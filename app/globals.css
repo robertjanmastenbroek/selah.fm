@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-void text-ivory font-body antialiased; }
+}
+
+@layer components {
+  .btn-gold {
+    @apply bg-gold text-void font-bold py-3 px-8 rounded-lg
+           hover:bg-gold-light transition-colors duration-200
+           inline-block text-center;
+  }
+  .btn-outline {
+    @apply border border-gold/40 text-gold py-3 px-8 rounded-lg
+           hover:bg-gold/10 transition-colors duration-200
+           inline-block text-center;
+  }
+}
