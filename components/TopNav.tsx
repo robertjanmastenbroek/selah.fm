@@ -71,11 +71,11 @@ export default function Header() {
                 <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => router.push('/dashboard')}>Dashboard</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => router.push('/earnings')}>Earnings</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => router.push('/settings')}>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/dashboard')}>Dashboard</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/earnings')}>Earnings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/settings')}>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={handleLogout} className="text-destructive focus:text-destructive">
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
