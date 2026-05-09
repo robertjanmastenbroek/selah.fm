@@ -51,7 +51,11 @@ export default function ReviewPage() {
                 </div>
               </div>
               <div className="card-elevated p-3 text-sm text-muted/50 mb-4">
-                Payout: {s.views.toLocaleString()} views × ${s.cpm} CPM = <span className="text-gold font-semibold">${((s.views / 1000) * s.cpm).toFixed(2)}</span>
+                {s.views.toLocaleString()} views × ${s.cpm} CPM = <span className="text-gold font-semibold">${((s.views / 1000) * s.cpm).toFixed(2)}</span>
+                <span className="text-muted/30 mx-1">·</span>
+                <span className="text-muted/40">−20% fee</span>
+                <span className="text-muted/30 mx-1">=</span>
+                <span className="text-ivory font-semibold">${((s.views / 1000) * s.cpm * 0.8).toFixed(2)}</span> net
               </div>
               <a href={`https://${s.url}`} target="_blank" className="text-gold/70 text-sm hover:text-gold transition-colors mb-4 inline-block">
                 Watch on {s.platform} →
