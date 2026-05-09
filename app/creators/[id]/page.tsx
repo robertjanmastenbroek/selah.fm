@@ -52,7 +52,7 @@ export default function CreatorProfilePage() {
       <main className="page-container max-w-2xl">
         {/* Profile header */}
         <Card className="mb-6 overflow-hidden">
-          <div className="h-32 bg-gradient-to-r from-amber-100 to-amber-50" />
+          <div className="h-32 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
           <CardContent className="p-6 -mt-12 relative">
             <CreatorAvatar src={creator.profile_image_url} name={creator.display_name || 'Creator'} size="xl" />
             <div className="mt-4">

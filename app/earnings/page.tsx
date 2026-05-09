@@ -98,7 +98,7 @@ export default function EarningsPage() {
                 <p className="text-sm font-medium">💳 Receive payouts</p>
                 <p className="text-xs text-muted-foreground">Connect your bank account via Stripe to receive payments directly. Payouts are processed after your submissions are approved.</p>
                 <div className="flex gap-2 justify-center">
-                  <Link href="/api/stripe/connect" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent-foreground text-white text-xs font-semibold hover:opacity-90 transition-opacity">
+                  <Link href="/api/stripe/connect" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity">
                     Set up Stripe Connect →
                   </Link>
                 </div>
