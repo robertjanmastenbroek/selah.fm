@@ -22,7 +22,7 @@ export default function TosPage() {
           <p>You must provide accurate information when creating an account. You are responsible for maintaining the security of your account. You must be at least 13 years old to use Selah.fm.</p>
 
           <h2 className="text-text font-semibold text-lg mt-8">3. Campaigns & Payments</h2>
-          <p>Artists deposit funds into campaigns via Stripe. Creators submit content for review. Artists approve or reject submissions. Approved content earns CPM-based payouts for verified views only. Platform fees are deducted per our fee schedule. Payouts to creators are processed on a net-7 basis after view verification.</p>
+          <p>Artists deposit funds into campaigns via Stripe. Creators submit content for review. Artists approve or reject submissions. Approved content earns CPM-based payouts for verified views only. A 20% platform fee is deducted from creator payouts. Artists are never charged above their campaign budget. Example: $500 campaign → creator earns $400. Payouts to creators are processed on a net-7 basis after view verification.</p>
 
           <h2 className="text-text font-semibold text-lg mt-8">4. Content</h2>
           <p>Creators retain rights to their content. Artists grant creators a limited license to use their music in promotional content on approved platforms. Content must comply with platform (TikTok, Instagram, YouTube) terms of service.</p>

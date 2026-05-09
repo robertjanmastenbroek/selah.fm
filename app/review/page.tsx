@@ -68,7 +68,7 @@ export default function ReviewPage() {
                       <Badge variant="secondary">{(s.views_verified || 0).toLocaleString()} views</Badge>
                     </div>
                     <Card className="bg-muted/50"><CardContent className="p-3 text-sm text-muted-foreground">
-                      {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> → <span className="text-foreground font-semibold">${net.toFixed(2)}</span> net
+                      {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> → <span className="text-foreground font-semibold">${net.toFixed(2)}</span> creator earns
                     </CardContent></Card>
                     <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" className="text-sm text-accent-foreground hover:underline">Watch on {s.platform} →</a>
                     <div className="flex gap-2">
