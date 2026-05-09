@@ -1,6 +1,9 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+// Fix: force Node.js runtime — Edge runtime doesn't support cookies properly
+export const runtime = "nodejs";
+
 if (!process.env.NEXTAUTH_SECRET) {
   console.error("❌ NEXTAUTH_SECRET is not set");
 }
@@ -13,8 +16,8 @@ const handler = NextAuth({
   debug: true,
   useSecureCookies: true,
   cookies: {
-    state: {
-      name: `__Secure-next-auth.state`,
+    sessionToken: {
+      name: `next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -23,7 +26,7 @@ const handler = NextAuth({
       },
     },
     csrfToken: {
-      name: `__Host-next-auth.csrf`,
+      name: `next-auth.csrf-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -31,8 +34,8 @@ const handler = NextAuth({
         secure: true,
       },
     },
-    sessionToken: {
-      name: `__Secure-next-auth.session`,
+    state: {
+      name: `next-auth.state`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -45,7 +48,6 @@ const handler = NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      checks: ["state"],
       authorization: {
         params: {
           scope: "openid email profile",
