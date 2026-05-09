@@ -26,17 +26,26 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const colors = {
-    success: 'bg-emerald-500 text-white',
-    error: 'bg-red-500 text-white',
-    info: 'bg-muted-foreground text-white',
+    success: 'bg-[#81C784] text-black font-medium',
+    error: 'bg-destructive/90 text-black font-medium',
+    info: 'bg-popover text-foreground border border-border',
   };
 
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
       <div className="fixed bottom-20 right-4 z-50 flex flex-col gap-2 max-w-xs">
-        {toasts.map(t => (
-          <div key={t.id} className={`px-4 py-3 rounded-lg text-sm font-medium shadow-lg animate-slide-up ${colors[t.type]}`}>
+        {toasts.map((t, i) => (
+          <div
+            key={t.id}
+            className={`px-4 py-3 rounded-xl text-sm shadow-xl backdrop-blur-sm ${colors[t.type]}`}
+            style={{
+              animation: `toastIn 0.3s ease-out`,
+              opacity: i < toasts.length - 1 ? 0.6 : 1,
+              transform: `scale(${1 - i * 0.03}) translateY(${i * 4}px)`,
+              zIndex: 50 - i,
+            }}
+          >
             {t.message}
           </div>
         ))}

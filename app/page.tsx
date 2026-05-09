@@ -84,7 +84,7 @@ export default function HomePage() {
             {/* Headline */}
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.05] animate-[fadeIn_0.6s_ease-out]">
               Get your music<br />
-              <span className="bg-gradient-to-r from-accent-foreground via-amber-400 to-accent-foreground bg-clip-text text-transparent animate-[shimmer_3s_ease-in-out_infinite] bg-[length:200%_100%]">
+              <span className="bg-gradient-to-r from-primary via-[#FFB8A8] to-primary bg-clip-text text-transparent animate-[shimmer_3s_ease-in-out_infinite] bg-[length:200%_100%]">
                 heard.
               </span>
             </h1>
@@ -376,7 +376,7 @@ export default function HomePage() {
                   </div>
                   <div className="p-8 text-center">
                     <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-3">Creator earns</p>
-                    <p className="text-5xl font-extrabold text-accent-foreground">$400</p>
+                    <p className="text-5xl font-extrabold text-primary">$400</p>
                     <p className="text-xs text-muted-foreground mt-2">80% of CPM payouts</p>
                   </div>
                 </div>
@@ -423,7 +423,7 @@ export default function HomePage() {
         <div className="page-container relative z-10 text-center">
           <h2 className="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight">
             Ready to get your music
-            <span className="bg-gradient-to-r from-accent-foreground via-amber-400 to-accent-foreground bg-clip-text text-transparent bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite]"> heard?</span>
+            <span className="bg-gradient-to-r from-primary via-[#FFB8A8] to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite]"> heard?</span>
           </h2>
           <p className="text-muted-foreground mb-10 max-w-md mx-auto text-lg">Join 200+ artists running campaigns on Selah.fm. Real creators. Real views. Real results.</p>
 

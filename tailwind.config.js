@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        border: 'hsl(var(--border))',
+        border: 'hsl(var(--border) / <alpha-value>)',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
@@ -37,8 +37,11 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        gold: '#d4a017',
-        'gold-dark': '#b8860b',
+        // Extended semantic tokens
+        success: 'hsl(123 46% 64%)',
+        'success-foreground': 'hsl(0 0% 5%)',
+        warning: 'hsl(45 100% 65%)',
+        'warning-foreground': 'hsl(0 0% 5%)',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -51,10 +54,21 @@ module.exports = {
       keyframes: {
         'fade-in': { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
         'slide-up': { '0%': { opacity: '0', transform: 'translateY(12px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        'float': { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-16px)' } },
+        'shimmer': { '0%': { backgroundPosition: '200% 0' }, '100%': { backgroundPosition: '-200% 0' } },
+        'breathe': { '0%': { boxShadow: '0 0 0 0 rgba(255,159,140,0.3)' }, '50%': { boxShadow: '0 0 0 8px rgba(255,159,140,0)' }, '100%': { boxShadow: '0 0 0 0 rgba(255,159,140,0)' } },
+        'shake': { '0%, 100%': { transform: 'translateX(0)' }, '20%': { transform: 'translateX(-4px)' }, '40%': { transform: 'translateX(4px)' }, '60%': { transform: 'translateX(-4px)' }, '80%': { transform: 'translateX(4px)' } },
       },
       animation: {
-        'fade-in': 'fade-in 0.3s ease-out',
-        'slide-up': 'slide-up 0.4s ease-out',
+        'fade-in': 'fade-in 0.25s ease-out',
+        'slide-up': 'slide-up 0.3s ease-out',
+        'float': 'float 6s ease-in-out infinite',
+        'shimmer': 'shimmer 3s ease-in-out infinite',
+        'breathe': 'breathe 0.8s ease-out',
+        'shake': 'shake 0.3s ease-out',
+      },
+      lineHeight: {
+        relaxed: '1.625',
       },
     },
   },

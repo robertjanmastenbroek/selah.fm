@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 
 export function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse bg-muted rounded-xl ${className}`} />;
+  return <div className={`animate-shimmer rounded-xl ${className}`} />;
 }
 
 export function CardSkeleton() {
