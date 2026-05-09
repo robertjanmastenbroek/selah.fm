@@ -21,7 +21,7 @@ export default function AnalyticsPage() {
   const [connected, setConnected] = useState<Set<string>>(new Set());
 
   const handleConnect = (platform: string) => {
-    setConnected(new Set([...connected, platform]));
+    window.location.href = `/api/connect?platform=${platform}`;
   };
 
   const connectedCount = connected.size;
