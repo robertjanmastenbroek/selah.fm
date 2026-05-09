@@ -44,7 +44,7 @@ export default function Header() {
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-6">
           <Link href="/browse" className="font-semibold text-lg tracking-tight">
-            Selah<span className="text-amber-600">.fm</span>
+            Selah<span className="text-accent-foreground">.fm</span>
           </Link>
           
           <nav className="hidden md:flex items-center gap-1">

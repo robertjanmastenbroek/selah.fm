@@ -70,7 +70,7 @@ export default function ReviewPage() {
                     <Card className="bg-muted/50"><CardContent className="p-3 text-sm text-muted-foreground">
                       {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> → <span className="text-foreground font-semibold">${net.toFixed(2)}</span> net
                     </CardContent></Card>
-                    <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" className="text-sm text-amber-600 hover:underline">Watch on {s.platform} →</a>
+                    <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" className="text-sm text-accent-foreground hover:underline">Watch on {s.platform} →</a>
                     <div className="flex gap-2">
                       <Button variant="outline" onClick={() => handleAction(s.id, 'rejected')} className="flex-1">Reject</Button>
                       <Button onClick={() => handleAction(s.id, 'approved')} className="flex-1">Approve</Button>

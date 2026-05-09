@@ -104,7 +104,7 @@ export default function BrowsePage() {
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <Link href={`/c/${c.id}`} className="font-semibold text-lg leading-tight hover:text-amber-600 transition-colors">
+                        <Link href={`/c/${c.id}`} className="font-semibold text-lg leading-tight hover:text-accent-foreground transition-colors">
                           {c.track_title}
                         </Link>
                         <p className="text-muted-foreground text-sm">${cpm} CPM · ${budget} budget</p>

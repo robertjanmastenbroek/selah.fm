@@ -24,15 +24,15 @@ export default function HomePage() {
             <div className="space-y-8">
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border bg-muted/50 text-sm text-muted-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent/100 animate-pulse" />
                   Now in beta
                 </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
-                  Your music,<br />
-                  <span className="text-amber-600">promoted by real creators.</span>
+                  Ancient Truth.<br />
+                  <span className="text-accent-foreground">Future Sound.</span>
                 </h1>
                 <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
-                  Set any budget from $5. Creators make TikToks, Reels, and Shorts with your track. You approve every video. Pay only for verified views.
+                  Get paid to post music you love. Get your music heard. The transparent CPM marketplace where artists and creators connect.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -52,9 +52,9 @@ export default function HomePage() {
                 )}
               </div>
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5"><span className="text-amber-600">✓</span> No upfront costs</span>
-                <span className="flex items-center gap-1.5"><span className="text-amber-600">✓</span> Pay per view</span>
-                <span className="flex items-center gap-1.5"><span className="text-amber-600">✓</span> You approve</span>
+                <span className="flex items-center gap-1.5"><span className="text-accent-foreground">✓</span> No upfront costs</span>
+                <span className="flex items-center gap-1.5"><span className="text-accent-foreground">✓</span> Pay per view</span>
+                <span className="flex items-center gap-1.5"><span className="text-accent-foreground">✓</span> You approve</span>
               </div>
             </div>
             <div className="hidden lg:block">
@@ -76,7 +76,7 @@ export default function HomePage() {
               { num: 'You', label: 'Approve every video' },
             ].map(({ num, label }) => (
               <div key={label} className="space-y-1">
-                <p className="text-3xl font-bold text-amber-600 tracking-tight">{num}</p>
+                <p className="text-3xl font-bold text-accent-foreground tracking-tight">{num}</p>
                 <p className="text-sm text-muted-foreground">{label}</p>
               </div>
             ))}
@@ -97,7 +97,7 @@ export default function HomePage() {
             { step: '03', title: 'Review & pay', desc: 'You review every submission. Approve the ones you like. Creators get paid automatically for verified views.' },
           ].map(s => (
             <div key={s.step} className="text-center group">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-5 text-sm font-bold group-hover:bg-amber-100 transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-accent/10 text-accent-foreground flex items-center justify-center mx-auto mb-5 text-sm font-bold group-hover:bg-amber-100 transition-colors">
                 {s.step}
               </div>
               <h3 className="text-xl font-semibold mb-3">{s.title}</h3>
@@ -111,8 +111,8 @@ export default function HomePage() {
       <section className="bg-muted/30 py-20 md:py-28">
         <div className="page-container">
           <div className="text-center max-w-lg mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">One fee. It shrinks as you grow.</h2>
-            <p className="text-muted-foreground text-lg">No subscription. No hidden costs. One platform fee on payouts.</p>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Transparent fees. Always.</h2>
+            <p className="text-muted-foreground text-lg">20% platform fee on creator payouts. Artists see every cost upfront. No hidden deductions.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
@@ -121,11 +121,11 @@ export default function HomePage() {
               { volume: '$2,000+', fee: '10%', desc: 'Full scale. Maximum volume at the lowest rate.' },
             ].map((t, i) => (
               <Card key={i} className={`relative overflow-hidden ${i === 1 ? 'ring-2 ring-amber-500 shadow-lg' : ''}`}>
-                {i === 1 && <div className="absolute top-0 inset-x-0 h-1 bg-amber-500" />}
+                {i === 1 && <div className="absolute top-0 inset-x-0 h-1 bg-accent/100" />}
                 <CardContent className="p-8 text-center space-y-4">
                   <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Monthly spend</p>
                   <p className="text-2xl font-bold">{t.volume}</p>
-                  <p className="text-5xl font-bold text-amber-600 tracking-tight">{t.fee}</p>
+                  <p className="text-5xl font-bold text-accent-foreground tracking-tight">{t.fee}</p>
                   <p className="text-muted-foreground text-sm leading-relaxed">{t.desc}</p>
                 </CardContent>
               </Card>
@@ -163,7 +163,7 @@ export default function HomePage() {
         <div className="page-container !py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-1 text-center md:text-left">
-              <p className="font-semibold">Selah<span className="text-amber-600">.fm</span></p>
+              <p className="font-semibold">Selah<span className="text-accent-foreground">.fm</span></p>
               <p className="text-sm text-muted-foreground">CPM marketplace for music promotion</p>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">

@@ -58,9 +58,9 @@ export default function CampaignPage() {
             </div>
 
             <div className="grid grid-cols-3 gap-4 text-center">
-              <div><p className="text-2xl font-bold text-amber-600">${cpm.toFixed(2)}</p><p className="text-muted-foreground text-xs mt-1">CPM per 1K views</p></div>
-              <div><p className="text-2xl font-bold text-amber-600">${budget}</p><p className="text-muted-foreground text-xs mt-1">Total budget</p></div>
-              <div><p className="text-2xl font-bold text-amber-600">{subs}</p><p className="text-muted-foreground text-xs mt-1">Submissions</p></div>
+              <div><p className="text-2xl font-bold text-accent-foreground">${cpm.toFixed(2)}</p><p className="text-muted-foreground text-xs mt-1">CPM per 1K views</p></div>
+              <div><p className="text-2xl font-bold text-accent-foreground">${budget}</p><p className="text-muted-foreground text-xs mt-1">Total budget</p></div>
+              <div><p className="text-2xl font-bold text-accent-foreground">{subs}</p><p className="text-muted-foreground text-xs mt-1">Submissions</p></div>
             </div>
 
             <div className="space-y-1.5">
