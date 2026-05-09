@@ -39,7 +39,47 @@ export default function ReviewPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { fetchSubmissions(); }, [selectedCampaign]);
+
+  const [undoState, setUndoState] = useState<{ id: string; status: string; timer: any } | null>(null);
+
+  const handleAction = async (id: string, status: string) => {
+    // Optimistic removal with undo
+    const subToUndo = subs.find(s => s.id === id);
+    setSubs(prev => prev.filter(s => s.id !== id));
+    
+    try {
+      await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
+      addToast(status === 'approved' ? 'Submission approved — creator will be paid' : 'Submission rejected', status === 'approved' ? 'success' : 'info');
+    } catch {
+      addToast('Failed to update — try again', 'error');
+      if (subToUndo) setSubs(prev => [...prev, subToUndo]);
+      return;
+    }
+
+    // Show undo option
+    if (subToUndo) {
+      const timer = setTimeout(() => setUndoState(null), 4000);
+      setUndoState({ id, status, timer });
+    }
+  };
+
+  const handleUndo = async () => {
+    if (!undoState) return;
+    clearTimeout(undoState.timer);
+    const reverseStatus = undoState.status === 'approved' ? 'pending' : undoState.status === 'rejected' ? 'pending' : 'pending';
+    try {
+      await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: undoState.id, status: reverseStatus }) });
+      addToast('Review undone', 'info');
+    } catch {
+      addToast('Failed to undo', 'error');
+    }
+    setUndoState(null);
+    // Refresh list
+    fetchSubmissions();
+  };
+
+  const fetchSubmissions = () => {
     setLoading(true);
     const campaignId = selectedCampaign === 'all' ? 'all' : selectedCampaign;
     fetch(`/api/submissions?campaignId=${campaignId}`)
@@ -50,22 +90,21 @@ export default function ReviewPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [selectedCampaign]);
-
-  const handleAction = async (id: string, status: string) => {
-    try {
-      await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
-      addToast(status === 'approved' ? 'Submission approved — creator will be paid' : 'Submission rejected', status === 'approved' ? 'success' : 'info');
-    } catch {
-      addToast('Failed to update — try again', 'error');
-    }
-    setSubs(prev => prev.filter(s => s.id !== id));
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="page-container">
+        {/* Undo banner */}
+        {undoState && (
+          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-popover border rounded-xl shadow-xl px-5 py-3 flex items-center gap-3 animate-slide-up">
+            <span className="text-sm">{undoState.status === 'approved' ? 'Submission approved' : 'Submission rejected'}</span>
+            <button onClick={handleUndo} className="text-sm font-semibold text-accent-foreground hover:underline">Undo</button>
+            <span className="text-xs text-muted-foreground">(auto-dismisses)</span>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="section-title mb-1">Review</h1>
