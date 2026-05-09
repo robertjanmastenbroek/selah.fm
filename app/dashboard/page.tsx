@@ -22,6 +22,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const { addToast } = useToast();
+  const [fundingId, setFundingId] = useState<string | null>(null);
+  const [fundingAmount, setFundingAmount] = useState('10');
 
   const [coverArt, setCoverArt] = useState('');
   const [trackTitle, setTrackTitle] = useState('');
@@ -225,14 +227,40 @@ export default function DashboardPage() {
                     <div className="h-full bg-gold rounded-full transition-all duration-500"
                       style={{ width: `${Math.min((c.spent / c.budget) * 100, 100)}%` }} />
                   </div>
-                  <div className="flex gap-2">
-                    <a href="/review" className="btn-secondary text-sm flex-1 !py-2.5">Review ({c.submissions})</a>
-                    <button onClick={async () => {
-                      const r = await fetch('/api/stripe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: 100, campaignId: c.id }) });
-                      const d = await r.json();
-                      d.url ? window.location.href = d.url : addToast('Add STRIPE_SECRET_KEY to Railway', 'error');
-                    }} className="btn-primary text-sm flex-1 !py-2.5">Add budget</button>
-                  </div>
+                  {fundingId === c.id ? (
+                    <div className="space-y-3 animate-slide-up">
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted/40 text-sm">$</span>
+                          <input
+                            value={fundingAmount}
+                            onChange={(e) => setFundingAmount(e.target.value)}
+                            type="number" min="5" step="5"
+                            placeholder="10"
+                            autoFocus
+                            className="input-field pl-7 !py-2.5"
+                          />
+                        </div>
+                        <button onClick={async () => {
+                          const amt = parseInt(fundingAmount);
+                          if (amt < 5) { addToast('Minimum $5', 'error'); return; }
+                          const r = await fetch('/api/stripe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: amt, campaignId: c.id }) });
+                          const d = await r.json();
+                          d.url ? window.location.href = d.url : addToast('Add STRIPE_SECRET_KEY to Railway', 'error');
+                          setFundingId(null);
+                        }} className="btn-primary text-sm !py-2.5 !px-4 flex-shrink-0">
+                          Fund ${fundingAmount || '?'}
+                        </button>
+                      </div>
+                      <button onClick={() => setFundingId(null)} className="btn-ghost text-xs w-full">Cancel</button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <a href="/review" className="btn-secondary text-sm flex-1 !py-2.5">Review ({c.submissions})</a>
+                      <button onClick={() => { setFundingId(c.id); setFundingAmount('10'); }}
+                        className="btn-primary text-sm flex-1 !py-2.5">Add budget</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
