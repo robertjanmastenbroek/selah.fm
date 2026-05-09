@@ -26,7 +26,7 @@ export default function ArtistDashboard() {
     <div className="min-h-screen bg-void">
       {/* Top bar */}
       <div className="sticky top-0 bg-void/95 backdrop-blur border-b border-white/5 px-4 py-4 flex items-center justify-between z-10">
-        <span className="font-display text-gold text-lg">sendmusic.io</span>
+        <span className="font-display text-gold text-lg">SendMusic.io</span>
         <div className="flex items-center gap-3">
           {step === 'live' && (
             <button onClick={() => setStep('create')} className="btn-gold text-sm !py-2 !px-4">+ New campaign</button>
@@ -163,7 +163,7 @@ export default function ArtistDashboard() {
                     <div className="h-full bg-gold rounded-full" style={{ width: `${(c.spent / c.budget) * 100}%` }}></div>
                   </div>
                   <div className="flex gap-2 mt-4">
-                    <button className="flex-1 btn-outline text-sm !py-2">Review submissions</button>
+                    <a href="/review" className="flex-1 btn-outline text-sm !py-2 text-center">Review submissions</a>
                     <button className="flex-1 btn-gold text-sm !py-2">Add budget</button>
                   </div>
                 </div>

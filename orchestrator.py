@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-sendmusic.io Autonomous Orchestrator
+SendMusic.io Autonomous Orchestrator
 =====================================
 #1 priority project. Self-directed task manager that drives the build
 queue for the CPM music promotion marketplace.
 
 Goal: $10k GMV in 90 days. 50 artists, 200 creators, 20 campaigns.
-Reuses patterns from CoolCompanion but focused entirely on sendmusic.io.
+Reuses patterns from CoolCompanion but focused entirely on SendMusic.io.
 
 Usage:
   python3 orchestrator.py status       # Full build status
@@ -25,7 +25,7 @@ AGENT_DIR = Path(__file__).resolve().parent
 TASKS_PATH = AGENT_DIR / "tasks.json"
 
 BUILD_PLAN = {
-    "project": "sendmusic.io",
+    "project": "SendMusic.io",
     "priority": "#1 — all efforts focused here",
     "goal": "$10k GMV in 90 days, 50 artists, 200 creators, 20 campaigns",
     "principle": "Launch fast. Real marketplace first. Outreach after.",
@@ -48,9 +48,9 @@ BUILD_PLAN = {
             "description": "Database, auth, campaign system — the actual product.",
             "tasks": [
                 {"id": "database_schema", "name": "PostgreSQL schema — users, campaigns, submissions, payments", "roi": "critical", "estimated_minutes": 60, "dependencies": [], "output_files": ["lib/db/schema.sql"]},
-                {"id": "auth_system", "name": "Auth — sign up / login for artists + creators", "roi": "critical", "estimated_minutes": 90, "dependencies": ["database_schema"], "output_files": ["app/login/page.tsx", "app/api/auth/route.ts"]},
-                {"id": "artist_dashboard", "name": "Artist dashboard — campaign creation, CPM + max payout, track upload, manual content review, analytics", "roi": "critical", "estimated_minutes": 180, "dependencies": ["auth_system"], "output_files": ["app/dashboard/artist/page.tsx"]},
-                {"id": "creator_dashboard", "name": "Creator dashboard — browse campaigns, apply, submit content, earnings", "roi": "critical", "estimated_minutes": 150, "dependencies": ["auth_system", "artist_dashboard"], "output_files": ["app/dashboard/creator/page.tsx"]},
+                {"id": "auth_system", "name": "Auth — sign up / login for artists + creators", "roi": "critical", "estimated_minutes": 90, "dependencies": ["database_schema"], "output_files": ["app/login/page.tsx", "app/api/auth/login/route.ts", "app/api/auth/signup/route.ts"]},
+                {"id": "artist_dashboard", "name": "Artist dashboard — campaign creation, CPM + max payout, track upload, manual content review, analytics", "roi": "critical", "estimated_minutes": 180, "dependencies": ["auth_system"], "output_files": ["app/dashboard/page.tsx", "app/review/page.tsx"]},
+                {"id": "creator_dashboard", "name": "Creator dashboard — browse campaigns, apply, submit content, earnings", "roi": "critical", "estimated_minutes": 150, "dependencies": ["auth_system", "artist_dashboard"], "output_files": ["app/browse/page.tsx", "app/earnings/page.tsx"]},
                 {"id": "stripe_connect", "name": "Stripe Connect — escrow, auto-payouts, platform fee", "roi": "critical", "estimated_minutes": 120, "dependencies": ["artist_dashboard", "creator_dashboard"], "output_files": ["app/api/stripe/connect/route.ts", "app/api/stripe/payout/route.ts"]},
             ]
         },
@@ -149,7 +149,7 @@ class Orchestrator:
         pct = int(done / total * 100) if total else 0
 
         print(f"\n{'='*60}")
-        print(f"  sendmusic.io Autonomous Orchestrator — PRIORITY #1")
+        print(f"  SendMusic.io Autonomous Orchestrator — PRIORITY #1")
         print(f"  Progress: {done}/{total} tasks ({pct}%)")
         print(f"  Goal: $10k GMV, 50 artists, 200 creators, 20 campaigns")
         print(f"{'='*60}")
@@ -178,7 +178,7 @@ class Orchestrator:
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="sendmusic.io Autonomous Orchestrator")
+    parser = argparse.ArgumentParser(description="SendMusic.io Autonomous Orchestrator")
     parser.add_argument("command", nargs="?", default="status",
                         choices=["status", "next", "plan", "evaluate"])
     args = parser.parse_args()
@@ -196,7 +196,7 @@ def main():
         else:
             print("\n✅ All tasks complete.")
     elif args.command == "plan":
-        print(f"\n  sendmusic.io Build Plan — PRIORITY #1\n")
+        print(f"\n  SendMusic.io Build Plan — PRIORITY #1\n")
         for phase in sorted(orch.plan["phases"], key=lambda p: p["priority"]):
             print(f"  ▸ {phase['name']}")
             for task in phase["tasks"]:

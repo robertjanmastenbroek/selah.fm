@@ -6,7 +6,7 @@ export default function LandingPage() {
       {/* ---- Nav ---- */}
       <nav className="border-b border-white/5 sticky top-0 bg-void/95 backdrop-blur z-50">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <span className="font-display text-gold text-xl tracking-wide">sendmusic.io</span>
+          <span className="font-display text-gold text-xl tracking-wide">SendMusic.io</span>
           <a href="/login" className="btn-gold text-sm !py-2 !px-5">Get started</a>
         </div>
       </nav>
@@ -32,15 +32,8 @@ export default function LandingPage() {
               <span>✓ 5% platform fee only</span>
             </div>
           </div>
-          {/* Hero image placeholder — replace with generated image */}
           <div className="hidden md:block">
-            <div className="bg-gradient-to-br from-void-card via-gold/5 to-void-card rounded-2xl h-80 flex items-center justify-center border border-white/5">
-              <div className="text-center">
-                <div className="text-5xl mb-4">🎵</div>
-                <div className="text-muted text-sm">Hero illustration</div>
-                <div className="text-muted/50 text-xs mt-1">Generated with Higgsfield</div>
-              </div>
-            </div>
+            <img src="/images/hero-illustration.png" alt="SendMusic.io — music promotion marketplace" className="rounded-2xl w-full h-auto" />
           </div>
         </div>
 
@@ -132,8 +125,8 @@ export default function LandingPage() {
               ))}
             </ul>
           </div>
-          <div className="bg-gradient-to-br from-void-card via-gold/5 to-void-card rounded-2xl h-64 flex items-center justify-center border border-white/5">
-            <div className="text-center"><div className="text-3xl mb-2">📊</div><div className="text-muted text-sm">Dashboard preview</div></div>
+          <div>
+            <img src="/images/dashboard-mockup.png" alt="Artist campaign dashboard" className="rounded-2xl w-full h-auto" />
           </div>
         </div>
       </section>
@@ -141,8 +134,8 @@ export default function LandingPage() {
       {/* ---- Earnings visual ---- */}
       <section className="border-y border-white/5 bg-void-elevated/30 py-20 md:py-28">
         <div className="max-w-5xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-          <div className="order-2 md:order-1 bg-gradient-to-br from-void-card via-gold/5 to-void-card rounded-2xl h-64 flex items-center justify-center border border-white/5">
-            <div className="text-center"><div className="text-3xl mb-2">📈</div><div className="text-muted text-sm">Earnings growth</div></div>
+          <div className="order-2 md:order-1">
+            <img src="/images/earnings-visual.png" alt="Creator earnings growth" className="rounded-2xl w-full h-auto" />
           </div>
           <div className="order-1 md:order-2">
             <div className="text-gold text-xs font-semibold uppercase tracking-widest mb-3">For creators</div>
@@ -169,7 +162,7 @@ export default function LandingPage() {
       {/* ---- Why different ---- */}
       <section className="py-20 md:py-28">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="font-display text-3xl text-center text-ivory mb-4">Why sendmusic.io</h2>
+          <h2 className="font-display text-3xl text-center text-ivory mb-4">Why SendMusic.io</h2>
           <p className="text-muted text-center mb-12 max-w-md mx-auto">
             Built for music. Not general content promotion.
           </p>
@@ -178,7 +171,7 @@ export default function LandingPage() {
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="text-left py-4 pr-4 text-muted font-normal">Other platforms</th>
-                  <th className="text-left py-4 px-4 text-gold font-display text-base">sendmusic.io</th>
+                  <th className="text-left py-4 px-4 text-gold font-display text-base">SendMusic.io</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -217,7 +210,7 @@ export default function LandingPage() {
 
       {/* ---- Footer ---- */}
       <footer className="py-10 text-center text-muted text-sm border-t border-white/5">
-        <p>sendmusic.io · CPM marketplace for music promotion</p>
+        <p>SendMusic.io · CPM marketplace for music promotion</p>
         <p className="mt-1">Built by artists, for artists and creators.</p>
       </footer>
     </>
