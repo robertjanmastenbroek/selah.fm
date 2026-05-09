@@ -7,7 +7,7 @@ export default function LandingPage() {
       <nav className="border-b border-white/5 sticky top-0 bg-void/95 backdrop-blur z-50">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <span className="font-display text-gold text-xl tracking-wide">SendMusic.io</span>
-          <a href="/login" className="btn-gold text-sm !py-2 !px-5">Get started</a>
+          <a href="/login" className="btn-primary text-sm !py-2 !px-5">Get started</a>
         </div>
       </nav>
 
@@ -24,8 +24,8 @@ export default function LandingPage() {
               TikTok, Reels, Shorts — your music, their audience.
             </p>
             <div className="flex gap-3 flex-wrap">
-              <a href="/login" className="btn-gold text-base !px-8 !py-3.5">Start as an artist</a>
-              <a href="/login" className="btn-outline text-base !px-8 !py-3.5">Start as a creator</a>
+              <a href="/login" className="btn-primary text-base !px-8 !py-3.5">Start as an artist</a>
+              <a href="/login" className="btn-secondary text-base !px-8 !py-3.5">Start as a creator</a>
             </div>
             <div className="flex gap-6 mt-8 text-sm text-muted">
               <span>✓ No upfront fees</span>
@@ -194,8 +194,8 @@ export default function LandingPage() {
             First cohort launching soon. Artists and creators — claim your spot.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <a href="/login" className="btn-gold text-base !px-8 !py-3.5">Start as an artist</a>
-            <a href="/login" className="btn-outline text-base !px-8 !py-3.5">Start as a creator</a>
+            <a href="/login" className="btn-primary text-base !px-8 !py-3.5">Start as an artist</a>
+            <a href="/login" className="btn-secondary text-base !px-8 !py-3.5">Start as a creator</a>
           </div>
           <p className="text-muted text-xs mt-4">5% platform fee. No upfront costs.</p>
         </div>

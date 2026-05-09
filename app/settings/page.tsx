@@ -71,7 +71,7 @@ export default function SettingsPage() {
                     style={{ backgroundColor: p.color + '20' }}>{p.icon}</div>
                   <span className="text-ivory text-sm">{p.name}</span>
                 </div>
-                <button className="btn-outline !py-1.5 !px-3 text-xs !rounded-lg">Connect →</button>
+                <button className="btn-secondary !py-1.5 !px-3 text-xs !rounded-lg">Connect →</button>
               </div>
             ))}
           </div>
