@@ -29,7 +29,7 @@ export default function LandingPage() {
             </div>
             <div className="flex gap-6 mt-8 text-sm text-muted">
               <span>✓ No upfront fees</span>
-              <span>✓ 5% platform fee only</span>
+              <span>✓ Tiered fees: 20% → 15% → 10%</span>
             </div>
           </div>
           <div className="hidden md:block">
@@ -41,7 +41,7 @@ export default function LandingPage() {
         <div className="mt-16 md:mt-24 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
           {[
             { num: 'CPM', label: 'You set the rate' },
-            { num: '5%', label: 'Platform fee' },
+            { num: '20%', label: 'Platform fee (less as you scale)' },
             { num: 'Cap', label: 'Max payout per video' },
             { num: 'You', label: 'Approve every video' },
           ].map(({ num, label }) => (
@@ -152,6 +152,28 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ---- Tiered fees ---- */}
+      <section className="py-20 md:py-28">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="section-title text-center mb-4">One fee. It gets smaller as you grow.</h2>
+          <p className="text-muted/50 text-center mb-12 max-w-md mx-auto">No subscription. No hidden costs. Just one platform fee on payouts.</p>
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { volume: '$0–$500', fee: '20%', desc: 'Getting started. Test campaigns, find your flow.' },
+              { volume: '$500–$2K', fee: '15%', desc: 'Growing. Regular campaigns, more creators.' },
+              { volume: '$2,000+', fee: '10%', desc: 'Scaling. Highest volume, lowest fee.' },
+            ].map((t, i) => (
+              <div key={i} className="card-glass p-6 text-center animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
+                <div className="text-muted/40 text-sm mb-2">Monthly spend</div>
+                <div className="text-ivory font-semibold text-lg mb-1">{t.volume}</div>
+                <div className="font-display text-3xl text-gold mb-2 tracking-tight">{t.fee}</div>
+                <div className="text-muted/40 text-sm">{t.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ---- Why different ---- */}
       <section className="py-20 md:py-28">
         <div className="max-w-4xl mx-auto px-4">
@@ -197,7 +219,7 @@ export default function LandingPage() {
             <a href="/login" className="btn-primary text-base !px-8 !py-3.5">Start as an artist</a>
             <a href="/login" className="btn-secondary text-base !px-8 !py-3.5">Start as a creator</a>
           </div>
-          <p className="text-muted text-xs mt-4">5% platform fee. No upfront costs.</p>
+          <p className="text-muted text-xs mt-4">Tiered fees: 20% → 15% → 10% as you scale. No upfront costs.</p>
         </div>
       </section>
 
