@@ -4,8 +4,14 @@ import sql from '@/lib/db';
 export async function GET() {
   try {
     const campaigns = await sql`
-      SELECT * FROM campaign_stats WHERE status IN ('active', 'draft')
-      ORDER BY cpm_rate_cents DESC, budget_remaining_cents DESC
+      SELECT c.*, 
+        COALESCE(v.approved_submissions, '0') as approved_submissions,
+        COALESCE(v.pending_submissions, '0') as pending_submissions,
+        COALESCE(v.total_verified_views, '0') as total_verified_views
+      FROM campaigns c
+      LEFT JOIN campaign_stats v ON v.id = c.id
+      WHERE c.status IN ('active', 'draft')
+      ORDER BY c.created_at DESC
       LIMIT 50
     `;
     return NextResponse.json(campaigns);

@@ -6,6 +6,7 @@ import TopNav from '@/components/TopNav';
 interface Campaign {
   id: string;
   track_title: string;
+  cover_art_url: string;
   cpm_rate_cents: number;
   total_budget_cents: number;
   budget_remaining_cents: number;
@@ -13,6 +14,8 @@ interface Campaign {
   platforms: string[];
   status: string;
   approved_submissions: string;
+  recommended_hashtags: string;
+  requirements: string;
 }
 
 export default function BrowsePage() {
@@ -114,6 +117,11 @@ export default function BrowsePage() {
 
               return (
                 <div key={c.id} className="card p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+                  {c.cover_art_url && (
+                    <div className="h-36 rounded-xl overflow-hidden -mx-5 -mt-5 mb-4">
+                      <img src={c.cover_art_url} alt={c.track_title} className="w-full h-full object-cover" />
+                    </div>
+                  )}
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <a href={`/c/${c.id}`} className="text-text font-semibold text-lg leading-tight hover:text-gold transition-colors">{c.track_title}</a>
