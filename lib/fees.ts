@@ -1,4 +1,4 @@
-// SendMusic.io tiered platform fee structure
+// Selah.fm tiered platform fee structure
 // Higher volume = lower fee. Drives scale, rewards loyalty.
 
 export const FEE_TIERS = [

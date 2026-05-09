@@ -14,6 +14,6 @@ export async function GET(request: Request) {
   console.log(`Connected ${state}: code=${code.substring(0, 10)}...`);
 
   return NextResponse.redirect(
-    `${process.env.NEXTAUTH_URL || 'https://sendmusic-io-production.up.railway.app'}/analytics?connected=${state}`
+    `${process.env.NEXTAUTH_URL || 'https://selah-fm-production.up.railway.app'}/analytics?connected=${state}`
   );
 }

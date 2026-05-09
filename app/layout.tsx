@@ -7,19 +7,19 @@ import { cn } from "@/lib/utils";
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: 'SendMusic.io — Get your music heard. Only pay for real views.',
+  title: 'Selah.fm — Get your music heard. Only pay for real views.',
   description: 'CPM marketplace connecting artists with creators. Set your budget. Creators make TikToks and Reels. You approve and pay only for verified views.',
   icons: {
     icon: '/favicon.svg',
   },
   openGraph: {
-    title: 'SendMusic.io — Music promotion by real creators',
+    title: 'Selah.fm — Music promotion by real creators',
     description: 'Set your budget. Creators make TikToks and Reels with your track. You review, approve, and pay only for verified views.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SendMusic.io — Music promotion by real creators',
+    title: 'Selah.fm — Music promotion by real creators',
     description: 'Set your budget. Creators make TikToks and Reels with your track. You review, approve, and pay only for verified views.',
   },
 };

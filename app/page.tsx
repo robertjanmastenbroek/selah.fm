@@ -39,7 +39,7 @@ export default function HomePage() {
             <p className="text-sm text-muted-foreground">No upfront costs. Fees: 20% → 15% → 10% as you scale.</p>
           </div>
           <div className="hidden md:block">
-            <img src="/images/hero-illustration.png" alt="SendMusic.io" className="w-full rounded-2xl shadow-sm" />
+            <img src="/images/hero-illustration.png" alt="Selah.fm" className="w-full rounded-2xl shadow-sm" />
           </div>
         </div>
       </section>
@@ -101,7 +101,7 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t py-8 text-center text-muted-foreground text-xs">
-        <p>SendMusic.io · CPM marketplace for music promotion</p>
+        <p>Selah.fm · CPM marketplace for music promotion</p>
         <div className="flex justify-center gap-4 mt-2">
           <Link href="/tos" className="hover:text-foreground transition-colors">Terms</Link>
           <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>

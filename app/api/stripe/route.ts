@@ -13,8 +13,8 @@ export async function POST(request: Request) {
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_URL || 'https://sendmusic-io-production.up.railway.app'}/dashboard?deposit=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_URL || 'https://sendmusic-io-production.up.railway.app'}/dashboard?deposit=cancelled`,
+      success_url: `${process.env.NEXT_PUBLIC_URL || 'https://selah-fm-production.up.railway.app'}/dashboard?deposit=success`,
+      cancel_url: `${process.env.NEXT_PUBLIC_URL || 'https://selah-fm-production.up.railway.app'}/dashboard?deposit=cancelled`,
       line_items: [{
         price_data: {
           currency: 'usd',
