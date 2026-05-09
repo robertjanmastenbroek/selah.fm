@@ -76,6 +76,20 @@ export async function POST(request: Request) {
         console.error('Approval notification failed:', notifErr);
       }
 
+      // Attempt auto-payout via Stripe
+      try {
+        const payoutRes = await fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/stripe/payout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId }),
+        });
+        if (!payoutRes.ok) {
+          console.log('Auto-payout deferred — creator may need to set up Stripe Connect');
+        }
+      } catch (payoutErr) {
+        console.log('Auto-payout attempt failed (non-critical):', payoutErr);
+      }
+
       return NextResponse.json(result[0]);
     }
 

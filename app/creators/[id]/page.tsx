@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Header from '@/components/TopNav';
 import BottomNav from '@/components/BottomNav';
 import CreatorAvatar from '@/components/CreatorAvatar';
+import CreatorSubmissions from '@/components/CreatorSubmissions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -111,6 +112,14 @@ export default function CreatorProfilePage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Portfolio — recent submissions */}
+        <Card className="mb-6">
+          <CardContent className="p-5">
+            <h3 className="font-semibold mb-4">Recent submissions</h3>
+            <CreatorSubmissions creatorId={id as string} />
+          </CardContent>
+        </Card>
 
         {/* Hire CTA */}
         <Card className="mb-6 border-accent/20 bg-accent/5">

@@ -190,6 +190,19 @@ function DashboardContent() {
           </>
         ) : (
           <>
+            {/* Referral banner */}
+            <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
+              <CardContent className="p-4 text-center space-y-2">
+                <p className="text-sm font-medium">🔗 Invite artists & earn</p>
+                <p className="text-xs text-muted-foreground">Share your referral link. When someone signs up, you both get $5 towards your next campaign.</p>
+                <div className="flex items-center gap-2 justify-center">
+                  <code className="text-xs bg-muted px-3 py-1.5 rounded-lg font-mono">
+                    https://selah.fm/login?ref=you@email.com
+                  </code>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Aggregate Stats Bar */}
             {campaigns.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">

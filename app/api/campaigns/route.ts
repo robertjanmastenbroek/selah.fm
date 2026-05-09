@@ -20,9 +20,10 @@ export async function GET(request: Request) {
       WHERE c.status IN ('active', 'draft')
     `;
 
-    // No easy way to do dynamic SQL with the tagged template, so filter in JS
+    // Sort by created_at desc and apply limit
     const campaigns = await query;
     
+    // Filter in JS (simpler than dynamic SQL for MVP)
     let filtered = campaigns;
     
     if (search) {
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
     
     if (platform) {
       filtered = filtered.filter((c: any) => 
-        c.platforms?.includes(platform)
+        Array.isArray(c.platforms) && c.platforms.includes(platform)
       );
     }
     
@@ -44,6 +45,9 @@ export async function GET(request: Request) {
       filtered = filtered.filter((c: any) => c.cpm_rate_cents >= min);
     }
 
+    // Sort by created_at desc
+    filtered.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
     const total = filtered.length;
     const page = filtered.slice(offset, offset + limit);
 
