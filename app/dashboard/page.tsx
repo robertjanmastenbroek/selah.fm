@@ -133,8 +133,9 @@ export default function DashboardPage() {
                   <Input type="number" min="1" value={maxPayout} onChange={e => setMaxPayout(e.target.value)} />
                 </div>
                 <Card className="bg-muted/50">
-                  <CardContent className="p-4 text-sm text-muted-foreground">
-                    ${budget} ÷ ${cpm} CPM ≈ <span className="text-foreground font-semibold">{estimatedViews.toLocaleString()}</span> estimated views
+                  <CardContent className="p-4 text-sm text-muted-foreground space-y-2">
+                    <p>${budget} ÷ ${cpm} CPM ≈ <span className="text-foreground font-semibold">{estimatedViews.toLocaleString()}</span> estimated views</p>
+                    <p className="text-xs">Creators earn 80% of payout after 20% platform fee. You pay exactly ${budget || '0'} — no hidden costs.</p>
                   </CardContent>
                 </Card>
                 <div className="flex gap-3 pt-2">
