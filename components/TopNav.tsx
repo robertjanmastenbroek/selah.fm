@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import NotificationBell from '@/components/NotificationBell';
 
 const links = [
   { href: '/browse', label: 'Discover' },
@@ -64,7 +65,8 @@ export default function Header() {
         </div>
 
         {profile ? (
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative flex items-center gap-2" ref={dropdownRef}>
+            <NotificationBell />
             <button
               onClick={() => setOpen(!open)}
               className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-medium hover:bg-muted/80 transition-colors">
