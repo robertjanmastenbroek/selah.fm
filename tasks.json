@@ -1,20 +1,31 @@
 {
-  "updated": "2026-05-09T20:00:00.000000",
-  "versions_shipped": 11,
+  "updated": "2026-05-09T20:30:00.000000",
+  "versions_shipped": 12,
   "phases": [
     {"id": "foundation", "name": "Foundation", "done": true, "progress": "8/8"},
     {"id": "core_features", "name": "Core Features", "done": true, "progress": "8/8"},
     {"id": "ux_visual", "name": "UX & Visual Polish", "done": true, "progress": "12/12"},
     {"id": "onboarding", "name": "Onboarding & Social", "done": true, "progress": "6/6"},
-    {"id": "mvp_completion", "name": "MVP Completion", "done": false, "progress": "0/9"},
+    {"id": "mvp_completion", "name": "MVP Completion", "done": false, "progress": "5/9"},
     {"id": "launch", "name": "Launch Readiness", "done": false, "progress": "0/7"}
   ],
+  "mvp_completion_tasks": {
+    "payment_e2e": {"name": "Verify end-to-end payment flow", "done": true},
+    "budget_trigger": {"name": "Fix budget update trigger on payout_status change", "done": true},
+    "auto_payout": {"name": "Auto-payout on approval (payout_status → processing)", "done": true},
+    "ownership_check": {"name": "Add submission ownership check", "done": true},
+    "budget_exhaustion": {"name": "Handle budget exhaustion", "done": true},
+    "stripe_connect_error": {"name": "Handle missing Stripe Connect", "done": false},
+    "mobile_audit": {"name": "Mobile responsiveness audit", "done": false},
+    "e2e_tests": {"name": "Run E2E tests against production", "done": false},
+    "cron_views": {"name": "Set up cron job for YouTube view auto-updates", "done": false}
+  },
   "summary": {
     "total_tasks": 50,
-    "completed": 34,
-    "remaining": 16,
-    "pct_complete": 68,
+    "completed": 39,
+    "remaining": 11,
+    "pct_complete": 78,
     "current_phase": "MVP Completion",
-    "next_task": "Verify end-to-end payment flow (deposit → submit → review → payout → budget update)"
+    "next_task": "Stripe Connect prompt on earnings (done) → Mobile audit + E2E tests"
   }
 }
