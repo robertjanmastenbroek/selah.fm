@@ -9,12 +9,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface Submission {
   id: string;
-  creator: string;
+  creator_name: string;
   track_title: string;
   platform: string;
   content_url: string;
   views_verified: number;
   cpm_rate_cents: number;
+  max_payout_per_submission_cents: number;
   review_status: string;
 }
 
@@ -54,15 +55,18 @@ export default function ReviewPage() {
         ) : (
           <div className="space-y-4">
             {subs.map((s, i) => {
-              const cpm = (s.cpm_rate_cents || 300) / 100;
-              const gross = ((s.views_verified || 0) / 1000) * cpm;
-              const net = gross * 0.8;
+              const cpm = s.cpm_rate_cents / 100;
+              const views = s.views_verified || 0;
+              let gross = (views / 1000) * cpm;
+              const maxPayout = (s.max_payout_per_submission_cents || 0) / 100;
+              if (maxPayout > 0 && gross > maxPayout) gross = maxPayout;
+              const net = gross * 0.80;
               return (
                 <Card key={s.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-semibold">{s.creator || 'Creator'}</h3>
+                        <h3 className="font-semibold">{s.creator_name || 'Creator'}</h3>
                         <p className="text-muted-foreground text-sm">{s.track_title} · {s.platform}</p>
                       </div>
                       <Badge variant="secondary">{(s.views_verified || 0).toLocaleString()} views</Badge>
