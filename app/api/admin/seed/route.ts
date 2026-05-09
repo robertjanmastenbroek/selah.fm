@@ -39,9 +39,42 @@ export async function GET() {
       UPDATE campaigns SET cover_art_url = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80' WHERE track_title = 'Summer Nights' AND (cover_art_url IS NULL OR cover_art_url = '')
     `;
 
+    // Seed demo submissions if none exist
+    const subCount = await sql`SELECT count(*) FROM submissions`;
+    if (parseInt(subCount[0].count) === 0) {
+      // Insert submissions for the three main demo campaigns
+      const campaigns = await sql`SELECT id, cpm_rate_cents, total_budget_cents FROM campaigns LIMIT 3`;
+      if (campaigns.length >= 3) {
+        const creators = await sql`SELECT id FROM users WHERE user_type = 'creator' LIMIT 5`;
+        if (creators.length >= 3) {
+          const c1 = campaigns[0].id, c2 = campaigns[1].id, c3 = campaigns[2].id;
+          const cr1 = creators[0].id, cr2 = creators[1].id, cr3 = creators[2].id, cr4 = creators[3]?.id, cr5 = creators[4]?.id;
+          
+          // Campaign 1 submissions
+          await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, views_at_submit, submitted_at) VALUES (${c1}, ${cr1}, 'https://tiktok.com/@creator/video1', 'tiktok', 'pending', 'pending', 3200, 3200, NOW() - INTERVAL '2 hours') ON CONFLICT DO NOTHING`;
+          if (cr2) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, views_at_submit, submitted_at) VALUES (${c1}, ${cr2}, 'https://tiktok.com/@creator/video2', 'tiktok', 'pending', 'pending', 8900, 8900, NOW() - INTERVAL '1 hour') ON CONFLICT DO NOTHING`;
+          if (cr3) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at, reviewed_at) VALUES (${c1}, ${cr3}, 'https://instagram.com/reel/demo3', 'instagram', 'approved', 'processing', 12400, 2976, 12400, NOW() - INTERVAL '3 days', NOW() - INTERVAL '2 days') ON CONFLICT DO NOTHING`;
+          if (cr1) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at, reviewed_at) VALUES (${c1}, ${cr1}, 'https://tiktok.com/@creator/video4', 'tiktok', 'approved', 'paid', 28500, 6840, 28500, NOW() - INTERVAL '7 days', NOW() - INTERVAL '5 days') ON CONFLICT DO NOTHING`;
+          if (cr4) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at, reviewed_at) VALUES (${c1}, ${cr4}, 'https://youtube.com/shorts/demo5', 'youtube', 'approved', 'paid', 15200, 3648, 15200, NOW() - INTERVAL '5 days', NOW() - INTERVAL '3 days') ON CONFLICT DO NOTHING`;
+          if (cr5) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, views_at_submit, submitted_at, reviewed_at) VALUES (${c1}, ${cr5}, 'https://tiktok.com/@creator/video6', 'tiktok', 'rejected', 'pending', 2100, 2100, NOW() - INTERVAL '4 days', NOW() - INTERVAL '3 days') ON CONFLICT DO NOTHING`;
+          
+          // Campaign 2 submissions
+          if (cr2) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, views_at_submit, submitted_at) VALUES (${c2}, ${cr2}, 'https://tiktok.com/@creator/video7', 'tiktok', 'pending', 'pending', 5600, 5600, NOW() - INTERVAL '30 minutes') ON CONFLICT DO NOTHING`;
+          if (cr4) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at, reviewed_at) VALUES (${c2}, ${cr4}, 'https://youtube.com/shorts/demo8', 'youtube', 'approved', 'paid', 22300, 4460, 22300, NOW() - INTERVAL '6 days', NOW() - INTERVAL '4 days') ON CONFLICT DO NOTHING`;
+          if (cr1) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at, reviewed_at) VALUES (${c2}, ${cr1}, 'https://instagram.com/reel/demo9', 'instagram', 'approved', 'paid', 9100, 1820, 9100, NOW() - INTERVAL '8 days', NOW() - INTERVAL '6 days') ON CONFLICT DO NOTHING`;
+          
+          // Campaign 3 submissions
+          if (cr3) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at, reviewed_at) VALUES (${c3}, ${cr3}, 'https://tiktok.com/@creator/video10', 'tiktok', 'approved', 'paid', 45100, 12628, 45100, NOW() - INTERVAL '10 days', NOW() - INTERVAL '8 days') ON CONFLICT DO NOTHING`;
+          if (cr5) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at, reviewed_at) VALUES (${c3}, ${cr5}, 'https://tiktok.com/@creator/video11', 'tiktok', 'approved', 'paid', 18300, 5124, 18300, NOW() - INTERVAL '9 days', NOW() - INTERVAL '7 days') ON CONFLICT DO NOTHING`;
+          if (cr2) await sql`INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, views_at_submit, submitted_at) VALUES (${c3}, ${cr2}, 'https://tiktok.com/@creator/video12', 'tiktok', 'pending', 'pending', 12500, 12500, NOW() - INTERVAL '4 hours') ON CONFLICT DO NOTHING`;
+        }
+      }
+    }
+
     const users = await sql`SELECT count(*) FROM users`;
     const campaigns = await sql`SELECT count(*) FROM campaigns`;
-    return NextResponse.json({ seeded: true, users: users[0].count, campaigns: campaigns[0].count });
+    const submissions = await sql`SELECT count(*) FROM submissions`;
+    return NextResponse.json({ seeded: true, users: users[0].count, campaigns: campaigns[0].count, submissions: submissions[0].count });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
