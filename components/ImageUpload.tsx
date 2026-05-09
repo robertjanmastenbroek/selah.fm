@@ -37,7 +37,7 @@ export default function ImageUpload({ onImage, currentImage }: ImageUploadProps)
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
       className={`relative rounded-2xl border-2 border-dashed transition-all cursor-pointer overflow-hidden
-        ${preview ? 'border-transparent' : dragging ? 'border-gold bg-gold/5' : 'border-white/10 hover:border-white/20'}
+        ${preview ? 'border-transparent' : dragging ? 'border-accent bg-accent/5' : 'border-border hover:border-muted-foreground/30'}
         ${preview ? 'aspect-[16/9]' : 'h-48'}`}
     >
       {preview ? (
@@ -48,10 +48,10 @@ export default function ImageUpload({ onImage, currentImage }: ImageUploadProps)
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center h-full text-muted">
+        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
           <div className="text-3xl mb-2">🖼️</div>
           <div className="text-sm font-medium">Drop cover art here</div>
-          <div className="text-xs mt-1 text-muted/60">or click to browse</div>
+          <div className="text-xs mt-1 text-muted-foreground/60">or click to browse</div>
         </div>
       )}
       <input ref={fileRef} type="file" accept="image/*" className="hidden"

@@ -20,7 +20,7 @@ export default function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background border-t border-border">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background border-t">
       <div className="flex items-center justify-around h-16 pt-1 pb-2">
         {TABS.map(({ href, label, icon }) => {
           const active = isActive(href);
@@ -29,7 +29,7 @@ export default function BottomNav() {
               key={href}
               href={href}
               className={`flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-all duration-200
-                ${active ? 'text-gold' : 'text-muted-foreground hover:text-foreground'}`}
+                ${active ? 'text-accent-foreground' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <span className={`text-xl transition-transform duration-200 ${active ? 'scale-110' : ''}`}>
                 {icon}

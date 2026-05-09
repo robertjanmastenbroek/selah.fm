@@ -18,6 +18,13 @@ CREATE TABLE users (
     instagram_handle TEXT,
     youtube_handle  TEXT,
     
+    -- Creator profile (marketplace directory)
+    bio                     TEXT,
+    genres                  TEXT,           -- comma-separated: "pop,electronic,indie"
+    preferred_cpm_cents     INTEGER,
+    profile_image_url       TEXT,
+    acceptance_rate         REAL DEFAULT 0, -- computed: approved / total submissions
+    
     -- Stripe
     stripe_customer_id      TEXT,
     stripe_connect_id       TEXT,   -- for creator payouts
@@ -184,6 +191,25 @@ LEFT JOIN submissions s ON s.creator_id = u.id AND s.payout_status = 'paid'
 WHERE u.user_type = 'creator'
 GROUP BY u.id, u.display_name;
 
+-- Creator stats (for marketplace directory — includes acceptance rate)
+CREATE VIEW creator_stats AS
+SELECT
+    u.id AS creator_id,
+    u.display_name,
+    COUNT(s.id) AS total_submissions,
+    COUNT(s.id) FILTER (WHERE s.review_status = 'approved') AS approved_submissions,
+    COALESCE(SUM(s.views_verified), 0) AS total_verified_views,
+    COALESCE(SUM(s.payout_amount_cents), 0) AS total_earned_cents,
+    CASE 
+        WHEN COUNT(s.id) > 0 
+        THEN ROUND(COUNT(s.id) FILTER (WHERE s.review_status = 'approved')::numeric / COUNT(s.id)::numeric, 2)
+        ELSE 0
+    END AS acceptance_rate
+FROM users u
+LEFT JOIN submissions s ON s.creator_id = u.id
+WHERE u.user_type = 'creator'
+GROUP BY u.id, u.display_name;
+
 -- ─── Functions ───────────────────────────────────────────────────────────────
 
 -- Auto-update budget_remaining when a payout is processed
@@ -212,6 +238,23 @@ CREATE TRIGGER trigger_update_budget
     FOR EACH ROW
     WHEN (NEW.payout_status IS DISTINCT FROM OLD.payout_status)
     EXECUTE FUNCTION update_budget_remaining();
+
+-- ─── Notifications ───────────────────────────────────────────────────────────
+
+CREATE TABLE notifications (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID NOT NULL REFERENCES users(id),
+    type            TEXT NOT NULL CHECK (type IN ('submission', 'approval', 'rejection', 'earning', 'payout', 'system')),
+    message         TEXT NOT NULL,
+    read            BOOLEAN NOT NULL DEFAULT false,
+    link            TEXT,                   -- relative URL e.g. '/review' or '/earnings'
+    metadata        JSONB DEFAULT '{}',     -- { campaign_id, submission_id, amount_cents }
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_notifications_user ON notifications(user_id);
+CREATE INDEX idx_notifications_user_unread ON notifications(user_id) WHERE read = false;
+CREATE INDEX idx_notifications_created ON notifications(created_at DESC);
 
 -- ─── Seed data (for development) ─────────────────────────────────────────────
 

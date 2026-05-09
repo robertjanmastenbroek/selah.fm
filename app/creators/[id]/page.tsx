@@ -118,7 +118,7 @@ export default function CreatorProfilePage() {
           <CardContent className="p-5 text-center space-y-3">
             <h3 className="font-semibold">Want this creator to promote your music?</h3>
             <p className="text-sm text-muted-foreground">Hire them for your campaign at their CPM rate or negotiate a custom offer.</p>
-            <Button className="w-full" onClick={() => window.location.href = '/dashboard'}>Hire this creator</Button>
+            <Button className="w-full" onClick={() => window.location.href = `/dashboard?hire=${creator.id}&cpm=${creator.preferred_cpm_cents}&name=${encodeURIComponent(creator.display_name)}`}>Hire this creator</Button>
           </CardContent>
         </Card>
       </main>

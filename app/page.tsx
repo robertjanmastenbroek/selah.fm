@@ -3,9 +3,25 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/TopNav';
+import TrustBadges from '@/components/TrustBadges';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Selah.fm',
+  description: 'Music promotion marketplace — pay creators for TikTok, Reels, and Shorts based on verified views.',
+  applicationCategory: 'MarketplaceApplication',
+  operatingSystem: 'Web',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    description: 'Free to start. Pay only for verified views.',
+  },
+};
 
 export default function HomePage() {
   const [calcViews, setCalcViews] = useState('10000');
@@ -15,6 +31,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
 
       {/* ── Hero — dual audience ── */}
@@ -23,6 +43,9 @@ export default function HomePage() {
           <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="inline-flex items-center gap-1.5 bg-accent/10 text-accent-foreground text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
               Early access — join 200+ artists already running campaigns
+            </div>
+            <div className="flex justify-center mb-8">
+              <TrustBadges />
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-[1.1]">
               Get your music<br />

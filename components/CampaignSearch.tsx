@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) => void }) {
   const [open, setOpen] = useState(false);
@@ -15,22 +17,44 @@ export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) 
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} className="btn-ghost text-sm">
+      <button
+        onClick={() => setOpen(!open)}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg hover:bg-muted transition-colors"
+      >
         🔍 Search
       </button>
       {open && (
-        <div className="absolute top-12 right-0 w-72 bg-bg-secondary border border-border rounded-xl p-4 shadow-xl z-50 space-y-3">
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Track name..." className="input-field" />
-          <select value={platform} onChange={e => setPlatform(e.target.value)} className="input-field">
+        <div className="absolute top-12 right-0 w-72 bg-popover border rounded-xl p-4 shadow-xl z-50 space-y-3">
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Track name..." />
+          <select
+            value={platform}
+            onChange={e => setPlatform(e.target.value)}
+            className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+          >
             <option value="">All platforms</option>
             <option value="tiktok">TikTok</option>
             <option value="instagram">Instagram</option>
             <option value="youtube">YouTube</option>
           </select>
-          <input value={minCpm} onChange={e => setMinCpm(e.target.value)} placeholder="Min CPM ($)" type="number" className="input-field" />
+          <Input
+            value={minCpm}
+            onChange={e => setMinCpm(e.target.value)}
+            placeholder="Min CPM ($)"
+            type="number"
+          />
           <div className="flex gap-2">
-            <button onClick={apply} className="btn-primary text-sm flex-1">Apply</button>
-            <button onClick={() => { setSearch(''); setPlatform(''); setMinCpm(''); onFilter({}); setOpen(false); }} className="btn-ghost text-sm flex-1">Clear</button>
+            <Button onClick={apply} size="sm" className="flex-1">Apply</Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-1"
+              onClick={() => {
+                setSearch(''); setPlatform(''); setMinCpm('');
+                onFilter({}); setOpen(false);
+              }}
+            >
+              Clear
+            </Button>
           </div>
         </div>
       )}
