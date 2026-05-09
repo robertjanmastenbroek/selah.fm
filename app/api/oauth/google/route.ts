@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 function createSession(user: { email: string; name: string; picture: string }) {
   const crypto = require('crypto');
-  const payload = Buffer.from(JSON.stringify({ ...user, type: 'creator' })).toString('base64');
+  const payload = Buffer.from(JSON.stringify(user)).toString('base64');
   const sig = crypto.createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback').update(payload).digest('hex');
   return `${payload}.${sig}`;
 }

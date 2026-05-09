@@ -4,7 +4,6 @@ import { useState } from 'react';
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [type, setType] = useState<'artist' | 'creator'>('artist');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -17,7 +16,7 @@ export default function LoginPage() {
     setError('');
 
     const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
-    const body: any = { email, password, type };
+    const body: any = { email, password, type: 'creator' };
     if (mode === 'signup') body.name = name || email.split('@')[0];
 
     const res = await fetch(endpoint, {
@@ -28,7 +27,7 @@ export default function LoginPage() {
     const data = await res.json();
 
     if (data.ok) {
-      window.location.href = type === 'artist' ? '/dashboard' : '/browse';
+      window.location.href = '/dashboard';
     } else {
       setError(data.error || 'Something went wrong');
       setLoading(false);
@@ -38,20 +37,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-void flex flex-col items-center justify-center px-4">
       <div className="text-center mb-10">
-        <div className="font-display text-gold text-2xl mb-2">SendMusic.io</div>
+        <div className="font-display text-gold text-3xl mb-2">SendMusic.io</div>
         <p className="text-muted text-sm">
           {mode === 'login' ? 'Welcome back' : 'Create your account'}
         </p>
-      </div>
-
-      <div className="flex bg-void-card rounded-xl p-1 mb-6 w-full max-w-sm">
-        {(['artist', 'creator'] as const).map((t) => (
-          <button key={t} onClick={() => setType(t)}
-            className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all
-              ${type === t ? 'bg-gold text-void' : 'text-muted hover:text-ivory'}`}>
-            {t === 'artist' ? '🎵 Artist' : '📱 Creator'}
-          </button>
-        ))}
+        <p className="text-muted/60 text-xs mt-2">Create campaigns. Browse music. Earn from views. One account does it all.</p>
       </div>
 
       {error && (
@@ -79,21 +69,18 @@ export default function LoginPage() {
         {mode === 'signup' && (
           <input type="text" value={name} onChange={(e) => setName(e.target.value)}
             placeholder="Display name" required
-            className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg
-                       placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
+            className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
         )}
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
           placeholder="Email" required
-          className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg
-                     placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
+          className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
           placeholder="Password" required
-          className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg
-                     placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
+          className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
 
         <button type="submit" disabled={loading}
           className="btn-gold w-full text-lg !py-3.5 !rounded-xl">
-          {loading ? '...' : mode === 'login' ? `Log in` : `Create account`}
+          {loading ? '...' : mode === 'login' ? 'Log in' : 'Create account'}
         </button>
       </form>
 
