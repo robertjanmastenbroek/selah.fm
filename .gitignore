@@ -43,3 +43,4 @@ public/images/u*.png
 
 # Railway
 .railway/
+tsconfig.tsbuildinfo
