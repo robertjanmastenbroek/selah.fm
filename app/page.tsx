@@ -112,27 +112,28 @@ export default function HomePage() {
         <div className="page-container">
           <div className="text-center max-w-lg mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Simple, transparent fees.</h2>
-            <p className="text-muted-foreground text-lg">Fee is taken from creator payouts, not added to your budget. The more you spend, the less they pay.</p>
+            <p className="text-muted-foreground text-lg">20% platform fee on creator payouts. Artists pay exactly what they budget — never more.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              { spend: '$0–$500', fee: '20%', desc: 'You\'re getting started. Creators earn 80% of payouts.' },
-              { spend: '$500–$2K', fee: '15%', desc: 'You\'re growing. Creators earn 85% on your campaigns.' },
-              { spend: '$2,000+', fee: '10%', desc: 'You\'re scaling. Creators earn 90% — best rates.' },
-            ].map((t, i) => (
-              <Card key={i} className={`relative overflow-hidden ${i === 1 ? 'ring-2 ring-accent-foreground shadow-lg' : ''}`}>
-                {i === 1 && <div className="absolute top-0 inset-x-0 h-1 bg-accent-foreground" />}
-                <CardContent className="p-8 text-center space-y-4">
-                  <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Artist monthly spend</p>
-                  <p className="text-2xl font-bold">{t.spend}</p>
-                  <p className="text-5xl font-bold text-accent-foreground tracking-tight">{t.fee}</p>
-                  <p className="text-sm text-muted-foreground font-medium">creator fee</p>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{t.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="max-w-md mx-auto">
+            <Card className="text-center">
+              <CardContent className="p-10 space-y-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Artist budget</p>
+                  <p className="text-4xl font-bold">$500</p>
+                </div>
+                <div className="flex items-center justify-center gap-3 text-muted-foreground">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-sm">20% platform fee</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Creator earns</p>
+                  <p className="text-4xl font-bold text-accent-foreground">$400</p>
+                </div>
+                <p className="text-sm text-muted-foreground">Fee is taken from the creator side. Artists never pay above their budget.</p>
+              </CardContent>
+            </Card>
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-8">Artists always pay exactly what they budget. Selah never adds fees on top.</p>
         </div>
       </section>
 
