@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import TopNav from '@/components/TopNav';
+import Header from '@/components/TopNav';
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<{ name?: string; email?: string } | null>(null);
@@ -21,7 +21,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <TopNav />
+      <Header />
       <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Settings</h1>

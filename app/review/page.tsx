@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import TopNav from '@/components/TopNav';
+import Header from '@/components/TopNav';
 
 interface Submission {
   id: string;
@@ -44,7 +44,7 @@ export default function ReviewPage() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <TopNav />
+      <Header />
       <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Review</h1>
