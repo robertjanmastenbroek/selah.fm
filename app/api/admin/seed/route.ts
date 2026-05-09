@@ -3,6 +3,10 @@ import sql from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
+    // ── Ensure schema exists (create tables if missing) ──────
+    await sql`CREATE TABLE IF NOT EXISTS notifications (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL, type TEXT NOT NULL, message TEXT NOT NULL, read BOOLEAN NOT NULL DEFAULT false, link TEXT, metadata JSONB DEFAULT '{}', created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id)`;
+
     // ── Always start clean: delete all demo data ──────────────
     await sql`DELETE FROM submissions WHERE content_url LIKE '%tiktok.com%' OR content_url LIKE '%youtube.com%' OR content_url LIKE '%instagram.com%'`;
     await sql`DELETE FROM campaigns WHERE track_title ILIKE '%midnight%' OR track_title ILIKE '%desert%' OR track_title ILIKE '%summer%' OR track_title ILIKE '%neon%' OR track_title ILIKE '%crystal%' OR track_title ILIKE '%bass%' OR track_title IN ('test', 'A', 'test campaign') OR artist_id IS NULL`;
