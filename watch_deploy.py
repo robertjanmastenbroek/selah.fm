@@ -24,7 +24,7 @@ def get_latest_commit():
 def deploy():
     print(f"  🚀 Deploying to Railway...")
     subprocess.run(["npm", "run", "build"], cwd=AGENT_DIR, capture_output=True)
-    result = subprocess.run(["railway", "up", "--service", "sendmusic-io"],
+    result = subprocess.run(["railway", "up", "--service", "selah-fm"],
                             cwd=AGENT_DIR, capture_output=True, text=True)
     print(f"  ✅ Deployed — {datetime.now().strftime('%H:%M:%S')}")
     return result.returncode == 0
