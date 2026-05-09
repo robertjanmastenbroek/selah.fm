@@ -31,6 +31,9 @@ export default function DashboardPage() {
   const [cpm, setCpm] = useState('1');
   const [budget, setBudget] = useState('25');
   const [maxPayout, setMaxPayout] = useState('10');
+  const [driveUrl, setDriveUrl] = useState('');
+  const [hashtags, setHashtags] = useState('#sendmusicio');
+  const [requirements, setRequirements] = useState('');
 
   useEffect(() => {
     fetch('/api/campaigns').then(r => r.json()).then(data => {
@@ -61,7 +64,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/campaigns', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout) }),
+        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements }),
       });
       const data = await res.json();
       if (!data.error && data.id) newCamp.id = data.id;
@@ -112,14 +115,31 @@ export default function DashboardPage() {
                   <p className="text-text-muted text-sm">Tell creators what they'll be promoting.</p>
                 </div>
                 <div>
-                  <label className="text-sm text-muted/60 mb-1.5 block">Track name</label>
+                  <label className="text-sm text-text-muted mb-1.5 block">Track name</label>
                   <input value={trackTitle} onChange={(e) => setTrackTitle(e.target.value)}
                     placeholder="My Song Title" className="input-field" />
                 </div>
                 <div>
-                  <label className="text-sm text-muted/60 mb-1.5 block">Track link</label>
+                  <label className="text-sm text-text-muted mb-1.5 block">Track link</label>
                   <input value={trackUrl} onChange={(e) => setTrackUrl(e.target.value)}
                     placeholder="spotify.com/track/..." className="input-field" />
+                </div>
+                <div>
+                  <label className="text-sm text-text-muted mb-1.5 block">Google Drive link (optional)</label>
+                  <input value={driveUrl} onChange={(e) => setDriveUrl(e.target.value)}
+                    placeholder="drive.google.com/... — creator assets" className="input-field" />
+                </div>
+                <div>
+                  <label className="text-sm text-text-muted mb-1.5 block">Recommended hashtags</label>
+                  <input value={hashtags} onChange={(e) => setHashtags(e.target.value)}
+                    placeholder="#sendmusicio #newmusic" className="input-field" />
+                  <p className="text-text-muted text-xs mt-1">Creators are encouraged to use these when posting.</p>
+                </div>
+                <div>
+                  <label className="text-sm text-text-muted mb-1.5 block">Requirements (optional)</label>
+                  <textarea value={requirements} onChange={(e) => setRequirements(e.target.value)}
+                    placeholder="Minimum video length, tone, specific instructions..."
+                    className="input-field !h-20 resize-none" />
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => setWizardStep(1)} className="btn-secondary flex-1">Back</button>
@@ -137,7 +157,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-muted/60 mb-1.5 block">CPM ($/1K views)</label>
+                    <label className="text-sm text-text-muted mb-1.5 block">CPM ($/1K views)</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
                       <input value={cpm} onChange={(e) => setCpm(e.target.value)}
@@ -145,7 +165,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm text-muted/60 mb-1.5 block">Budget ($)</label>
+                    <label className="text-sm text-text-muted mb-1.5 block">Budget ($)</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
                       <input value={budget} onChange={(e) => setBudget(e.target.value)}
@@ -154,14 +174,14 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm text-muted/60 mb-1.5 block">Max payout per submission ($)</label>
+                  <label className="text-sm text-text-muted mb-1.5 block">Max payout per submission ($)</label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
                     <input value={maxPayout} onChange={(e) => setMaxPayout(e.target.value)}
                       type="number" min="1" className="input-field pl-8" />
                   </div>
                 </div>
-                <div className="card p-4 text-sm text-muted/60">
+                <div className="card p-4 text-sm text-text-muted">
                   <span className="text-gold font-medium">${budget}</span> ÷ <span className="text-gold font-medium">${cpm}</span> CPM ≈ <span className="text-text font-semibold">{estimatedViews.toLocaleString()}</span> estimated views
                 </div>
                 <div className="flex gap-3 pt-2">
