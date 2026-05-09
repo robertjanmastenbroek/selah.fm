@@ -3,7 +3,7 @@ let _sql: any = null;
 function getSql() {
   if (!_sql) {
     const { neon } = require('@neondatabase/serverless');
-    _sql = neon(process.env.DATABASE_URL || 'postgresql://localhost/nodb');
+    _sql = neon(process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL || 'postgresql://localhost/nodb');
   }
   return _sql;
 }
