@@ -161,7 +161,7 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
             )}
 
             {(campaign as any).require_ftc && (
-              <Badge className="text-xs bg-amber-500/10 text-amber-400 border-amber-500/20">FTC disclosure required (#ad, #paidpartner)</Badge>
+              <Badge className="text-xs bg-warning/10 text-warning border-warning/20">FTC disclosure required (#ad, #paidpartner)</Badge>
             )}
 
             {(campaign as any).caption_requirements && (

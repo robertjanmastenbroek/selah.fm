@@ -192,7 +192,7 @@ export default function HomePage() {
           {/* 3 product screenshots side by side */}
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {[
-              { title: 'Create a campaign', desc: 'Upload your track, set a CPM rate and budget. Add hashtags and creative requirements.', color: 'from-amber-500/20 to-amber-600/10', accent: 'bg-amber-500' },
+              { title: 'Create a campaign', desc: 'Upload your track, set a CPM rate and budget. Add hashtags and creative requirements.', color: 'from-primary/20 to-primary/10', accent: 'bg-primary' },
               { title: 'Creators make content', desc: 'Creators browse your campaign, pick tracks they love, and create TikToks, Reels, or Shorts.', color: 'from-violet-500/20 to-violet-600/10', accent: 'bg-violet-500' },
               { title: 'Review & pay for views', desc: 'Watch every submission. Approve what you like. Pay only for verified views. Budget stays safe.', color: 'from-emerald-500/20 to-emerald-600/10', accent: 'bg-emerald-500' },
             ].map((s, i) => (
@@ -274,7 +274,7 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: 'Marcus J.', role: 'Electronic Producer', quote: 'Finally a platform where I actually see what I\'m paying for. I approved 12 videos last month and my track hit 80K streams. The CPM model just makes sense.', color: 'from-amber-500/10 to-amber-600/5' },
+              { name: 'Marcus J.', role: 'Electronic Producer', quote: 'Finally a platform where I actually see what I\'m paying for. I approved 12 videos last month and my track hit 80K streams. The CPM model just makes sense.', color: 'from-primary/10 to-primary/5' },
               { name: 'Mia J.', role: 'TikTok Creator · 28K', quote: 'I love that I can browse campaigns and pick tracks that fit my style. Made $340 last month from 3 videos. Way better than brand deals that take weeks to close.', color: 'from-violet-500/10 to-violet-600/5' },
               { name: 'Sarah K.', role: 'Christian EDM Artist', quote: 'I wasted $1,500 on playlist pitching last year. On Selah, I spent $200 and got 6 great videos from real creators. The approval flow means I never pay for content I don\'t like.', color: 'from-emerald-500/10 to-emerald-600/5' },
             ].map((t, i) => (
