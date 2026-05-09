@@ -450,6 +450,8 @@ export default function HomePage() {
             <Link href="/artists" className="hover:text-foreground transition-colors">Artists</Link>
             <span className="text-border">·</span>
             <Link href="/creators" className="hover:text-foreground transition-colors">Creators</Link>
+            <span className="text-border">·</span>
+            <Link href="/content-guidelines" className="hover:text-foreground transition-colors">Guidelines</Link>
           </div>
         </div>
       </section>
