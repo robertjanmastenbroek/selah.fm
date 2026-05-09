@@ -2,57 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   SELAH.FM — Dark Mode Only Design System
+   "Selah" = pause, reflect. The UI should feel like a calm sanctuary.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 43 74% 49%;
-    --accent-foreground: 43 74% 35%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --radius: 0.75rem;
+    /* ── Surface palette (luminance-based elevation) ──────────── */
+    --background: 0 0% 5%;           /* #0D0D0D — near-OLED black */
+    --foreground: 0 0% 94%;          /* #F0F0F0 — off-white, AAA 17:1 */
+    --card: 0 0% 10%;               /* #1A1A1A — elevation level 1 */
+    --card-foreground: 0 0% 94%;
+    --popover: 0 0% 14%;             /* #242424 — elevation level 2 */
+    --popover-foreground: 0 0% 94%;
+
+    /* ── Accent (coral — warm, optimistic, rewarding) ─────────── */
+    --primary: 11 100% 78%;           /* #FF9F8C — coral */
+    --primary-foreground: 0 0% 5%;
+    --secondary: 0 0% 16%;           /* #2A2A2A */
+    --secondary-foreground: 0 0% 63%; /* #A0A0A0 */
+    --muted: 0 0% 10%;               /* #1A1A1A */
+    --muted-foreground: 0 0% 33%;    /* #555555 */
+    --accent: 11 100% 78%;            /* #FF9F8C — same as primary */
+    --accent-foreground: 0 0% 5%;
+
+    /* ── Semantic ─────────────────────────────────────────────── */
+    --destructive: 0 65% 77%;        /* #EF9A9A — soft, not alarming */
+    --destructive-foreground: 0 0% 5%;
+    --border: 0 0% 100% / 0.06;      /* almost invisible */
+    --input: 0 0% 10%;
+    --ring: 11 100% 78%;             /* focus ring = coral */
+    --radius: 0.5rem;
+
+    /* ── Extended semantic tokens ─────────────────────────────── */
+    --success: 123 46% 64%;           /* #81C784 */
+    --success-foreground: 0 0% 5%;
+    --warning: 45 100% 65%;           /* #FFD54F */
+    --warning-foreground: 0 0% 5%;
+    --accent-glow: 11 100% 78% / 0.15;
+
+    /* ── Typography ───────────────────────────────────────────── */
+    --line-height-body: 1.6;
+    --heading-weight: 600;
   }
 
+  /* ── Base element resets ────────────────────────────────────── */
   * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Selection highlight */
+  ::selection {
+    background: rgba(255, 159, 140, 0.25);
+    color: #F0F0F0;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+
+  /* Focus ring — keyboard only */
+  :focus-visible {
+    @apply outline-none ring-2 ring-[hsl(var(--ring))] ring-offset-2 ring-offset-background;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENT LAYER
+   ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
   .page-container { @apply max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12; }
   .section-title { @apply text-2xl md:text-3xl font-bold tracking-tight; }
-  
-  /* Glass card — frosted glass effect */
-  .card-glass {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
-  }
-  
-  /* Gradient card — subtle amber glow */
-  .card-gradient {
-    @apply rounded-2xl border border-accent/10;
-    background: linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 50%);
-  }
-  
-  /* Campaign grid — responsive masonry-like grid */
+
+  /* Campaign grid */
   .campaign-grid {
     @apply grid gap-4 sm:gap-6;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
+
+  /* Card hover lift */
+  .hover-lift {
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    background-color: hsl(0 0% 12%);
+  }
+
+  /* Ripple effect container */
+  .ripple-container {
+    position: relative;
+    overflow: hidden;
+  }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY LAYER — ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
 @layer utilities {
   .animate-slide-up {
     animation: slideUp 0.3s ease-out forwards;
@@ -60,64 +124,75 @@
     transform: translateY(8px);
   }
   .animate-fade-in {
-    animation: fadeIn 0.2s ease-out forwards;
+    animation: fadeIn 0.25s ease-out forwards;
     opacity: 0;
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 @keyframes slideUp {
   to { opacity: 1; transform: translateY(0); }
 }
+
 @keyframes fadeIn {
   to { opacity: 1; }
 }
 
-/* Landing page animations */
+/* Floating orbs (landing page) */
 @keyframes float {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-20px) scale(1.05); }
 }
 
+/* Gradient shimmer (headlines) */
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
+/* Skeleton shimmer (dark mode) */
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, hsl(var(--muted)) 25%, rgba(255,255,255,0.03) 50%, hsl(var(--muted)) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+
+/* Micro-reward: success breathe */
+@keyframes breathe {
+  0% { box-shadow: 0 0 0 0 rgba(255, 159, 140, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 159, 140, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 159, 140, 0); }
+}
+.animate-breathe {
+  animation: breathe 0.8s ease-out;
+}
+
+/* Micro-reward: error shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.3s ease-out;
+}
+
+/* Micro-reward: pulse glow */
 @keyframes pulseGlow {
   0%, 100% { opacity: 0.4; transform: scale(1); }
   50% { opacity: 0.8; transform: scale(1.05); }
 }
 
-/* ─── Micro-interactions ─────────────────────────────────────────── */
-
-/* Button press */
-button:active:not([disabled]), 
-a:active:not([disabled]) {
-  transform: scale(0.97) !important;
-  transition: transform 0.1s ease !important;
-}
-
-/* Card hover lift */
-.hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-}
-
-/* Skeleton shimmer */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.animate-shimmer {
-  background: linear-gradient(90deg, hsl(var(--muted)) 25%, hsl(var(--muted-foreground)/0.08) 50%, hsl(var(--muted)) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-/* Toast enter animation */
+/* Toast enter/exit */
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(16px) scale(0.95); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -125,4 +200,24 @@ a:active:not([disabled]) {
 @keyframes toastOut {
   from { opacity: 1; transform: translateY(0) scale(1); }
   to { opacity: 0; transform: translateY(-8px) scale(0.95); }
+}
+
+/* Ripple */
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 159, 140, 0.3);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+/* ── Button press (global) ────────────────────────────────────── */
+button:active:not([disabled]),
+a:active:not([disabled]) {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
 }
