@@ -14,13 +14,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Selah.fm — Music Promotion Marketplace | Pay Creators for TikTok, Reels & Shorts',
-    description: 'Get paid to post music you love. The transparent CPM marketplace for music promotion.',
+    description: 'Set your CPM rate, approve every video, and pay only for verified views. The transparent marketplace for music promotion on TikTok, Reels, and Shorts.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Selah.fm — Music Promotion Marketplace | Pay Creators for TikTok, Reels & Shorts',
-    description: 'Get paid to post music you love.',
+    description: 'Set your CPM, approve every video, pay only for verified views.',
   },
 };
 
