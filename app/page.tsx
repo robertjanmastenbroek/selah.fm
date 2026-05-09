@@ -28,8 +28,8 @@ export default function HomePage() {
                   Now in beta
                 </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]">
-                  Ancient Truth.<br />
-                  <span className="text-accent-foreground">Future Sound.</span>
+                  Get your music<br />
+                  <span className="text-accent-foreground">heard.</span>
                 </h1>
                 <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
                   Get paid to post music you love. Get your music heard. The transparent CPM marketplace where artists and creators connect.
