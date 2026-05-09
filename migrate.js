@@ -1,3 +1,8 @@
+#!/usr/bin/env node
+/**
+ * Selah.fm — Database Migration Helper
+ * Usage: node migrate.js [DATABASE_URL]
+ */
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
@@ -6,6 +11,7 @@ const DB_URL = process.argv[2] || process.env.DATABASE_URL;
 
 if (!DB_URL) {
   console.error('Usage: node migrate.js <postgresql://...>');
+  console.error('   or: DATABASE_URL=postgresql://... node migrate.js');
   process.exit(1);
 }
 
@@ -14,6 +20,10 @@ async function main() {
   const client = await pool.connect();
   
   const schemaPath = path.join(__dirname, 'lib', 'db', 'schema.sql');
+  if (!fs.existsSync(schemaPath)) {
+    console.error(`Schema file not found: ${schemaPath}`);
+    process.exit(1);
+  }
   const schema = fs.readFileSync(schemaPath, 'utf8');
 
   console.log('Running schema...\n');
@@ -40,7 +50,7 @@ async function main() {
         await client.query(stmt);
         ok++;
       } catch (se) {
-        if (se.message?.includes('already exists') || se.message?.includes('duplicate') || se.message?.includes('syntax error')) {
+        if (se.message?.includes('already exists') || se.message?.includes('duplicate')) {
           skipped++;
         } else {
           console.error('❌', stmt.substring(0, 80).replace(/\n/g, ' '), se.message?.substring(0, 100));

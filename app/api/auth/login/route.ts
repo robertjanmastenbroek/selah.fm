@@ -2,12 +2,18 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import crypto from 'crypto';
 import { setSessionCookie } from '@/lib/auth';
+import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 
 function hashPassword(password: string): string {
   return crypto.createHash('sha256').update(password + 'selah-salt').digest('hex');
 }
 
 export async function POST(request: Request) {
+  const rl = rateLimit(getRateLimitKey(request), { maxRequests: 10, windowMs: 60_000 });
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
+  }
+
   const { email, password } = await request.json();
   if (!email || !password) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });

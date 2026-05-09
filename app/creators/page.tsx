@@ -24,16 +24,31 @@ interface Creator {
 
 export default function CreatorsPage() {
   const [creators, setCreators] = useState<Creator[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [hiring, setHiring] = useState<string | null>(null);
   const [offerCpm, setOfferCpm] = useState<Record<string, string>>({});
+  const [searchText, setSearchText] = useState('');
 
-  useEffect(() => {
-    fetch('/api/creators')
+  const fetchCreators = (search = '') => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    fetch(`/api/creators?${params}`)
       .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setCreators(data); })
+      .then(data => {
+        setCreators(data.creators || []);
+        setTotal(data.total || 0);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchCreators(); }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchCreators(searchText);
+  };
 
   const hireCreator = async (creatorId: string) => {
     const cpm = offerCpm[creatorId];
@@ -56,8 +71,18 @@ export default function CreatorsPage() {
       <main className="page-container">
         <div className="mb-8">
           <h1 className="section-title mb-1">Creators</h1>
-          <p className="text-muted-foreground text-sm">Find the right creators for your music.</p>
+          <p className="text-muted-foreground text-sm">{total} creators available</p>
         </div>
+
+        <form onSubmit={handleSearch} className="mb-6">
+          <input
+            type="text"
+            value={searchText}
+            onChange={e => setSearchText(e.target.value)}
+            placeholder="Search by name, genre, or bio..."
+            className="w-full border rounded-lg px-4 py-2.5 text-sm bg-background"
+          />
+        </form>
 
         {loading ? (
           <div className="campaign-grid">
@@ -66,82 +91,83 @@ export default function CreatorsPage() {
         ) : creators.length === 0 ? (
           <Card className="text-center py-16"><CardContent><p className="text-4xl mb-4 opacity-10">🎬</p><h2 className="text-lg font-medium">No creators yet</h2><p className="text-muted-foreground text-sm">Creators join when they sign up and submit content.</p></CardContent></Card>
         ) : (
-          <div className="campaign-grid">
-            {creators.map((c, i) => {
-              const acceptancePct = Math.round((c.acceptance_rate || 0) * 100);
-              const defaultCpm = (c.preferred_cpm_cents || 100) / 100;
-              const isHiring = hiring === c.id;
+          <>
+            <div className="campaign-grid">
+              {creators.map((c, i) => {
+                const acceptancePct = Math.round((c.acceptance_rate || 0) * 100);
+                const defaultCpm = (c.preferred_cpm_cents || 100) / 100;
+                const isHiring = hiring === c.id;
 
-              return (
-                <Card key={c.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
-                  <CardContent className="p-5 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
-                        {c.display_name?.[0]?.toUpperCase() || '?'}
+                return (
+                  <Card key={c.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
+                    <CardContent className="p-5 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
+                          {c.display_name?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <div>
+                          <a href={`/creators/${c.id}`} className="font-semibold hover:text-accent-foreground transition-colors">
+                            {c.display_name || 'Creator'}
+                          </a>
+                          <p className="text-xs text-muted-foreground">
+                            {c.tiktok_handle && `${c.tiktok_handle.startsWith('@') ? c.tiktok_handle : `@${c.tiktok_handle}`}`}
+                            {c.instagram_handle && ` · ${c.instagram_handle.startsWith('@') ? c.instagram_handle : `@${c.instagram_handle}`}`}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <a href={`/creators/${c.id}`} className="font-semibold hover:text-accent-foreground transition-colors">
-                          {c.display_name || 'Creator'}
-                        </a>
-                        <p className="text-xs text-muted-foreground">
-                          {c.tiktok_handle && `@${c.tiktok_handle}`}
-                          {c.instagram_handle && ` · @${c.instagram_handle}`}
-                        </p>
-                      </div>
-                    </div>
 
-                    {c.bio && <p className="text-sm text-muted-foreground line-clamp-2">{c.bio}</p>}
+                      {c.bio && <p className="text-sm text-muted-foreground line-clamp-2">{c.bio}</p>}
 
-                    {c.genres && (
-                      <div className="flex gap-1 flex-wrap">
-                        {c.genres.split(',').slice(0, 3).map(g => (
-                          <Badge key={g} variant="outline" className="text-xs">{g.trim()}</Badge>
-                        ))}
-                      </div>
-                    )}
+                      {c.genres && (
+                        <div className="flex gap-1 flex-wrap">
+                          {c.genres.split(',').slice(0, 3).map(g => (
+                            <Badge key={g} variant="outline" className="text-xs">{g.trim()}</Badge>
+                          ))}
+                        </div>
+                      )}
 
-                    <div className="grid grid-cols-3 gap-3 text-center py-2 border-y">
-                      <div>
-                        <div className="font-bold text-sm">${((c.total_earned_cents || 0) / 100).toFixed(0)}</div>
-                        <div className="text-muted-foreground text-[10px]">earned</div>
+                      <div className="grid grid-cols-3 gap-3 text-center py-2 border-y">
+                        <div>
+                          <div className="font-bold text-sm">${((c.total_earned_cents || 0) / 100).toFixed(0)}</div>
+                          <div className="text-muted-foreground text-[10px]">earned</div>
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm">{((c.total_verified_views || 0) / 1000).toFixed(1)}K</div>
+                          <div className="text-muted-foreground text-[10px]">views</div>
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm">{acceptancePct}%</div>
+                          <div className="text-muted-foreground text-[10px]">accepted</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-bold text-sm">{((c.total_verified_views || 0) / 1000).toFixed(1)}K</div>
-                        <div className="text-muted-foreground text-[10px]">views</div>
-                      </div>
-                      <div>
-                        <div className="font-bold text-sm">{acceptancePct}%</div>
-                        <div className="text-muted-foreground text-[10px]">accepted</div>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">Default ${defaultCpm}</span>
-                      <input
-                        type="number"
-                        min="0.1"
-                        step="0.1"
-                        value={offerCpm[c.id] || defaultCpm.toString()}
-                        onChange={e => setOfferCpm(prev => ({ ...prev, [c.id]: e.target.value }))}
-                        className="w-20 border rounded-md px-2 py-1.5 text-xs bg-background"
-                        placeholder={`${defaultCpm}`}
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => hireCreator(c.id)}
-                        disabled={isHiring}
-                        className="flex-1">
-                        {isHiring ? 'Hiring...' : 'Hire'}
-                      </Button>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      Offer a custom CPM rate to this creator for your campaign.
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">Default ${defaultCpm}</span>
+                        <input
+                          type="number"
+                          min="0.1"
+                          step="0.1"
+                          value={offerCpm[c.id] || defaultCpm.toString()}
+                          onChange={e => setOfferCpm(prev => ({ ...prev, [c.id]: e.target.value }))}
+                          className="w-20 border rounded-md px-2 py-1.5 text-xs bg-background"
+                        />
+                        <Button size="sm" onClick={() => hireCreator(c.id)} disabled={isHiring} className="flex-1">
+                          {isHiring ? 'Hiring...' : 'Hire'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+            {total > creators.length && (
+              <div className="text-center mt-8">
+                <Button variant="outline" onClick={() => fetchCreators(searchText)}>
+                  Load more
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

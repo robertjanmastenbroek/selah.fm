@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/components/TopNav';
-import BottomNav from '@/components/BottomNav';
 import ImageUpload from '@/components/ImageUpload';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,10 +22,16 @@ interface Campaign {
   spent: number;
   views: number;
   submissions: number;
+  status: string;
 }
 
-export default function DashboardPage() {
-  const [step, setStep] = useState<'list' | 'wizard'>('list');
+function DashboardContent() {
+  const searchParams = useSearchParams();
+  const hireCreatorId = searchParams.get('hire') || '';
+  const hireCreatorCpm = searchParams.get('cpm') || '';
+  const hireCreatorName = searchParams.get('name') || '';
+
+  const [step, setStep] = useState<'list' | 'wizard'>(hireCreatorId ? 'wizard' : 'list');
   const [wizardStep, setWizardStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -36,56 +42,78 @@ export default function DashboardPage() {
   const [coverArt, setCoverArt] = useState('');
   const [trackTitle, setTrackTitle] = useState('');
   const [trackUrl, setTrackUrl] = useState('');
-  const [cpm, setCpm] = useState('1');
+  const [cpm, setCpm] = useState(hireCreatorCpm || '1');
   const [budget, setBudget] = useState('25');
   const [maxPayout, setMaxPayout] = useState('10');
   const [driveUrl, setDriveUrl] = useState('');
   const [hashtags, setHashtags] = useState('#selahfm');
   const [requirements, setRequirements] = useState('');
 
-  useEffect(() => {
+  const fetchCampaigns = () => {
     fetch('/api/campaigns').then(r => r.json()).then(data => {
-      if (Array.isArray(data)) {
-        setCampaigns(data.map((c: any) => ({
-          id: c.id, trackTitle: c.track_title || c.trackTitle,
-          coverArt: c.cover_art_url || '',
-          cpmRate: (c.cpm_rate_cents || 0) / 100,
-          budget: (c.total_budget_cents || 0) / 100,
-          spent: ((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0)) / 100,
-          views: parseInt(c.total_verified_views || '0'),
-          submissions: parseInt(c.approved_submissions || '0'),
-        })));
-      }
+      const list = data.campaigns || [];
+      setCampaigns(list.map((c: any) => ({
+        id: c.id, trackTitle: c.track_title,
+        coverArt: c.cover_art_url || '',
+        cpmRate: (c.cpm_rate_cents || 0) / 100,
+        budget: (c.total_budget_cents || 0) / 100,
+        spent: ((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0)) / 100,
+        views: parseInt(c.total_verified_views || '0'),
+        submissions: parseInt(c.approved_submissions || '0'),
+        status: c.status || 'active',
+      })));
     }).catch(() => {});
-  }, []);
+  };
+
+  useEffect(() => { fetchCampaigns(); }, []);
+
+  // Aggregate stats
+  const totalViews = campaigns.reduce((s, c) => s + c.views, 0);
+  const totalSpent = campaigns.reduce((s, c) => s + c.spent, 0);
+  const totalSubmissions = campaigns.reduce((s, c) => s + c.submissions, 0);
+  const activeCount = campaigns.filter(c => c.status === 'active').length;
 
   const createCampaign = async () => {
     setLoading(true);
-    const newCamp: Campaign = {
-      id: Date.now().toString(), trackTitle, coverArt,
-      cpmRate: parseFloat(cpm), budget: parseInt(budget),
-      spent: 0, views: 0, submissions: 0,
-    };
     try {
       await fetch('/api/campaigns', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements }),
       });
+      fetchCampaigns();
+      addToast('Campaign live', 'success');
     } catch {}
-    setCampaigns(prev => [newCamp, ...prev]);
-    addToast('Campaign live', 'success');
     setCoverArt(''); setTrackTitle(''); setCpm('1'); setBudget('25');
     setWizardStep(1); setStep('list'); setLoading(false);
+  };
+
+  const toggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+    try {
+      await fetch(`/api/campaigns/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      fetchCampaigns();
+      addToast(newStatus === 'active' ? 'Campaign resumed' : 'Campaign paused', 'info');
+    } catch {}
   };
 
   const estimatedViews = Math.floor((parseInt(budget || '0') / parseFloat(cpm || '1')) * 1000);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="page-container">
         {step === 'wizard' ? (
           <>
+            {hireCreatorName && wizardStep === 2 && (
+              <Card className="mb-6 border-accent/20 bg-accent/5">
+                <CardContent className="p-4 text-center text-sm">
+                  🎯 Creating campaign for <strong>{decodeURIComponent(hireCreatorName)}</strong> at ${hireCreatorCpm} CPM
+                </CardContent>
+              </Card>
+            )}
             <div className="flex gap-2 mb-10">
               {[1, 2, 3].map(s => (
                 <div key={s} className={`flex-1 h-1 rounded-full transition-colors ${s <= wizardStep ? 'bg-foreground' : 'bg-muted'}`} />
@@ -97,7 +125,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground text-sm">A beautiful cover makes your campaign stand out.</p>
                 <ImageUpload onImage={setCoverArt} currentImage={coverArt} />
                 {coverArt && <Button onClick={() => setWizardStep(2)} className="w-full">Continue</Button>}
-                <Button variant="ghost" onClick={() => setStep('list')} className="w-full">Cancel</Button>
+                <Button variant="ghost" onClick={() => { setStep('list'); }} className="w-full">Cancel</Button>
               </div>
             )}
             {wizardStep === 2 && (
@@ -150,7 +178,26 @@ export default function DashboardPage() {
           </>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-8">
+            {/* Aggregate Stats Bar */}
+            {campaigns.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                {[
+                  { value: activeCount, label: 'Active' },
+                  { value: totalSubmissions, label: 'Submissions' },
+                  { value: totalViews >= 1000 ? `${(totalViews/1000).toFixed(1)}K` : totalViews, label: 'Total Views' },
+                  { value: `$${totalSpent.toFixed(0)}`, label: 'Spent' },
+                ].map(s => (
+                  <Card key={s.label}>
+                    <CardContent className="p-3 text-center">
+                      <div className="text-lg font-bold text-accent-foreground">{s.value}</div>
+                      <div className="text-xs text-muted-foreground">{s.label}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mb-6">
               <h1 className="section-title">Your campaigns</h1>
               <Button onClick={() => setStep('wizard')} size="sm">
                 <Plus className="h-4 w-4 mr-1" /> New
@@ -186,7 +233,9 @@ export default function DashboardPage() {
                           <h3 className="font-semibold text-lg leading-tight">{c.trackTitle}</h3>
                           <p className="text-muted-foreground text-sm">${c.cpmRate} CPM · ${c.budget} budget</p>
                         </div>
-                        <Badge variant="secondary">Live</Badge>
+                        <Badge variant={c.status === 'active' ? 'default' : 'secondary'}>
+                          {c.status === 'active' ? 'Live' : c.status}
+                        </Badge>
                       </div>
                       <div className="grid grid-cols-3 gap-3 text-center">
                         <div><div className="font-bold text-lg">{c.submissions}</div><div className="text-muted-foreground text-xs">subs</div></div>
@@ -217,6 +266,14 @@ export default function DashboardPage() {
                           <Button size="sm" className="flex-1" onClick={() => { setFundingId(c.id); setFundingAmount('10'); }}>
                             Add budget
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleStatus(c.id, c.status)}
+                            title={c.status === 'active' ? 'Pause campaign' : 'Resume campaign'}
+                          >
+                            {c.status === 'active' ? '⏸' : '▶'}
+                          </Button>
                         </div>
                       )}
                     </CardContent>
@@ -228,5 +285,13 @@ export default function DashboardPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background"><Header /><main className="page-container"><div className="space-y-4"><Skeleton className="h-10 w-1/3" /><Skeleton className="h-40 w-full" /></div></main></div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

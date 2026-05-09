@@ -1,14 +1,24 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 
-// Cron endpoint — runs periodically to update view counts for pending submissions
-// Trigger via external cron or Vercel Cron Jobs
+const CRON_SECRET = process.env.CRON_SECRET || '';
 
-export async function GET() {
+// Cron endpoint — runs periodically to update view counts for pending submissions
+// Protect with CRON_SECRET to prevent abuse
+// Trigger via: curl https://selah.fm/api/cron?secret=YOUR_CRON_SECRET
+
+export async function GET(request: Request) {
+  // Auth check
+  const { searchParams } = new URL(request.url);
+  const secret = searchParams.get('secret');
+  
+  if (CRON_SECRET && secret !== CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const results: string[] = [];
   
   try {
-    // Get all pending/approved submissions with external URLs
     const subs = await sql`
       SELECT s.id, s.content_url, s.platform, s.views_verified, s.review_status
       FROM submissions s
@@ -19,7 +29,6 @@ export async function GET() {
 
     for (const sub of subs) {
       try {
-        // For YouTube, use the YouTube API
         if (sub.platform === 'youtube') {
           const videoId = extractYtId(sub.content_url);
           if (videoId && process.env.YOUTUBE_API_KEY) {
@@ -35,18 +44,8 @@ export async function GET() {
             `;
             results.push(`yt:${sub.id.substring(0,8)} → ${views} views`);
           }
-        } else {
-          // TikTok/Instagram — use mock growth for now
-          const prev = parseInt(sub.views_verified || '0');
-          const mockGrowth = prev > 0 ? prev + Math.floor(Math.random() * 500) : Math.floor(Math.random() * 5000 + 500);
-          
-          await sql`
-            UPDATE submissions 
-            SET views_verified = ${mockGrowth}, views_current = ${mockGrowth}, updated_at = NOW()
-            WHERE id = ${sub.id}
-          `;
-          results.push(`${sub.platform}:${sub.id.substring(0,8)} → ${mockGrowth} views`);
         }
+        // TikTok/Instagram remain manual verification for now
       } catch (e: any) {
         results.push(`err:${sub.id.substring(0,8)}: ${e.message}`);
       }
