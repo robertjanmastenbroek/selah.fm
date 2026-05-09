@@ -56,7 +56,7 @@ module.exports = {
         'slide-up': { '0%': { opacity: '0', transform: 'translateY(12px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
         'float': { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-16px)' } },
         'shimmer': { '0%': { backgroundPosition: '200% 0' }, '100%': { backgroundPosition: '-200% 0' } },
-        'breathe': { '0%': { boxShadow: '0 0 0 0 rgba(255,159,140,0.3)' }, '50%': { boxShadow: '0 0 0 8px rgba(255,159,140,0)' }, '100%': { boxShadow: '0 0 0 0 rgba(255,159,140,0)' } },
+        'breathe': { '0%': { boxShadow: '0 0 0 0 rgba(91,127,255,0.3)' }, '50%': { boxShadow: '0 0 0 8px rgba(91,127,255,0)' }, '100%': { boxShadow: '0 0 0 0 rgba(91,127,255,0)' } },
         'shake': { '0%, 100%': { transform: 'translateX(0)' }, '20%': { transform: 'translateX(-4px)' }, '40%': { transform: 'translateX(4px)' }, '60%': { transform: 'translateX(-4px)' }, '80%': { transform: 'translateX(4px)' } },
       },
       animation: {

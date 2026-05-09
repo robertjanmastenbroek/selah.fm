@@ -17,22 +17,22 @@
     --popover: 0 0% 14%;             /* #242424 — elevation level 2 */
     --popover-foreground: 0 0% 94%;
 
-    /* ── Accent (coral — warm, optimistic, rewarding) ─────────── */
-    --primary: 11 100% 78%;           /* #FF9F8C — coral */
-    --primary-foreground: 0 0% 5%;
+    /* ── Accent (DeepSeek blue — electric, focused, premium) ─── */
+    --primary: 230 100% 68%;          /* #5B7FFF — DeepSeek blue */
+    --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 16%;           /* #2A2A2A */
     --secondary-foreground: 0 0% 72%; /* #B8B8B8 — AAA on #2A2A2A */
     --muted: 0 0% 12%;               /* #1E1E1E */
     --muted-foreground: 0 0% 55%;    /* #8C8C8C — readable placeholder */
-    --accent: 11 100% 78%;            /* #FF9F8C — same as primary */
-    --accent-foreground: 0 0% 5%;
+    --accent: 230 100% 68%;           /* #5B7FFF — same as primary */
+    --accent-foreground: 0 0% 100%;
 
     /* ── Semantic ─────────────────────────────────────────────── */
     --destructive: 0 65% 77%;        /* #EF9A9A — soft, not alarming */
     --destructive-foreground: 0 0% 5%;
     --border: 0 0% 100% / 0.06;      /* almost invisible */
     --input: 0 0% 10%;
-    --ring: 11 100% 78%;             /* focus ring = coral */
+    --ring: 230 100% 68%;             /* focus ring = DeepSeek blue */
     --radius: 0.5rem;
 
     /* ── Extended semantic tokens ─────────────────────────────── */
@@ -40,7 +40,7 @@
     --success-foreground: 0 0% 5%;
     --warning: 45 100% 65%;           /* #FFD54F */
     --warning-foreground: 0 0% 5%;
-    --accent-glow: 11 100% 78% / 0.15;
+    --accent-glow: 230 100% 68% / 0.15;
 
     /* ── Typography ───────────────────────────────────────────── */
     --line-height-body: 1.6;
@@ -60,7 +60,7 @@
 
   /* Selection highlight */
   ::selection {
-    background: rgba(255, 159, 140, 0.25);
+    background: rgba(91, 127, 255, 0.25);
     color: #F0F0F0;
   }
 
@@ -166,9 +166,9 @@
 
 /* Micro-reward: success breathe */
 @keyframes breathe {
-  0% { box-shadow: 0 0 0 0 rgba(255, 159, 140, 0.3); }
-  50% { box-shadow: 0 0 0 8px rgba(255, 159, 140, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 159, 140, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(91, 127, 255, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(91, 127, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(91, 127, 255, 0); }
 }
 .animate-breathe {
   animation: breathe 0.8s ease-out;
@@ -209,7 +209,7 @@
 .ripple-effect {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 159, 140, 0.3);
+  background: rgba(91, 127, 255, 0.3);
   transform: scale(0);
   animation: ripple 0.6s linear;
   pointer-events: none;
