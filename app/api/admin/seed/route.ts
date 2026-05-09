@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // ── Clean up stale data ───────────────────────────────────
+    const { searchParams } = new URL(request.url);
+    if (searchParams.get('reset') === 'true') {
+      await sql`DELETE FROM submissions`;
+      await sql`DELETE FROM campaigns`;
+      await sql`DELETE FROM users WHERE email LIKE '%@selah-demo.fm'`;
+    }
+    // Always clean NULL-artist campaigns (broken data)
+    await sql`DELETE FROM campaigns WHERE artist_id IS NULL`;
+
     // ── Seed Artists ──────────────────────────────────────────
     await sql`
       INSERT INTO users (id, email, password_hash, user_type, display_name)
@@ -41,11 +51,6 @@ export async function GET() {
         ('dd000000-1000-4000-8000-000000000006', ${ARTIST3}, 'Bass Cathedral', 'https://open.spotify.com/track/demo6', 500, 100000, 20000, 100000, ARRAY['tiktok','instagram'], 'active', 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80', 'High energy. Festival vibes.', '#bassmusic #christianedm')
       ON CONFLICT (id) DO UPDATE SET cover_art_url = EXCLUDED.cover_art_url, artist_id = EXCLUDED.artist_id
     `;
-
-    // ── Patch old NULL-artist campaigns ───────────────────────
-    await sql`UPDATE campaigns SET artist_id = ${ARTIST1} WHERE cover_art_url LIKE '%unsplash%' AND artist_id IS NULL LIMIT 2`;
-    await sql`UPDATE campaigns SET artist_id = ${ARTIST2} WHERE cover_art_url LIKE '%unsplash%' AND artist_id IS NULL LIMIT 2`;
-    await sql`UPDATE campaigns SET artist_id = ${ARTIST3} WHERE cover_art_url LIKE '%unsplash%' AND artist_id IS NULL LIMIT 2`;
 
     // ── Seed Submissions ──────────────────────────────────────
     const subCount = await sql`SELECT count(*) FROM submissions`;
