@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google OAuth Test — SendMusic.io</title>
+  <style>
+    body {
+      font-family: system-ui;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 0 20px;
+    }
+    textarea { width: 100%; height: 100px; font-family: monospace; font-size: 12px; }
+    button { padding: 10px 24px; font-size: 16px; cursor: pointer; margin: 10px 0; }
+    .url { 
+      word-break: break-all;
+      background: #f0f0f0;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: monospace;
+      margin: 10px 0;
+    }
+    .note { color: #666; font-size: 13px; margin: 5px 0; }
+    .error { color: red; }
+    .ok { color: green; }
+  </style>
+</head>
+<body>
+  <h1>Google OAuth — Direct Test</h1>
+  <p class="note">This page bypasses NextAuth and calls Google directly. If this works, the issue is in NextAuth config. If this fails, the issue is in Google Cloud Console.</p>
+
+  <label>Enter GOOGLE_CLIENT_ID:</label>
+  <textarea id="clientId" placeholder="Paste your GOOGLE_CLIENT_ID here..."></textarea>
+
+  <div id="result"></div>
+
+  <button onclick="testOAuth()">Test Google OAuth</button>
+
+  <script>
+    function testOAuth() {
+      const clientId = document.getElementById('clientId').value.trim();
+      if (!clientId) { alert('Paste your GOOGLE_CLIENT_ID first'); return; }
+
+      const redirectUri = 'https://sendmusic-io-production.up.railway.app/api/auth/callback/google';
+      const scope = 'openid profile email';
+      const state = 'test-' + Date.now();
+
+      const url = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: scope,
+        state: state,
+      }).toString();
+
+      document.getElementById('result').innerHTML = `
+        <div class="note">This is the URL NextAuth would send you to:</div>
+        <div class="url" onclick="this.select()">${url}</div>
+        <p class="note">🟡 CLICK THE BUTTON BELOW to test it directly with Google:</p>
+        <a href="${url}" style="display:inline-block;padding:12px 24px;background:#4285F4;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">Test with Google →</a>
+        <p class="note">If Google shows you a consent screen: ✅ Google Console is configured correctly (problem is in NextAuth)</p>
+        <p class="note">If Google shows an error page: ❌ Google Console has a problem (check redirect URI, test users, publishing status)</p>
+        <p class="note" style="margin-top:20px">After testing: you'll get redirected to a 404 page (because there's no real callback handler for this test). That's expected — the key is whether Google showed an error BEFORE redirecting.</p>
+      `;
+    }
+  </script>
+</body>
+</html>
