@@ -4,52 +4,65 @@ import { useState } from 'react';
 import TopNav from '@/components/TopNav';
 
 const MOCK = [
-  { id: '1', creator: '@dancewithjake', track: 'Midnight Frequencies', platform: 'tiktok', url: 'tiktok.com/@.../...', views: 12400, cpm: 3 },
-  { id: '2', creator: '@creatormia', track: 'Desert Prayer', platform: 'instagram', url: 'instagram.com/reel/...', views: 8300, cpm: 4 },
+  { id: '1', creator: '@dancewithjake', track: 'Midnight Frequencies', platform: 'tiktok', url: 'tiktok.com/@.../...', views: 12400, cpm: 3, acceptRate: 92 },
+  { id: '2', creator: '@creatormia', track: 'Desert Prayer', platform: 'instagram', url: 'instagram.com/reel/...', views: 8300, cpm: 4, acceptRate: 85 },
 ];
 
 export default function ReviewPage() {
   const [subs, setSubs] = useState(MOCK);
 
-  const handleAction = (id: string, action: 'approved' | 'rejected') => {
+  const handleAction = (id: string) => {
     setSubs(prev => prev.filter(s => s.id !== id));
   };
 
   return (
     <div className="min-h-screen bg-void">
       <TopNav />
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-ivory mb-2">Review submissions</h1>
-        <p className="text-muted text-sm mb-6">{subs.length} pending</p>
+      <main className="max-w-2xl mx-auto px-4 py-8 md:py-10">
+        <div className="mb-8">
+          <h1 className="section-title mb-1">Review</h1>
+          <p className="text-muted/50 text-sm">{subs.length} pending submissions</p>
+        </div>
 
         {subs.length === 0 && (
-          <div className="card-elevated text-center py-12">
-            <div className="text-4xl mb-3">✅</div>
-            <div className="text-ivory font-semibold">All caught up</div>
-            <p className="text-muted text-sm mt-1">No submissions to review right now.</p>
+          <div className="card-glass text-center py-16 animate-fade-in">
+            <div className="text-muted/30 text-[64px] mb-4 font-light">✓</div>
+            <div className="text-ivory font-medium text-lg">All caught up</div>
+            <p className="text-muted/40 text-sm mt-1">No submissions to review.</p>
           </div>
         )}
 
         <div className="space-y-4">
-          {subs.map(s => (
-            <div key={s.id} className="card-elevated">
+          {subs.map((s, i) => (
+            <div key={s.id} className="card-glass p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <div className="text-ivory font-semibold">{s.creator}</div>
-                  <div className="text-muted text-xs flex items-center gap-2">
+                  <div className="text-muted/50 text-sm flex items-center gap-2 mt-0.5">
                     <span>{s.track} · {s.platform}</span>
-                    <span className="bg-gold/10 text-gold text-[10px] px-1.5 py-0.5 rounded-full font-medium">85% accept</span>
+                    <span className="bg-gold/10 text-gold text-[11px] px-1.5 py-0.5 rounded-full font-medium">
+                      {s.acceptRate}% accept
+                    </span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-gold font-bold">{s.views.toLocaleString()}</div>
-                  <div className="text-muted text-[10px]">views · ${((s.views / 1000) * s.cpm).toFixed(2)} payout</div>
+                  <div className="text-gold font-bold text-lg">{s.views.toLocaleString()}</div>
+                  <div className="text-muted/40 text-[11px] mt-0.5">views</div>
                 </div>
               </div>
-              <a href={`https://${s.url}`} target="_blank" className="text-gold text-xs hover:underline mb-3 block">Watch video →</a>
+              <div className="card-elevated p-3 text-sm text-muted/50 mb-4">
+                Payout: {s.views.toLocaleString()} views × ${s.cpm} CPM = <span className="text-gold font-semibold">${((s.views / 1000) * s.cpm).toFixed(2)}</span>
+              </div>
+              <a href={`https://${s.url}`} target="_blank" className="text-gold/70 text-sm hover:text-gold transition-colors mb-4 inline-block">
+                Watch on {s.platform} →
+              </a>
               <div className="flex gap-2">
-                <button onClick={() => handleAction(s.id, 'rejected')} className="flex-1 btn-outline text-sm !py-2 !border-crimson/30 !text-crimson-light hover:!bg-crimson/10">Reject</button>
-                <button onClick={() => handleAction(s.id, 'approved')} className="flex-1 btn-gold text-sm !py-2">Approve</button>
+                <button onClick={() => handleAction(s.id)} className="btn-secondary flex-1 !border-crimson-light/20 !text-crimson-light/70 hover:!bg-crimson/5">
+                  Reject
+                </button>
+                <button onClick={() => handleAction(s.id)} className="btn-primary flex-1">
+                  Approve
+                </button>
               </div>
             </div>
           ))}

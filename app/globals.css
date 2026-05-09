@@ -2,28 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
-  html { scroll-behavior: smooth; }
-  body { @apply bg-void text-ivory font-body antialiased; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  body { @apply bg-void text-ivory font-body; }
+  input, textarea, select { @apply outline-none; }
 }
 
 @layer components {
-  .btn-gold {
-    @apply bg-gold text-void font-bold py-3 px-8 rounded-lg
-           hover:bg-gold-hover transition-all duration-200
-           inline-block text-center shadow-lg shadow-gold/20;
+  /* Glass card */
+  .card-glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl
+           shadow-card transition-all duration-300 ease-out;
   }
-  .btn-outline {
-    @apply border border-gold/30 text-gold py-3 px-8 rounded-lg
-           hover:bg-gold/10 hover:border-gold/50 transition-all duration-200
-           inline-block text-center;
+  .card-glass:hover {
+    @apply shadow-card-hover border-white/[0.1] -translate-y-0.5;
   }
-  .card {
-    @apply bg-void-card border border-white/5 rounded-2xl p-8;
-  }
+
+  /* Elevated card */
   .card-elevated {
-    @apply bg-void-elevated border border-white/10 rounded-2xl p-8;
+    @apply bg-white/[0.04] border border-white/[0.08] rounded-2xl
+           shadow-card transition-all duration-300 ease-out;
+  }
+
+  /* Input field */
+  .input-field {
+    @apply w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3.5
+           text-ivory text-[15px] placeholder:text-muted/40
+           transition-all duration-200 ease-out
+           focus:border-gold/40 focus:bg-white/[0.06] focus:shadow-gold;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply bg-gold text-void font-semibold py-3 px-6 rounded-xl
+           hover:bg-gold-hover active:scale-[0.98]
+           transition-all duration-200 ease-out
+           inline-flex items-center justify-center gap-2
+           shadow-button disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply border border-white/[0.1] text-ivory font-medium py-3 px-6 rounded-xl
+           hover:bg-white/[0.04] hover:border-white/[0.2] active:scale-[0.98]
+           transition-all duration-200 ease-out
+           inline-flex items-center justify-center gap-2;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply text-muted font-medium py-2 px-3 rounded-lg
+           hover:text-ivory hover:bg-white/[0.04]
+           transition-all duration-150 ease-out;
+  }
+
+  /* Section heading */
+  .section-title {
+    @apply font-display text-2xl md:text-3xl text-ivory tracking-tight;
   }
 }

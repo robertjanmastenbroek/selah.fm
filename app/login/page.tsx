@@ -79,7 +79,7 @@ export default function LoginPage() {
           className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
 
         <button type="submit" disabled={loading}
-          className="btn-gold w-full text-lg !py-3.5 !rounded-xl">
+          className="btn-primary w-full text-lg !py-3.5 !rounded-xl">
           {loading ? '...' : mode === 'login' ? 'Log in' : 'Create account'}
         </button>
       </form>

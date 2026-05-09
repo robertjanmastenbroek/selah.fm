@@ -16,25 +16,29 @@ export default function EarningsPage() {
   return (
     <div className="min-h-screen bg-void">
       <TopNav />
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-ivory mb-6">Earnings</h1>
+      <main className="max-w-2xl mx-auto px-4 py-8 md:py-10">
+        <div className="mb-8">
+          <h1 className="section-title mb-1">Earnings</h1>
+        </div>
 
-        <div className="card-elevated text-center py-8 mb-6">
-          <div className="text-muted text-xs uppercase tracking-widest mb-2">Available</div>
-          <div className="font-display text-5xl text-gold">${total.toFixed(2)}</div>
-          <div className="text-muted text-sm mt-1">+${pending.toFixed(2)} pending</div>
+        <div className="card-glass p-8 text-center mb-6 animate-fade-in">
+          <div className="text-muted/40 text-xs uppercase tracking-[0.2em] mb-2">Available balance</div>
+          <div className="font-display text-5xl md:text-6xl text-gold mb-2 tracking-tight">${total.toFixed(2)}</div>
+          <div className="text-muted/40 text-sm">+${pending.toFixed(2)} pending</div>
         </div>
 
         <div className="space-y-2">
-          {submissions.map(s => (
-            <div key={s.id} className="card !p-4 flex items-center justify-between">
+          {submissions.map((s, i) => (
+            <div key={s.id} className="card-glass p-4 flex items-center justify-between animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
               <div>
-                <div className="text-ivory text-sm font-semibold">{s.track}</div>
-                <div className="text-muted text-xs">{s.platform} · {s.views.toLocaleString()} views · {s.date}</div>
+                <div className="text-ivory text-sm font-medium">{s.track}</div>
+                <div className="text-muted/40 text-xs mt-0.5">{s.platform} · {s.views.toLocaleString()} views · {s.date}</div>
               </div>
               <div className="text-right">
-                <div className="text-gold font-bold">${s.earned.toFixed(2)}</div>
-                <div className={`text-xs ${s.status === 'paid' ? 'text-emerald-400' : 'text-amber-400'}`}>{s.status}</div>
+                <div className="text-gold font-semibold">${s.earned.toFixed(2)}</div>
+                <div className={`text-[11px] mt-0.5 ${s.status === 'paid' ? 'text-emerald-400/70' : 'text-amber-400/70'}`}>
+                  {s.status}
+                </div>
               </div>
             </div>
           ))}
