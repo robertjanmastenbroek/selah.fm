@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 function createSession(user: { email: string; name: string; picture: string }) {
   const crypto = require('crypto');
@@ -14,34 +13,29 @@ export async function GET(request: Request) {
   const error = searchParams.get('error');
 
   if (error) {
-    console.error('Google OAuth error:', error);
-    return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL || ''}/login?error=OAuthCallback`
-    );
+    console.error('Google error:', error);
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
   }
 
+  // Step 1: No code → redirect to Google
   if (!code) {
-    // Initiate OAuth — redirect to Google
     const clientId = process.env.GOOGLE_CLIENT_ID;
     if (!clientId) {
-      return NextResponse.json({ error: 'Google OAuth not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'GOOGLE_CLIENT_ID not set' }, { status: 500 });
     }
-
-    const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/google`;
-    const scope = 'openid email profile';
-    const googleUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
+    const redirectUri = `${process.env.NEXTAUTH_URL}/api/oauth/google`;
+    const url = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: scope,
-      access_type: 'online',
+      scope: 'openid email profile',
       prompt: 'select_account',
     }).toString();
-
-    return NextResponse.redirect(googleUrl);
+    console.log('Redirecting to Google:', url.substring(0, 150));
+    return NextResponse.redirect(url);
   }
 
-  // Exchange code for tokens
+  // Step 2: Got code → exchange for tokens
   try {
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -50,17 +44,15 @@ export async function GET(request: Request) {
         code,
         client_id: process.env.GOOGLE_CLIENT_ID || '',
         client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/google`,
+        redirect_uri: `${process.env.NEXTAUTH_URL}/api/oauth/google`,
         grant_type: 'authorization_code',
       }).toString(),
     });
 
     const tokens = await tokenRes.json();
     if (tokens.error) {
-      console.error('Token exchange failed:', tokens);
-      return NextResponse.redirect(
-        `${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`
-      );
+      console.error('Token exchange failed:', tokens.error_description || tokens.error);
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
     }
 
     // Get user info
@@ -69,27 +61,18 @@ export async function GET(request: Request) {
     });
     const user = await userRes.json();
 
-    // Create session
-    const session = createSession({
-      email: user.email,
-      name: user.name,
-      picture: user.picture,
-    });
+    console.log('Google login success:', user.email);
 
+    // Create session
+    const session = createSession({ email: user.email, name: user.name, picture: user.picture });
     const res = NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard`);
     res.cookies.set('session', session, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
+      httpOnly: true, secure: true, sameSite: 'lax', path: '/',
       maxAge: 60 * 60 * 24 * 7,
     });
-
     return res;
   } catch (e) {
-    console.error('Google OAuth error:', e);
-    return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`
-    );
+    console.error('OAuth error:', e);
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
   }
 }
