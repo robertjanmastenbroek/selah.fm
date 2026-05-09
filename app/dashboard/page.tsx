@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
+import NotificationBell from '@/components/NotificationBell';
+import { useToast } from '@/components/Toast';
 
 export default function ArtistDashboard() {
   const [step, setStep] = useState<'create' | 'live'>('create');
