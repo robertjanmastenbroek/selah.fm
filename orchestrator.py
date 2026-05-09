@@ -39,7 +39,7 @@ BUILD_PLAN = {
         {"id": "outreach", "name": "Outreach & Launch", "tasks": [
             {"id": "outreach_agent", "name": "DM outreach to artists + creators", "done": True},
             {"id": "autonomous", "name": "Autonomous agent fleet (DeepSeek)", "done": True},
-            {"id": "social_templates", "name": "Social media content templates", "done": False},
+            {"id": "social_templates", "name": "Social media content templates", "done": True},
             {"id": "social", "name": "Social media content + presence", "done": False},
             {"id": "launch", "name": "Pilot launch with seed users", "done": False},
         ]},
