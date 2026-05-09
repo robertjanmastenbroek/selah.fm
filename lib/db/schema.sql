@@ -139,6 +139,9 @@ CREATE TABLE payouts (
 );
 
 CREATE INDEX idx_payouts_creator ON payouts(creator_id);
+CREATE TABLE IF NOT EXISTS referrals (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), referrer_id UUID REFERENCES users(id), referred_email TEXT NOT NULL, status TEXT DEFAULT 'pending', created_at TIMESTAMPTZ DEFAULT now());
+CREATE INDEX idx_referrals_referrer ON referrals(referrer_id);
+
 CREATE INDEX idx_payouts_status ON payouts(status);
 
 -- ─── Views (materialized or cached) ──────────────────────────────────────────
