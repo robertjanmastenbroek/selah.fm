@@ -20,7 +20,7 @@ export default function LandingPage() {
               <span className="text-gold">promoted. Get views. Get paid.</span>
             </h1>
             <p className="text-lg text-muted leading-relaxed mb-8 max-w-md">
-              The marketplace where artists set the price and creators earn for every view.
+              Set any budget. Start with $5. Set your CPM from $0.10. Creators earn for every view.
               TikTok, Reels, Shorts — your music, their audience.
             </p>
             <div className="flex gap-3 flex-wrap">

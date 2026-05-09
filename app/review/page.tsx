@@ -36,7 +36,10 @@ export default function ReviewPage() {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <div className="text-ivory font-semibold">{s.creator}</div>
-                  <div className="text-muted text-xs">{s.track} · {s.platform}</div>
+                  <div className="text-muted text-xs flex items-center gap-2">
+                    <span>{s.track} · {s.platform}</span>
+                    <span className="bg-gold/10 text-gold text-[10px] px-1.5 py-0.5 rounded-full font-medium">85% accept</span>
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="text-gold font-bold">{s.views.toLocaleString()}</div>

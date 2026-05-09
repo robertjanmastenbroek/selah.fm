@@ -26,9 +26,9 @@ export default function DashboardPage() {
   const [coverArt, setCoverArt] = useState('');
   const [trackTitle, setTrackTitle] = useState('');
   const [trackUrl, setTrackUrl] = useState('');
-  const [cpm, setCpm] = useState('3');
-  const [budget, setBudget] = useState('500');
-  const [maxPayout, setMaxPayout] = useState('100');
+  const [cpm, setCpm] = useState('1');
+  const [budget, setBudget] = useState('25');
+  const [maxPayout, setMaxPayout] = useState('10');
 
   useEffect(() => {
     fetch('/api/campaigns').then(r => r.json()).then(data => {
@@ -67,7 +67,7 @@ export default function DashboardPage() {
 
     setCampaigns(prev => [newCamp, ...prev]);
     addToast('Campaign live!', 'success');
-    setCoverArt(''); setTrackTitle(''); setTrackUrl(''); setCpm('3'); setBudget('500');
+    setCoverArt(''); setTrackTitle(''); setTrackUrl(''); setCpm('1'); setBudget('25');
     setWizardStep(1); setStep('list'); setLoading(false);
   };
 
@@ -143,7 +143,7 @@ export default function DashboardPage() {
                     <label className="text-sm text-muted mb-1.5 block">CPM ($/1K views)</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted">$</span>
-                      <input value={cpm} onChange={(e) => setCpm(e.target.value)} type="number" min="1" max="20"
+                      <input value={cpm} onChange={(e) => setCpm(e.target.value)} type="number" min="0.1" max="50" step="0.1"
                         className="w-full bg-void-card border border-white/10 rounded-xl pl-8 pr-4 py-3.5 text-ivory text-lg focus:outline-none focus:border-gold/50 transition-all" />
                     </div>
                   </div>
@@ -151,7 +151,7 @@ export default function DashboardPage() {
                     <label className="text-sm text-muted mb-1.5 block">Budget ($)</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted">$</span>
-                      <input value={budget} onChange={(e) => setBudget(e.target.value)} type="number" min="100" step="100"
+                      <input value={budget} onChange={(e) => setBudget(e.target.value)} type="number" min="5" step="5"
                         className="w-full bg-void-card border border-white/10 rounded-xl pl-8 pr-4 py-3.5 text-ivory text-lg focus:outline-none focus:border-gold/50 transition-all" />
                     </div>
                   </div>
