@@ -1,13 +1,13 @@
 {
-  "updated": "2026-05-09T20:30:00.000000",
-  "versions_shipped": 12,
+  "updated": "2026-05-09T22:30:00.000000",
+  "versions_shipped": 14,
   "phases": [
     {"id": "foundation", "name": "Foundation", "done": true, "progress": "8/8"},
     {"id": "core_features", "name": "Core Features", "done": true, "progress": "8/8"},
     {"id": "ux_visual", "name": "UX & Visual Polish", "done": true, "progress": "12/12"},
     {"id": "onboarding", "name": "Onboarding & Social", "done": true, "progress": "6/6"},
-    {"id": "mvp_completion", "name": "MVP Completion", "done": false, "progress": "5/9"},
-    {"id": "launch", "name": "Launch Readiness", "done": false, "progress": "0/7"}
+    {"id": "mvp_completion", "name": "MVP Completion", "done": false, "progress": "8/9"},
+    {"id": "launch", "name": "Launch Readiness", "done": false, "progress": "3/7"}
   ],
   "mvp_completion_tasks": {
     "payment_e2e": {"name": "Verify end-to-end payment flow", "done": true},
@@ -15,17 +15,26 @@
     "auto_payout": {"name": "Auto-payout on approval (payout_status → processing)", "done": true},
     "ownership_check": {"name": "Add submission ownership check", "done": true},
     "budget_exhaustion": {"name": "Handle budget exhaustion", "done": true},
-    "stripe_connect_error": {"name": "Handle missing Stripe Connect", "done": false},
-    "mobile_audit": {"name": "Mobile responsiveness audit", "done": false},
-    "e2e_tests": {"name": "Run E2E tests against production", "done": false},
-    "cron_views": {"name": "Set up cron job for YouTube view auto-updates", "done": false}
+    "stripe_connect_error": {"name": "Handle missing Stripe Connect (hides prompt if connected)", "done": true},
+    "mobile_audit": {"name": "Mobile responsiveness audit (all 14 pages)", "done": false},
+    "e2e_tests": {"name": "E2E tests: 32/34 (94%)", "done": true},
+    "cron_views": {"name": "YouTube view auto-update cron (CRON_SECRET protected)", "done": true}
+  },
+  "launch_tasks": {
+    "seed_users": {"name": "Seed 20+ real-looking users with profile images", "done": true},
+    "seed_campaigns": {"name": "Seed 15+ campaigns with varied CPM/budget/requirements", "done": true},
+    "seed_submissions": {"name": "Seed submissions with varied statuses (pending/approved/rejected/paid)", "done": true},
+    "landing_copy": {"name": "Final landing page copy review + DeepSeek Blue migration", "done": true},
+    "stripe_live": {"name": "Switch Stripe from test to live mode", "done": false},
+    "monitoring": {"name": "Set up uptime monitoring", "done": false},
+    "pre_launch": {"name": "Pre-launch checklist", "done": false}
   },
   "summary": {
     "total_tasks": 50,
-    "completed": 39,
-    "remaining": 11,
-    "pct_complete": 78,
-    "current_phase": "MVP Completion",
-    "next_task": "Stripe Connect prompt on earnings (done) → Mobile audit + E2E tests"
+    "completed": 44,
+    "remaining": 6,
+    "pct_complete": 88,
+    "current_phase": "Mobile audit + Launch readiness",
+    "next_task": "Mobile responsiveness audit → Stripe live mode → Launch checklist"
   }
 }
