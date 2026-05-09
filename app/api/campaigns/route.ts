@@ -23,9 +23,23 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { trackTitle, trackUrl, cpmRate, budget, maxPayout, driveUrl, hashtags, requirements, coverArtUrl } = await request.json();
+    
+    // Get user ID from session cookie
+    const cookieHeader = request.headers.get('cookie') || '';
+    const sessionMatch = cookieHeader.match(/session=([^;]+)/);
+    let artistId = null;
+    if (sessionMatch) {
+      try {
+        const [payload] = sessionMatch[1].split('.');
+        const user = JSON.parse(Buffer.from(payload, 'base64').toString());
+        const existing = await sql`SELECT id FROM users WHERE email = ${user.email}`;
+        if (existing.length > 0) artistId = existing[0].id;
+      } catch {}
+    }
+
     const result = await sql`
-      INSERT INTO campaigns (track_title, track_url, cpm_rate_cents, total_budget_cents, max_payout_per_submission_cents, budget_remaining_cents, status, content_assets_url, recommended_hashtags, requirements, cover_art_url)
-      VALUES (${trackTitle}, ${trackUrl}, ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100}, 'active', ${driveUrl || ''}, ${hashtags || '#selahfm'}, ${requirements || ''}, ${coverArtUrl || null})
+      INSERT INTO campaigns (artist_id, track_title, track_url, cpm_rate_cents, total_budget_cents, max_payout_per_submission_cents, budget_remaining_cents, status, content_assets_url, recommended_hashtags, requirements, cover_art_url)
+      VALUES (${artistId}, ${trackTitle}, ${trackUrl}, ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100}, 'active', ${driveUrl || ''}, ${hashtags || '#selahfm'}, ${requirements || ''}, ${coverArtUrl || null})
       RETURNING *
     `;
     return NextResponse.json(result[0]);
