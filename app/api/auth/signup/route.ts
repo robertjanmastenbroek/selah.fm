@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const res = NextResponse.json({ ok: true });
+    const res = NextResponse.json({ ok: true, redirectTo: '/onboarding' });
     setSessionCookie(res, {
       email,
       type: 'creator',
