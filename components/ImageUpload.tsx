@@ -49,7 +49,7 @@ export default function ImageUpload({ onImage, currentImage }: ImageUploadProps)
         </>
       ) : (
         <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-          <div className="text-3xl mb-2">🖼️</div>
+          <div className="text-3xl mb-2">+</div>
           <div className="text-sm font-medium">Drop cover art here</div>
           <div className="text-xs mt-1 text-muted-foreground/60">or click to browse</div>
         </div>
