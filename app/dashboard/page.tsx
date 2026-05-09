@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import BottomNav from '@/components/BottomNav';
 
 export default function ArtistDashboard() {
   const [step, setStep] = useState<'create' | 'live'>('create');
@@ -172,6 +173,7 @@ export default function ArtistDashboard() {
           </>
         )}
       </div>
+      <BottomNav role="artist" />
     </div>
   );
 }

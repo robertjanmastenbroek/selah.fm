@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import BottomNav from '@/components/BottomNav';
 
 export default function SettingsPage() {
   const [name, setName] = useState('Your Name');
@@ -70,6 +71,7 @@ export default function SettingsPage() {
           {saved ? '✓ Saved' : 'Save settings'}
         </button>
       </div>
+      <BottomNav role="artist" />
     </div>
   );
 }

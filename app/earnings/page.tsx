@@ -1,5 +1,7 @@
 'use client';
 
+import BottomNav from '@/components/BottomNav';
+
 const MOCK_EARNINGS = [
   { id: '1', track: 'Midnight Frequencies', artist: 'RJ Mastenbroek', platform: 'tiktok', views: 12400, earned: 37.20, status: 'paid', date: 'May 8' },
   { id: '2', track: 'Desert Prayer', artist: 'Luna Sol', platform: 'instagram', views: 8300, earned: 33.20, status: 'paid', date: 'May 7' },
@@ -56,6 +58,7 @@ export default function EarningsPage() {
           ))}
         </div>
       </div>
+      <BottomNav role="creator" />
     </div>
   );
 }

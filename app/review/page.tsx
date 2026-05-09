@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import BottomNav from '@/components/BottomNav';
 
 const MOCK_SUBMISSIONS = [
   { id: '1', creator: '@creatormia', track: 'Midnight Frequencies', platform: 'tiktok', views: 12400, url: 'tiktok.com/@creatormia/video/123', thumbnail: '🎬' },
@@ -92,6 +93,7 @@ export default function ReviewPage() {
           </>
         )}
       </div>
+      <BottomNav role="artist" />
     </div>
   );
 }

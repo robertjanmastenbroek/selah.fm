@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import BottomNav from '@/components/BottomNav';
 
 // Mock campaigns — in real app, fetched from DB
 const MOCK_CAMPAIGNS = [
@@ -152,6 +153,7 @@ export default function BrowsePage() {
           );
         })}
       </div>
+      <BottomNav role="creator" />
     </div>
   );
 }
