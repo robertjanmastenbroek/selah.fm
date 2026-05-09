@@ -6,7 +6,7 @@ const users = (globalThis.__users = globalThis.__users || new Map());
 
 function hashPassword(password: string): string {
   const crypto = require('crypto');
-  return crypto.createHash('sha256').update(password + 'sendmusic-salt').digest('hex');
+  return crypto.createHash('sha256').update(password + 'selah-salt').digest('hex');
 }
 
 function createSession(user: { email: string; type: string; name: string }): string {
