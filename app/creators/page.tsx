@@ -107,6 +107,9 @@ export default function CreatorsPage() {
                         <div>
                           <a href={`/creators/${c.id}`} className="font-semibold hover:text-accent-foreground transition-colors">
                             {c.display_name || 'Creator'}
+                            {(c.tiktok_handle || c.instagram_handle) && (
+                              <span className="ml-1.5 inline-flex items-center gap-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-full" title="Verified creator">✓</span>
+                            )}
                           </a>
                           <p className="text-xs text-muted-foreground">
                             {c.tiktok_handle && `${c.tiktok_handle.startsWith('@') ? c.tiktok_handle : `@${c.tiktok_handle}`}`}

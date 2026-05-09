@@ -23,7 +23,7 @@ function LoginForm() {
     if (refCode && mode === 'signup') body.refCode = refCode;
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
-    if (data.ok) window.location.href = '/browse';
+    if (data.ok) window.location.href = data.redirectTo || '/browse';
     else { setError(data.error); setLoading(false); }
   };
 

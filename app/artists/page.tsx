@@ -78,7 +78,9 @@ export default function ArtistsPage() {
                     <div className="flex items-center gap-3">
                       <CreatorAvatar name={a.display_name} size="md" />
                       <div>
-                        <h3 className="font-semibold">{a.display_name}</h3>
+                        <h3 className="font-semibold">
+                          {a.display_name}
+                        </h3>
                         <p className="text-xs text-muted-foreground">
                           {a.active_campaigns} active · {a.total_campaigns} total campaigns
                         </p>
