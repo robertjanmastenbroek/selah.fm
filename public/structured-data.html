@@ -1,16 +1,21 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "WebApplication",
   "name": "Selah.fm",
-  "description": "CPM marketplace connecting artists with creators for music promotion on TikTok, Instagram, and YouTube",
+  "description": "Get your music heard. CPM marketplace connecting artists with creators for music promotion on TikTok, Reels, and Shorts.",
+  "url": "https://selah.fm",
   "applicationCategory": "MusicApplication",
   "operatingSystem": "Web",
-  "url": "https://selah.fm",
   "offers": {
     "@type": "Offer",
     "price": "0",
     "priceCurrency": "USD"
+  },
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://selah.fm/browse?search={search_term_string}",
+    "query-input": "required name=search_term_string"
   }
 }
 </script>
