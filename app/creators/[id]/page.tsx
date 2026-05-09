@@ -93,7 +93,11 @@ export default function CreatorProfilePage() {
   useEffect(() => {
     fetch(`/api/creators/${id}`)
       .then(r => r.json())
-      .then(d => { setCreator(d); setLoading(false); })
+      .then(d => {
+        if (d.error) { setCreator(null); setLoading(false); return; }
+        setCreator(d);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, [id]);
 
