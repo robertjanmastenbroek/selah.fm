@@ -4,11 +4,9 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 const TABS = [
-  { href: '/', label: 'Home', icon: '🏠' },
-  { href: '/browse', label: 'Discover', icon: '🔍' },
-  { href: '/dashboard', label: 'Campaigns', icon: '📊' },
-  { href: '/earnings', label: 'Earnings', icon: '💰' },
-  { href: '/settings', label: 'Profile', icon: '👤' },
+  { href: '/browse', label: 'Campaigns', icon: '🔍' },
+  { href: '/artists', label: 'Artists', icon: '🎵' },
+  { href: '/creators', label: 'Creators', icon: '👤' },
 ];
 
 export default function BottomNav() {

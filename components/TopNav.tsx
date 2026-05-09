@@ -5,11 +5,10 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import NotificationBell from '@/components/NotificationBell';
 
-const links = [
-  { href: '/browse', label: 'Discover' },
+const mainLinks = [
+  { href: '/browse', label: 'Campaigns' },
+  { href: '/artists', label: 'Artists' },
   { href: '/creators', label: 'Creators' },
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/review', label: 'Review' },
 ];
 
 export default function Header() {
@@ -47,14 +46,14 @@ export default function Header() {
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         {/* Logo + Nav */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <Link href="/browse" className="flex items-center gap-2 group shrink-0">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
             <span className="text-xl leading-none">♪</span>
             <span className="font-bold text-lg tracking-tight group-hover:text-accent-foreground transition-colors">
               Selah<span className="text-accent-foreground">.fm</span>
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-0.5">
-            {links.map(link => {
+            {mainLinks.map(link => {
               const active = isActive(link.href);
               return (
                 <Link key={link.href} href={link.href}
@@ -90,6 +89,9 @@ export default function Header() {
                   <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                     <span>📊</span> Dashboard
                   </Link>
+                  <Link href="/review" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
+                    <span>✅</span> Review
+                  </Link>
                   <Link href="/earnings" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors">
                     <span>💰</span> Earnings
                   </Link>
@@ -113,7 +115,7 @@ export default function Header() {
 
       {/* Mobile top tabs */}
       <nav className="md:hidden flex items-center justify-around h-11 border-t bg-background/95 backdrop-blur">
-        {links.map(link => {
+        {mainLinks.map(link => {
           const active = isActive(link.href);
           return (
             <Link key={link.href} href={link.href}
