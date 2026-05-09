@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/TopNav';
 import ImageUpload from '@/components/ImageUpload';
+import CampaignCover from '@/components/CampaignCover';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -222,11 +223,7 @@ function DashboardContent() {
                 const pct = c.budget > 0 ? Math.min((c.spent / c.budget) * 100, 100) : 0;
                 return (
                   <Card key={c.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
-                    {c.coverArt && (
-                      <div className="h-40 overflow-hidden">
-                        <img src={c.coverArt} alt={c.trackTitle} className="w-full h-full object-cover" />
-                      </div>
-                    )}
+                    <CampaignCover src={c.coverArt} title={c.trackTitle} className="h-40" />
                     <CardContent className="p-5 space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
