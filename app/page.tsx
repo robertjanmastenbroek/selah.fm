@@ -107,29 +107,32 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Tiered fees */}
+      {/* Fee structure */}
       <section className="bg-muted/30 py-20 md:py-28">
         <div className="page-container">
           <div className="text-center max-w-lg mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Transparent fees. Always.</h2>
-            <p className="text-muted-foreground text-lg">20% platform fee on creator payouts. Artists see every cost upfront. No hidden deductions.</p>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Simple, transparent fees.</h2>
+            <p className="text-muted-foreground text-lg">20% platform fee on creator payouts. Artists set the budget — creators price accordingly.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              { volume: '$0–$500', fee: '20%', desc: 'Getting started. Test your first campaigns with minimal risk.' },
-              { volume: '$500–$2K', fee: '15%', desc: 'Scaling up. Run regular campaigns with more creators.' },
-              { volume: '$2,000+', fee: '10%', desc: 'Full scale. Maximum volume at the lowest rate.' },
-            ].map((t, i) => (
-              <Card key={i} className={`relative overflow-hidden ${i === 1 ? 'ring-2 ring-amber-500 shadow-lg' : ''}`}>
-                {i === 1 && <div className="absolute top-0 inset-x-0 h-1 bg-accent/100" />}
-                <CardContent className="p-8 text-center space-y-4">
-                  <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Monthly spend</p>
-                  <p className="text-2xl font-bold">{t.volume}</p>
-                  <p className="text-5xl font-bold text-accent-foreground tracking-tight">{t.fee}</p>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{t.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="max-w-md mx-auto">
+            <Card className="text-center">
+              <CardContent className="p-10 space-y-6">
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Artist budget</p>
+                  <p className="text-4xl font-bold">$500</p>
+                </div>
+                <div className="flex items-center justify-center gap-3 text-muted-foreground">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-sm">20% platform fee</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Creator earns</p>
+                  <p className="text-4xl font-bold text-accent-foreground">$400</p>
+                </div>
+                <p className="text-sm text-muted-foreground">Like Fiverr — creators build the fee into their rates. Artists pay exactly what they budget. No hidden costs.</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
