@@ -48,9 +48,10 @@ export default function SettingsPage() {
         }),
       });
       if (res.ok) {
-        addToast('Profile saved', 'success');
+        addToast('Saved! ✓', 'success');
       } else {
-        addToast('Failed to save', 'error');
+        const errData = await res.json().catch(() => ({}));
+        addToast(errData.error || 'Could not save. Try again.', 'error');
       }
     } catch {
       addToast('Network error', 'error');
