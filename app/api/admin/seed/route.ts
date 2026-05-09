@@ -54,8 +54,8 @@ export async function GET(request: Request) {
       const creators = await sql`SELECT id FROM users WHERE user_type = 'creator' LIMIT 5`;
       
       if (campaigns.length >= 3 && creators.length >= 3) {
-        const [c1, c2, c3] = campaigns.map(c => c.id);
-        const [cr1, cr2, cr3, cr4, cr5] = [...creators.map(c => c.id), null, null, null, null, null].slice(0, 5);
+        const [c1, c2, c3] = campaigns.map((c: any) => c.id);
+        const [cr1, cr2, cr3, cr4, cr5] = [...creators.map((c: any) => c.id), null, null, null, null, null].slice(0, 5);
 
         const insert = async (cid: any, crid: any, url: string, plat: string, rs: string, ps: string, views: number, paCents: number | null = null) => {
           if (!cid || !crid) return;
