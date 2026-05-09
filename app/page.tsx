@@ -84,16 +84,16 @@ export default function HomePage() {
             {/* Headline */}
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.05] animate-[fadeIn_0.6s_ease-out]">
               Get your music<br />
-              <span className="bg-gradient-to-r from-primary via-[#FFB8A8] to-primary bg-clip-text text-transparent animate-[shimmer_3s_ease-in-out_infinite] bg-[length:200%_100%]">
+              <span className="bg-gradient-to-r from-primary via-[#8B9FFF] to-primary bg-clip-text text-transparent animate-[shimmer_3s_ease-in-out_infinite] bg-[length:200%_100%]">
                 heard.
               </span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-3 animate-[fadeIn_0.7s_ease-out]">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-3 animate-[fadeIn_0.7s_ease-out] leading-relaxed">
               Real creators make TikToks, Reels & Shorts for your track. You set the CPM, approve every video, and only pay for verified views.
             </p>
-            <p className="text-sm text-muted-foreground/60 max-w-md mx-auto mb-10 animate-[fadeIn_0.8s_ease-out]">
+            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-10 animate-[fadeIn_0.8s_ease-out]">
               The transparent marketplace for music promotion. No bots. No waste. Just results.
             </p>
 
@@ -153,7 +153,7 @@ export default function HomePage() {
           <div className="text-center mb-14">
             <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold mb-3">The old way</p>
             <h2 className="text-2xl md:text-4xl font-bold mb-4">Music promotion is broken.</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">Playlist pitching gets you bots. Ads burn cash with no engagement. PR is slow and expensive. There&apos;s a better way.</p>
+            <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">Playlist pitching gets you bots. Ads burn cash with no engagement. PR is slow and expensive. There&apos;s a better way.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-12">
@@ -186,7 +186,7 @@ export default function HomePage() {
         <div className="page-container max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-2xl md:text-4xl font-bold mb-4">Real creators. Real content. Real results.</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">Artists set budgets and CPM rates. Creators browse, create, and submit. You approve what you like. You pay only for verified views.</p>
+            <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">Artists set budgets and CPM rates. Creators browse, create, and submit. You approve what you like. You pay only for verified views.</p>
           </div>
 
           {/* 3 product screenshots side by side */}
@@ -423,7 +423,7 @@ export default function HomePage() {
         <div className="page-container relative z-10 text-center">
           <h2 className="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight">
             Ready to get your music
-            <span className="bg-gradient-to-r from-primary via-[#FFB8A8] to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite]"> heard?</span>
+            <span className="bg-gradient-to-r from-primary via-[#8B9FFF] to-primary bg-clip-text text-transparent bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite]"> heard?</span>
           </h2>
           <p className="text-muted-foreground mb-10 max-w-md mx-auto text-lg">Join 200+ artists running campaigns on Selah.fm. Real creators. Real views. Real results.</p>
 
