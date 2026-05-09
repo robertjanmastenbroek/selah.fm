@@ -4,22 +4,13 @@ import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import NotificationBell from '@/components/NotificationBell';
+import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music } from 'lucide-react';
 
 const mainLinks = [
   { href: '/browse', label: 'Campaigns' },
   { href: '/artists', label: 'Artists' },
   { href: '/creators', label: 'Creators' },
 ];
-
-/* ── SVG icons ──────────────────────────────────────────────── */
-const Icons = {
-  Dashboard: () => (<svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>),
-  Review: () => (<svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 2h12v3H2zM2 7h12v3H2zM2 12h12v3H2z"/><path d="M5 5l2 2 4-4"/></svg>),
-  Earnings: () => (<svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M5 7h3.5a1.5 1.5 0 010 3H6.5"/></svg>),
-  Settings: () => (<svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/></svg>),
-  Logout: () => (<svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M11 11l4-3-4-3M15 8H6"/></svg>),
-  Note: () => (<svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M8 18V6l8-1.5v9"/><circle cx="5.5" cy="18" r="2"/><circle cx="15" cy="14.5" r="2"/></svg>),
-};
 
 export default function Header() {
   const [profile, setProfile] = useState<any>(null);
@@ -54,7 +45,7 @@ export default function Header() {
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-4 sm:gap-6">
           <Link href="/" className="flex items-center gap-2 group shrink-0">
-            <span className="text-primary"><Icons.Note /></span>
+            <Music size={18} strokeWidth={1.5} className="text-primary" />
             <span className="font-bold text-lg tracking-tight group-hover:text-primary transition-colors">
               Selah<span className="text-primary">.fm</span>
             </span>
@@ -89,12 +80,12 @@ export default function Header() {
                     <p className="text-sm font-medium truncate">{profile?.name || 'User'}</p>
                     <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
                   </div>
-                  <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Icons.Dashboard /> Dashboard</Link>
-                  <Link href="/review" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Icons.Review /> Review</Link>
-                  <Link href="/earnings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Icons.Earnings /> Earnings</Link>
-                  <Link href="/settings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Icons.Settings /> Settings</Link>
+                  <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><LayoutDashboard size={16} strokeWidth={1.5} /> Dashboard</Link>
+                  <Link href="/review" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><ClipboardCheck size={16} strokeWidth={1.5} /> Review</Link>
+                  <Link href="/earnings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Banknote size={16} strokeWidth={1.5} /> Earnings</Link>
+                  <Link href="/settings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Settings size={16} strokeWidth={1.5} /> Settings</Link>
                   <div className="border-t border-border/20 my-1" />
-                  <button onClick={handleLogout} className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-muted/50 transition-colors"><Icons.Logout /> Log out</button>
+                  <button onClick={handleLogout} className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-muted/50 transition-colors"><LogOut size={16} strokeWidth={1.5} /> Log out</button>
                 </div>
               )}
             </div>
