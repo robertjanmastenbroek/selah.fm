@@ -11,15 +11,34 @@ if (!process.env.GOOGLE_CLIENT_ID) {
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   debug: true,
-  logger: {
-    error(code, ...args) {
-      console.error("[NextAuth ERROR]", code, JSON.stringify(args));
+  useSecureCookies: true,
+  cookies: {
+    stateToken: {
+      name: `__Secure-next-auth.state`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+      },
     },
-    warn(code, ...args) {
-      console.warn("[NextAuth WARN]", code, JSON.stringify(args));
+    csrfToken: {
+      name: `__Host-next-auth.csrf`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+      },
     },
-    debug(code, ...args) {
-      console.log("[NextAuth DEBUG]", code, JSON.stringify(args));
+    sessionToken: {
+      name: `__Secure-next-auth.session`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+      },
     },
   },
   providers: [
@@ -36,7 +55,9 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ account, profile }) {
-      console.log("[NextAuth signIn]", { provider: account?.provider, email: profile?.email });
+      if (account?.provider === "google") {
+        return true;
+      }
       return true;
     },
     async session({ session, token }) {
@@ -48,7 +69,6 @@ const handler = NextAuth({
   },
   pages: {
     signIn: "/login",
-    error: "/login",
   },
 });
 
