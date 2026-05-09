@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import sql from '@/lib/db';
 
 function createSession(user: { email: string; name: string; picture: string }) {
   const crypto = require('crypto');
@@ -62,6 +63,19 @@ export async function GET(request: Request) {
     const user = await userRes.json();
 
     console.log('Google login success:', user.email);
+
+    // Persist user to database
+    try {
+      const existing = await sql`SELECT id FROM users WHERE email = ${user.email}`;
+      if (existing.length === 0) {
+        await sql`
+          INSERT INTO users (email, password_hash, user_type, display_name)
+          VALUES (${user.email}, 'google-oauth', 'creator', ${user.name || user.email.split('@')[0]})
+        `;
+      }
+    } catch (dbErr) {
+      console.error('DB insert failed:', dbErr);
+    }
 
     // Create session
     const session = createSession({ email: user.email, name: user.name, picture: user.picture });
