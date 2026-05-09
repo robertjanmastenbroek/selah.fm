@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-SendMusic.io Autonomous Orchestrator
+Selah.fm Autonomous Orchestrator
 =====================================
 #1 priority project. Self-directed task manager that drives the build
 queue for the CPM music promotion marketplace.
 
 Goal: $10k GMV in 90 days. 50 artists, 200 creators, 20 campaigns.
-Reuses patterns from CoolCompanion but focused entirely on SendMusic.io.
+Reuses patterns from CoolCompanion but focused entirely on Selah.fm.
 
 Usage:
   python3 orchestrator.py status       # Full build status
@@ -25,7 +25,7 @@ AGENT_DIR = Path(__file__).resolve().parent
 TASKS_PATH = AGENT_DIR / "tasks.json"
 
 BUILD_PLAN = {
-    "project": "SendMusic.io",
+    "project": "Selah.fm",
     "priority": "#1 — all efforts focused here",
     "goal": "$10k GMV in 90 days, 50 artists, 200 creators, 20 campaigns",
     "principle": "Launch fast. Real marketplace first. Outreach after.",
@@ -149,7 +149,7 @@ class Orchestrator:
         pct = int(done / total * 100) if total else 0
 
         print(f"\n{'='*60}")
-        print(f"  SendMusic.io Autonomous Orchestrator — PRIORITY #1")
+        print(f"  Selah.fm Autonomous Orchestrator — PRIORITY #1")
         print(f"  Progress: {done}/{total} tasks ({pct}%)")
         print(f"  Goal: $10k GMV, 50 artists, 200 creators, 20 campaigns")
         print(f"{'='*60}")
@@ -178,7 +178,7 @@ class Orchestrator:
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="SendMusic.io Autonomous Orchestrator")
+    parser = argparse.ArgumentParser(description="Selah.fm Autonomous Orchestrator")
     parser.add_argument("command", nargs="?", default="status",
                         choices=["status", "next", "plan", "evaluate"])
     args = parser.parse_args()
@@ -196,7 +196,7 @@ def main():
         else:
             print("\n✅ All tasks complete.")
     elif args.command == "plan":
-        print(f"\n  SendMusic.io Build Plan — PRIORITY #1\n")
+        print(f"\n  Selah.fm Build Plan — PRIORITY #1\n")
         for phase in sorted(orch.plan["phases"], key=lambda p: p["priority"]):
             print(f"  ▸ {phase['name']}")
             for task in phase["tasks"]:

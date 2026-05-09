@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SendMusic.io Autonomous Build Loop
+Selah.fm Autonomous Build Loop
 ===================================
 Continuous improvement engine. Run this to keep building, deploying,
 and improving without human intervention.

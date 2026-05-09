@@ -39,7 +39,7 @@ export default function DashboardPage() {
   const [budget, setBudget] = useState('25');
   const [maxPayout, setMaxPayout] = useState('10');
   const [driveUrl, setDriveUrl] = useState('');
-  const [hashtags, setHashtags] = useState('#sendmusicio');
+  const [hashtags, setHashtags] = useState('#selahfm');
   const [requirements, setRequirements] = useState('');
 
   useEffect(() => {

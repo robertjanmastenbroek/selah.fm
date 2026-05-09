@@ -1,4 +1,4 @@
--- sendmusic.io — PostgreSQL Schema
+-- selah.fm — PostgreSQL Schema
 -- CPM marketplace for music promotion
 -- 
 -- Core entities: users, campaigns, submissions, payouts
