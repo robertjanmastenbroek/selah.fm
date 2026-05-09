@@ -35,7 +35,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-void flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-bg flex flex-col items-center justify-center px-4">
       <div className="text-center mb-10">
         <div className="font-display text-gold text-3xl mb-2">SendMusic.io</div>
         <p className="text-muted text-sm">
@@ -69,14 +69,14 @@ export default function LoginPage() {
         {mode === 'signup' && (
           <input type="text" value={name} onChange={(e) => setName(e.target.value)}
             placeholder="Display name" required
-            className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
+            className="w-full bg-bg-card border border-white/10 rounded-xl px-4 py-3.5 text-text text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
         )}
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
           placeholder="Email" required
-          className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
+          className="w-full bg-bg-card border border-white/10 rounded-xl px-4 py-3.5 text-text text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
           placeholder="Password" required
-          className="w-full bg-void-card border border-white/10 rounded-xl px-4 py-3.5 text-ivory text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
+          className="w-full bg-bg-card border border-white/10 rounded-xl px-4 py-3.5 text-text text-lg placeholder:text-muted focus:outline-none focus:border-gold/50 transition-all" />
 
         <button type="submit" disabled={loading}
           className="btn-primary w-full text-lg !py-3.5 !rounded-xl">

@@ -7,12 +7,12 @@ export default function AnalyticsPage() {
   const [connected, setConnected] = useState<Set<string>>(new Set(['google']));
 
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-bg">
       <TopNav />
       <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Analytics</h1>
-          <p className="text-muted/50 text-sm">Track your content performance and earnings.</p>
+          <p className="text-text-muted text-sm">Track your content performance and earnings.</p>
         </div>
 
         {/* Overview stats */}
@@ -22,18 +22,18 @@ export default function AnalyticsPage() {
             { label: 'Posts', value: '0', sub: 'Submitted content' },
             { label: 'Earned', value: '$0', sub: 'Lifetime earnings' },
           ].map(s => (
-            <div key={s.label} className="card-glass p-4 text-center">
+            <div key={s.label} className="card p-4 text-center">
               <div className="text-gold font-bold text-xl mb-0.5">{s.value}</div>
-              <div className="text-ivory text-[11px] font-medium">{s.label}</div>
-              <div className="text-muted/30 text-[10px] mt-0.5">{s.sub}</div>
+              <div className="text-text text-[11px] font-medium">{s.label}</div>
+              <div className="text-text-muted text-[10px] mt-0.5">{s.sub}</div>
             </div>
           ))}
         </div>
 
         {/* Platform connections */}
-        <div className="card-glass p-6 mb-6">
-          <h2 className="text-ivory font-medium text-sm mb-4">Platforms</h2>
-          <p className="text-muted/40 text-xs mb-4 leading-relaxed">
+        <div className="card p-6 mb-6">
+          <h2 className="text-text font-medium text-sm mb-4">Platforms</h2>
+          <p className="text-text-muted text-xs mb-4 leading-relaxed">
             Connect your social accounts to track real view counts and verify content performance.
           </p>
           <div className="space-y-3">
@@ -50,7 +50,7 @@ export default function AnalyticsPage() {
                       style={{ backgroundColor: p.color + '15', color: p.color }}>
                       {p.name[0]}
                     </div>
-                    <div className="text-ivory text-sm">{p.name}</div>
+                    <div className="text-text text-sm">{p.name}</div>
                   </div>
                   {isConn ? (
                     <span className="text-emerald-400/60 text-[11px] font-medium">Connected</span>
@@ -67,10 +67,10 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Coming soon */}
-        <div className="card-glass p-6 text-center">
-          <div className="text-muted/30 text-4xl mb-3 font-light">↗</div>
-          <div className="text-ivory font-medium text-sm mb-1">Detailed analytics coming soon</div>
-          <p className="text-muted/40 text-xs">View tracking, engagement data, and payout history in real time.</p>
+        <div className="card p-6 text-center">
+          <div className="text-text-muted text-4xl mb-3 font-light">↗</div>
+          <div className="text-text font-medium text-sm mb-1">Detailed analytics coming soon</div>
+          <p className="text-text-muted text-xs">View tracking, engagement data, and payout history in real time.</p>
         </div>
       </main>
     </div>
