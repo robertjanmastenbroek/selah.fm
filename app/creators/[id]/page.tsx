@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Header from '@/components/TopNav';
 import BottomNav from '@/components/BottomNav';
+import CreatorAvatar from '@/components/CreatorAvatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,9 +53,7 @@ export default function CreatorProfilePage() {
         <Card className="mb-6 overflow-hidden">
           <div className="h-32 bg-gradient-to-r from-amber-100 to-amber-50" />
           <CardContent className="p-6 -mt-12 relative">
-            <div className="w-20 h-20 rounded-full bg-muted border-4 border-background flex items-center justify-center text-2xl font-bold">
-              {creator.display_name?.[0]?.toUpperCase() || '?'}
-            </div>
+            <CreatorAvatar src={creator.profile_image_url} name={creator.display_name || 'Creator'} size="xl" />
             <div className="mt-4">
               <h1 className="text-2xl font-bold">{creator.display_name}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-2">
