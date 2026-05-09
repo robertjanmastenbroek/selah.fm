@@ -1,16 +1,18 @@
-export const dynamic = 'force-dynamic';
-
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
-export default function OnboardingPage() {
+function OnboardingWizard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +29,24 @@ export default function OnboardingPage() {
   const [tiktok, setTikTok] = useState('');
   const [instagram, setInstagram] = useState('');
   const [youtube, setYouTube] = useState('');
+  const [facebook, setFacebook] = useState('');
   const [cpm, setCpm] = useState('2');
+
+  // Handle OAuth callback params
+  useEffect(() => {
+    const connected = searchParams.get('connected');
+    const err = searchParams.get('error');
+    if (err) {
+      setError(`Could not connect ${err.replace(/_/g, ' ')}. Try entering your handle manually.`);
+    }
+    if (connected) {
+      // Platform was connected via OAuth — mark it
+      if (connected === 'tiktok') setTikTok('@connected');
+      if (connected === 'instagram') setInstagram('@connected');
+      if (connected === 'youtube') setYouTube('@connected');
+      if (connected === 'facebook') setFacebook('@connected');
+    }
+  }, [searchParams]);
 
   const save = async () => {
     setSaving(true);
@@ -43,6 +62,7 @@ export default function OnboardingPage() {
           tiktok_handle: tiktok || null,
           instagram_handle: instagram || null,
           youtube_handle: youtube || null,
+          facebook_handle: facebook || null,
           preferredCpm: cpm,
         }),
       });
@@ -55,7 +75,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const connectedCount = [tiktok, instagram, youtube].filter(Boolean).length;
+  const connectedCount = [tiktok, instagram, youtube, facebook].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
@@ -114,45 +134,90 @@ export default function OnboardingPage() {
           <div className="space-y-4 animate-slide-up">
             <h2 className="text-xl font-bold text-center">Connect your accounts</h2>
             <p className="text-sm text-muted-foreground text-center">
-              Connect your social accounts to get verified. Verified creators and artists get more visibility.
+              Connect your social accounts to get verified. Verified profiles get more visibility and trust.
             </p>
 
             <div className="space-y-3">
+              {/* TikTok */}
               <Card className={tiktok ? 'border-pink-500/30 bg-pink-500/[0.02]' : ''}>
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#ff0050]/10 flex items-center justify-center text-lg">🎵</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">TikTok</span>
-                      {tiktok && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#ff0050]/10 flex items-center justify-center text-lg shrink-0">🎵</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium">TikTok</span>
+                        {tiktok && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
+                      </div>
+                      <div className="flex gap-2">
+                        <a href="/api/connect?platform=tiktok" className="text-xs px-3 py-1.5 rounded-lg bg-[#ff0050]/10 text-[#ff0050] font-medium hover:bg-[#ff0050]/20 transition-colors shrink-0">
+                          Connect
+                        </a>
+                        <Input value={tiktok === '@connected' ? '' : tiktok} onChange={e => setTikTok(e.target.value)} placeholder="Or enter @handle" className="h-7 text-xs" />
+                      </div>
                     </div>
-                    <Input value={tiktok} onChange={e => setTikTok(e.target.value)} placeholder="@yourhandle" className="mt-2 h-8 text-xs" />
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Instagram */}
               <Card className={instagram ? 'border-purple-500/30 bg-purple-500/[0.02]' : ''}>
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#E1306C]/10 flex items-center justify-center text-lg">📷</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">Instagram</span>
-                      {instagram && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-[#E1306C]/10 flex items-center justify-center text-lg shrink-0">📷</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium">Instagram</span>
+                        {instagram && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
+                      </div>
+                      <div className="flex gap-2">
+                        <a href="/api/connect?platform=instagram" className="text-xs px-3 py-1.5 rounded-lg bg-[#E1306C]/10 text-[#E1306C] font-medium hover:bg-[#E1306C]/20 transition-colors shrink-0">
+                          Connect
+                        </a>
+                        <Input value={instagram === '@connected' ? '' : instagram} onChange={e => setInstagram(e.target.value)} placeholder="Or enter @handle" className="h-7 text-xs" />
+                      </div>
                     </div>
-                    <Input value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="@yourhandle" className="mt-2 h-8 text-xs" />
                   </div>
                 </CardContent>
               </Card>
 
+              {/* YouTube */}
               <Card className={youtube ? 'border-red-500/30 bg-red-500/[0.02]' : ''}>
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-lg">▶</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">YouTube</span>
-                      {youtube && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-lg shrink-0">▶</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium">YouTube</span>
+                        {youtube && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
+                      </div>
+                      <div className="flex gap-2">
+                        <a href="/api/connect?platform=youtube" className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 font-medium hover:bg-red-500/20 transition-colors shrink-0">
+                          Connect
+                        </a>
+                        <Input value={youtube === '@connected' ? '' : youtube} onChange={e => setYouTube(e.target.value)} placeholder="Or enter @channel" className="h-7 text-xs" />
+                      </div>
                     </div>
-                    <Input value={youtube} onChange={e => setYouTube(e.target.value)} placeholder="@yourchannel" className="mt-2 h-8 text-xs" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Facebook */}
+              <Card className={facebook ? 'border-blue-500/30 bg-blue-500/[0.02]' : ''}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-lg shrink-0">📘</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm font-medium">Facebook</span>
+                        {facebook && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
+                      </div>
+                      <div className="flex gap-2">
+                        <a href="/api/connect?platform=facebook" className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-500 font-medium hover:bg-blue-500/20 transition-colors shrink-0">
+                          Connect
+                        </a>
+                        <Input value={facebook === '@connected' ? '' : facebook} onChange={e => setFacebook(e.target.value)} placeholder="Or enter name" className="h-7 text-xs" />
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -174,5 +239,13 @@ export default function OnboardingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-pulse text-muted-foreground">Loading...</div></div>}>
+      <OnboardingWizard />
+    </Suspense>
   );
 }

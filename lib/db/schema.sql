@@ -17,6 +17,7 @@ CREATE TABLE users (
     tiktok_handle   TEXT,
     instagram_handle TEXT,
     youtube_handle  TEXT,
+    facebook_handle TEXT,
     
     -- Creator profile (marketplace directory)
     bio                     TEXT,

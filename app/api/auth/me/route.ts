@@ -46,6 +46,7 @@ export async function PATCH(request: Request) {
     if (body.tiktok_handle !== undefined) { updates.push(`tiktok_handle = $${updates.length + 1}`); values.push(body.tiktok_handle); }
     if (body.instagram_handle !== undefined) { updates.push(`instagram_handle = $${updates.length + 1}`); values.push(body.instagram_handle); }
     if (body.youtube_handle !== undefined) { updates.push(`youtube_handle = $${updates.length + 1}`); values.push(body.youtube_handle); }
+    if (body.facebook_handle !== undefined) { updates.push(`facebook_handle = $${updates.length + 1}`); values.push(body.facebook_handle); }
 
     if (updates.length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
@@ -61,9 +62,10 @@ export async function PATCH(request: Request) {
         tiktok_handle = COALESCE(${body.tiktok_handle ?? null}, tiktok_handle),
         instagram_handle = COALESCE(${body.instagram_handle ?? null}, instagram_handle),
         youtube_handle = COALESCE(${body.youtube_handle ?? null}, youtube_handle),
+        facebook_handle = COALESCE(${body.facebook_handle ?? null}, facebook_handle),
         updated_at = NOW()
       WHERE id = ${userId}
-      RETURNING id, email, display_name, bio, genres, preferred_cpm_cents, tiktok_handle, instagram_handle, youtube_handle
+      RETURNING id, email, display_name, bio, genres, preferred_cpm_cents, tiktok_handle, instagram_handle, youtube_handle, facebook_handle
     `;
 
     return NextResponse.json({ ok: true, user: result[0] });
