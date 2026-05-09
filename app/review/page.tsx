@@ -17,20 +17,38 @@ interface Submission {
   cpm_rate_cents: number;
   max_payout_per_submission_cents: number;
   review_status: string;
+  campaign_id: string;
 }
 
 export default function ReviewPage() {
   const [subs, setSubs] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCampaign, setSelectedCampaign] = useState('all');
+  const [campaigns, setCampaigns] = useState<{ id: string; track_title: string }[]>([]);
 
   useEffect(() => {
-    fetch('/api/submissions?campaignId=all')
+    // Fetch artist's campaigns first
+    fetch('/api/campaigns')
+      .then(r => r.json())
+      .then(d => {
+        const artistCampaigns = d.campaigns || [];
+        setCampaigns(artistCampaigns.map((c: any) => ({ id: c.id, track_title: c.track_title })));
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const campaignId = selectedCampaign === 'all' ? 'all' : selectedCampaign;
+    fetch(`/api/submissions?campaignId=${campaignId}`)
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data)) setSubs(data.filter((s: Submission) => s.review_status === 'pending'));
+        if (Array.isArray(data)) {
+          setSubs(data.filter((s: Submission) => s.review_status === 'pending'));
+        }
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedCampaign]);
 
   const handleAction = async (id: string, status: string) => {
     try { await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) }); } catch {}
@@ -41,9 +59,21 @@ export default function ReviewPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="page-container">
-        <div className="mb-8">
-          <h1 className="section-title mb-1">Review</h1>
-          <p className="text-muted-foreground text-sm">{loading ? 'Loading...' : `${subs.length} pending`}</p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="section-title mb-1">Review</h1>
+            <p className="text-muted-foreground text-sm">{loading ? 'Loading...' : `${subs.length} pending`}</p>
+          </div>
+          <select
+            value={selectedCampaign}
+            onChange={e => setSelectedCampaign(e.target.value)}
+            className="border rounded-md px-3 py-2 text-sm bg-background"
+          >
+            <option value="all">All campaigns</option>
+            {campaigns.map(c => (
+              <option key={c.id} value={c.id}>{c.track_title}</option>
+            ))}
+          </select>
         </div>
 
         {loading ? (
@@ -74,7 +104,7 @@ export default function ReviewPage() {
                     <Card className="bg-muted/50"><CardContent className="p-3 text-sm text-muted-foreground">
                       {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> → <span className="text-foreground font-semibold">${net.toFixed(2)}</span> creator earns
                     </CardContent></Card>
-                    <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" className="text-sm text-accent-foreground hover:underline">Watch on {s.platform} →</a>
+                    <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-accent-foreground hover:underline">Watch on {s.platform} →</a>
                     <div className="flex gap-2">
                       <Button variant="outline" onClick={() => handleAction(s.id, 'rejected')} className="flex-1">Reject</Button>
                       <Button onClick={() => handleAction(s.id, 'approved')} className="flex-1">Approve</Button>

@@ -58,9 +58,9 @@ export default function CreatorProfilePage() {
             <div className="mt-4">
               <h1 className="text-2xl font-bold">{creator.display_name}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                {creator.tiktok_handle && <Badge variant="outline">@TikTok</Badge>}
-                {creator.instagram_handle && <Badge variant="outline">@Instagram</Badge>}
-                {creator.youtube_handle && <Badge variant="outline">@YouTube</Badge>}
+                {creator.tiktok_handle && <Badge variant="outline">{creator.tiktok_handle.startsWith('@') ? creator.tiktok_handle : `@${creator.tiktok_handle}`}</Badge>}
+                {creator.instagram_handle && <Badge variant="outline">{creator.instagram_handle.startsWith('@') ? creator.instagram_handle : `@${creator.instagram_handle}`}</Badge>}
+                {creator.youtube_handle && <Badge variant="outline">{creator.youtube_handle.startsWith('@') ? creator.youtube_handle : `@${creator.youtube_handle}`}</Badge>}
               </div>
             </div>
           </CardContent>
