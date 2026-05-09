@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const offset = parseInt(searchParams.get('offset') || '0');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
 
-    let query = sql`
+    const campaigns = await sql`
       SELECT c.*, 
         COALESCE(v.approved_submissions, '0') as approved_submissions,
         COALESCE(v.pending_submissions, '0') as pending_submissions,
@@ -18,13 +18,10 @@ export async function GET(request: Request) {
       FROM campaigns c
       LEFT JOIN campaign_stats v ON v.id = c.id
       WHERE c.status IN ('active', 'draft')
-        AND (c.ends_at IS NULL OR c.ends_at > NOW())
+      ORDER BY c.created_at DESC
+      LIMIT ${limit}
     `;
 
-    // Sort by created_at desc and apply limit
-    const campaigns = await query;
-    
-    // Filter in JS (simpler than dynamic SQL for MVP)
     let filtered = campaigns;
     
     if (search) {
@@ -46,9 +43,6 @@ export async function GET(request: Request) {
       filtered = filtered.filter((c: any) => c.cpm_rate_cents >= min);
     }
 
-    // Sort by created_at desc
-    filtered.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    
     const total = filtered.length;
     const page = filtered.slice(offset, offset + limit);
 
