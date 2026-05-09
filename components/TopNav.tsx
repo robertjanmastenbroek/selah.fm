@@ -41,7 +41,7 @@ export default function Header() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-xl">
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-4 sm:gap-6">
           <Link href="/" className="flex items-center gap-2 group shrink-0">
@@ -95,7 +95,7 @@ export default function Header() {
         </div>
       </div>
 
-      <nav className="md:hidden flex items-center justify-around h-11 border-t border-border/40 bg-background/95 backdrop-blur">
+      <nav className="md:hidden flex items-center justify-around h-11 border-t border-white/[0.06] bg-white/[0.02] backdrop-blur-xl">
         {mainLinks.map(link => {
           const active = isActive(link.href);
           return (
