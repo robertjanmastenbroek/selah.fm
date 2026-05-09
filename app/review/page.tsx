@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
+import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState('all');
   const [campaigns, setCampaigns] = useState<{ id: string; track_title: string }[]>([]);
+  const { addToast } = useToast();
 
   useEffect(() => {
     // Fetch artist's campaigns first
@@ -51,7 +53,12 @@ export default function ReviewPage() {
   }, [selectedCampaign]);
 
   const handleAction = async (id: string, status: string) => {
-    try { await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) }); } catch {}
+    try {
+      await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
+      addToast(status === 'approved' ? 'Submission approved — creator will be paid' : 'Submission rejected', status === 'approved' ? 'success' : 'info');
+    } catch {
+      addToast('Failed to update — try again', 'error');
+    }
     setSubs(prev => prev.filter(s => s.id !== id));
   };
 

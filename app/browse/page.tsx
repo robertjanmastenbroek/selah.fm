@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
 import CampaignSearch from '@/components/CampaignSearch';
 import CampaignCover from '@/components/CampaignCover';
+import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -33,6 +34,7 @@ export default function BrowsePage() {
   const [submitUrl, setSubmitUrl] = useState<Record<string, string>>({});
   const [submitPlatform, setSubmitPlatform] = useState<Record<string, string>>({});
   const [filters, setFilters] = useState<{ search?: string; platform?: string; minCpm?: number; offset?: number }>({});
+  const { addToast } = useToast();
 
   const fetchCampaigns = (f: typeof filters = {}) => {
     setLoading(true);
@@ -67,11 +69,19 @@ export default function BrowsePage() {
     if (!url) return;
     setSubmitting(campaignId);
     try {
-      await fetch('/api/submissions', {
+      const res = await fetch('/api/submissions', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ campaignId, contentUrl: url, platform: submitPlatform[campaignId] || 'tiktok' }),
       });
-    } catch {}
+      if (res.ok) {
+        addToast('Submitted! Artist will review your video.', 'success');
+      } else {
+        const err = await res.json();
+        addToast(err.error || 'Failed to submit', 'error');
+      }
+    } catch {
+      addToast('Network error — try again', 'error');
+    }
     setSubmitting(null);
     setSubmitUrl(prev => ({ ...prev, [campaignId]: '' }));
     setJoined(prev => { const next = new Set(prev); next.delete(campaignId); return next; });
