@@ -143,14 +143,46 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
         </div>
 
         {/* Requirements */}
-        {campaign.requirements && (
-          <Card className="mb-8">
-            <CardContent className="p-5">
-              <h3 className="font-semibold mb-3">Requirements for creators</h3>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{campaign.requirements}</p>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="mb-8">
+          <CardContent className="p-5 space-y-4">
+            <h3 className="font-semibold">Requirements for creators</h3>
+            
+            {(campaign as any).min_video_length_seconds > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="outline" className="text-xs">⏱ Min {(campaign as any).min_video_length_seconds}s</Badge>
+              </div>
+            )}
+
+            {(campaign as any).required_hashtags && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Required hashtags:</p>
+                <p className="text-sm font-mono text-accent-foreground">{(campaign as any).required_hashtags}</p>
+              </div>
+            )}
+
+            {(campaign as any).require_ftc && (
+              <Badge className="text-xs bg-amber-500/10 text-amber-400 border-amber-500/20">FTC disclosure required (#ad, #paidpartner)</Badge>
+            )}
+
+            {(campaign as any).caption_requirements && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Caption requirements:</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{(campaign as any).caption_requirements}</p>
+              </div>
+            )}
+
+            {campaign.requirements && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Content guidelines:</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{campaign.requirements}</p>
+              </div>
+            )}
+
+            {!campaign.requirements && !(campaign as any).required_hashtags && !(campaign as any).min_video_length_seconds && (
+              <p className="text-sm text-muted-foreground">No specific requirements — be creative!</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Google Drive */}
         {campaign.content_assets_url && (
