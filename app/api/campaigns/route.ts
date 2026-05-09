@@ -16,10 +16,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { trackTitle, trackUrl, cpmRate, budget, maxPayout } = await request.json();
+    const { trackTitle, trackUrl, cpmRate, budget, maxPayout, driveUrl, hashtags, requirements } = await request.json();
     const result = await sql`
-      INSERT INTO campaigns (track_title, track_url, cpm_rate_cents, total_budget_cents, max_payout_per_submission_cents, budget_remaining_cents, status)
-      VALUES (${trackTitle}, ${trackUrl}, ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100}, 'active')
+      INSERT INTO campaigns (track_title, track_url, cpm_rate_cents, total_budget_cents, max_payout_per_submission_cents, budget_remaining_cents, status, content_assets_url, recommended_hashtags, requirements)
+      VALUES (${trackTitle}, ${trackUrl}, ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100}, 'active', ${driveUrl || ''}, ${hashtags || '#sendmusicio'}, ${requirements || ''})
       RETURNING *
     `;
     return NextResponse.json(result[0]);
