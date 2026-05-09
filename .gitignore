@@ -34,9 +34,8 @@ venv/
 *.db
 *.sqlite
 
-# Generated images
-public/images/*.png
-public/images/*.jpg
+# Generated images (keep originals out, but renamed ones in)
+public/images/u*.png
 
 # macOS
 .AppleDouble
