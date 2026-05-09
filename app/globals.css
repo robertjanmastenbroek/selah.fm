@@ -6,70 +6,69 @@
 
 @layer base {
   html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-  body { @apply bg-void text-ivory font-body; }
+  body { @apply bg-bg text-text font-body; }
   input, textarea, select { @apply outline-none; }
 }
 
 @layer components {
-  /* Glass card */
-  .card-glass {
-    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl
-           shadow-card transition-all duration-300 ease-out;
+  /* Card — white with subtle shadow */
+  .card {
+    @apply bg-bg-card border border-border-light rounded-2xl p-5
+           shadow-card transition-all duration-200 ease-out;
   }
-  .card-glass:hover {
-    @apply shadow-card-hover border-white/[0.1] -translate-y-0.5;
-  }
-
-  /* Elevated card */
-  .card-elevated {
-    @apply bg-white/[0.04] border border-white/[0.08] rounded-2xl
-           shadow-card transition-all duration-300 ease-out;
+  .card:hover {
+    @apply shadow-card-hover -translate-y-0.5;
   }
 
-  /* Input field */
+  /* Input */
   .input-field {
-    @apply w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3.5
-           text-ivory text-[15px] placeholder:text-muted/40
+    @apply w-full bg-bg-secondary border border-border rounded-xl px-4 py-3.5
+           text-text text-[15px] placeholder:text-text-muted
            transition-all duration-200 ease-out
-           focus:border-gold/40 focus:bg-white/[0.06] focus:shadow-gold;
+           focus:border-gold focus:ring-2 focus:ring-gold/10;
   }
 
   /* Primary button */
   .btn-primary {
-    @apply bg-gold text-void font-semibold py-3 px-6 rounded-xl
-           hover:bg-gold-hover active:scale-[0.98]
+    @apply bg-text text-white font-semibold py-3 px-6 rounded-xl
+           hover:bg-text-secondary active:scale-[0.98]
            transition-all duration-200 ease-out
            inline-flex items-center justify-center gap-2
-           shadow-button disabled:opacity-40 disabled:cursor-not-allowed;
+           disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
-  /* Secondary button */
+  /* Gold CTA */
+  .btn-gold {
+    @apply bg-gold text-white font-semibold py-3 px-6 rounded-xl
+           hover:bg-gold-dark active:scale-[0.98]
+           transition-all duration-200 ease-out
+           inline-flex items-center justify-center gap-2
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+
+  /* Secondary */
   .btn-secondary {
-    @apply border border-white/[0.1] text-ivory font-medium py-3 px-6 rounded-xl
-           hover:bg-white/[0.04] hover:border-white/[0.2] active:scale-[0.98]
+    @apply border border-border text-text font-medium py-3 px-6 rounded-xl
+           hover:bg-bg-secondary active:scale-[0.98]
            transition-all duration-200 ease-out
            inline-flex items-center justify-center gap-2;
   }
 
-  /* Ghost button */
   .btn-ghost {
-    @apply text-muted font-medium py-2 px-3 rounded-lg
-           hover:text-ivory hover:bg-white/[0.04]
+    @apply text-text-muted font-medium py-2 px-3 rounded-lg
+           hover:text-text hover:bg-bg-secondary
            transition-all duration-150 ease-out;
   }
 
-  /* Section heading */
   .section-title {
-    @apply font-display text-2xl md:text-3xl lg:text-4xl text-ivory tracking-tight;
+    @apply font-display text-2xl md:text-3xl lg:text-4xl text-text tracking-tight;
   }
 
-  /* Page container — responsive widths */
   .page-container {
-    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 md:pt-24;
   }
 
-  /* Two-column grid for campaign cards on desktop */
   .campaign-grid {
-    @apply grid gap-4 md:grid-cols-2 lg:grid-cols-2;
+    @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-2;
   }
 }

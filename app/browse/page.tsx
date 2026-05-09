@@ -74,31 +74,31 @@ export default function BrowsePage() {
   };
 
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-bg">
       <TopNav />
 
       <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Browse campaigns</h1>
-          <p className="text-muted/50 text-sm">Pick a track you love, create content, get paid for views.</p>
+          <p className="text-text-muted text-sm">Pick a track you love, create content, get paid for views.</p>
         </div>
 
         {loading ? (
           <div className="space-y-4">
             {[1,2,3].map(i => (
-              <div key={i} className="card-glass p-5 animate-pulse">
-                <div className="h-5 bg-white/[0.04] rounded w-2/3 mb-3" />
-                <div className="h-4 bg-white/[0.03] rounded w-1/3 mb-4" />
-                <div className="h-1 bg-white/[0.03] rounded mb-4" />
-                <div className="h-10 bg-white/[0.04] rounded" />
+              <div key={i} className="card p-5 animate-pulse">
+                <div className="h-5 bg-bg-secondary rounded w-2/3 mb-3" />
+                <div className="h-4 bg-bg-secondary rounded w-1/3 mb-4" />
+                <div className="h-1 bg-bg-secondary rounded mb-4" />
+                <div className="h-10 bg-bg-secondary rounded" />
               </div>
             ))}
           </div>
         ) : campaigns.length === 0 ? (
-          <div className="card-glass text-center py-16">
-            <div className="text-muted/30 text-[64px] mb-4 font-light">♪</div>
-            <div className="text-ivory font-medium text-lg mb-2">No campaigns yet</div>
-            <p className="text-muted/40 text-sm">Be the first to create one.</p>
+          <div className="card text-center py-16">
+            <div className="text-text-muted text-[64px] mb-4 font-light">♪</div>
+            <div className="text-text font-medium text-lg mb-2">No campaigns yet</div>
+            <p className="text-text-muted text-sm">Be the first to create one.</p>
           </div>
         ) : (
           <div className="campaign-grid">
@@ -113,25 +113,25 @@ export default function BrowsePage() {
               const platform = submitPlatform[c.id] || 'tiktok';
 
               return (
-                <div key={c.id} className="card-glass p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+                <div key={c.id} className="card p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <div className="text-ivory font-semibold text-lg leading-tight">{c.track_title}</div>
-                      <div className="text-muted/50 text-sm mt-0.5">${cpm} CPM · ${budget} budget</div>
+                      <a href={`/c/${c.id}`} className="text-text font-semibold text-lg leading-tight hover:text-gold transition-colors">{c.track_title}</a>
+                      <div className="text-text-muted text-sm mt-0.5">${cpm} CPM · ${budget} budget</div>
                     </div>
                     <div className="text-right">
                       <div className="text-gold font-bold text-xl leading-none">${cpm}</div>
-                      <div className="text-muted/40 text-[11px] mt-0.5">per 1K views</div>
+                      <div className="text-text-muted text-[11px] mt-0.5">per 1K views</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 text-xs text-muted/40 mb-3">
+                  <div className="flex items-center gap-4 text-xs text-text-muted mb-3">
                     <span>{c.approved_submissions || '0'} submissions</span>
                     <span>${remaining.toFixed(0)} remaining</span>
                     <span className="capitalize">{c.platforms?.join(', ') || 'tiktok'}</span>
                   </div>
 
-                  <div className="h-1 bg-white/[0.04] rounded-full overflow-hidden mb-4">
+                  <div className="h-1 bg-bg-secondary rounded-full overflow-hidden mb-4">
                     <div className={`h-full rounded-full transition-all duration-500 ${budgetPct > 80 ? 'bg-crimson-light' : 'bg-gold'}`}
                       style={{ width: `${Math.min(budgetPct, 100)}%` }} />
                   </div>
@@ -161,7 +161,7 @@ export default function BrowsePage() {
                           Submit
                         </button>
                       </div>
-                      <p className="text-muted/30 text-[11px]">Only content reaching the minimum view threshold will be reviewed.</p>
+                      <p className="text-text-muted text-[11px]">Only content reaching the minimum view threshold will be reviewed.</p>
                     </div>
                   )}
                 </div>

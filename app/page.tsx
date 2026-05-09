@@ -4,7 +4,7 @@ export default function LandingPage() {
   return (
     <>
       {/* ---- Nav ---- */}
-      <nav className="border-b border-white/5 sticky top-0 bg-void/95 backdrop-blur z-50">
+      <nav className="border-b border-white/5 sticky top-0 bg-bg/95 backdrop-blur z-50">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <span className="font-display text-gold text-xl tracking-wide">SendMusic.io</span>
           <a href="/login" className="btn-primary text-sm !py-2 !px-5">Get started</a>
@@ -15,7 +15,7 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 pt-16 md:pt-28 pb-16 md:pb-24">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div>
-            <h1 className="font-display text-4xl md:text-6xl text-ivory leading-tight mb-4">
+            <h1 className="font-display text-4xl md:text-6xl text-text leading-tight mb-4">
               Get your music<br />
               <span className="text-gold">promoted. Get views. Get paid.</span>
             </h1>
@@ -45,7 +45,7 @@ export default function LandingPage() {
             { num: 'Cap', label: 'Max payout per video' },
             { num: 'You', label: 'Approve every video' },
           ].map(({ num, label }) => (
-            <div key={label} className="card-elevated !p-5">
+            <div key={label} className="card !p-5">
               <div className="font-display text-2xl text-gold mb-1">{num}</div>
               <div className="text-muted text-xs">{label}</div>
             </div>
@@ -54,9 +54,9 @@ export default function LandingPage() {
       </section>
 
       {/* ---- How it works — Vyro-style 3 steps ---- */}
-      <section className="border-y border-white/5 bg-void-elevated/30 py-20 md:py-28">
+      <section className="border-y border-white/5 bg-bg-elevated/30 py-20 md:py-28">
         <div className="page-container px-4">
-          <h2 className="font-display text-3xl text-center text-ivory mb-16">How it works</h2>
+          <h2 className="font-display text-3xl text-center text-text mb-16">How it works</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { step: '01', title: 'Set your price', desc: 'Upload your track. Set CPM rate and max payout. Deposit your budget. Campaign goes live.', icon: '🎯' },
@@ -66,7 +66,7 @@ export default function LandingPage() {
               <div key={s.step} className="text-center">
                 <div className="text-4xl mb-4">{s.icon}</div>
                 <div className="text-gold text-xs font-bold tracking-widest mb-3">{s.step}</div>
-                <div className="font-display text-xl text-ivory mb-3">{s.title}</div>
+                <div className="font-display text-xl text-text mb-3">{s.title}</div>
                 <div className="text-muted text-sm leading-relaxed">{s.desc}</div>
               </div>
             ))}
@@ -79,7 +79,7 @@ export default function LandingPage() {
         <div className="page-container px-4 grid md:grid-cols-2 gap-12 items-center">
           <div>
             <div className="text-gold text-xs font-semibold uppercase tracking-widest mb-3">For artists</div>
-            <h2 className="font-display text-3xl text-ivory mb-4">Full control over your budget</h2>
+            <h2 className="font-display text-3xl text-text mb-4">Full control over your budget</h2>
             <p className="text-muted leading-relaxed mb-6">
               Set CPM rate, max payout per video, and minimum view threshold.
               Only quality content reaches your review queue. One viral clip never drains your budget.
@@ -103,14 +103,14 @@ export default function LandingPage() {
       </section>
 
       {/* ---- Earnings visual ---- */}
-      <section className="border-y border-white/5 bg-void-elevated/30 py-20 md:py-28">
+      <section className="border-y border-white/5 bg-bg-elevated/30 py-20 md:py-28">
         <div className="page-container px-4 grid md:grid-cols-2 gap-12 items-center">
           <div className="order-2 md:order-1">
             <img src="/images/earnings-visual.png" alt="Creator earnings growth" className="rounded-2xl w-full h-auto" />
           </div>
           <div className="order-1 md:order-2">
             <div className="text-gold text-xs font-semibold uppercase tracking-widest mb-3">For creators</div>
-            <h2 className="font-display text-3xl text-ivory mb-4">Get paid for the content you already make</h2>
+            <h2 className="font-display text-3xl text-text mb-4">Get paid for the content you already make</h2>
             <p className="text-muted leading-relaxed mb-6">
               Browse campaigns from artists who want their music promoted.
               Create TikToks and Reels with tracks you love. Earn CPM on verified views.
@@ -133,7 +133,7 @@ export default function LandingPage() {
       {/* ---- Creator earnings ---- */}
       <section className="py-20 md:py-28">
         <div className="page-container px-4">
-          <h2 className="font-display text-3xl text-center text-ivory mb-4">Creators earning on SendMusic.io</h2>
+          <h2 className="font-display text-3xl text-center text-text mb-4">Creators earning on SendMusic.io</h2>
           <p className="text-muted text-center mb-12 max-w-md mx-auto">Real payouts. Real views. No bots.</p>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -144,7 +144,7 @@ export default function LandingPage() {
               <div key={c.handle} className="card text-center !p-6">
                 <div className="text-2xl mb-2">🎬</div>
                 <div className="font-display text-xl text-gold mb-1">{c.earned}</div>
-                <div className="text-ivory font-semibold text-sm mb-1">{c.name}</div>
+                <div className="text-text font-semibold text-sm mb-1">{c.name}</div>
                 <div className="text-muted text-xs">{c.vids} videos · {c.platform}</div>
               </div>
             ))}
@@ -156,18 +156,18 @@ export default function LandingPage() {
       <section className="py-20 md:py-28">
         <div className="page-container px-4">
           <h2 className="section-title text-center mb-4">One fee. It gets smaller as you grow.</h2>
-          <p className="text-muted/50 text-center mb-12 max-w-md mx-auto">No subscription. No hidden costs. Just one platform fee on payouts.</p>
+          <p className="text-text-muted text-center mb-12 max-w-md mx-auto">No subscription. No hidden costs. Just one platform fee on payouts.</p>
           <div className="grid md:grid-cols-3 gap-4">
             {[
               { volume: '$0–$500', fee: '20%', desc: 'Getting started. Test campaigns, find your flow.' },
               { volume: '$500–$2K', fee: '15%', desc: 'Growing. Regular campaigns, more creators.' },
               { volume: '$2,000+', fee: '10%', desc: 'Scaling. Highest volume, lowest fee.' },
             ].map((t, i) => (
-              <div key={i} className="card-glass p-6 text-center animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="text-muted/40 text-sm mb-2">Monthly spend</div>
-                <div className="text-ivory font-semibold text-lg mb-1">{t.volume}</div>
+              <div key={i} className="card p-6 text-center animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
+                <div className="text-text-muted text-sm mb-2">Monthly spend</div>
+                <div className="text-text font-semibold text-lg mb-1">{t.volume}</div>
                 <div className="font-display text-3xl text-gold mb-2 tracking-tight">{t.fee}</div>
-                <div className="text-muted/40 text-sm">{t.desc}</div>
+                <div className="text-text-muted text-sm">{t.desc}</div>
               </div>
             ))}
           </div>
@@ -177,7 +177,7 @@ export default function LandingPage() {
       {/* ---- Why different ---- */}
       <section className="py-20 md:py-28">
         <div className="page-container px-4">
-          <h2 className="font-display text-3xl text-center text-ivory mb-4">Why SendMusic.io</h2>
+          <h2 className="font-display text-3xl text-center text-text mb-4">Why SendMusic.io</h2>
           <p className="text-muted text-center mb-12 max-w-md mx-auto">
             Built for music. Not general content promotion.
           </p>
@@ -199,7 +199,7 @@ export default function LandingPage() {
                 ].map(([old, nw]) => (
                   <tr key={old}>
                     <td className="py-4 pr-4 text-muted">{old}</td>
-                    <td className="py-4 px-4 text-ivory">{nw}</td>
+                    <td className="py-4 px-4 text-text">{nw}</td>
                   </tr>
                 ))}
               </tbody>
@@ -209,9 +209,9 @@ export default function LandingPage() {
       </section>
 
       {/* ---- Final CTA ---- */}
-      <section className="border-y border-white/5 bg-void-elevated/30 py-20 md:py-28 text-center">
+      <section className="border-y border-white/5 bg-bg-elevated/30 py-20 md:py-28 text-center">
         <div className="max-w-lg mx-auto px-4">
-          <h2 className="font-display text-3xl text-ivory mb-4">Ready to get your music heard?</h2>
+          <h2 className="font-display text-3xl text-text mb-4">Ready to get your music heard?</h2>
           <p className="text-muted mb-8">
             First cohort launching soon. Artists and creators — claim your spot.
           </p>

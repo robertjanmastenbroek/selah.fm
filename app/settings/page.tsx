@@ -20,7 +20,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-bg">
       <TopNav />
       <main className="page-container py-8 md:py-12">
         <div className="mb-8">
@@ -29,15 +29,15 @@ export default function SettingsPage() {
 
         <div className="space-y-6">
           {/* Profile card */}
-          <div className="card-glass p-6">
-            <h2 className="text-ivory font-medium text-sm mb-4">Profile</h2>
+          <div className="card p-6">
+            <h2 className="text-text font-medium text-sm mb-4">Profile</h2>
             <div className="space-y-4">
               <div>
-                <label className="text-muted/50 text-xs mb-1.5 block">Display name</label>
+                <label className="text-text-muted text-xs mb-1.5 block">Display name</label>
                 <input defaultValue={profile?.name || ''} className="input-field" />
               </div>
               <div>
-                <label className="text-muted/50 text-xs mb-1.5 block">Email</label>
+                <label className="text-text-muted text-xs mb-1.5 block">Email</label>
                 <input defaultValue={profile?.email || ''} disabled className="input-field opacity-60" />
               </div>
               <button className="btn-primary text-sm">Save changes</button>
@@ -45,8 +45,8 @@ export default function SettingsPage() {
           </div>
 
           {/* Connected accounts */}
-          <div className="card-glass p-6">
-            <h2 className="text-ivory font-medium text-sm mb-4">Connected accounts</h2>
+          <div className="card p-6">
+            <h2 className="text-text font-medium text-sm mb-4">Connected accounts</h2>
             <div className="space-y-3">
               {[
                 { name: 'Google', connected: true, icon: 'G' },
@@ -60,8 +60,8 @@ export default function SettingsPage() {
                       {p.icon}
                     </div>
                     <div>
-                      <div className="text-ivory text-sm">{p.name}</div>
-                      <div className="text-muted/40 text-[11px]">
+                      <div className="text-text text-sm">{p.name}</div>
+                      <div className="text-text-muted text-[11px]">
                         {p.connected ? 'Connected' : 'Not connected'}
                       </div>
                     </div>
@@ -79,7 +79,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Danger zone */}
-          <div className="card-glass p-6">
+          <div className="card p-6">
             <h2 className="text-crimson-light/70 font-medium text-sm mb-4">Account</h2>
             <button onClick={handleLogout}
               className="btn-secondary w-full !border-crimson-light/20 !text-crimson-light/70 hover:!bg-crimson/5">
@@ -87,7 +87,7 @@ export default function SettingsPage() {
             </button>
           </div>
 
-          <div className="text-center text-muted/30 text-xs py-4">
+          <div className="text-center text-text-muted text-xs py-4">
             SendMusic.io v0.2
           </div>
         </div>

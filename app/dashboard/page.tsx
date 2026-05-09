@@ -76,7 +76,7 @@ export default function DashboardPage() {
   const estimatedViews = Math.floor((parseInt(budget || '0') / parseFloat(cpm || '1')) * 1000);
 
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-bg">
       <TopNav />
 
       <main className="page-container py-8 md:py-12">
@@ -93,7 +93,7 @@ export default function DashboardPage() {
               <div className="space-y-6 animate-fade-in">
                 <div>
                   <h1 className="section-title mb-1">Campaign cover</h1>
-                  <p className="text-muted/50 text-sm">A beautiful cover makes your campaign stand out.</p>
+                  <p className="text-text-muted text-sm">A beautiful cover makes your campaign stand out.</p>
                 </div>
                 <ImageUpload onImage={setCoverArt} currentImage={coverArt} />
                 {coverArt && (
@@ -109,7 +109,7 @@ export default function DashboardPage() {
               <div className="space-y-5 animate-fade-in">
                 <div>
                   <h1 className="section-title mb-1">Track details</h1>
-                  <p className="text-muted/50 text-sm">Tell creators what they'll be promoting.</p>
+                  <p className="text-text-muted text-sm">Tell creators what they'll be promoting.</p>
                 </div>
                 <div>
                   <label className="text-sm text-muted/60 mb-1.5 block">Track name</label>
@@ -133,13 +133,13 @@ export default function DashboardPage() {
               <div className="space-y-5 animate-fade-in">
                 <div>
                   <h1 className="section-title mb-1">Budget</h1>
-                  <p className="text-muted/50 text-sm">Set your CPM rate and budget. Pay only for verified views.</p>
+                  <p className="text-text-muted text-sm">Set your CPM rate and budget. Pay only for verified views.</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm text-muted/60 mb-1.5 block">CPM ($/1K views)</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted/40">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
                       <input value={cpm} onChange={(e) => setCpm(e.target.value)}
                         type="number" min="0.1" max="50" step="0.1" className="input-field pl-8" />
                     </div>
@@ -147,7 +147,7 @@ export default function DashboardPage() {
                   <div>
                     <label className="text-sm text-muted/60 mb-1.5 block">Budget ($)</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted/40">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
                       <input value={budget} onChange={(e) => setBudget(e.target.value)}
                         type="number" min="5" step="5" className="input-field pl-8" />
                     </div>
@@ -156,13 +156,13 @@ export default function DashboardPage() {
                 <div>
                   <label className="text-sm text-muted/60 mb-1.5 block">Max payout per submission ($)</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted/40">$</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
                     <input value={maxPayout} onChange={(e) => setMaxPayout(e.target.value)}
                       type="number" min="1" className="input-field pl-8" />
                   </div>
                 </div>
-                <div className="card-glass p-4 text-sm text-muted/60">
-                  <span className="text-gold font-medium">${budget}</span> ÷ <span className="text-gold font-medium">${cpm}</span> CPM ≈ <span className="text-ivory font-semibold">{estimatedViews.toLocaleString()}</span> estimated views
+                <div className="card p-4 text-sm text-muted/60">
+                  <span className="text-gold font-medium">${budget}</span> ÷ <span className="text-gold font-medium">${cpm}</span> CPM ≈ <span className="text-text font-semibold">{estimatedViews.toLocaleString()}</span> estimated views
                 </div>
                 <div className="flex gap-3 pt-2">
                   <button onClick={() => setWizardStep(2)} className="btn-secondary flex-1">Back</button>
@@ -184,10 +184,10 @@ export default function DashboardPage() {
             </div>
 
             {campaigns.length === 0 && (
-              <div className="card-glass text-center py-16 animate-fade-in">
-                <div className="text-muted/30 text-[64px] mb-4 font-light">♪</div>
-                <div className="text-ivory font-medium text-lg mb-2">Create your first campaign</div>
-                <p className="text-muted/40 text-sm mb-8 max-w-sm mx-auto leading-relaxed">
+              <div className="card text-center py-16 animate-fade-in">
+                <div className="text-text-muted text-[64px] mb-4 font-light">♪</div>
+                <div className="text-text font-medium text-lg mb-2">Create your first campaign</div>
+                <p className="text-text-muted text-sm mb-8 max-w-sm mx-auto leading-relaxed">
                   Upload your track, set a CPM rate, and creators will promote it on TikTok, Reels, and Shorts.
                 </p>
                 <button onClick={() => setStep('wizard')} className="btn-primary">Start your first campaign</button>
@@ -196,7 +196,7 @@ export default function DashboardPage() {
 
             <div className="campaign-grid">
               {campaigns.map((c, i) => (
-                <div key={c.id} className="card-glass p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+                <div key={c.id} className="card p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   {c.coverArt && (
                     <div className="h-36 rounded-xl overflow-hidden -mx-5 -mt-5 mb-4">
                       <img src={c.coverArt} alt={c.trackTitle} className="w-full h-full object-cover" />
@@ -204,26 +204,26 @@ export default function DashboardPage() {
                   )}
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <div className="text-ivory font-semibold text-lg leading-tight">{c.trackTitle}</div>
-                      <div className="text-muted/50 text-sm mt-0.5">${c.cpmRate} CPM · ${c.budget} budget</div>
+                      <div className="text-text font-semibold text-lg leading-tight">{c.trackTitle}</div>
+                      <div className="text-text-muted text-sm mt-0.5">${c.cpmRate} CPM · ${c.budget} budget</div>
                     </div>
                     <div className="bg-gold/10 text-gold text-[11px] font-semibold px-3 py-1.5 rounded-full">Live</div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 text-center mb-4">
                     <div>
                       <div className="text-gold font-bold text-lg">{c.submissions}</div>
-                      <div className="text-muted/40 text-[11px] mt-0.5">submissions</div>
+                      <div className="text-text-muted text-[11px] mt-0.5">submissions</div>
                     </div>
                     <div>
                       <div className="text-gold font-bold text-lg">{c.views >= 1000 ? `${(c.views / 1000).toFixed(1)}K` : c.views}</div>
-                      <div className="text-muted/40 text-[11px] mt-0.5">views</div>
+                      <div className="text-text-muted text-[11px] mt-0.5">views</div>
                     </div>
                     <div>
                       <div className="text-gold font-bold text-lg">${c.spent}</div>
-                      <div className="text-muted/40 text-[11px] mt-0.5">of ${c.budget}</div>
+                      <div className="text-text-muted text-[11px] mt-0.5">of ${c.budget}</div>
                     </div>
                   </div>
-                  <div className="h-1 bg-white/[0.04] rounded-full overflow-hidden mb-4">
+                  <div className="h-1 bg-bg-secondary rounded-full overflow-hidden mb-4">
                     <div className="h-full bg-gold rounded-full transition-all duration-500"
                       style={{ width: `${Math.min((c.spent / c.budget) * 100, 100)}%` }} />
                   </div>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                     <div className="space-y-3 animate-slide-up">
                       <div className="flex items-center gap-2">
                         <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted/40 text-sm">$</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">$</span>
                           <input
                             value={fundingAmount}
                             onChange={(e) => setFundingAmount(e.target.value)}

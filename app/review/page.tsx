@@ -43,33 +43,33 @@ export default function ReviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-void">
+    <div className="min-h-screen bg-bg">
       <TopNav />
       <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Review</h1>
-          <p className="text-muted/50 text-sm">{loading ? 'Loading...' : `${subs.length} pending submissions`}</p>
+          <p className="text-text-muted text-sm">{loading ? 'Loading...' : `${subs.length} pending submissions`}</p>
         </div>
 
         {loading ? (
           <div className="space-y-4">
             {[1,2].map(i => (
-              <div key={i} className="card-glass p-5 animate-pulse">
-                <div className="h-5 bg-white/[0.04] rounded w-1/2 mb-3" />
-                <div className="h-4 bg-white/[0.03] rounded w-3/4 mb-4" />
-                <div className="h-16 bg-white/[0.03] rounded mb-4" />
+              <div key={i} className="card p-5 animate-pulse">
+                <div className="h-5 bg-bg-secondary rounded w-1/2 mb-3" />
+                <div className="h-4 bg-bg-secondary rounded w-3/4 mb-4" />
+                <div className="h-16 bg-bg-secondary rounded mb-4" />
                 <div className="flex gap-2">
-                  <div className="h-10 bg-white/[0.04] rounded flex-1" />
-                  <div className="h-10 bg-white/[0.04] rounded flex-1" />
+                  <div className="h-10 bg-bg-secondary rounded flex-1" />
+                  <div className="h-10 bg-bg-secondary rounded flex-1" />
                 </div>
               </div>
             ))}
           </div>
         ) : subs.length === 0 ? (
-          <div className="card-glass text-center py-16 animate-fade-in">
-            <div className="text-muted/30 text-[64px] mb-4 font-light">✓</div>
-            <div className="text-ivory font-medium text-lg">All caught up</div>
-            <p className="text-muted/40 text-sm mt-1">No submissions to review.</p>
+          <div className="card text-center py-16 animate-fade-in">
+            <div className="text-text-muted text-[64px] mb-4 font-light">✓</div>
+            <div className="text-text font-medium text-lg">All caught up</div>
+            <p className="text-text-muted text-sm mt-1">No submissions to review.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -79,25 +79,25 @@ export default function ReviewPage() {
               const net = gross * 0.8;
 
               return (
-                <div key={s.id} className="card-glass p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+                <div key={s.id} className="card p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <div className="text-ivory font-semibold">{s.creator || 'Creator'}</div>
-                      <div className="text-muted/50 text-sm mt-0.5">
+                      <div className="text-text font-semibold">{s.creator || 'Creator'}</div>
+                      <div className="text-text-muted text-sm mt-0.5">
                         <span>{s.track_title} · {s.platform}</span>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-gold font-bold text-lg">{((s.views_verified || 0)).toLocaleString()}</div>
-                      <div className="text-muted/40 text-[11px] mt-0.5">views</div>
+                      <div className="text-text-muted text-[11px] mt-0.5">views</div>
                     </div>
                   </div>
-                  <div className="card-elevated p-3 text-sm text-muted/50 mb-4">
+                  <div className="card p-3 text-sm text-text-muted mb-4">
                     {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-gold font-semibold">${gross.toFixed(2)}</span>
-                    <span className="text-muted/30 mx-1">·</span>
-                    <span className="text-muted/40">−20% fee</span>
-                    <span className="text-muted/30 mx-1">=</span>
-                    <span className="text-ivory font-semibold">${net.toFixed(2)}</span> net
+                    <span className="text-text-muted mx-1">·</span>
+                    <span className="text-text-muted">−20% fee</span>
+                    <span className="text-text-muted mx-1">=</span>
+                    <span className="text-text font-semibold">${net.toFixed(2)}</span> net
                   </div>
                   <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank"
                     className="text-gold/70 text-sm hover:text-gold transition-colors mb-4 inline-block">
