@@ -4,42 +4,50 @@ import { useState } from 'react';
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const [notifs] = useState([
-    { id: '1', text: 'New submission on Midnight Frequencies', time: '2m ago', read: false },
-    { id: '2', text: 'Campaign "Desert Prayer" budget 50% spent', time: '1h ago', read: false },
-    { id: '3', text: 'Creator @dancewithjake joined your campaign', time: '3h ago', read: true },
+  const [notifications] = useState([
+    { id: '1', text: 'Your submission was approved 🎉', time: '2m ago', read: false },
+    { id: '2', text: 'Campaign "Summer Nights" has 3 new submissions', time: '1h ago', read: false },
+    { id: '3', text: 'Payout of $37.20 processed', time: '3h ago', read: true },
+    { id: '4', text: 'New creator joined your campaign', time: '1d ago', read: true },
   ]);
 
-  const unread = notifs.filter(n => !n.read).length;
+  const unread = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} className="relative p-2">
-        <span className="text-xl">🔔</span>
+      <button onClick={() => setOpen(!open)}
+        className="relative w-10 h-10 rounded-xl bg-void-card border border-white/10 flex items-center justify-center hover:border-gold/30 transition-all">
+        🔔
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-crimson text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-crimson text-white text-[10px] font-bold flex items-center justify-center">
             {unread}
           </span>
         )}
       </button>
       {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-12 w-72 bg-void-card border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
-            <div className="p-3 border-b border-white/5 flex justify-between">
-              <span className="text-ivory font-semibold text-sm">Notifications</span>
-              <span className="text-muted text-xs">{unread} new</span>
-            </div>
-            <div className="max-h-64 overflow-y-auto">
-              {notifs.map(n => (
-                <div key={n.id} className={`p-3 border-b border-white/5 hover:bg-void-elevated transition-colors ${!n.read ? 'bg-gold/5' : ''}`}>
-                  <p className="text-ivory text-sm">{n.text}</p>
-                  <p className="text-muted text-xs mt-1">{n.time}</p>
-                </div>
-              ))}
-            </div>
+        <div className="absolute right-0 top-12 w-72 bg-void-card border border-white/10 rounded-2xl shadow-xl overflow-hidden z-50">
+          <div className="px-4 py-3 border-b border-white/5">
+            <span className="text-ivory font-semibold text-sm">Notifications</span>
+            <span className="text-muted text-xs ml-2">{notifications.length} total</span>
           </div>
-        </>
+          <div className="max-h-80 overflow-y-auto">
+            {notifications.map((n) => (
+              <div key={n.id} className={`px-4 py-3 border-b border-white/5 hover:bg-void-elevated transition-colors`}>
+                <div className="flex items-start gap-3">
+                  {!n.read && <div className="w-2 h-2 rounded-full bg-gold mt-1.5 flex-shrink-0" />}
+                  <div>
+                    <div className="text-ivory text-sm">{n.text}</div>
+                    <div className="text-muted text-xs mt-0.5">{n.time}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => setOpen(false)}
+            className="w-full py-2.5 text-gold text-xs font-semibold hover:bg-void-elevated transition-colors">
+            Mark all read
+          </button>
+        </div>
       )}
     </div>
   );

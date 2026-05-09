@@ -130,6 +130,28 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ---- Creator earnings ---- */}
+      <section className="py-20 md:py-28">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="font-display text-3xl text-center text-ivory mb-4">Creators earning on SendMusic.io</h2>
+          <p className="text-muted text-center mb-12 max-w-md mx-auto">Real payouts. Real views. No bots.</p>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { name: 'Mia J.', handle: '@creatormia', earned: '$189', vids: '12', platform: 'TikTok' },
+              { name: 'Jake M.', handle: '@dancewithjake', earned: '$142', vids: '8', platform: 'Instagram' },
+              { name: 'Sarah K.', handle: '@viralqueen', earned: '$257', vids: '15', platform: 'TikTok' },
+            ].map((c) => (
+              <div key={c.handle} className="card text-center !p-6">
+                <div className="text-2xl mb-2">🎬</div>
+                <div className="font-display text-xl text-gold mb-1">{c.earned}</div>
+                <div className="text-ivory font-semibold text-sm mb-1">{c.name}</div>
+                <div className="text-muted text-xs">{c.vids} videos · {c.platform}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ---- Why different ---- */}
       <section className="py-20 md:py-28">
         <div className="max-w-4xl mx-auto px-4">
