@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import TopNav from '@/components/TopNav';
+import Header from '@/components/TopNav';
 
 export default function CampaignPage({ params }: { params: { id: string } }) {
   const [campaign, setCampaign] = useState<any>(null);
@@ -21,7 +21,7 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-bg">
-        <TopNav />
+        <Header />
         <div className="page-container">
           <div className="card p-8 animate-pulse space-y-4">
             <div className="h-6 bg-bg-secondary rounded w-1/3" />
@@ -42,7 +42,7 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-bg">
-      <TopNav />
+      <Header />
       <div className="page-container">
         <a href="/browse" className="text-text-muted text-sm hover:text-text mb-6 inline-block">← Back to Discover</a>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import TopNav from '@/components/TopNav';
+import Header from '@/components/TopNav';
 
 export default function EarningsPage() {
   const [submissions] = useState([
@@ -15,7 +15,7 @@ export default function EarningsPage() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <TopNav />
+      <Header />
       <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Earnings</h1>

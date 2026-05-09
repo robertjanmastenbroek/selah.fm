@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import TopNav from '@/components/TopNav';
+import Header from '@/components/TopNav';
 
 interface Campaign {
   id: string;
@@ -78,7 +78,7 @@ export default function BrowsePage() {
 
   return (
     <div className="min-h-screen bg-bg">
-      <TopNav />
+      <Header />
 
       <main className="page-container py-8 md:py-12">
         <div className="mb-8">

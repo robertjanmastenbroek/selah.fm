@@ -65,7 +65,7 @@
   }
 
   .page-container {
-    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-16 md:pb-8;
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-14 md:pb-8;
   }
 
   .campaign-grid {
