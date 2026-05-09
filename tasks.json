@@ -1,25 +1,20 @@
 {
-  "initialized": "2026-05-09T00:39:29.674469",
-  "phase_statuses": {
-    "phase_0_foundation": "completed",
-    "phase_1_core": "in_progress",
-    "phase_2_verification": "pending",
-    "phase_3_outreach": "in_progress"
-  },
-  "task_statuses": {
-    "landing_page": "completed",
-    "orchestrator": "completed",
-    "railway_deploy": "completed",
-    "database_schema": "completed",
-    "auth_system": "completed",
-    "artist_dashboard": "completed",
-    "creator_dashboard": "completed",
-    "stripe_connect": "pending",
-    "view_verification": "pending",
-    "auto_payout": "pending",
-    "outreach_agent": "completed",
-    "pilot_launch": "pending"
-  },
-  "last_evaluated": "2026-05-09T09:38:17.836743",
-  "last_updated": "2026-05-09T09:38:17.836745"
+  "updated": "2026-05-09T20:00:00.000000",
+  "versions_shipped": 11,
+  "phases": [
+    {"id": "foundation", "name": "Foundation", "done": true, "progress": "8/8"},
+    {"id": "core_features", "name": "Core Features", "done": true, "progress": "8/8"},
+    {"id": "ux_visual", "name": "UX & Visual Polish", "done": true, "progress": "12/12"},
+    {"id": "onboarding", "name": "Onboarding & Social", "done": true, "progress": "6/6"},
+    {"id": "mvp_completion", "name": "MVP Completion", "done": false, "progress": "0/9"},
+    {"id": "launch", "name": "Launch Readiness", "done": false, "progress": "0/7"}
+  ],
+  "summary": {
+    "total_tasks": 50,
+    "completed": 34,
+    "remaining": 16,
+    "pct_complete": 68,
+    "current_phase": "MVP Completion",
+    "next_task": "Verify end-to-end payment flow (deposit → submit → review → payout → budget update)"
+  }
 }
