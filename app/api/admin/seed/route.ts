@@ -12,7 +12,7 @@ export async function GET() {
         ('d0000000-0000-0000-0000-000000000003', 'rachel@selah-demo.fm', 'demo', 'creator', 'Rachel T', 'Reels creator. 35K on Instagram.', 'pop,hiphop', 350, '@viralqueen', '@rachelcreates', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=face'),
         ('d0000000-0000-0000-0000-000000000004', 'tom@selah-demo.fm', 'demo', 'creator', 'Tom Wells', 'YouTube Shorts creator. Music promo niche.', 'edm,techno', 250, '@shortsguy', '@tomwells', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=face'),
         ('d0000000-0000-0000-0000-000000000005', 'alex@selah-demo.fm', 'demo', 'creator', 'Alex + Sam', 'Couple creators. Brand partnerships.', 'pop,electronic,indie', 400, '@reelmasters', '@alexsamcreates', 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=200&fit=crop&crop=face')
-      ON CONFLICT DO NOTHING
+      ON CONFLICT (id) DO UPDATE SET profile_image_url = EXCLUDED.profile_image_url
     `;
 
     // Seed demo campaigns with cover art
@@ -25,7 +25,18 @@ export async function GET() {
         ('d0000000-1000-4000-8000-000000000004', NULL, 'Neon Cathedral', 'https://open.spotify.com/track/demo4', 400, 75000, 15000, 60000, ARRAY['tiktok','youtube'], 'active', 'https://images.unsplash.com/photo-1598653222000-6b9b7a042652?w=800&q=80', 'Dark, moody aesthetic. 30+ seconds.', '#darkelectronic'),
         ('d0000000-1000-4000-8000-000000000005', NULL, 'Crystal Dawn', 'https://open.spotify.com/track/demo5', 200, 20000, 5000, 20000, ARRAY['tiktok','instagram','youtube'], 'active', 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&q=80', 'Morning vibes, coffee, sunrise.', '#organichouse'),
         ('d0000000-1000-4000-8000-000000000006', NULL, 'Bass Cathedral', 'https://open.spotify.com/track/demo6', 500, 100000, 20000, 100000, ARRAY['tiktok','instagram'], 'active', 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80', 'High energy. Festival vibes.', '#bassmusic #christianedm')
-      ON CONFLICT DO NOTHING
+      ON CONFLICT (id) DO UPDATE SET cover_art_url = EXCLUDED.cover_art_url
+    `;
+
+    // Ensure all demo campaigns have cover art (patch any that don't)
+    await sql`
+      UPDATE campaigns SET cover_art_url = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80' WHERE track_title = 'Midnight Frequencies' AND (cover_art_url IS NULL OR cover_art_url = '')
+    `;
+    await sql`
+      UPDATE campaigns SET cover_art_url = 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=800&q=80' WHERE track_title = 'Desert Wind' AND (cover_art_url IS NULL OR cover_art_url = '')
+    `;
+    await sql`
+      UPDATE campaigns SET cover_art_url = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80' WHERE track_title = 'Summer Nights' AND (cover_art_url IS NULL OR cover_art_url = '')
     `;
 
     const users = await sql`SELECT count(*) FROM users`;
