@@ -3,7 +3,14 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
 import ImageUpload from '@/components/ImageUpload';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
+import { Plus } from 'lucide-react';
 
 interface Campaign {
   id: string;
@@ -54,142 +61,87 @@ export default function DashboardPage() {
   const createCampaign = async () => {
     setLoading(true);
     const newCamp: Campaign = {
-      id: Date.now().toString(),
-      trackTitle, coverArt,
+      id: Date.now().toString(), trackTitle, coverArt,
       cpmRate: parseFloat(cpm), budget: parseInt(budget),
       spent: 0, views: 0, submissions: 0,
     };
-
     try {
-      const res = await fetch('/api/campaigns', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch('/api/campaigns', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements }),
       });
-      const data = await res.json();
-      if (!data.error && data.id) newCamp.id = data.id;
     } catch {}
-
     setCampaigns(prev => [newCamp, ...prev]);
     addToast('Campaign live', 'success');
-    setCoverArt(''); setTrackTitle(''); setTrackUrl(''); setCpm('1'); setBudget('25');
+    setCoverArt(''); setTrackTitle(''); setCpm('1'); setBudget('25');
     setWizardStep(1); setStep('list'); setLoading(false);
   };
 
   const estimatedViews = Math.floor((parseInt(budget || '0') / parseFloat(cpm || '1')) * 1000);
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-background">
       <Header />
-
-      <main className="page-container py-8 md:py-12">
+      <main className="page-container">
         {step === 'wizard' ? (
           <>
-            <div className="flex items-center gap-2 mb-10">
+            <div className="flex gap-2 mb-10">
               {[1, 2, 3].map(s => (
-                <div key={s}
-                  className={`flex-1 h-1 rounded-full transition-all duration-500 ${s <= wizardStep ? 'bg-gold' : 'bg-white/[0.06]'}`} />
+                <div key={s} className={`flex-1 h-1 rounded-full transition-colors ${s <= wizardStep ? 'bg-foreground' : 'bg-muted'}`} />
               ))}
             </div>
-
             {wizardStep === 1 && (
-              <div className="space-y-6 animate-fade-in">
-                <div>
-                  <h1 className="section-title mb-1">Campaign cover</h1>
-                  <p className="text-text-muted text-sm">A beautiful cover makes your campaign stand out.</p>
-                </div>
+              <div className="max-w-lg mx-auto space-y-6 animate-slide-up">
+                <h1 className="section-title">Campaign cover</h1>
+                <p className="text-muted-foreground text-sm">A beautiful cover makes your campaign stand out.</p>
                 <ImageUpload onImage={setCoverArt} currentImage={coverArt} />
-                {coverArt && (
-                  <button onClick={() => setWizardStep(2)} className="btn-primary w-full">
-                    Next: Track details
-                  </button>
-                )}
-                <button onClick={() => setStep('list')} className="btn-ghost w-full">Cancel</button>
+                {coverArt && <Button onClick={() => setWizardStep(2)} className="w-full">Continue</Button>}
+                <Button variant="ghost" onClick={() => setStep('list')} className="w-full">Cancel</Button>
               </div>
             )}
-
             {wizardStep === 2 && (
-              <div className="space-y-5 animate-fade-in">
-                <div>
-                  <h1 className="section-title mb-1">Track details</h1>
-                  <p className="text-text-muted text-sm">Tell creators what they'll be promoting.</p>
-                </div>
-                <div>
-                  <label className="text-sm text-text-muted mb-1.5 block">Track name</label>
-                  <input value={trackTitle} onChange={(e) => setTrackTitle(e.target.value)}
-                    placeholder="My Song Title" className="input-field" />
-                </div>
-                <div>
-                  <label className="text-sm text-text-muted mb-1.5 block">Track link</label>
-                  <input value={trackUrl} onChange={(e) => setTrackUrl(e.target.value)}
-                    placeholder="spotify.com/track/..." className="input-field" />
-                </div>
-                <div>
-                  <label className="text-sm text-text-muted mb-1.5 block">Google Drive link (optional)</label>
-                  <input value={driveUrl} onChange={(e) => setDriveUrl(e.target.value)}
-                    placeholder="drive.google.com/... — creator assets" className="input-field" />
-                </div>
-                <div>
-                  <label className="text-sm text-text-muted mb-1.5 block">Recommended hashtags</label>
-                  <input value={hashtags} onChange={(e) => setHashtags(e.target.value)}
-                    placeholder="#sendmusicio #newmusic" className="input-field" />
-                  <p className="text-text-muted text-xs mt-1">Creators are encouraged to use these when posting.</p>
-                </div>
-                <div>
-                  <label className="text-sm text-text-muted mb-1.5 block">Requirements (optional)</label>
-                  <textarea value={requirements} onChange={(e) => setRequirements(e.target.value)}
-                    placeholder="Minimum video length, tone, specific instructions..."
-                    className="input-field !h-20 resize-none" />
-                </div>
+              <div className="max-w-lg mx-auto space-y-4 animate-slide-up">
+                <h1 className="section-title">Track details</h1>
+                <p className="text-muted-foreground text-sm mb-6">Tell creators what they'll be promoting.</p>
+                <Input value={trackTitle} onChange={e => setTrackTitle(e.target.value)} placeholder="Track name" />
+                <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} placeholder="Spotify or SoundCloud link" />
+                <Input value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="Google Drive link (optional)" />
+                <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags" />
+                <Input value={requirements} onChange={e => setRequirements(e.target.value)} placeholder="Requirements for creators (optional)" />
                 <div className="flex gap-3 pt-2">
-                  <button onClick={() => setWizardStep(1)} className="btn-secondary flex-1">Back</button>
-                  <button onClick={() => setWizardStep(3)} disabled={!trackTitle || !trackUrl}
-                    className="btn-primary flex-1">Next: Budget</button>
+                  <Button variant="outline" onClick={() => setWizardStep(1)} className="flex-1">Back</Button>
+                  <Button onClick={() => setWizardStep(3)} disabled={!trackTitle} className="flex-1">Continue</Button>
                 </div>
               </div>
             )}
-
             {wizardStep === 3 && (
-              <div className="space-y-5 animate-fade-in">
-                <div>
-                  <h1 className="section-title mb-1">Budget</h1>
-                  <p className="text-text-muted text-sm">Set your CPM rate and budget. Pay only for verified views.</p>
-                </div>
+              <div className="max-w-lg mx-auto space-y-4 animate-slide-up">
+                <h1 className="section-title">Budget</h1>
+                <p className="text-muted-foreground text-sm mb-6">Pay only for verified views.</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-text-muted mb-1.5 block">CPM ($/1K views)</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
-                      <input value={cpm} onChange={(e) => setCpm(e.target.value)}
-                        type="number" min="0.1" max="50" step="0.1" className="input-field pl-8" />
-                    </div>
+                    <label className="text-sm text-muted-foreground mb-1.5 block">CPM ($/1K views)</label>
+                    <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} />
                   </div>
                   <div>
-                    <label className="text-sm text-text-muted mb-1.5 block">Budget ($)</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
-                      <input value={budget} onChange={(e) => setBudget(e.target.value)}
-                        type="number" min="5" step="5" className="input-field pl-8" />
-                    </div>
+                    <label className="text-sm text-muted-foreground mb-1.5 block">Budget ($)</label>
+                    <Input type="number" min="5" step="5" value={budget} onChange={e => setBudget(e.target.value)} />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm text-text-muted mb-1.5 block">Max payout per submission ($)</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">$</span>
-                    <input value={maxPayout} onChange={(e) => setMaxPayout(e.target.value)}
-                      type="number" min="1" className="input-field pl-8" />
-                  </div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Max payout per submission ($)</label>
+                  <Input type="number" min="1" value={maxPayout} onChange={e => setMaxPayout(e.target.value)} />
                 </div>
-                <div className="card p-4 text-sm text-text-muted">
-                  <span className="text-gold font-medium">${budget}</span> ÷ <span className="text-gold font-medium">${cpm}</span> CPM ≈ <span className="text-text font-semibold">{estimatedViews.toLocaleString()}</span> estimated views
-                </div>
+                <Card className="bg-muted/50">
+                  <CardContent className="p-4 text-sm text-muted-foreground">
+                    ${budget} ÷ ${cpm} CPM ≈ <span className="text-foreground font-semibold">{estimatedViews.toLocaleString()}</span> estimated views
+                  </CardContent>
+                </Card>
                 <div className="flex gap-3 pt-2">
-                  <button onClick={() => setWizardStep(2)} className="btn-secondary flex-1">Back</button>
-                  <button onClick={createCampaign} disabled={loading || !budget}
-                    className="btn-primary flex-1">
+                  <Button variant="outline" onClick={() => setWizardStep(2)} className="flex-1">Back</Button>
+                  <Button onClick={createCampaign} disabled={loading} className="flex-1">
                     {loading ? 'Creating...' : 'Launch campaign'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -198,91 +150,77 @@ export default function DashboardPage() {
           <>
             <div className="flex items-center justify-between mb-8">
               <h1 className="section-title">Your campaigns</h1>
-              <button onClick={() => setStep('wizard')} className="btn-primary text-sm !py-2 !px-4">
-                New campaign
-              </button>
+              <Button onClick={() => setStep('wizard')} size="sm">
+                <Plus className="h-4 w-4 mr-1" /> New
+              </Button>
             </div>
 
             {campaigns.length === 0 && (
-              <div className="card text-center py-16 animate-fade-in">
-                <div className="text-text-muted text-[64px] mb-4 font-light">♪</div>
-                <div className="text-text font-medium text-lg mb-2">Create your first campaign</div>
-                <p className="text-text-muted text-sm mb-8 max-w-sm mx-auto leading-relaxed">
-                  Upload your track, set a CPM rate, and creators will promote it on TikTok, Reels, and Shorts.
-                </p>
-                <button onClick={() => setStep('wizard')} className="btn-primary">Start your first campaign</button>
-              </div>
+              <Card className="text-center py-16 animate-fade-in">
+                <CardContent>
+                  <p className="text-6xl mb-4 opacity-10">♪</p>
+                  <h2 className="text-lg font-medium mb-2">Create your first campaign</h2>
+                  <p className="text-muted-foreground text-sm mb-8 max-w-sm mx-auto">
+                    Upload your track, set a CPM rate, and creators will promote it.
+                  </p>
+                  <Button onClick={() => setStep('wizard')}>Start your first campaign</Button>
+                </CardContent>
+              </Card>
             )}
 
             <div className="campaign-grid">
-              {campaigns.map((c, i) => (
-                <div key={c.id} className="card p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
-                  {c.coverArt && (
-                    <div className="h-36 rounded-xl overflow-hidden -mx-5 -mt-5 mb-4">
-                      <img src={c.coverArt} alt={c.trackTitle} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div className="text-text font-semibold text-lg leading-tight">{c.trackTitle}</div>
-                      <div className="text-text-muted text-sm mt-0.5">${c.cpmRate} CPM · ${c.budget} budget</div>
-                    </div>
-                    <div className="bg-gold/10 text-gold text-[11px] font-semibold px-3 py-1.5 rounded-full">Live</div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-center mb-4">
-                    <div>
-                      <div className="text-gold font-bold text-lg">{c.submissions}</div>
-                      <div className="text-text-muted text-[11px] mt-0.5">submissions</div>
-                    </div>
-                    <div>
-                      <div className="text-gold font-bold text-lg">{c.views >= 1000 ? `${(c.views / 1000).toFixed(1)}K` : c.views}</div>
-                      <div className="text-text-muted text-[11px] mt-0.5">views</div>
-                    </div>
-                    <div>
-                      <div className="text-gold font-bold text-lg">${c.spent}</div>
-                      <div className="text-text-muted text-[11px] mt-0.5">of ${c.budget}</div>
-                    </div>
-                  </div>
-                  <div className="h-1 bg-bg-secondary rounded-full overflow-hidden mb-4">
-                    <div className="h-full bg-gold rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min((c.spent / c.budget) * 100, 100)}%` }} />
-                  </div>
-                  {fundingId === c.id ? (
-                    <div className="space-y-3 animate-slide-up">
-                      <div className="flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">$</span>
-                          <input
-                            value={fundingAmount}
-                            onChange={(e) => setFundingAmount(e.target.value)}
-                            type="number" min="5" step="5"
-                            placeholder="10"
-                            autoFocus
-                            className="input-field pl-7 !py-2.5"
-                          />
-                        </div>
-                        <button onClick={async () => {
-                          const amt = parseInt(fundingAmount);
-                          if (amt < 5) { addToast('Minimum $5', 'error'); return; }
-                          const r = await fetch('/api/stripe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: amt, campaignId: c.id }) });
-                          const d = await r.json();
-                          d.url ? window.location.href = d.url : addToast('Add STRIPE_SECRET_KEY to Railway', 'error');
-                          setFundingId(null);
-                        }} className="btn-primary text-sm !py-2.5 !px-4 flex-shrink-0">
-                          Fund ${fundingAmount || '?'}
-                        </button>
+              {campaigns.map((c, i) => {
+                const pct = c.budget > 0 ? Math.min((c.spent / c.budget) * 100, 100) : 0;
+                return (
+                  <Card key={c.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
+                    {c.coverArt && (
+                      <div className="h-40 overflow-hidden">
+                        <img src={c.coverArt} alt={c.trackTitle} className="w-full h-full object-cover" />
                       </div>
-                      <button onClick={() => setFundingId(null)} className="btn-ghost text-xs w-full">Cancel</button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <a href="/review" className="btn-secondary text-sm flex-1 !py-2.5">Review ({c.submissions})</a>
-                      <button onClick={() => { setFundingId(c.id); setFundingAmount('10'); }}
-                        className="btn-primary text-sm flex-1 !py-2.5">Add budget</button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                    <CardContent className="p-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-lg leading-tight">{c.trackTitle}</h3>
+                          <p className="text-muted-foreground text-sm">${c.cpmRate} CPM · ${c.budget} budget</p>
+                        </div>
+                        <Badge variant="secondary">Live</Badge>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div><div className="font-bold text-lg">{c.submissions}</div><div className="text-muted-foreground text-xs">subs</div></div>
+                        <div><div className="font-bold text-lg">{c.views >= 1000 ? `${(c.views / 1000).toFixed(1)}K` : c.views}</div><div className="text-muted-foreground text-xs">views</div></div>
+                        <div><div className="font-bold text-lg">${c.spent}</div><div className="text-muted-foreground text-xs">of ${c.budget}</div></div>
+                      </div>
+                      <Progress value={pct} className="h-1.5" />
+                      {fundingId === c.id ? (
+                        <div className="space-y-2 animate-slide-up">
+                          <div className="flex gap-2">
+                            <Input type="number" min="5" value={fundingAmount} onChange={e => setFundingAmount(e.target.value)} className="flex-1" autoFocus />
+                            <Button onClick={async () => {
+                              const amt = parseInt(fundingAmount);
+                              if (amt < 5) { addToast('Minimum $5', 'error'); return; }
+                              const r = await fetch('/api/stripe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: amt, campaignId: c.id }) });
+                              const d = await r.json();
+                              d.url ? window.location.href = d.url : addToast('Stripe not configured', 'error');
+                              setFundingId(null);
+                            }}>Fund ${fundingAmount}</Button>
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => setFundingId(null)} className="w-full">Cancel</Button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1" asChild>
+                            <a href="/review">Review ({c.submissions})</a>
+                          </Button>
+                          <Button size="sm" className="flex-1" onClick={() => { setFundingId(c.id); setFundingAmount('10'); }}>
+                            Add budget
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </>
         )}
