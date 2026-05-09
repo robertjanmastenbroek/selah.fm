@@ -1,4 +1,46 @@
+# Dependencies
 node_modules/
+
+# Build output
 .next/
-.env.local
 out/
+
+# Environment — NEVER COMMIT
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Logs
+*.log
+
+# Database (local dev only)
+*.db
+*.sqlite
+
+# Generated images
+public/images/*.png
+public/images/*.jpg
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Railway
+.railway/

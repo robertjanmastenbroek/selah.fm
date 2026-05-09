@@ -5,7 +5,7 @@ sendmusic.io Autonomous Orchestrator
 #1 priority project. Self-directed task manager that drives the build
 queue for the CPM music promotion marketplace.
 
-Goal: $10k GMV in 90 days. 50 musicians, 200 creators, 20 campaigns.
+Goal: $10k GMV in 90 days. 50 artists, 200 creators, 20 campaigns.
 Reuses patterns from CoolCompanion but focused entirely on sendmusic.io.
 
 Usage:
@@ -27,7 +27,7 @@ TASKS_PATH = AGENT_DIR / "tasks.json"
 BUILD_PLAN = {
     "project": "sendmusic.io",
     "priority": "#1 — all efforts focused here",
-    "goal": "$10k GMV in 90 days, 50 musicians, 200 creators, 20 campaigns",
+    "goal": "$10k GMV in 90 days, 50 artists, 200 creators, 20 campaigns",
     "principle": "Launch fast. Real marketplace first. Outreach after.",
     "phases": [
         {
@@ -48,10 +48,10 @@ BUILD_PLAN = {
             "description": "Database, auth, campaign system — the actual product.",
             "tasks": [
                 {"id": "database_schema", "name": "PostgreSQL schema — users, campaigns, submissions, payments", "roi": "critical", "estimated_minutes": 60, "dependencies": [], "output_files": ["lib/db/schema.sql"]},
-                {"id": "auth_system", "name": "Auth — sign up / login for musicians + creators", "roi": "critical", "estimated_minutes": 90, "dependencies": ["database_schema"], "output_files": ["app/login/page.tsx", "app/api/auth/route.ts"]},
-                {"id": "musician_dashboard", "name": "Musician dashboard — campaign creation, track upload, CPM settings, analytics", "roi": "critical", "estimated_minutes": 180, "dependencies": ["auth_system"], "output_files": ["app/dashboard/musician/page.tsx"]},
-                {"id": "creator_dashboard", "name": "Creator dashboard — browse campaigns, apply, submit content, earnings", "roi": "critical", "estimated_minutes": 150, "dependencies": ["auth_system", "musician_dashboard"], "output_files": ["app/dashboard/creator/page.tsx"]},
-                {"id": "stripe_connect", "name": "Stripe Connect — escrow, auto-payouts, platform fee", "roi": "critical", "estimated_minutes": 120, "dependencies": ["musician_dashboard", "creator_dashboard"], "output_files": ["app/api/stripe/connect/route.ts", "app/api/stripe/payout/route.ts"]},
+                {"id": "auth_system", "name": "Auth — sign up / login for artists + creators", "roi": "critical", "estimated_minutes": 90, "dependencies": ["database_schema"], "output_files": ["app/login/page.tsx", "app/api/auth/route.ts"]},
+                {"id": "artist_dashboard", "name": "Artist dashboard — campaign creation, CPM + max payout, track upload, manual content review, analytics", "roi": "critical", "estimated_minutes": 180, "dependencies": ["auth_system"], "output_files": ["app/dashboard/artist/page.tsx"]},
+                {"id": "creator_dashboard", "name": "Creator dashboard — browse campaigns, apply, submit content, earnings", "roi": "critical", "estimated_minutes": 150, "dependencies": ["auth_system", "artist_dashboard"], "output_files": ["app/dashboard/creator/page.tsx"]},
+                {"id": "stripe_connect", "name": "Stripe Connect — escrow, auto-payouts, platform fee", "roi": "critical", "estimated_minutes": 120, "dependencies": ["artist_dashboard", "creator_dashboard"], "output_files": ["app/api/stripe/connect/route.ts", "app/api/stripe/payout/route.ts"]},
             ]
         },
         {
@@ -68,10 +68,10 @@ BUILD_PLAN = {
             "id": "phase_3_outreach",
             "name": "Phase 3 — Outreach & Launch",
             "priority": 3,
-            "description": "Reuse outreach agent pattern to recruit musicians + creators. Launch with pilot.",
+            "description": "Reuse outreach agent pattern to recruit artists + creators. Launch with pilot.",
             "tasks": [
-                {"id": "outreach_agent", "name": "Outreach agent — DM musicians (Spotify 1k-50k) + creators (TikTok 5k-50k)", "roi": "high", "estimated_minutes": 120, "dependencies": ["landing_page"], "output_files": ["outreach_agent.py"]},
-                {"id": "pilot_launch", "name": "Pilot launch — 10 musicians + 50 creators, first campaigns", "roi": "critical", "estimated_minutes": 60, "dependencies": ["musician_dashboard", "creator_dashboard", "stripe_connect"], "output_files": []},
+                {"id": "outreach_agent", "name": "Outreach agent — DM artists (Spotify 1k-50k) + creators (TikTok 5k-50k)", "roi": "high", "estimated_minutes": 120, "dependencies": ["landing_page"], "output_files": ["outreach_agent.py"]},
+                {"id": "pilot_launch", "name": "Pilot launch — 10 artists + 50 creators, first campaigns", "roi": "critical", "estimated_minutes": 60, "dependencies": ["artist_dashboard", "creator_dashboard", "stripe_connect"], "output_files": []},
             ]
         },
     ]
@@ -151,7 +151,7 @@ class Orchestrator:
         print(f"\n{'='*60}")
         print(f"  sendmusic.io Autonomous Orchestrator — PRIORITY #1")
         print(f"  Progress: {done}/{total} tasks ({pct}%)")
-        print(f"  Goal: $10k GMV, 50 musicians, 200 creators, 20 campaigns")
+        print(f"  Goal: $10k GMV, 50 artists, 200 creators, 20 campaigns")
         print(f"{'='*60}")
 
         for phase in sorted(self.plan["phases"], key=lambda p: p["priority"]):

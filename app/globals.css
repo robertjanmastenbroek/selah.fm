@@ -12,12 +12,18 @@
 @layer components {
   .btn-gold {
     @apply bg-gold text-void font-bold py-3 px-8 rounded-lg
-           hover:bg-gold-light transition-colors duration-200
-           inline-block text-center;
+           hover:bg-gold-hover transition-all duration-200
+           inline-block text-center shadow-lg shadow-gold/20;
   }
   .btn-outline {
-    @apply border border-gold/40 text-gold py-3 px-8 rounded-lg
-           hover:bg-gold/10 transition-colors duration-200
+    @apply border border-gold/30 text-gold py-3 px-8 rounded-lg
+           hover:bg-gold/10 hover:border-gold/50 transition-all duration-200
            inline-block text-center;
+  }
+  .card {
+    @apply bg-void-card border border-white/5 rounded-2xl p-8;
+  }
+  .card-elevated {
+    @apply bg-void-elevated border border-white/10 rounded-2xl p-8;
   }
 }
