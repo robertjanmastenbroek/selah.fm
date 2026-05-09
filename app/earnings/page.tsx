@@ -91,12 +91,15 @@ export default function EarningsPage() {
 
             {/* Stripe Connect prompt */}
             <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
-              <CardContent className="p-5 text-center space-y-2">
-                <p className="text-sm font-medium">💳 Set up payouts</p>
-                <p className="text-xs text-muted-foreground">Connect your bank account via Stripe to receive payments.</p>
-                <Link href="/api/stripe/connect" className="inline-block mt-2 text-xs font-semibold text-accent-foreground hover:underline">
-                  Set up Stripe Connect →
-                </Link>
+              <CardContent className="p-5 text-center space-y-3">
+                <p className="text-sm font-medium">💳 Receive payouts</p>
+                <p className="text-xs text-muted-foreground">Connect your bank account via Stripe to receive payments directly. Payouts are processed after your submissions are approved.</p>
+                <div className="flex gap-2 justify-center">
+                  <Link href="/api/stripe/connect" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent-foreground text-white text-xs font-semibold hover:opacity-90 transition-opacity">
+                    Set up Stripe Connect →
+                  </Link>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Takes 2 minutes. Works in 40+ countries.</p>
               </CardContent>
             </Card>
 

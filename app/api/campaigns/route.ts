@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       FROM campaigns c
       LEFT JOIN campaign_stats v ON v.id = c.id
       WHERE c.status IN ('active', 'draft')
+        AND (c.ends_at IS NULL OR c.ends_at > NOW())
     `;
 
     // Sort by created_at desc and apply limit

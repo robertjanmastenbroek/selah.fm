@@ -68,6 +68,10 @@ CREATE TABLE campaigns (
     -- Platform settings
     platforms       TEXT[] NOT NULL DEFAULT '{tiktok,instagram,youtube}',
     
+    -- Timing
+    starts_at       TIMESTAMPTZ DEFAULT now(),
+    ends_at         TIMESTAMPTZ,            -- campaign deadline (null = no deadline)
+    
     -- Status
     status          TEXT NOT NULL DEFAULT 'draft'
                     CHECK (status IN ('draft', 'active', 'paused', 'completed', 'cancelled')),
