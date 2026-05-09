@@ -25,6 +25,7 @@ export default function ReviewPage() {
   const [subs, setSubs] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('pending');
   const [campaigns, setCampaigns] = useState<{ id: string; track_title: string }[]>([]);
   const { addToast } = useToast();
 
@@ -39,7 +40,7 @@ export default function ReviewPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => { fetchSubmissions(); }, [selectedCampaign]);
+  useEffect(() => { fetchSubmissions(); }, [selectedCampaign, statusFilter]);
 
   const [undoState, setUndoState] = useState<{ id: string; status: string; timer: any } | null>(null);
 
@@ -86,7 +87,7 @@ export default function ReviewPage() {
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setSubs(data.filter((s: Submission) => s.review_status === 'pending'));
+          setSubs(data.filter((s: Submission) => s.review_status === statusFilter));
         }
       })
       .finally(() => setLoading(false));
@@ -108,15 +109,15 @@ export default function ReviewPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="section-title mb-1">Review</h1>
-            <p className="text-muted-foreground text-sm">{loading ? 'Loading...' : `${subs.length} pending`}</p>
+            <p className="text-muted-foreground text-sm">{loading ? 'Loading...' : `${subs.length} ${statusFilter}`}</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex rounded-lg border overflow-hidden">
               {['pending', 'approved', 'rejected'].map(tab => (
                 <button
                   key={tab}
-                  onClick={() => setSelectedCampaign(tab === 'pending' ? 'all' : tab)}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${selectedCampaign === (tab === 'pending' ? 'all' : tab) || (tab === 'pending' && selectedCampaign === 'all') ? 'bg-foreground text-background' : 'hover:bg-muted'}`}
+                  onClick={() => setStatusFilter(tab)}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === tab ? 'bg-foreground text-background' : 'hover:bg-muted'}`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
