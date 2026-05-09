@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Submission {
   id: string;
@@ -19,100 +23,60 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSubmissions();
+    fetch('/api/submissions?campaignId=all')
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setSubs(data.filter((s: Submission) => s.review_status === 'pending'));
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchSubmissions = async () => {
-    try {
-      const res = await fetch('/api/submissions?campaignId=all');
-      const data = await res.json();
-      if (Array.isArray(data)) setSubs(data.filter((s: Submission) => s.review_status === 'pending'));
-    } catch {}
-    setLoading(false);
-  };
-
-  const handleAction = async (id: string, status: 'approved' | 'rejected') => {
-    try {
-      await fetch('/api/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId: id, status }),
-      });
-    } catch {}
+  const handleAction = async (id: string, status: string) => {
+    try { await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) }); } catch {}
     setSubs(prev => prev.filter(s => s.id !== id));
   };
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-background">
       <Header />
-      <main className="page-container py-8 md:py-12">
+      <main className="page-container">
         <div className="mb-8">
           <h1 className="section-title mb-1">Review</h1>
-          <p className="text-text-muted text-sm">{loading ? 'Loading...' : `${subs.length} pending submissions`}</p>
+          <p className="text-muted-foreground text-sm">{loading ? 'Loading...' : `${subs.length} pending`}</p>
         </div>
 
         {loading ? (
           <div className="space-y-4">
-            {[1,2].map(i => (
-              <div key={i} className="card p-5 animate-pulse">
-                <div className="h-5 bg-bg-secondary rounded w-1/2 mb-3" />
-                <div className="h-4 bg-bg-secondary rounded w-3/4 mb-4" />
-                <div className="h-16 bg-bg-secondary rounded mb-4" />
-                <div className="flex gap-2">
-                  <div className="h-10 bg-bg-secondary rounded flex-1" />
-                  <div className="h-10 bg-bg-secondary rounded flex-1" />
-                </div>
-              </div>
-            ))}
+            {[1,2].map(i => <Card key={i}><CardContent className="p-5 space-y-3"><Skeleton className="h-5 w-1/2" /><Skeleton className="h-4 w-3/4" /><Skeleton className="h-16 w-full" /><div className="flex gap-2"><Skeleton className="h-10 flex-1" /><Skeleton className="h-10 flex-1" /></div></CardContent></Card>)}
           </div>
         ) : subs.length === 0 ? (
-          <div className="card text-center py-16 animate-fade-in">
-            <div className="text-text-muted text-[64px] mb-4 font-light">✓</div>
-            <div className="text-text font-medium text-lg">All caught up</div>
-            <p className="text-text-muted text-sm mt-1">No submissions to review.</p>
-          </div>
+          <Card className="text-center py-16"><CardContent><p className="text-4xl mb-4 opacity-10">✓</p><h2 className="text-lg font-medium">All caught up</h2><p className="text-muted-foreground text-sm">No submissions to review.</p></CardContent></Card>
         ) : (
           <div className="space-y-4">
             {subs.map((s, i) => {
               const cpm = (s.cpm_rate_cents || 300) / 100;
               const gross = ((s.views_verified || 0) / 1000) * cpm;
               const net = gross * 0.8;
-
               return (
-                <div key={s.id} className="card p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-text font-semibold">{s.creator || 'Creator'}</div>
-                      <div className="text-text-muted text-sm mt-0.5">
-                        <span>{s.track_title} · {s.platform}</span>
+                <Card key={s.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{s.creator || 'Creator'}</h3>
+                        <p className="text-muted-foreground text-sm">{s.track_title} · {s.platform}</p>
                       </div>
+                      <Badge variant="secondary">{(s.views_verified || 0).toLocaleString()} views</Badge>
                     </div>
-                    <div className="text-right">
-                      <div className="text-gold font-bold text-lg">{((s.views_verified || 0)).toLocaleString()}</div>
-                      <div className="text-text-muted text-[11px] mt-0.5">views</div>
+                    <Card className="bg-muted/50"><CardContent className="p-3 text-sm text-muted-foreground">
+                      {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> → <span className="text-foreground font-semibold">${net.toFixed(2)}</span> net
+                    </CardContent></Card>
+                    <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" className="text-sm text-amber-600 hover:underline">Watch on {s.platform} →</a>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => handleAction(s.id, 'rejected')} className="flex-1">Reject</Button>
+                      <Button onClick={() => handleAction(s.id, 'approved')} className="flex-1">Approve</Button>
                     </div>
-                  </div>
-                  <div className="card p-3 text-sm text-text-muted mb-4">
-                    {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-gold font-semibold">${gross.toFixed(2)}</span>
-                    <span className="text-text-muted mx-1">·</span>
-                    <span className="text-text-muted">−20% fee</span>
-                    <span className="text-text-muted mx-1">=</span>
-                    <span className="text-text font-semibold">${net.toFixed(2)}</span> net
-                  </div>
-                  <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank"
-                    className="text-gold/70 text-sm hover:text-gold transition-colors mb-4 inline-block">
-                    Watch on {s.platform} →
-                  </a>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleAction(s.id, 'rejected')}
-                      className="btn-secondary flex-1 !border-crimson-light/20 !text-crimson-light/70 hover:!bg-crimson/5">
-                      Reject
-                    </button>
-                    <button onClick={() => handleAction(s.id, 'approved')} className="btn-primary flex-1">
-                      Approve
-                    </button>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>

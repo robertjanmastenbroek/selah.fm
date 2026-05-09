@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Header from '@/components/TopNav';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function EarningsPage() {
   const [submissions] = useState([
@@ -9,38 +11,37 @@ export default function EarningsPage() {
     { id: '2', track: 'Desert Prayer', platform: 'instagram', views: 8300, earned: 33.20, status: 'paid', date: 'May 7' },
     { id: '3', track: 'Neon Cathedral', platform: 'tiktok', views: 45100, earned: 90.20, status: 'pending', date: 'May 9' },
   ]);
-
   const total = submissions.filter(s => s.status === 'paid').reduce((s, e) => s + e.earned, 0);
   const pending = submissions.filter(s => s.status === 'pending').reduce((s, e) => s + e.earned, 0);
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-background">
       <Header />
-      <main className="page-container py-8 md:py-12">
-        <div className="mb-8">
-          <h1 className="section-title mb-1">Earnings</h1>
-        </div>
-
-        <div className="card p-8 text-center mb-6 animate-fade-in">
-          <div className="text-text-muted text-xs uppercase tracking-[0.2em] mb-2">Available balance</div>
-          <div className="font-display text-5xl md:text-6xl text-gold mb-2 tracking-tight">${total.toFixed(2)}</div>
-          <div className="text-text-muted text-sm">+${pending.toFixed(2)} pending</div>
-        </div>
-
+      <main className="page-container">
+        <h1 className="section-title mb-8">Earnings</h1>
+        <Card className="text-center mb-6 animate-fade-in">
+          <CardContent className="p-8">
+            <p className="text-muted-foreground text-xs uppercase tracking-widest mb-2">Available balance</p>
+            <p className="text-5xl font-bold tracking-tight">${total.toFixed(2)}</p>
+            <p className="text-muted-foreground text-sm mt-1">+${pending.toFixed(2)} pending</p>
+          </CardContent>
+        </Card>
         <div className="space-y-2">
           {submissions.map((s, i) => (
-            <div key={s.id} className="card p-4 flex items-center justify-between animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
-              <div>
-                <div className="text-text text-sm font-medium">{s.track}</div>
-                <div className="text-text-muted text-xs mt-0.5">{s.platform} · {s.views.toLocaleString()} views · {s.date}</div>
-              </div>
-              <div className="text-right">
-                <div className="text-gold font-semibold">${s.earned.toFixed(2)}</div>
-                <div className={`text-[11px] mt-0.5 ${s.status === 'paid' ? 'text-emerald-400/70' : 'text-amber-400/70'}`}>
-                  {s.status}
+            <Card key={s.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">{s.track}</p>
+                  <p className="text-muted-foreground text-xs">{s.platform} · {s.views.toLocaleString()} views · {s.date}</p>
                 </div>
-              </div>
-            </div>
+                <div className="text-right">
+                  <p className="font-semibold">${s.earned.toFixed(2)}</p>
+                  <Badge variant={s.status === 'paid' ? 'default' : 'secondary'} className="text-xs">
+                    {s.status}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </main>
