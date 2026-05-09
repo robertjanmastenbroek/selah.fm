@@ -81,7 +81,7 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
 
   await check('3.3 Campaign cards have content', async () => {
     // Either campaign cards or empty state should be visible
-    const cards = await page.$$('text=CPM');
+    const cards = await page.$$('text=budget');
     const empty = await page.$('text=No campaigns yet');
     if (!cards.length && !empty) throw new Error('No content on browse page');
   });
@@ -162,7 +162,7 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
 
   await check('13.1 Campaign detail handles missing ID', async () => {
     await page.goto(BASE + '/c/nonexistent-id');
-    await page.waitForSelector('text=not found', { timeout: 5000 });
+    await page.waitForSelector('text=Campaign not found', { timeout: 5000 });
   });
 
   // ─── 14. Onboarding Page ───────────────────────────────────────────────────
@@ -184,7 +184,7 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
   await check('15.2 Mobile browse works', async () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(BASE + '/browse');
-    await page.waitForSelector('text=Campaigns', { timeout: 5000 });
+    await page.waitForSelector('text=Discover', { timeout: 5000 });
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 
