@@ -1,9 +1,19 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-const tabs = [
+const links = [
   { href: '/browse', label: 'Discover' },
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/review', label: 'Review' },
@@ -11,7 +21,6 @@ const tabs = [
 ];
 
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [profile, setProfile] = useState<{ name?: string; email?: string } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -22,82 +31,66 @@ export default function Header() {
     });
   }, []);
 
+  const initials = profile?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+
   return (
-    <>
-      {/* === TOP BAR === */}
-      <div className="fixed top-0 inset-x-0 z-50 bg-bg/95 backdrop-blur-sm border-b border-border-light">
-        <div className="max-w-5xl mx-auto flex items-center justify-between h-12 px-4 sm:px-6">
-          <div className="flex items-center gap-4">
-            <a href="/browse" className="font-semibold text-text text-base">
-              SendMusic<span className="text-gold">.io</span>
-            </a>
-            
-            {/* Desktop nav — hidden on mobile */}
-            <div className="hidden md:flex items-center gap-0.5">
-              {tabs.map(t => (
-                <a key={t.href} href={t.href}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors
-                    ${pathname === t.href || pathname.startsWith(t.href + '/') 
-                      ? 'bg-bg-secondary text-text' 
-                      : 'text-text-muted hover:text-text-secondary'}`}>
-                  {t.label}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Profile button */}
-          <button onClick={() => setMenuOpen(!menuOpen)}
-            className="w-7 h-7 rounded-full bg-bg-secondary border border-border flex items-center justify-center
-                       text-xs font-semibold text-text-secondary shrink-0">
-            {profile?.name?.[0]?.toUpperCase() || '☺'}
-          </button>
-        </div>
-      </div>
-
-      {/* === PROFILE DROPDOWN (fixed to viewport) === */}
-      {menuOpen && (
-        <>
-          <div className="fixed inset-0 z-[60]" onClick={() => setMenuOpen(false)} />
-          <div className="fixed top-12 right-4 sm:right-6 z-[70] w-56 bg-bg border border-border rounded-xl shadow-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border-light">
-              <p className="text-text text-sm font-medium truncate">{profile?.name || 'User'}</p>
-              <p className="text-text-muted text-xs mt-0.5 truncate">{profile?.email}</p>
-            </div>
-            {[
-              { href: '/dashboard', label: 'Dashboard' },
-              { href: '/earnings', label: 'Earnings' },
-              { href: '/settings', label: 'Settings' },
-            ].map(item => (
-              <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
-                className="block px-4 py-2.5 text-sm text-text-secondary hover:text-text hover:bg-bg-secondary transition-colors">
-                {item.label}
-              </a>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
+      <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
+        <div className="flex items-center gap-6">
+          <Link href="/browse" className="font-semibold text-lg tracking-tight">
+            SendMusic<span className="text-amber-600">.io</span>
+          </Link>
+          
+          <nav className="hidden md:flex items-center gap-1">
+            {links.map(link => (
+              <Link key={link.href} href={link.href}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors
+                  ${isActive(link.href) 
+                    ? 'bg-muted text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
+                {link.label}
+              </Link>
             ))}
-            <button onClick={async () => {
-              setMenuOpen(false);
+          </nav>
+        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger className="rounded-full focus:outline-none">
+            <Avatar className="h-7 w-7">
+              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              <p className="text-sm font-medium">{profile?.name || 'User'}</p>
+              <p className="text-xs text-muted-foreground">{profile?.email}</p>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push('/dashboard')}>Dashboard</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/earnings')}>Earnings</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/settings')}>Settings</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={async () => {
               await fetch('/api/auth/logout', { method: 'POST' });
               router.push('/login');
-            }} className="w-full text-left px-4 py-3 border-t border-border-light text-sm text-crimson hover:bg-red-50 transition-colors">
+            }} className="text-destructive">
               Log out
-            </button>
-          </div>
-        </>
-      )}
-
-      {/* === BOTTOM NAV (mobile only) === */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-bg/95 backdrop-blur-sm border-t border-border-light flex items-center justify-around h-12">
-        {tabs.map(t => {
-          const active = pathname === t.href || pathname.startsWith(t.href + '/');
-          return (
-            <a key={t.href} href={t.href}
-              className={`text-[11px] font-medium px-3 py-2 transition-colors
-                ${active ? 'text-gold' : 'text-text-muted'}`}>
-              {t.label}
-            </a>
-          );
-        })}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-    </>
+
+      <nav className="md:hidden flex items-center justify-around h-12 border-t bg-background/95 backdrop-blur">
+        {links.map(link => (
+          <Link key={link.href} href={link.href}
+            className={`text-xs font-medium px-3 py-2 transition-colors
+              ${isActive(link.href) ? 'text-foreground' : 'text-muted-foreground'}`}>
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+    </header>
   );
 }
