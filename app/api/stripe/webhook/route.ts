@@ -25,18 +25,22 @@ export async function POST(request: Request) {
       const grossCents = session.amount_total || 0;
 
       if (campaignId && grossCents > 0) {
-        // Stripe processing fee: 2.9% + 30¢
-        const stripeFeeCents = Math.round(grossCents * 0.029 + 30);
-        const netCents = grossCents - stripeFeeCents;
-        
-        await sql`
-          UPDATE campaigns 
-          SET total_budget_cents = total_budget_cents + ${netCents},
-              budget_remaining_cents = budget_remaining_cents + ${netCents},
-              updated_at = NOW()
-          WHERE id = ${campaignId}
-        `;
-        console.log(`✅ Campaign ${campaignId}: +$${(netCents/100).toFixed(2)} (gross: $${(grossCents/100).toFixed(2)}, stripe: $${(stripeFeeCents/100).toFixed(2)})`);
+        try {
+          // Stripe processing fee: 2.9% + 30¢
+          const stripeFeeCents = Math.round(grossCents * 0.029 + 30);
+          const netCents = grossCents - stripeFeeCents;
+          
+          await sql`
+            UPDATE campaigns 
+            SET total_budget_cents = total_budget_cents + ${netCents},
+                budget_remaining_cents = budget_remaining_cents + ${netCents},
+                updated_at = NOW()
+            WHERE id = ${campaignId}
+          `;
+          console.log(`✅ Campaign ${campaignId}: +$${(netCents/100).toFixed(2)} (gross: $${(grossCents/100).toFixed(2)}, stripe: $${(stripeFeeCents/100).toFixed(2)})`);
+        } catch (dbError: any) {
+          console.error('DB update failed:', dbError.message);
+        }
       }
     }
 
