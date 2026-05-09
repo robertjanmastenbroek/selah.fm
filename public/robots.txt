@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sendmusic-io-production.up.railway.app/sitemap.xml
