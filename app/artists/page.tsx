@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
 import CreatorAvatar from '@/components/CreatorAvatar';
+import { useDebounce } from '@/lib/useDebounce';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,8 @@ export default function ArtistsPage() {
       .finally(() => setLoading(false));
   };
 
+  const debouncedSearch = useDebounce(searchText, 300);
+  useEffect(() => { fetchArtists(debouncedSearch); }, [debouncedSearch]);
   useEffect(() => { fetchArtists(); }, []);
 
   const handleSearch = (e: React.FormEvent) => {

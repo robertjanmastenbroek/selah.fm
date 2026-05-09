@@ -110,16 +110,29 @@ export default function ReviewPage() {
             <h1 className="section-title mb-1">Review</h1>
             <p className="text-muted-foreground text-sm">{loading ? 'Loading...' : `${subs.length} pending`}</p>
           </div>
-          <select
-            value={selectedCampaign}
-            onChange={e => setSelectedCampaign(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm bg-background"
-          >
-            <option value="all">All campaigns</option>
-            {campaigns.map(c => (
-              <option key={c.id} value={c.id}>{c.track_title}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border overflow-hidden">
+              {['pending', 'approved', 'rejected'].map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setSelectedCampaign(tab === 'pending' ? 'all' : tab)}
+                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${selectedCampaign === (tab === 'pending' ? 'all' : tab) || (tab === 'pending' && selectedCampaign === 'all') ? 'bg-foreground text-background' : 'hover:bg-muted'}`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
+            </div>
+            <select
+              value={selectedCampaign}
+              onChange={e => setSelectedCampaign(e.target.value)}
+              className="border rounded-md px-3 py-2 text-sm bg-background"
+            >
+              <option value="all">All campaigns</option>
+              {campaigns.map(c => (
+                <option key={c.id} value={c.id}>{c.track_title}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {loading ? (
