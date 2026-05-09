@@ -29,6 +29,18 @@ export async function POST(request: Request) {
       if (typeof vData.views === 'number') initialViews = vData.views;
     } catch {}
 
+    // Check campaign is active and has budget
+    const campaign = await sql`SELECT status, budget_remaining_cents FROM campaigns WHERE id = ${campaignId}`;
+    if (campaign.length === 0) {
+      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+    }
+    if (campaign[0].status !== 'active') {
+      return NextResponse.json({ error: 'Campaign is not accepting submissions' }, { status: 400 });
+    }
+    if (campaign[0].budget_remaining_cents <= 0) {
+      return NextResponse.json({ error: 'Campaign budget is exhausted' }, { status: 400 });
+    }
+
     const result = await sql`
       INSERT INTO submissions (campaign_id, creator_id, content_url, platform, views_at_submit, views_verified)
       VALUES (${campaignId}, ${creatorId}, ${contentUrl}, ${platform}, ${initialViews}, ${initialViews})

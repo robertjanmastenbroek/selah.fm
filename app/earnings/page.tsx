@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -85,6 +86,17 @@ export default function EarningsPage() {
                     +${(data?.totalPending || 0).toFixed(2)} pending
                   </p>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Stripe Connect prompt */}
+            <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
+              <CardContent className="p-5 text-center space-y-2">
+                <p className="text-sm font-medium">💳 Set up payouts</p>
+                <p className="text-xs text-muted-foreground">Connect your bank account via Stripe to receive payments.</p>
+                <Link href="/api/stripe/connect" className="inline-block mt-2 text-xs font-semibold text-accent-foreground hover:underline">
+                  Set up Stripe Connect →
+                </Link>
               </CardContent>
             </Card>
 
