@@ -59,11 +59,19 @@ export async function GET(request: Request) {
 
         const insert = async (cid: any, crid: any, url: string, plat: string, rs: string, ps: string, views: number, paCents: number | null = null) => {
           if (!cid || !crid) return;
-          await sql`
-            INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at${paCents !== null ? ', reviewed_at' : ''})
-            VALUES (${cid}, ${crid}, ${url}, ${plat}, ${rs}, ${ps}, ${views}, ${paCents || null}, ${views}, NOW() - INTERVAL '1 hour'${paCents !== null ? `, NOW() - INTERVAL '2 days'` : ''})
-            ON CONFLICT DO NOTHING
-          `;
+          if (paCents !== null) {
+            await sql`
+              INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, payout_amount_cents, views_at_submit, submitted_at, reviewed_at)
+              VALUES (${cid}, ${crid}, ${url}, ${plat}, ${rs}, ${ps}, ${views}, ${paCents}, ${views}, NOW() - INTERVAL '1 hour', NOW() - INTERVAL '2 days')
+              ON CONFLICT DO NOTHING
+            `;
+          } else {
+            await sql`
+              INSERT INTO submissions (campaign_id, creator_id, content_url, platform, review_status, payout_status, views_verified, views_at_submit, submitted_at)
+              VALUES (${cid}, ${crid}, ${url}, ${plat}, ${rs}, ${ps}, ${views}, ${views}, NOW() - INTERVAL '1 hour')
+              ON CONFLICT DO NOTHING
+            `;
+          }
         };
 
         await insert(c1, cr1, 'https://tiktok.com/@creator/video1', 'tiktok', 'pending', 'pending', 3200);
