@@ -40,12 +40,12 @@ export default function DashboardPage() {
       if (Array.isArray(data)) {
         setCampaigns(data.map((c: any) => ({
           id: c.id, trackTitle: c.track_title || c.trackTitle,
-          coverArt: c.cover_art_url || c.coverArt || '',
-          cpmRate: c.cpm_rate_cents ? c.cpm_rate_cents / 100 : (c.cpm || 3),
-          budget: c.total_budget_cents ? c.total_budget_cents / 100 : (c.budget || 500),
-          spent: c.budget_remaining_cents ? (c.total_budget_cents - c.budget_remaining_cents) / 100 : 0,
-          views: c.total_verified_views || c.views || 0,
-          submissions: parseInt(c.approved_submissions || c.submissions || '0'),
+          coverArt: c.cover_art_url || '',
+          cpmRate: (c.cpm_rate_cents || 0) / 100,
+          budget: (c.total_budget_cents || 0) / 100,
+          spent: ((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0)) / 100,
+          views: parseInt(c.total_verified_views || '0'),
+          submissions: parseInt(c.approved_submissions || '0'),
         })));
       }
     }).catch(() => {});
