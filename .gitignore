@@ -3,6 +3,8 @@ node_modules/
 
 # Build output
 .next/
+test-results/
+playwright-report/
 out/
 
 # Environment — NEVER COMMIT

@@ -1,44 +1,72 @@
 import { NextResponse } from 'next/server';
 
-// View verification — checks TikTok/Instagram/YouTube for real view counts
-// Production: use platform APIs. MVP: simulated verification.
+// YouTube Data API v3 — no OAuth needed for public video stats
+// Get key: https://console.cloud.google.com/apis/credentials
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY || '';
 
-const MOCK_VIEW_GROWTH: Record<string, number[]> = {
-  tiktok: [0, 1200, 3400, 8900, 12400, 18500, 22000],
-  instagram: [0, 800, 2100, 5600, 8300, 12100, 15000],
-  youtube: [0, 400, 1500, 3800, 6500, 9500, 11000],
-};
-
-export async function POST(request: Request) {
-  const { contentUrl, platform } = await request.json();
-
-  // Extract view count based on platform API or mock data
-  // In production: call TikTok/IG/YT APIs with real tokens
-  const mockViews = MOCK_VIEW_GROWTH[platform] || [0];
-  const views = mockViews[Math.min(mockViews.length - 1, Math.floor(Math.random() * mockViews.length))];
-
-  return NextResponse.json({
-    views,
-    platform,
-    verified: true,
-    verifiedAt: new Date().toISOString(),
-    note: platform === 'tiktok' && !process.env.TIKTOK_CLIENT_KEY
-      ? 'Mock data — add TIKTOK_CLIENT_KEY to Railway for real verification'
-      : undefined,
-  });
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/,  // raw video ID
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
 }
 
-// Auto-check endpoint — runs periodically to update all active submissions
-export async function GET() {
-  const checks = [
-    { submissionId: '1', platform: 'tiktok', views: 12400 },
-    { submissionId: '2', platform: 'instagram', views: 8300 },
-    { submissionId: '3', platform: 'youtube', views: 9500 },
-  ];
+export async function POST(request: Request) {
+  try {
+    const { url, platform } = await request.json();
+    
+    if (!url) return NextResponse.json({ error: 'URL required' }, { status: 400 });
 
-  return NextResponse.json({
-    checked: checks.length,
-    results: checks,
-    timestamp: new Date().toISOString(),
-  });
+    // YouTube verification
+    if (platform === 'youtube' || !platform) {
+      const videoId = extractYouTubeId(url);
+      if (!videoId) {
+        return NextResponse.json({ 
+          platform: 'youtube',
+          views: 0,
+          note: 'Could not extract YouTube video ID. For TikTok/Instagram, paste the URL and we will verify manually.',
+        });
+      }
+
+      if (YOUTUBE_API_KEY) {
+        const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${YOUTUBE_API_KEY}`;
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        
+        const views = parseInt(data.items?.[0]?.statistics?.viewCount || '0');
+        return NextResponse.json({
+          platform: 'youtube',
+          videoId,
+          views,
+          title: data.items?.[0]?.snippet?.title || '',
+          verified: true,
+        });
+      }
+
+      // Fallback: return mock for testing
+      return NextResponse.json({
+        platform: 'youtube',
+        videoId,
+        views: 'YouTube API key not configured',
+        note: 'Set YOUTUBE_API_KEY in Railway to enable automatic verification',
+        verified: false,
+      });
+    }
+
+    // TikTok / Instagram — manual verification for now
+    return NextResponse.json({
+      platform,
+      views: 'pending',
+      note: `${platform} verification will be available soon. Your submission is queued for manual review.`,
+      verified: false,
+    });
+
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }
