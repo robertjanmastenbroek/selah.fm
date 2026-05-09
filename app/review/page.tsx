@@ -45,7 +45,7 @@ export default function ReviewPage() {
   return (
     <div className="min-h-screen bg-void">
       <TopNav />
-      <main className="max-w-2xl mx-auto px-4 py-8 md:py-10">
+      <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Review</h1>
           <p className="text-muted/50 text-sm">{loading ? 'Loading...' : `${subs.length} pending submissions`}</p>

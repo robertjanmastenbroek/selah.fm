@@ -22,7 +22,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-void">
       <TopNav />
-      <main className="max-w-2xl mx-auto px-4 py-8 md:py-10">
+      <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Settings</h1>
         </div>

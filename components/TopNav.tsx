@@ -40,7 +40,7 @@ export default function TopNav() {
     <>
       {/* Desktop header */}
       <header className="fixed top-0 inset-x-0 z-50 bg-void/70 backdrop-blur-xl border-b border-white/[0.06]">
-        <div className="max-w-5xl mx-auto flex items-center justify-between px-6 h-14">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-14">
           <a href="/dashboard" className="font-display text-gold text-lg tracking-tight">
             SendMusic.io
           </a>
