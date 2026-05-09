@@ -165,7 +165,12 @@ export default function ArtistDashboard() {
                   </div>
                   <div className="flex gap-2 mt-4">
                     <a href="/review" className="flex-1 btn-outline text-sm !py-2 text-center">Review submissions</a>
-                    <button className="flex-1 btn-gold text-sm !py-2">Add budget</button>
+                    <button onClick={async () => {
+                      const res = await fetch('/api/stripe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: 100, campaignId: c.id }) });
+                      const data = await res.json();
+                      if (data.url) window.location.href = data.url;
+                      else alert('Stripe not configured — add STRIPE_SECRET_KEY to Railway');
+                    }} className="flex-1 btn-gold text-sm !py-2">Add budget</button>
                   </div>
                 </div>
               ))}
