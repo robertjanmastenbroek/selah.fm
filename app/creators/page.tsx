@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
+import CreatorAvatar from '@/components/CreatorAvatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -102,9 +103,7 @@ export default function CreatorsPage() {
                   <Card key={c.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
                     <CardContent className="p-5 space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold">
-                          {c.display_name?.[0]?.toUpperCase() || '?'}
-                        </div>
+                        <CreatorAvatar src={c.profile_image_url} name={c.display_name || 'Creator'} size="md" />
                         <div>
                           <a href={`/creators/${c.id}`} className="font-semibold hover:text-accent-foreground transition-colors">
                             {c.display_name || 'Creator'}
