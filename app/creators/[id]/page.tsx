@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/TopNav';
 import BottomNav from '@/components/BottomNav';
 import CreatorAvatar from '@/components/CreatorAvatar';
