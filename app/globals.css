@@ -2,73 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @layer base {
-  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-  body { @apply bg-bg text-text font-body; }
-  input, textarea, select { @apply outline-none; }
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
 @layer components {
-  /* Card — white with subtle shadow */
-  .card {
-    @apply bg-bg-card border border-border-light rounded-2xl p-5
-           shadow-card transition-all duration-200 ease-out;
-  }
-  .card:hover {
-    @apply shadow-card-hover -translate-y-0.5;
-  }
-
-  /* Input */
-  .input-field {
-    @apply w-full bg-bg-secondary border border-border rounded-xl px-4 py-3.5
-           text-text text-[15px] placeholder:text-text-muted
-           transition-all duration-200 ease-out
-           focus:border-gold focus:ring-2 focus:ring-gold/10;
-  }
-
-  /* Primary button */
-  .btn-primary {
-    @apply bg-text text-white font-semibold py-3 px-6 rounded-xl
-           hover:bg-text-secondary active:scale-[0.98]
-           transition-all duration-200 ease-out
-           inline-flex items-center justify-center gap-2
-           disabled:opacity-40 disabled:cursor-not-allowed;
-  }
-
-  /* Gold CTA */
-  .btn-gold {
-    @apply bg-gold text-white font-semibold py-3 px-6 rounded-xl
-           hover:bg-gold-dark active:scale-[0.98]
-           transition-all duration-200 ease-out
-           inline-flex items-center justify-center gap-2
-           disabled:opacity-40 disabled:cursor-not-allowed;
-  }
-
-  /* Secondary */
-  .btn-secondary {
-    @apply border border-border text-text font-medium py-3 px-6 rounded-xl
-           hover:bg-bg-secondary active:scale-[0.98]
-           transition-all duration-200 ease-out
-           inline-flex items-center justify-center gap-2;
-  }
-
-  .btn-ghost {
-    @apply text-text-muted font-medium py-2 px-3 rounded-lg
-           hover:text-text hover:bg-bg-secondary
-           transition-all duration-150 ease-out;
-  }
-
-  .section-title {
-    @apply font-display text-2xl md:text-3xl lg:text-4xl text-text tracking-tight;
-  }
-
   .page-container {
-    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-14 md:pb-8;
+    @apply max-w-5xl mx-auto px-4 sm:px-6 pt-4 pb-20 md:pb-8;
   }
-
   .campaign-grid {
-    @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-2;
+    @apply grid gap-4 sm:grid-cols-2;
+  }
+  .section-title {
+    @apply text-2xl md:text-3xl font-semibold tracking-tight;
   }
 }
