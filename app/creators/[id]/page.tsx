@@ -27,6 +27,64 @@ interface Creator {
   total_submissions: number;
 }
 
+function HireButton({ creatorId, creatorName, cpm }: { creatorId: string; creatorName: string; cpm: number }) {
+  const [profile, setProfile] = useState<any>(null);
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => setProfile(d.user));
+  }, []);
+
+  const handleHire = () => {
+    if (!profile) {
+      router.push(`/login?redirect=/creators/${creatorId}`);
+      return;
+    }
+    if (profile.type === 'creator') {
+      return; // Will show message below
+    }
+    // Artist — redirect to dashboard with hire params
+    router.push(`/dashboard?hire=${creatorId}&cpm=${cpm}&name=${encodeURIComponent(creatorName)}`);
+    setStatus('success');
+    setTimeout(() => setStatus('idle'), 1500);
+  };
+
+  if (!profile) {
+    return (
+      <>
+        <h3 className="font-semibold">Want this creator to promote your music?</h3>
+        <p className="text-sm text-muted-foreground">Sign in as an artist to hire this creator for your campaign.</p>
+        <Button className="w-full" onClick={handleHire}>Sign in to hire</Button>
+      </>
+    );
+  }
+
+  if (profile.type === 'creator') {
+    return (
+      <>
+        <h3 className="font-semibold">👋 Hey creator!</h3>
+        <p className="text-sm text-muted-foreground">The hire feature is for artists looking to promote their music. Want to browse campaigns instead?</p>
+        <Button variant="secondary" className="w-full" onClick={() => router.push('/browse')}>Browse campaigns</Button>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <h3 className="font-semibold">Want this creator to promote your music?</h3>
+      <p className="text-sm text-muted-foreground">Hire them for your campaign at their CPM rate or negotiate a custom offer.</p>
+      <Button
+        className="w-full"
+        onClick={handleHire}
+        disabled={status === 'loading'}
+      >
+        {status === 'success' ? 'Redirecting... ✓' : `Hire @${creatorName} — $${(cpm / 100).toFixed(2)} CPM`}
+      </Button>
+    </>
+  );
+}
+
 export default function CreatorProfilePage() {
   const { id } = useParams<{ id: string }>();
   const [creator, setCreator] = useState<Creator | null>(null);
@@ -124,9 +182,7 @@ export default function CreatorProfilePage() {
         {/* Hire CTA */}
         <Card className="mb-6 border-accent/20 bg-accent/5">
           <CardContent className="p-5 text-center space-y-3">
-            <h3 className="font-semibold">Want this creator to promote your music?</h3>
-            <p className="text-sm text-muted-foreground">Hire them for your campaign at their CPM rate or negotiate a custom offer.</p>
-            <Button className="w-full" onClick={() => window.location.href = `/dashboard?hire=${creator.id}&cpm=${creator.preferred_cpm_cents}&name=${encodeURIComponent(creator.display_name)}`}>Hire this creator</Button>
+            <HireButton creatorId={creator.id} creatorName={creator.display_name} cpm={creator.preferred_cpm_cents} />
           </CardContent>
         </Card>
       </main>

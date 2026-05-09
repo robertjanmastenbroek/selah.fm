@@ -1,251 +1,333 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { useRouter } from 'next/navigation';
 
-function OnboardingWizard() {
+export default function OnboardingPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [step, setStep] = useState(1);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  // Step 1: Role selection
+  const [step, setStep] = useState(0);
   const [role, setRole] = useState<'artist' | 'creator' | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
 
-  // Step 2: Profile details
-  const [displayName, setDisplayName] = useState('');
-  const [bio, setBio] = useState('');
-  const [genres, setGenres] = useState('');
+  // Step data
+  const [name, setName] = useState('');
+  const [genres, setGenres] = useState<string[]>([]);
+  const [platforms, setPlatforms] = useState<string[]>([]);
+  const [budget, setBudget] = useState(100);
+  const [cpm, setCpm] = useState(2);
 
-  // Step 3: Social connections
-  const [tiktok, setTikTok] = useState('');
-  const [instagram, setInstagram] = useState('');
-  const [youtube, setYouTube] = useState('');
-  const [facebook, setFacebook] = useState('');
-  const [cpm, setCpm] = useState('2');
-
-  // Handle OAuth callback params
-  useEffect(() => {
-    const connected = searchParams.get('connected');
-    const err = searchParams.get('error');
-    if (err) {
-      setError(`Could not connect ${err.replace(/_/g, ' ')}. Try entering your handle manually.`);
-    }
-    if (connected) {
-      // Platform was connected via OAuth — mark it
-      if (connected === 'tiktok') setTikTok('@connected');
-      if (connected === 'instagram') setInstagram('@connected');
-      if (connected === 'youtube') setYouTube('@connected');
-      if (connected === 'facebook') setFacebook('@connected');
-    }
-  }, [searchParams]);
+  const totalSteps = role === 'artist' ? 5 : 5;
+  const genreOptions = ['Pop', 'Hip-Hop', 'Electronic', 'Rock', 'Indie', 'R&B', 'Jazz', 'Classical', 'Country', 'Metal'];
+  const platformOptions = ['TikTok', 'Instagram Reels', 'YouTube Shorts'];
+  const budgetPresets = [50, 100, 250, 500];
 
   const save = async () => {
     setSaving(true);
-    setError('');
     try {
-      const res = await fetch('/api/auth/me', {
+      await fetch('/api/auth/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: displayName,
-          bio,
-          genres,
-          tiktok_handle: tiktok || null,
-          instagram_handle: instagram || null,
-          youtube_handle: youtube || null,
-          facebook_handle: facebook || null,
+          name,
+          genres: genres.join(', '),
+          tiktok_handle: platforms.includes('TikTok') ? '@pending' : null,
+          instagram_handle: platforms.includes('Instagram Reels') ? '@pending' : null,
+          youtube_handle: platforms.includes('YouTube Shorts') ? '@pending' : null,
           preferredCpm: cpm,
         }),
       });
-      if (!res.ok) throw new Error('Failed to save');
-      router.push(role === 'artist' ? '/dashboard' : '/browse');
-    } catch (e: any) {
-      setError(e.message || 'Something went wrong');
-    } finally {
+      setDone(true);
+      setTimeout(() => {
+        router.push(role === 'artist' ? '/dashboard' : '/browse');
+      }, 2000);
+    } catch {
       setSaving(false);
     }
   };
 
-  const connectedCount = [tiktok, instagram, youtube, facebook].filter(Boolean).length;
+  const nextStep = () => setStep(s => Math.min(s + 1, totalSteps));
+  const prevStep = () => setStep(s => Math.max(s - 1, 0));
+
+  // Confetti particles
+  const particles = done ? Array.from({ length: 30 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    delay: Math.random() * 1.5,
+    size: Math.random() * 6 + 4,
+    color: ['#5B7FFF', '#8B9FFF', '#81C784', '#FFD54F'][i % 4],
+  })) : [];
+
+  if (done) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
+        {particles.map(p => (
+          <div
+            key={p.id}
+            className="absolute rounded-full animate-[float_2s_ease-out_forwards]"
+            style={{
+              left: `${p.x}%`,
+              top: '50%',
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              backgroundColor: p.color,
+              animationDelay: `${p.delay}s`,
+              opacity: 0,
+              animation: `confettiFall ${1.5 + p.delay}s ease-out forwards`,
+            }}
+          />
+        ))}
+        <div className="text-center space-y-4 animate-fade-in z-10">
+          <div className="text-5xl">🎉</div>
+          <h2 className="text-2xl font-bold">
+            {role === 'artist' ? 'Your campaign is live!' : "You're all set!"}
+          </h2>
+          <p className="text-muted-foreground">
+            {role === 'artist' ? 'Creators can now find your track.' : 'Browse campaigns and start earning.'}
+          </p>
+        </div>
+        <style>{`
+          @keyframes confettiFall {
+            0% { opacity: 1; transform: translateY(-50vh) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(50vh) rotate(720deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md space-y-6">
-        {/* Progress */}
-        <div className="text-center mb-4">
-          <a href="/" className="font-semibold text-2xl">Selah<span className="text-accent-foreground">.fm</span></a>
-          <p className="text-muted-foreground text-sm mt-2">Let&apos;s set up your profile</p>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md">
+        {/* Progress bar */}
+        <div className="mb-10">
+          <div className="h-1 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 text-right">
+            Step {step + 1} of {totalSteps}
+          </p>
         </div>
-        <div className="flex gap-2 mb-8">
-          {[1, 2, 3].map(s => (
-            <div key={s} className={`flex-1 h-1 rounded-full transition-colors ${s <= step ? 'bg-accent-foreground' : 'bg-muted'}`} />
-          ))}
+
+        {/* Back button */}
+        {step > 0 && (
+          <button onClick={prevStep} className="mb-4 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            ← Back
+          </button>
+        )}
+
+        <div className="animate-[slideUp_0.3s_ease-out]">
+          {/* Step 0: Role selection */}
+          {step === 0 && (
+            <div className="space-y-5">
+              <h2 className="text-2xl font-bold">What brings you here?</h2>
+              <p className="text-muted-foreground text-sm">We&apos;ll tailor your experience.</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { role: 'artist' as const, icon: '🎵', title: "I'm an artist", desc: 'I want to promote my music' },
+                  { role: 'creator' as const, icon: '📱', title: "I'm a creator", desc: 'I want to earn money creating content' },
+                ].map(r => (
+                  <button
+                    key={r.role}
+                    onClick={() => { setRole(r.role); nextStep(); }}
+                    className="p-5 rounded-2xl border-2 border-border hover:border-primary/40 transition-all text-left space-y-2 hover:bg-primary/[0.03]"
+                  >
+                    <div className="text-3xl">{r.icon}</div>
+                    <div className="font-semibold text-sm">{r.title}</div>
+                    <div className="text-xs text-muted-foreground">{r.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 1: Name */}
+          {step === 1 && (
+            <div className="space-y-5">
+              <h2 className="text-2xl font-bold">
+                {role === 'artist' ? "What's your artist name?" : "What's your creator name?"}
+              </h2>
+              <input
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder={role === 'artist' ? 'e.g. Luna Park' : 'e.g. MiaCreates'}
+                className="w-full bg-input border border-border rounded-xl px-4 py-4 text-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                autoFocus
+                onKeyDown={e => e.key === 'Enter' && name && nextStep()}
+              />
+              {name && (
+                <button onClick={nextStep} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+                  Continue →
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Genres (artist) or Platforms (creator) */}
+          {step === 2 && role === 'artist' && (
+            <div className="space-y-5">
+              <h2 className="text-2xl font-bold">What genre is your music?</h2>
+              <p className="text-muted-foreground text-sm">Pick one or more.</p>
+              <div className="flex flex-wrap gap-2">
+                {genreOptions.map(g => {
+                  const selected = genres.includes(g);
+                  return (
+                    <button
+                      key={g}
+                      onClick={() => setGenres(prev => selected ? prev.filter(x => x !== g) : [...prev, g])}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  );
+                })}
+              </div>
+              {genres.length > 0 && (
+                <button onClick={nextStep} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+                  Continue →
+                </button>
+              )}
+            </div>
+          )}
+
+          {step === 2 && role === 'creator' && (
+            <div className="space-y-5">
+              <h2 className="text-2xl font-bold">Where do you create content?</h2>
+              <p className="text-muted-foreground text-sm">Pick your platforms.</p>
+              <div className="space-y-2">
+                {platformOptions.map(p => {
+                  const selected = platforms.includes(p);
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setPlatforms(prev => selected ? prev.filter(x => x !== p) : [...prev, p])}
+                      className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                        selected ? 'border-primary bg-primary/[0.05]' : 'border-border hover:border-primary/30'
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{p}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              {platforms.length > 0 && (
+                <button onClick={nextStep} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+                  Continue →
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Step 3: Genres (creator) or Budget (artist) */}
+          {step === 3 && role === 'artist' && (
+            <div className="space-y-5">
+              <h2 className="text-2xl font-bold">Set your budget</h2>
+              <p className="text-muted-foreground text-sm">You can always add more later.</p>
+              <div className="grid grid-cols-2 gap-2">
+                {budgetPresets.map(b => (
+                  <button
+                    key={b}
+                    onClick={() => { setBudget(b); nextStep(); }}
+                    className={`p-4 rounded-xl border-2 text-center transition-all ${
+                      budget === b ? 'border-primary bg-primary/[0.05]' : 'border-border hover:border-primary/30'
+                    }`}
+                  >
+                    <div className="text-xl font-bold">${b}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      ≈ {Math.floor((b / (cpm || 2)) * 1000).toLocaleString()} views
+                    </div>
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setBudget(0); nextStep(); }}
+                  className="p-4 rounded-xl border-2 border-border hover:border-primary/30 text-center col-span-2"
+                >
+                  <div className="text-sm font-medium">Custom amount</div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && role === 'creator' && (
+            <div className="space-y-5">
+              <h2 className="text-2xl font-bold">What&apos;s your style?</h2>
+              <p className="text-muted-foreground text-sm">Pick your genres.</p>
+              <div className="flex flex-wrap gap-2">
+                {genreOptions.map(g => {
+                  const selected = genres.includes(g);
+                  return (
+                    <button
+                      key={g}
+                      onClick={() => setGenres(prev => selected ? prev.filter(x => x !== g) : [...prev, g])}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  );
+                })}
+              </div>
+              {genres.length > 0 && (
+                <button onClick={nextStep} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+                  Continue →
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Step 4: Platform connect (creator) or CPM (artist) */}
+          {step === 4 && role === 'artist' && (
+            <div className="space-y-5">
+              <h2 className="text-2xl font-bold">Set your CPM rate</h2>
+              <p className="text-muted-foreground text-sm">This is how much you pay per 1,000 verified views.</p>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="0.5"
+                  max="10"
+                  step="0.5"
+                  value={cpm}
+                  onChange={e => setCpm(parseFloat(e.target.value))}
+                  className="flex-1 accent-primary"
+                />
+                <span className="text-2xl font-bold tabular-nums w-16 text-right">${cpm.toFixed(1)}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Creators earn 80% = ${(cpm * 0.8).toFixed(2)} per 1,000 views</p>
+              <button onClick={save} disabled={saving} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+                {saving ? 'Launching...' : 'Launch campaign →'}
+              </button>
+            </div>
+          )}
+
+          {step === 4 && role === 'creator' && (
+            <div className="space-y-5">
+              <h2 className="text-2xl font-bold">Connect your platforms</h2>
+              <p className="text-muted-foreground text-sm">This helps artists find you. You can skip for now.</p>
+              <div className="space-y-3">
+                {platforms.map(p => (
+                  <div key={p} className="p-4 rounded-xl border border-primary/20 bg-primary/[0.02] text-center">
+                    <p className="text-sm font-medium">{p} — connected</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => router.push('/browse')} className="flex-1 py-3 border border-border rounded-xl text-sm text-muted-foreground hover:bg-muted transition-colors">
+                  Skip for now
+                </button>
+                <button onClick={save} disabled={saving} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+                  {saving ? 'Finishing...' : "I'm ready →"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-
-        {/* Step 1: Role */}
-        {step === 1 && (
-          <div className="space-y-4 animate-slide-up">
-            <h2 className="text-xl font-bold text-center">What brings you here?</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => { setRole('artist'); setStep(2); }}
-                className={`p-5 rounded-2xl border-2 transition-all text-left space-y-2 ${role === 'artist' ? 'border-accent-foreground bg-accent/5' : 'border-border hover:border-muted-foreground'}`}>
-                <div className="text-3xl">🎵</div>
-                <div className="font-semibold">I&apos;m an artist</div>
-                <div className="text-xs text-muted-foreground">I want to promote my music</div>
-              </button>
-              <button onClick={() => { setRole('creator'); setStep(2); }}
-                className={`p-5 rounded-2xl border-2 transition-all text-left space-y-2 ${role === 'creator' ? 'border-accent-foreground bg-accent/5' : 'border-border hover:border-muted-foreground'}`}>
-                <div className="text-3xl">📱</div>
-                <div className="font-semibold">I&apos;m a creator</div>
-                <div className="text-xs text-muted-foreground">I want to earn money creating content</div>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Profile */}
-        {step === 2 && (
-          <div className="space-y-4 animate-slide-up">
-            <h2 className="text-xl font-bold text-center">Tell us about yourself</h2>
-            <Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Display name" />
-            <Input value={bio} onChange={e => setBio(e.target.value)} placeholder={role === 'artist' ? 'Describe your music style...' : 'Describe your content style...'} />
-            <Input value={genres} onChange={e => setGenres(e.target.value)} placeholder="Genres — e.g. pop, electronic, indie" />
-            {role === 'creator' && (
-              <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} placeholder="Preferred CPM rate ($)" />
-            )}
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
-              <Button onClick={() => setStep(3)} disabled={!displayName} className="flex-1">Continue</Button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Social verification */}
-        {step === 3 && (
-          <div className="space-y-4 animate-slide-up">
-            <h2 className="text-xl font-bold text-center">Connect your accounts</h2>
-            <p className="text-sm text-muted-foreground text-center">
-              Connect your social accounts to get verified. Verified profiles get more visibility and trust.
-            </p>
-
-            <div className="space-y-3">
-              {/* TikTok */}
-              <Card className={tiktok ? 'border-pink-500/30 bg-pink-500/[0.02]' : ''}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#ff0050]/10 flex items-center justify-center text-lg shrink-0">🎵</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium">TikTok</span>
-                        {tiktok && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
-                      </div>
-                      <div className="flex gap-2">
-                        <a href="/api/connect?platform=tiktok" className="text-xs px-3 py-1.5 rounded-lg bg-[#ff0050]/10 text-[#ff0050] font-medium hover:bg-[#ff0050]/20 transition-colors shrink-0">
-                          Connect
-                        </a>
-                        <Input value={tiktok === '@connected' ? '' : tiktok} onChange={e => setTikTok(e.target.value)} placeholder="Or enter @handle" className="h-7 text-xs" />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Instagram */}
-              <Card className={instagram ? 'border-purple-500/30 bg-purple-500/[0.02]' : ''}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#E1306C]/10 flex items-center justify-center text-lg shrink-0">📷</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium">Instagram</span>
-                        {instagram && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
-                      </div>
-                      <div className="flex gap-2">
-                        <a href="/api/connect?platform=instagram" className="text-xs px-3 py-1.5 rounded-lg bg-[#E1306C]/10 text-[#E1306C] font-medium hover:bg-[#E1306C]/20 transition-colors shrink-0">
-                          Connect
-                        </a>
-                        <Input value={instagram === '@connected' ? '' : instagram} onChange={e => setInstagram(e.target.value)} placeholder="Or enter @handle" className="h-7 text-xs" />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* YouTube */}
-              <Card className={youtube ? 'border-red-500/30 bg-red-500/[0.02]' : ''}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-lg shrink-0">▶</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium">YouTube</span>
-                        {youtube && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
-                      </div>
-                      <div className="flex gap-2">
-                        <a href="/api/connect?platform=youtube" className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 font-medium hover:bg-red-500/20 transition-colors shrink-0">
-                          Connect
-                        </a>
-                        <Input value={youtube === '@connected' ? '' : youtube} onChange={e => setYouTube(e.target.value)} placeholder="Or enter @channel" className="h-7 text-xs" />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Facebook */}
-              <Card className={facebook ? 'border-blue-500/30 bg-blue-500/[0.02]' : ''}>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-lg shrink-0">📘</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium">Facebook</span>
-                        {facebook && <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Connected</Badge>}
-                      </div>
-                      <div className="flex gap-2">
-                        <a href="/api/connect?platform=facebook" className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-500 font-medium hover:bg-blue-500/20 transition-colors shrink-0">
-                          Connect
-                        </a>
-                        <Input value={facebook === '@connected' ? '' : facebook} onChange={e => setFacebook(e.target.value)} placeholder="Or enter name" className="h-7 text-xs" />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {error && <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3 text-sm text-destructive">{error}</div>}
-
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Back</Button>
-              <Button onClick={save} disabled={saving} className="flex-1">
-                {saving ? 'Saving...' : `Finish (${connectedCount} connected)`}
-              </Button>
-            </div>
-
-            <p className="text-xs text-muted-foreground text-center">
-              You can always update these later in Settings.
-            </p>
-          </div>
-        )}
       </div>
     </div>
-  );
-}
-
-export default function OnboardingPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="animate-pulse text-muted-foreground">Loading...</div></div>}>
-      <OnboardingWizard />
-    </Suspense>
   );
 }
