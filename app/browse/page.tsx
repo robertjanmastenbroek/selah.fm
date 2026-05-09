@@ -77,7 +77,7 @@ export default function BrowsePage() {
     <div className="min-h-screen bg-void">
       <TopNav />
 
-      <main className="max-w-2xl mx-auto px-4 py-8 md:py-10">
+      <main className="page-container py-8 md:py-12">
         <div className="mb-8">
           <h1 className="section-title mb-1">Browse campaigns</h1>
           <p className="text-muted/50 text-sm">Pick a track you love, create content, get paid for views.</p>
@@ -101,7 +101,7 @@ export default function BrowsePage() {
             <p className="text-muted/40 text-sm">Be the first to create one.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="campaign-grid">
             {campaigns.map((c, i) => {
               const isJoined = joined.has(c.id);
               const isSubmitting = submitting === c.id;

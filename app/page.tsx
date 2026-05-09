@@ -55,7 +55,7 @@ export default function LandingPage() {
 
       {/* ---- How it works — Vyro-style 3 steps ---- */}
       <section className="border-y border-white/5 bg-void-elevated/30 py-20 md:py-28">
-        <div className="max-w-5xl mx-auto px-4">
+        <div className="page-container px-4">
           <h2 className="font-display text-3xl text-center text-ivory mb-16">How it works</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -76,7 +76,7 @@ export default function LandingPage() {
 
       {/* ---- Dashboard preview ---- */}
       <section className="py-20 md:py-28">
-        <div className="max-w-5xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
+        <div className="page-container px-4 grid md:grid-cols-2 gap-12 items-center">
           <div>
             <div className="text-gold text-xs font-semibold uppercase tracking-widest mb-3">For artists</div>
             <h2 className="font-display text-3xl text-ivory mb-4">Full control over your budget</h2>
@@ -104,7 +104,7 @@ export default function LandingPage() {
 
       {/* ---- Earnings visual ---- */}
       <section className="border-y border-white/5 bg-void-elevated/30 py-20 md:py-28">
-        <div className="max-w-5xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
+        <div className="page-container px-4 grid md:grid-cols-2 gap-12 items-center">
           <div className="order-2 md:order-1">
             <img src="/images/earnings-visual.png" alt="Creator earnings growth" className="rounded-2xl w-full h-auto" />
           </div>
@@ -132,7 +132,7 @@ export default function LandingPage() {
 
       {/* ---- Creator earnings ---- */}
       <section className="py-20 md:py-28">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="page-container px-4">
           <h2 className="font-display text-3xl text-center text-ivory mb-4">Creators earning on SendMusic.io</h2>
           <p className="text-muted text-center mb-12 max-w-md mx-auto">Real payouts. Real views. No bots.</p>
           <div className="grid md:grid-cols-3 gap-6">
@@ -154,7 +154,7 @@ export default function LandingPage() {
 
       {/* ---- Tiered fees ---- */}
       <section className="py-20 md:py-28">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="page-container px-4">
           <h2 className="section-title text-center mb-4">One fee. It gets smaller as you grow.</h2>
           <p className="text-muted/50 text-center mb-12 max-w-md mx-auto">No subscription. No hidden costs. Just one platform fee on payouts.</p>
           <div className="grid md:grid-cols-3 gap-4">
@@ -176,7 +176,7 @@ export default function LandingPage() {
 
       {/* ---- Why different ---- */}
       <section className="py-20 md:py-28">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="page-container px-4">
           <h2 className="font-display text-3xl text-center text-ivory mb-4">Why SendMusic.io</h2>
           <p className="text-muted text-center mb-12 max-w-md mx-auto">
             Built for music. Not general content promotion.

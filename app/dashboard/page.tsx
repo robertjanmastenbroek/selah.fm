@@ -79,7 +79,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-void">
       <TopNav />
 
-      <main className="max-w-2xl mx-auto px-4 py-8 md:py-10">
+      <main className="page-container py-8 md:py-12">
         {step === 'wizard' ? (
           <>
             <div className="flex items-center gap-2 mb-10">
@@ -194,7 +194,7 @@ export default function DashboardPage() {
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="campaign-grid">
               {campaigns.map((c, i) => (
                 <div key={c.id} className="card-glass p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   {c.coverArt && (
