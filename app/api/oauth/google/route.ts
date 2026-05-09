@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     if (!clientId) {
       return NextResponse.json({ error: 'GOOGLE_CLIENT_ID not set' }, { status: 500 });
     }
-    const redirectUri = `${process.env.NEXTAUTH_URL}/api/oauth/google`;
+    const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/callback/google`;
     const url = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         code,
         client_id: process.env.GOOGLE_CLIENT_ID || '',
         client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/oauth/google`,
+        redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`,
         grant_type: 'authorization_code',
       }).toString(),
     });
