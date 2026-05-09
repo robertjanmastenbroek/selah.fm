@@ -70,6 +70,7 @@ export async function POST(request: Request) {
     }
 
     const { trackTitle, trackUrl, cpmRate, budget, maxPayout, requirements, driveUrl, hashtags, coverArtUrl } = validation.sanitized!;
+    const { requiredHashtags, requireFtc, minVideoLength, captionRequirements } = body;
 
     const session = getSession(request);
     if (!session) {
@@ -87,12 +88,14 @@ export async function POST(request: Request) {
       INSERT INTO campaigns (
         artist_id, track_title, track_url, 
         cpm_rate_cents, total_budget_cents, max_payout_per_submission_cents, budget_remaining_cents,
-        status, content_assets_url, recommended_hashtags, requirements, cover_art_url
+        status, content_assets_url, recommended_hashtags, requirements, cover_art_url,
+        required_hashtags, require_ftc, min_video_length_seconds, caption_requirements
       )
       VALUES (
         ${artistId}, ${trackTitle}, ${trackUrl}, 
         ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100},
-        'active', ${driveUrl || ''}, ${hashtags || '#selahfm'}, ${requirements || ''}, ${coverArtUrl || null}
+        'active', ${driveUrl || ''}, ${hashtags || '#selahfm'}, ${requirements || ''}, ${coverArtUrl || null},
+        ${requiredHashtags || null}, ${requireFtc || false}, ${minVideoLength || null}, ${captionRequirements || null}
       )
       RETURNING *
     `;

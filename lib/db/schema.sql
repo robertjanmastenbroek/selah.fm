@@ -57,9 +57,13 @@ CREATE TABLE campaigns (
     flat_fee_bonus_cents INTEGER DEFAULT 0,   -- optional extra per approved submission
     budget_remaining_cents INTEGER NOT NULL,  -- auto-calculated
     
-    -- Requirements (Whop: brand sets rules upfront)
-    requirements    TEXT,               -- quality, messaging, prohibitions, length, format
-    content_assets  TEXT,               -- link to Google Doc / assets folder
+    -- Requirements (brand sets rules upfront)
+    requirements        TEXT,           -- quality, messaging, prohibitions, format
+    required_hashtags   TEXT,           -- hashtags creators MUST include
+    require_ftc         BOOLEAN DEFAULT false,  -- require FTC disclosure hashtag
+    min_video_length_seconds INTEGER,  -- minimum video duration
+    caption_requirements TEXT,          -- required caption format/text
+    content_assets_url  TEXT,           -- link to content folder / Google Drive
     
     -- Platform settings
     platforms       TEXT[] NOT NULL DEFAULT '{tiktok,instagram,youtube}',

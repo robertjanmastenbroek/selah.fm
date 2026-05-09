@@ -49,6 +49,10 @@ function DashboardContent() {
   const [driveUrl, setDriveUrl] = useState('');
   const [hashtags, setHashtags] = useState('#selahfm');
   const [requirements, setRequirements] = useState('');
+  const [requiredHashtags, setRequiredHashtags] = useState('');
+  const [requireFtc, setRequireFtc] = useState(false);
+  const [minVideoLength, setMinVideoLength] = useState('');
+  const [captionReq, setCaptionReq] = useState('');
 
   const fetchCampaigns = () => {
     fetch('/api/campaigns').then(r => r.json()).then(data => {
@@ -79,7 +83,7 @@ function DashboardContent() {
     try {
       await fetch('/api/campaigns', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements }),
+        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq }),
       });
       fetchCampaigns();
       addToast('Campaign live', 'success');
@@ -136,8 +140,15 @@ function DashboardContent() {
                 <Input value={trackTitle} onChange={e => setTrackTitle(e.target.value)} placeholder="Track name" />
                 <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} placeholder="Spotify or SoundCloud link" />
                 <Input value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="Google Drive link (optional)" />
-                <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags" />
-                <Input value={requirements} onChange={e => setRequirements(e.target.value)} placeholder="Requirements for creators (optional)" />
+                <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags (optional)" />
+                <Input value={requiredHashtags} onChange={e => setRequiredHashtags(e.target.value)} placeholder="Required hashtags — creators MUST include these" />
+                <div className="flex items-center gap-3 py-1">
+                  <input type="checkbox" id="ftc" checked={requireFtc} onChange={e => setRequireFtc(e.target.checked)} className="rounded" />
+                  <label htmlFor="ftc" className="text-sm text-muted-foreground">Require FTC disclosure hashtag (#ad, #paidpartner)</label>
+                </div>
+                <Input value={minVideoLength} onChange={e => setMinVideoLength(e.target.value)} type="number" placeholder="Minimum video length (seconds)" />
+                <Input value={captionReq} onChange={e => setCaptionReq(e.target.value)} placeholder="Caption requirements (optional)" />
+                <Input value={requirements} onChange={e => setRequirements(e.target.value)} placeholder="Content requirements & guidelines" />
                 <div className="flex gap-3 pt-2">
                   <Button variant="outline" onClick={() => setWizardStep(1)} className="flex-1">Back</Button>
                   <Button onClick={() => setWizardStep(3)} disabled={!trackTitle} className="flex-1">Continue</Button>
