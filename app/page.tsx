@@ -1,172 +1,94 @@
 'use client';
 
-export default function LandingPage() {
+import { useState, useEffect } from 'react';
+
+export default function HomePage() {
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d.user) setLoggedIn(true);
+    });
+  }, []);
+
+  if (loggedIn) {
+    if (typeof window !== 'undefined') window.location.href = '/browse';
+    return null;
+  }
+
   return (
-    <>
-      {/* ---- Nav ---- */}
-      <nav className="border-b border-white/5 sticky top-0 bg-bg/95 backdrop-blur z-50">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <span className="font-display text-gold text-xl tracking-wide">SendMusic.io</span>
-          <a href="/login" className="btn-primary text-sm !py-2 !px-5">Get started</a>
-        </div>
-      </nav>
-
-      {/* ---- Hero ---- */}
-      <section className="max-w-6xl mx-auto px-4 pt-16 md:pt-28 pb-16 md:pb-24">
-        <div className="grid md:grid-cols-2 gap-10 items-center">
-          <div>
-            <h1 className="font-display text-4xl md:text-6xl text-text leading-tight mb-4">
-              Get your music<br />
-              <span className="text-gold">promoted. Get views. Get paid.</span>
-            </h1>
-            <p className="text-lg text-muted leading-relaxed mb-8 max-w-md">
-              Set any budget. Start with $5. Set your CPM from $0.10. Creators earn for every view.
-              TikTok, Reels, Shorts — your music, their audience.
-            </p>
-            <div className="flex gap-3 flex-wrap">
-              <a href="/login" className="btn-primary text-base !px-8 !py-3.5">Start as an artist</a>
-              <a href="/login" className="btn-secondary text-base !px-8 !py-3.5">Start as a creator</a>
-            </div>
-            <div className="flex gap-6 mt-8 text-sm text-muted">
-              <span>✓ No upfront fees</span>
-              <span>✓ Tiered fees: 20% → 15% → 10%</span>
-            </div>
+    <main className="min-h-screen bg-bg">
+      {/* Hero */}
+      <section className="page-container pt-24 md:pt-32 pb-16 md:pb-24">
+        <div className="max-w-2xl">
+          <h1 className="font-display text-4xl md:text-6xl text-text leading-tight mb-6 tracking-tight">
+            Get your music <span className="text-gold">promoted</span> by real creators.
+          </h1>
+          <p className="text-lg text-text-secondary leading-relaxed mb-8 max-w-lg">
+            Set any budget from $5. Creators make TikToks, Reels, and Shorts with your track. 
+            You approve every video. Pay only for verified views.
+          </p>
+          <div className="flex gap-3">
+            <a href="/login" className="btn-primary text-base !px-8 !py-3.5">Get started</a>
+            <a href="/browse" className="btn-secondary text-base !px-8 !py-3.5">Browse campaigns</a>
           </div>
-          <div className="hidden md:block">
-            <img src="/images/hero-illustration.png" alt="SendMusic.io — music promotion marketplace" className="rounded-2xl w-full h-auto" />
+          <p className="text-text-muted text-sm mt-4">No upfront costs. Fees: 20% → 15% → 10% as you scale.</p>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="border-y border-border-light bg-bg-secondary">
+        <div className="page-container !pt-12 !pb-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {[
+              { num: '$0.10', label: 'Minimum CPM' },
+              { num: '$5', label: 'Minimum budget' },
+              { num: 'CPM', label: 'You set the rate' },
+              { num: 'You', label: 'Approve every video' },
+            ].map(({ num, label }) => (
+              <div key={label}>
+                <div className="font-display text-2xl md:text-3xl text-gold mb-1">{num}</div>
+                <div className="text-text-muted text-sm">{label}</div>
+              </div>
+            ))}
           </div>
         </div>
+      </section>
 
-        {/* Stats bar */}
-        <div className="mt-16 md:mt-24 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+      {/* How it works */}
+      <section className="page-container py-16 md:py-24">
+        <h2 className="section-title text-center mb-4">How it works</h2>
+        <p className="text-text-muted text-center mb-12 max-w-md mx-auto">Simple as posting a TikTok. Set your terms. Creators earn for views.</p>
+        <div className="grid md:grid-cols-3 gap-8">
           {[
-            { num: 'CPM', label: 'You set the rate' },
-            { num: '20%', label: 'Platform fee (less as you scale)' },
-            { num: 'Cap', label: 'Max payout per video' },
-            { num: 'You', label: 'Approve every video' },
-          ].map(({ num, label }) => (
-            <div key={label} className="card !p-5">
-              <div className="font-display text-2xl text-gold mb-1">{num}</div>
-              <div className="text-muted text-xs">{label}</div>
+            { step: '01', title: 'Set your price', desc: 'Upload your track. Set CPM and budget. Campaign goes live.' },
+            { step: '02', title: 'Creators post', desc: 'Creators browse, pick your track, make TikToks and Reels. They submit links.' },
+            { step: '03', title: 'Pay for views', desc: 'Approve content you like. Views verified. Creators paid automatically.' },
+          ].map(s => (
+            <div key={s.step} className="text-center">
+              <div className="text-gold text-xs font-bold tracking-widest mb-3">{s.step}</div>
+              <div className="font-display text-xl text-text mb-3">{s.title}</div>
+              <div className="text-text-muted text-sm leading-relaxed">{s.desc}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ---- How it works — Vyro-style 3 steps ---- */}
-      <section className="border-y border-white/5 bg-bg-elevated/30 py-20 md:py-28">
-        <div className="page-container px-4">
-          <h2 className="font-display text-3xl text-center text-text mb-16">How it works</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+      {/* Tiered fees */}
+      <section className="bg-bg-secondary py-16 md:py-24">
+        <div className="page-container !pt-16 !pb-16">
+          <h2 className="section-title text-center mb-4">One fee. It shrinks as you grow.</h2>
+          <p className="text-text-muted text-center mb-12 max-w-md mx-auto">No subscription. One platform fee on payouts.</p>
+          <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {[
-              { step: '01', title: 'Set your price', desc: 'Upload your track. Set CPM rate and max payout. Deposit your budget. Campaign goes live.', icon: '🎯' },
-              { step: '02', title: 'Creators post', desc: 'Creators browse, pick your track, and make TikToks and Reels. They submit links for review.', icon: '📱' },
-              { step: '03', title: 'Pay for views', desc: 'You approve content you like. Views are verified. Creators get paid automatically.', icon: '💰' },
-            ].map((s) => (
-              <div key={s.step} className="text-center">
-                <div className="text-4xl mb-4">{s.icon}</div>
-                <div className="text-gold text-xs font-bold tracking-widest mb-3">{s.step}</div>
-                <div className="font-display text-xl text-text mb-3">{s.title}</div>
-                <div className="text-muted text-sm leading-relaxed">{s.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---- Dashboard preview ---- */}
-      <section className="py-20 md:py-28">
-        <div className="page-container px-4 grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="text-gold text-xs font-semibold uppercase tracking-widest mb-3">For artists</div>
-            <h2 className="font-display text-3xl text-text mb-4">Full control over your budget</h2>
-            <p className="text-muted leading-relaxed mb-6">
-              Set CPM rate, max payout per video, and minimum view threshold.
-              Only quality content reaches your review queue. One viral clip never drains your budget.
-            </p>
-            <ul className="space-y-3 text-muted text-sm">
-              {[
-                'Real-time dashboard: views, spend, submissions',
-                'Review content before paying — you have final say',
-                'Auto-capped payouts protect your campaign',
-              ].map((item) => (
-                <li key={item} className="flex gap-2 items-start">
-                  <span className="text-gold flex-shrink-0">✓</span> {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <img src="/images/dashboard-mockup.png" alt="Artist campaign dashboard" className="rounded-2xl w-full h-auto" />
-          </div>
-        </div>
-      </section>
-
-      {/* ---- Earnings visual ---- */}
-      <section className="border-y border-white/5 bg-bg-elevated/30 py-20 md:py-28">
-        <div className="page-container px-4 grid md:grid-cols-2 gap-12 items-center">
-          <div className="order-2 md:order-1">
-            <img src="/images/earnings-visual.png" alt="Creator earnings growth" className="rounded-2xl w-full h-auto" />
-          </div>
-          <div className="order-1 md:order-2">
-            <div className="text-gold text-xs font-semibold uppercase tracking-widest mb-3">For creators</div>
-            <h2 className="font-display text-3xl text-text mb-4">Get paid for the content you already make</h2>
-            <p className="text-muted leading-relaxed mb-6">
-              Browse campaigns from artists who want their music promoted.
-              Create TikToks and Reels with tracks you love. Earn CPM on verified views.
-            </p>
-            <ul className="space-y-3 text-muted text-sm">
-              {[
-                'See CPM rates and remaining budgets before you start',
-                'Submit your link — simple as pasting a URL',
-                'Automatic payouts when views hit thresholds',
-              ].map((item) => (
-                <li key={item} className="flex gap-2 items-start">
-                  <span className="text-gold flex-shrink-0">✓</span> {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* ---- Creator earnings ---- */}
-      <section className="py-20 md:py-28">
-        <div className="page-container px-4">
-          <h2 className="font-display text-3xl text-center text-text mb-4">Creators earning on SendMusic.io</h2>
-          <p className="text-muted text-center mb-12 max-w-md mx-auto">Real payouts. Real views. No bots.</p>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { name: 'Mia J.', handle: '@creatormia', earned: '$189', vids: '12', platform: 'TikTok' },
-              { name: 'Jake M.', handle: '@dancewithjake', earned: '$142', vids: '8', platform: 'Instagram' },
-              { name: 'Sarah K.', handle: '@viralqueen', earned: '$257', vids: '15', platform: 'TikTok' },
-            ].map((c) => (
-              <div key={c.handle} className="card text-center !p-6">
-                <div className="text-2xl mb-2">🎬</div>
-                <div className="font-display text-xl text-gold mb-1">{c.earned}</div>
-                <div className="text-text font-semibold text-sm mb-1">{c.name}</div>
-                <div className="text-muted text-xs">{c.vids} videos · {c.platform}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---- Tiered fees ---- */}
-      <section className="py-20 md:py-28">
-        <div className="page-container px-4">
-          <h2 className="section-title text-center mb-4">One fee. It gets smaller as you grow.</h2>
-          <p className="text-text-muted text-center mb-12 max-w-md mx-auto">No subscription. No hidden costs. Just one platform fee on payouts.</p>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { volume: '$0–$500', fee: '20%', desc: 'Getting started. Test campaigns, find your flow.' },
-              { volume: '$500–$2K', fee: '15%', desc: 'Growing. Regular campaigns, more creators.' },
-              { volume: '$2,000+', fee: '10%', desc: 'Scaling. Highest volume, lowest fee.' },
+              { volume: '$0–$500', fee: '20%', desc: 'Getting started. Test campaigns.' },
+              { volume: '$500–$2K', fee: '15%', desc: 'Growing. Regular campaigns.' },
+              { volume: '$2,000+', fee: '10%', desc: 'Scaling. Lowest fee.' },
             ].map((t, i) => (
-              <div key={i} className="card p-6 text-center animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
+              <div key={i} className="card p-6 text-center">
                 <div className="text-text-muted text-sm mb-2">Monthly spend</div>
                 <div className="text-text font-semibold text-lg mb-1">{t.volume}</div>
-                <div className="font-display text-3xl text-gold mb-2 tracking-tight">{t.fee}</div>
+                <div className="font-display text-3xl text-gold mb-2">{t.fee}</div>
                 <div className="text-text-muted text-sm">{t.desc}</div>
               </div>
             ))}
@@ -174,60 +96,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ---- Why different ---- */}
-      <section className="py-20 md:py-28">
-        <div className="page-container px-4">
-          <h2 className="font-display text-3xl text-center text-text mb-4">Why SendMusic.io</h2>
-          <p className="text-muted text-center mb-12 max-w-md mx-auto">
-            Built for music. Not general content promotion.
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-4 pr-4 text-muted font-normal">Other platforms</th>
-                  <th className="text-left py-4 px-4 text-gold font-display text-base">SendMusic.io</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {[
-                  ['Pay per submission — no guarantee', 'Pay per verified view — only when it works'],
-                  ['General content — not music-focused', 'Built exclusively for music promotion'],
-                  ['No budget protection', 'Max payout cap + minimum view threshold'],
-                  ['Automated — no quality check', 'You review and approve every video'],
-                  ['Fixed pricing — no control', 'You set CPM, budget, and per-video cap'],
-                ].map(([old, nw]) => (
-                  <tr key={old}>
-                    <td className="py-4 pr-4 text-muted">{old}</td>
-                    <td className="py-4 px-4 text-text">{nw}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {/* CTA */}
+      <section className="page-container py-16 md:py-24 text-center">
+        <h2 className="section-title mb-4">Ready to get your music heard?</h2>
+        <p className="text-text-muted mb-8 max-w-md mx-auto">Start with $5. No upfront costs. Only pay when you approve content.</p>
+        <div className="flex gap-3 justify-center">
+          <a href="/login" className="btn-primary text-base !px-8 !py-3.5">Get started</a>
+          <a href="/login" className="btn-secondary text-base !px-8 !py-3.5">I'm a creator</a>
         </div>
       </section>
 
-      {/* ---- Final CTA ---- */}
-      <section className="border-y border-white/5 bg-bg-elevated/30 py-20 md:py-28 text-center">
-        <div className="max-w-lg mx-auto px-4">
-          <h2 className="font-display text-3xl text-text mb-4">Ready to get your music heard?</h2>
-          <p className="text-muted mb-8">
-            First cohort launching soon. Artists and creators — claim your spot.
-          </p>
-          <div className="flex gap-3 justify-center flex-wrap">
-            <a href="/login" className="btn-primary text-base !px-8 !py-3.5">Start as an artist</a>
-            <a href="/login" className="btn-secondary text-base !px-8 !py-3.5">Start as a creator</a>
-          </div>
-          <p className="text-muted text-xs mt-4">Tiered fees: 20% → 15% → 10% as you scale. No upfront costs.</p>
-        </div>
-      </section>
-
-      {/* ---- Footer ---- */}
-      <footer className="py-10 text-center text-muted text-sm border-t border-white/5">
+      <footer className="border-t border-border-light py-8 text-center text-text-muted text-xs">
         <p>SendMusic.io · CPM marketplace for music promotion</p>
-        <p className="mt-1">Built by artists, for artists and creators.</p>
       </footer>
-    </>
+    </main>
   );
 }
