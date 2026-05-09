@@ -15,13 +15,13 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 pt-16 md:pt-28 pb-16 md:pb-24">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div>
-            <h1 className="font-display text-4xl md:text-6xl text-ivory leading-tight mb-6">
-              Your music,<br />
-              <span className="text-gold">promoted by real creators.</span>
+            <h1 className="font-display text-4xl md:text-6xl text-ivory leading-tight mb-4">
+              Get your music<br />
+              <span className="text-gold">promoted. Get views. Get paid.</span>
             </h1>
             <p className="text-lg text-muted leading-relaxed mb-8 max-w-md">
-              Set your budget. Creators make TikToks and Reels with your track.
-              You review, approve, and pay only for verified views.
+              The marketplace where artists set the price and creators earn for every view.
+              TikTok, Reels, Shorts — your music, their audience.
             </p>
             <div className="flex gap-3 flex-wrap">
               <a href="/login" className="btn-gold text-base !px-8 !py-3.5">Start as an artist</a>
@@ -53,52 +53,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ---- How it works (3 steps each) ---- */}
+      {/* ---- How it works — Vyro-style 3 steps ---- */}
       <section className="border-y border-white/5 bg-void-elevated/30 py-20 md:py-28">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="font-display text-3xl text-center text-ivory mb-4">How it works</h2>
-          <p className="text-muted text-center mb-16 max-w-md mx-auto">
-            Simple as posting a TikTok. Artists set the terms. Creators earn for views.
-          </p>
-
-          {/* Artist flow */}
-          <div className="mb-16">
-            <h3 className="text-gold text-xs font-semibold uppercase tracking-widest mb-8 text-center">For artists</h3>
-            <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              {[
-                { step: '1', title: 'Create campaign', desc: 'Set CPM rate, max payout, and upload your track. Funds held in escrow.' },
-                { step: '2', title: 'Review submissions', desc: 'Creators submit their TikToks and Reels. You watch and approve the ones you like.' },
-                { step: '3', title: 'Pay for views', desc: 'Approved content earns as views grow. Auto-capped so your budget stays safe.' },
-              ].map((s) => (
-                <div key={s.step} className="card text-center !p-6">
-                  <div className="w-10 h-10 rounded-full bg-gold/10 border border-gold/30 text-gold flex items-center justify-center mx-auto mb-4 font-bold">
-                    {s.step}
-                  </div>
-                  <div className="font-semibold text-ivory mb-2">{s.title}</div>
-                  <div className="text-muted text-sm leading-relaxed">{s.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Creator flow */}
-          <div>
-            <h3 className="text-gold text-xs font-semibold uppercase tracking-widest mb-8 text-center">For creators</h3>
-            <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              {[
-                { step: '1', title: 'Pick a track', desc: 'Browse campaigns with visible CPM rates and budgets. Find music you love.' },
-                { step: '2', title: 'Create & submit', desc: 'Post your TikTok or Reel with the track. Paste the link. That\'s it.' },
-                { step: '3', title: 'Get paid', desc: 'Artist approves your content. Views are verified. You earn CPM automatically.' },
-              ].map((s) => (
-                <div key={s.step} className="card text-center !p-6">
-                  <div className="w-10 h-10 rounded-full bg-gold/10 border border-gold/30 text-gold flex items-center justify-center mx-auto mb-4 font-bold">
-                    {s.step}
-                  </div>
-                  <div className="font-semibold text-ivory mb-2">{s.title}</div>
-                  <div className="text-muted text-sm leading-relaxed">{s.desc}</div>
-                </div>
-              ))}
-            </div>
+          <h2 className="font-display text-3xl text-center text-ivory mb-16">How it works</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { step: '01', title: 'Set your price', desc: 'Upload your track. Set CPM rate and max payout. Deposit your budget. Campaign goes live.', icon: '🎯' },
+              { step: '02', title: 'Creators post', desc: 'Creators browse, pick your track, and make TikToks and Reels. They submit links for review.', icon: '📱' },
+              { step: '03', title: 'Pay for views', desc: 'You approve content you like. Views are verified. Creators get paid automatically.', icon: '💰' },
+            ].map((s) => (
+              <div key={s.step} className="text-center">
+                <div className="text-4xl mb-4">{s.icon}</div>
+                <div className="text-gold text-xs font-bold tracking-widest mb-3">{s.step}</div>
+                <div className="font-display text-xl text-ivory mb-3">{s.title}</div>
+                <div className="text-muted text-sm leading-relaxed">{s.desc}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
