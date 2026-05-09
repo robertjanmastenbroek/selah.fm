@@ -1,52 +1,33 @@
 #!/usr/bin/env python3
-"""
-SendMusic.io Auto-Deploy Watcher
-=================================
-Watches for new git commits and auto-deploys to Railway.
-Run in background: python3 watch_deploy.py &
+"""Watch for file changes and auto-deploy to Railway."""
 
-Usage:
-  python3 watch_deploy.py       # Watch forever, deploy on commit
-  python3 watch_deploy.py once  # Deploy once and exit
-"""
-
-import os, sys, time, subprocess
+import subprocess, time, os
 from pathlib import Path
 from datetime import datetime
 
 AGENT_DIR = Path(__file__).resolve().parent
+last_deploy = datetime.now()
+cooldown_minutes = 5
 
-def get_latest_commit():
-    result = subprocess.run(["git", "log", "-1", "--format=%H"], cwd=AGENT_DIR,
-                            capture_output=True, text=True)
-    return result.stdout.strip() if result.returncode == 0 else None
+def get_modified():
+    r = subprocess.run(["git", "diff", "--name-only", "HEAD"], cwd=AGENT_DIR, capture_output=True, text=True)
+    return [f for f in r.stdout.strip().split("\n") if f]
 
 def deploy():
-    print(f"  🚀 Deploying to Railway...")
-    subprocess.run(["npm", "run", "build"], cwd=AGENT_DIR, capture_output=True)
-    result = subprocess.run(["railway", "up", "--service", "selah-fm"],
-                            cwd=AGENT_DIR, capture_output=True, text=True)
-    print(f"  ✅ Deployed — {datetime.now().strftime('%H:%M:%S')}")
-    return result.returncode == 0
-
-def main():
-    import argparse
-    p = argparse.ArgumentParser()
-    p.add_argument("cmd", nargs="?", default="watch", choices=["watch", "once"])
-    args = p.parse_args()
-
-    if args.cmd == "once":
-        deploy()
-    else:
-        print("  Watching for git commits... (Ctrl+C to stop)")
-        last_commit = get_latest_commit()
-        while True:
-            time.sleep(30)
-            current = get_latest_commit()
-            if current and current != last_commit:
-                print(f"\n  🔄 New commit detected: {current[:8]}")
-                deploy()
-                last_commit = current
+    global last_deploy
+    print(f"\n  🚀 Deploying at {datetime.now().strftime('%H:%M:%S')}...")
+    subprocess.run(["git", "add", "-A"], cwd=AGENT_DIR)
+    subprocess.run(["git", "commit", "-m", f"watchdog deploy {datetime.now().strftime('%H:%M')}"], cwd=AGENT_DIR)
+    subprocess.run(["railway", "up", "--service", "selah-fm"], cwd=AGENT_DIR)
+    last_deploy = datetime.now()
 
 if __name__ == "__main__":
-    main()
+    print(f"  👀 Watching for changes... (deploy cooldown: {cooldown_minutes} min)")
+    while True:
+        modified = get_modified()
+        if modified:
+            elapsed = (datetime.now() - last_deploy).total_seconds()
+            if elapsed > cooldown_minutes * 60:
+                print(f"  📝 {len(modified)} files changed: {', '.join(modified[:3])}")
+                deploy()
+        time.sleep(30)
