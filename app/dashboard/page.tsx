@@ -209,8 +209,8 @@ export default function DashboardPage() {
                         </div>
                       ) : (
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="flex-1" asChild>
-                            <a href="/review">Review ({c.submissions})</a>
+                          <Button variant="outline" size="sm" className="flex-1" onClick={() => window.location.href = '/review'}>
+                            Review ({c.submissions})
                           </Button>
                           <Button size="sm" className="flex-1" onClick={() => { setFundingId(c.id); setFundingAmount('10'); }}>
                             Add budget
