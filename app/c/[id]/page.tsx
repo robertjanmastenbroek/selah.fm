@@ -1,98 +1,142 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import Header from '@/components/TopNav';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Skeleton } from '@/components/ui/skeleton';
 
-export default function CampaignPage() {
-  const { id } = useParams<{ id: string }>();
-  const [campaign, setCampaign] = useState<any>(null);
+interface Campaign {
+  id: string;
+  track_title: string;
+  track_url: string;
+  cover_art_url: string;
+  cpm_rate_cents: number;
+  total_budget_cents: number;
+  budget_remaining_cents: number;
+  platforms: string[];
+  status: string;
+  content_assets_url: string;
+  recommended_hashtags: string;
+  requirements: string;
+  approved_submissions: string;
+  total_verified_views: string;
+}
+
+export default function CampaignPage({ params }: { params: { id: string } }) {
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/campaigns')
+    fetch(`/api/campaigns/${params.id}`)
       .then(r => r.json())
-      .then(data => {
-        const found = Array.isArray(data) ? data.find((c: any) => c.id === id) : null;
-        setCampaign(found);
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
+      .then(d => { setCampaign(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [params.id]);
 
-  if (loading) return (
-    <div className="min-h-screen bg-background"><Header /><main className="page-container"><Card><CardContent className="p-8 space-y-4"><Skeleton className="h-8 w-1/3" /><Skeleton className="h-4 w-2/3" /><Skeleton className="h-32 w-full" /><Skeleton className="h-10 w-full" /></CardContent></Card></main></div>
-  );
+  if (loading) return <div className="min-h-screen bg-void"><Header /><div className="max-w-3xl mx-auto px-4 py-16"><div className="animate-pulse space-y-4"><div className="h-48 bg-void-card rounded-2xl" /><div className="h-6 bg-void-card rounded w-1/3" /><div className="h-4 bg-void-card rounded w-2/3" /></div></div></div>;
 
-  const cpm = campaign?.cpm_rate_cents ? campaign.cpm_rate_cents / 100 : 0;
-  const budget = campaign?.total_budget_cents ? campaign.total_budget_cents / 100 : 0;
-  const remaining = campaign?.budget_remaining_cents ? campaign.budget_remaining_cents / 100 : 0;
+  if (!campaign) return <div className="min-h-screen bg-void"><Header /><div className="max-w-3xl mx-auto px-4 py-20 text-center"><h1 className="text-2xl font-bold mb-4">Campaign not found</h1><a href="/browse" className="btn-primary">Browse campaigns</a></div></div>;
+
+  const budget = campaign.total_budget_cents / 100;
+  const remaining = campaign.budget_remaining_cents / 100;
   const spent = budget - remaining;
-  const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
-  const subs = campaign?.approved_submissions || '0';
+  const cpm = campaign.cpm_rate_cents / 100;
+  const progress = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-void">
       <Header />
-      <main className="page-container max-w-2xl">
-        <Link href="/browse" className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-block">← Back to Discover</Link>
+      <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
+        {/* Cover image */}
+        {campaign.cover_art_url && (
+          <div className="h-48 md:h-64 rounded-2xl overflow-hidden mb-8">
+            <img src={campaign.cover_art_url} alt={campaign.track_title} className="w-full h-full object-cover" />
+          </div>
+        )}
 
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">{campaign.track_title}</h1>
+            <a href={campaign.track_url} target="_blank" className="text-gold hover:underline text-sm">Listen on Spotify →</a>
+          </div>
+          <Badge variant="outline" className="border-gold/30 text-gold">
+            {campaign.status === 'active' ? 'Live' : campaign.status}
+          </Badge>
+        </div>
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'CPM', value: `$${cpm}` },
+            { label: 'Budget', value: `$${budget}` },
+            { label: 'Submissions', value: campaign.approved_submissions || '0' },
+            { label: 'Views', value: parseInt(campaign.total_verified_views || '0').toLocaleString() },
+          ].map(s => (
+            <Card key={s.label}>
+              <CardContent className="p-4 text-center">
+                <div className="text-lg font-bold">{s.value}</div>
+                <div className="text-xs text-muted">{s.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Budget progress */}
         <Card className="mb-8">
-          {campaign?.cover_art_url && (
-            <div className="h-56 overflow-hidden rounded-t-xl">
-              <img src={campaign.cover_art_url} alt={campaign.track_title} className="w-full h-full object-cover" />
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm text-muted">Budget spent</span>
+              <span className="text-sm font-medium">${spent.toFixed(0)} of ${budget}</span>
             </div>
-          )}
-          <CardContent className="p-8 space-y-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">{campaign?.track_title || `Campaign #${id}`}</h1>
-                <p className="text-muted-foreground text-sm mt-1">Music promotion on TikTok, Reels & Shorts</p>
-              </div>
-              <Badge>{campaign?.status || 'Active'}</Badge>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div><p className="text-2xl font-bold text-accent-foreground">${cpm.toFixed(2)}</p><p className="text-muted-foreground text-xs mt-1">CPM per 1K views</p></div>
-              <div><p className="text-2xl font-bold text-accent-foreground">${budget}</p><p className="text-muted-foreground text-xs mt-1">Total budget</p></div>
-              <div><p className="text-2xl font-bold text-accent-foreground">{subs}</p><p className="text-muted-foreground text-xs mt-1">Submissions</p></div>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Budget used</span><span>{pct.toFixed(0)}% · ${spent.toFixed(0)} of ${budget}</span></div>
-              <Progress value={pct} className="h-2" />
-            </div>
-
-            {campaign?.recommended_hashtags && (
-              <p className="text-sm text-muted-foreground">{campaign.recommended_hashtags}</p>
-            )}
-            {campaign?.requirements && (
-              <Card className="bg-muted/50"><CardContent className="p-4 text-sm text-muted-foreground">{campaign.requirements}</CardContent></Card>
-            )}
-
-            <Button size="lg" className="w-full" onClick={() => window.location.href = '/login'}>
-              Join this campaign
-            </Button>
+            <Progress value={progress} className="h-2" />
           </CardContent>
         </Card>
 
-        <Card><CardContent className="p-8 space-y-4">
-          <h2 className="text-xl font-semibold">How it works</h2>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Artists post campaigns with CPM rates. Creators browse, pick tracks they love, 
-            make TikToks, Instagram Reels, or YouTube Shorts, and submit their content links.
-            Artists review and approve. Creators get paid for every verified view.
-          </p>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            No bots. No fake views. Every view is verified through platform APIs.
-            Artists set a max payout per submission so their budget stays safe.
-          </p>
-        </CardContent></Card>
+        {/* Campaign details */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {campaign.platforms?.length > 0 && (
+            <Card><CardContent className="p-5">
+              <h3 className="font-semibold mb-3">Platforms</h3>
+              <div className="flex gap-2 flex-wrap">
+                {campaign.platforms.map(p => <Badge key={p} variant="secondary">{p}</Badge>)}
+              </div>
+            </CardContent></Card>
+          )}
+          {campaign.recommended_hashtags && (
+            <Card><CardContent className="p-5">
+              <h3 className="font-semibold mb-3">Recommended hashtags</h3>
+              <p className="text-sm text-muted">{campaign.recommended_hashtags}</p>
+            </CardContent></Card>
+          )}
+        </div>
+
+        {/* Requirements */}
+        {campaign.requirements && (
+          <Card className="mb-8">
+            <CardContent className="p-5">
+              <h3 className="font-semibold mb-3">Requirements for creators</h3>
+              <p className="text-sm text-muted whitespace-pre-wrap">{campaign.requirements}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Google Drive */}
+        {campaign.content_assets_url && (
+          <Card className="mb-8">
+            <CardContent className="p-5">
+              <h3 className="font-semibold mb-3">Content assets</h3>
+              <a href={campaign.content_assets_url} target="_blank" className="text-gold hover:underline text-sm">
+                Open Google Drive folder →
+              </a>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* CTA */}
+        <div className="text-center py-8">
+          <a href="/browse" className="btn-primary text-lg">← Back to browse</a>
+        </div>
       </main>
     </div>
   );
