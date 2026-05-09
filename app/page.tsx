@@ -162,7 +162,7 @@ export default function HomePage() {
               { icon: '💸', title: 'Wasted ad spend', desc: 'TikTok and Instagram ads with 0.5% engagement. You pay for impressions, not results.' },
               { icon: '🐌', title: 'Slow PR agencies', desc: '$2,000/month retainers. Months to see any traction. No guarantee of coverage.' },
             ].map((item, i) => (
-              <div key={i} className="relative p-6 rounded-xl border border-red-500/10 bg-red-500/[0.02]">
+              <div key={i} className="problem-card relative p-6 rounded-xl border">
                 <div className="absolute -top-3 -right-3 w-6 h-6 rounded-full bg-red-500/10 flex items-center justify-center text-xs">✕</div>
                 <div className="text-2xl mb-3">{item.icon}</div>
                 <h3 className="font-semibold mb-2 text-sm">{item.title}</h3>

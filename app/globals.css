@@ -21,9 +21,9 @@
     --primary: 11 100% 78%;           /* #FF9F8C — coral */
     --primary-foreground: 0 0% 5%;
     --secondary: 0 0% 16%;           /* #2A2A2A */
-    --secondary-foreground: 0 0% 63%; /* #A0A0A0 */
-    --muted: 0 0% 10%;               /* #1A1A1A */
-    --muted-foreground: 0 0% 33%;    /* #555555 */
+    --secondary-foreground: 0 0% 72%; /* #B8B8B8 — AAA on #2A2A2A */
+    --muted: 0 0% 12%;               /* #1E1E1E */
+    --muted-foreground: 0 0% 55%;    /* #8C8C8C — readable placeholder */
     --accent: 11 100% 78%;            /* #FF9F8C — same as primary */
     --accent-foreground: 0 0% 5%;
 
@@ -220,4 +220,19 @@ button:active:not([disabled]),
 a:active:not([disabled]) {
   transform: scale(0.97);
   transition: transform 0.1s ease;
+}
+
+/* ── Dark mode readability fixes ─────────────────────────────── */
+input::placeholder,
+textarea::placeholder {
+  color: hsl(0 0% 50%) !important;
+}
+
+select {
+  color-scheme: dark;
+}
+
+.problem-card {
+  background: rgba(239, 154, 154, 0.04) !important;
+  border-color: rgba(239, 154, 154, 0.12) !important;
 }
