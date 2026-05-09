@@ -3,15 +3,10 @@ import sql from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
-    // ── Clean up stale data ───────────────────────────────────
-    const url = new URL(request.url, 'https://selah.fm');
-    if (url.searchParams.get('reset') === 'true') {
-      await sql`DELETE FROM submissions`;
-      await sql`DELETE FROM campaigns`;
-      await sql`DELETE FROM users WHERE email LIKE '%@selah-demo.fm'`;
-    }
-    // Always clean NULL-artist campaigns (broken data)
-    await sql`DELETE FROM campaigns WHERE artist_id IS NULL`;
+    // ── Always start clean: delete all demo data ──────────────
+    await sql`DELETE FROM submissions WHERE content_url LIKE '%tiktok.com%' OR content_url LIKE '%youtube.com%' OR content_url LIKE '%instagram.com%'`;
+    await sql`DELETE FROM campaigns WHERE track_title ILIKE '%midnight%' OR track_title ILIKE '%desert%' OR track_title ILIKE '%summer%' OR track_title ILIKE '%neon%' OR track_title ILIKE '%crystal%' OR track_title ILIKE '%bass%' OR track_title IN ('test', 'A', 'test campaign') OR artist_id IS NULL`;
+    await sql`DELETE FROM users WHERE email LIKE '%@selah-demo.fm'`;
 
     // ── Seed Artists ──────────────────────────────────────────
     await sql`
