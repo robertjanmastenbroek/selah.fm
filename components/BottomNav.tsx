@@ -7,6 +7,7 @@ const TABS = [
   { href: '/browse', label: 'Campaigns', icon: '🔍' },
   { href: '/artists', label: 'Artists', icon: '🎵' },
   { href: '/creators', label: 'Creators', icon: '👤' },
+  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
 ];
 
 export default function BottomNav() {

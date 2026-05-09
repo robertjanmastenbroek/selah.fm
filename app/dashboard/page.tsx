@@ -31,6 +31,11 @@ function DashboardContent() {
   const hireCreatorId = searchParams.get('hire') || '';
   const hireCreatorCpm = searchParams.get('cpm') || '';
   const hireCreatorName = searchParams.get('name') || '';
+  const [profile, setProfile] = useState<{email?: string} | null>(null);
+
+  useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.user) setProfile(d.user); });
+  }, []);
 
   const [step, setStep] = useState<'list' | 'wizard'>(hireCreatorId ? 'wizard' : 'list');
   const [wizardStep, setWizardStep] = useState(1);
@@ -197,7 +202,7 @@ function DashboardContent() {
                 <p className="text-xs text-muted-foreground">Share your referral link. When someone signs up, you both get $5 towards your next campaign.</p>
                 <div className="flex items-center gap-2 justify-center">
                   <code className="text-xs bg-muted px-3 py-1.5 rounded-lg font-mono">
-                    https://selah.fm/login?ref=you@email.com
+                    https://selah.fm/login?ref={profile?.email || 'you@email.com'}
                   </code>
                 </div>
               </CardContent>

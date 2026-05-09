@@ -145,9 +145,9 @@ export default function BrowsePage() {
                         </div>
                         <Badge variant="secondary">${cpm}</Badge>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{c.approved_submissions || '0'} submissions</span>
-                        <span>${remaining.toFixed(0)} left</span>
+                        <span>{pct > 0 ? `${Math.round(pct)}% paid` : `${(c as any).budget_consumed_pct || 0}% used`}</span>
                       </div>
                       <Progress value={Math.min(pct, 100)} className="h-1.5" />
 
