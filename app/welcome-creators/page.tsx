@@ -1,126 +1,97 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Music4, Video, Wallet, Star, ArrowRight, Check, DollarSign, Smartphone, Search, Camera, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { DollarSign, Smartphone, Wallet, Star, ArrowRight, Check, Search, Camera } from 'lucide-react';
 
-function useReveal(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current; if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, visible };
-}
+const stagger = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
+const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25,0.1,0.25,1] as const } } };
 
 function SectionWrap({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  const { ref, visible } = useReveal();
-  return (<section ref={ref} className={`py-20 md:py-28 transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}>{children}</section>);
+  return (<motion.section className={`py-20 md:py-28 ${className}`} variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>{children}</motion.section>);
 }
 
 export default function WelcomeCreatorsPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      <style>{`
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(91,127,255,0.3); } 50% { box-shadow: 0 0 0 12px rgba(91,127,255,0); } }
-        @keyframes shimmerLine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
-      `}</style>
-
+    <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.35) 0%, #0A0A0A 60%), #0A0A0A' }}>
       {/* HERO */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-        <div className="absolute inset-0"><div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-3xl animate-pulse" /><div className="absolute bottom-1/4 left-1/4 w-[350px] h-[350px] rounded-full bg-primary/[0.04] blur-3xl" style={{ animation: 'glow 4s ease-in-out infinite' }} /></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-15 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(91,127,255,0.25) 0%, transparent 70%)' }} />
         <div className="max-w-3xl mx-auto px-6 py-20 text-center relative z-10">
-          <div className="inline-flex items-center gap-1.5 bg-primary/5 border border-primary/10 text-primary/90 text-xs font-medium px-4 py-2 rounded-full mb-10"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />Free to join. No weird contracts.</div>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-[-0.02em] leading-[1.05] mb-8">Make Content.<br /><span className="bg-gradient-to-r from-primary via-[#8B9FFF] to-primary bg-clip-text text-transparent" style={{ backgroundSize: '200% 100%', animation: 'shimmerLine 4s ease-in-out infinite' }}>Get Paid.</span></h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-4 leading-relaxed">Turn your creativity into cash. Use TikTok, Instagram &amp; YouTube Shorts to promote music you love, and earn based on the real views your content generates.</p>
-          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground mb-12">
-            {['No upfront costs', 'Earn per 1,000 views', 'Choose tracks you love', 'Fast, secure payouts'].map(t => (
-              <span key={t} className="flex items-center gap-1"><Check size={14} className="text-primary/60" strokeWidth={2} />{t}</span>
-            ))}
-          </div>
-          <Link href="/browse" className="group inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] active:scale-[0.97]">Start Earning Today <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" /></Link>
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}><span className="inline-flex items-center gap-1.5 bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] text-primary/90 text-xs font-medium px-4 py-2 rounded-full mb-10"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"/>Free to join. No weird contracts.</span></motion.div>
+          <motion.h1 className="text-5xl md:text-7xl font-extrabold tracking-[-0.02em] leading-[1.05] mb-8" initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{delay:0.1,duration:0.5}}>Make Content.<br/><span className="bg-gradient-to-r from-primary via-[#8B9FFF] to-primary bg-clip-text text-transparent animate-[shimmer_3s_ease-in-out_infinite] bg-[length:200%_100%]">Get Paid.</span></motion.h1>
+          <motion.p className="text-lg text-muted-foreground max-w-xl mx-auto mb-4 leading-relaxed" initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.2}}>Turn your creativity into cash. Use TikTok, Instagram &amp; YouTube Shorts to promote music you love, and earn based on real views.</motion.p>
+          <motion.div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground mb-12" initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.25}}>
+            {['No upfront costs','Earn per 1,000 views','Choose tracks you love','Fast, secure payouts'].map(t=><span key={t} className="flex items-center gap-1"><Check size={14} className="text-primary/60" strokeWidth={2}/>{t}</span>)}
+          </motion.div>
+          <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:0.3}}><Link href="/browse" className="group inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] active:scale-[0.97]">Start Earning Today <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5"/></Link></motion.div>
         </div>
       </section>
 
       {/* OPPORTUNITY */}
-      <SectionWrap className="bg-muted/[0.25]">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16"><p className="text-xs tracking-[0.15em] uppercase text-primary font-semibold mb-4">The Reality</p><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">You&apos;re already making content. Now get paid fairly for it.</h2><p className="text-muted-foreground max-w-lg mx-auto">The creator hustle is real. Here&apos;s what you&apos;re up against.</p></div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[ { icon: DollarSign, title: 'Unpredictable Brand Deals', desc: 'Hunting for sponsors is a full-time job. Stop DMing 50 brands for a $50 offer.' }, { icon: Smartphone, title: 'Algorithm-Dependent Income', desc: 'Monetization programs keep changing the rules. You deserve a stable, transparent way to earn.' }, { icon: Wallet, title: '"Exposure" Doesn\'t Pay Rent', desc: 'You\'ve been asked to work for exposure too many times. On Selah, every view has a dollar value.' } ].map((item, i) => { const I = item.icon; return (
-              <div key={i} className="group relative rounded-2xl bg-card border border-border/20 p-8 transition-all duration-300 hover:border-success/20 hover:-translate-y-1">
-                <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-success/10 flex items-center justify-center text-success text-xs font-bold">✓</div>
-                <div className="w-12 h-12 rounded-xl bg-success/[0.06] flex items-center justify-center text-success mb-5"><I size={28} strokeWidth={1.5} /></div>
-                <h3 className="font-semibold text-base mb-3">{item.title}</h3><p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-              </div>
-            )})}
-          </div>
+      <SectionWrap className="bg-white/[0.01]">
+        <motion.div className="text-center mb-16" variants={fadeUp}><p className="text-xs tracking-[0.15em] uppercase text-primary font-semibold mb-4">The Reality</p><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">You&apos;re already making content. Now get paid fairly for it.</h2><p className="text-muted-foreground max-w-lg mx-auto">The creator hustle is real.</p></motion.div>
+        <div className="max-w-4xl mx-auto px-6 grid md:grid-cols-3 gap-6">
+          {[{icon:DollarSign,title:'Unpredictable Brand Deals',desc:'Hunting for sponsors is a full-time job. Stop DMing 50 brands for a $50 offer.'},{icon:Smartphone,title:'Algorithm-Dependent Income',desc:'Monetization programs keep changing the rules. You deserve stable, transparent earnings.'},{icon:Wallet,title:"Exposure Doesn't Pay Rent",desc:"You've been asked to work for exposure too many times. On Selah, every view has a dollar value."}].map((item,i)=>{const I=item.icon;return(
+            <motion.div key={i} variants={fadeUp} className="relative rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-8" whileHover={{y:-2,backgroundColor:'rgba(255,255,255,0.05)',borderColor:'rgba(129,199,132,0.2)'}} whileTap={{scale:0.98}}>
+              <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-success/10 flex items-center justify-center text-success text-xs font-bold">✓</div>
+              <div className="w-12 h-12 rounded-xl bg-success/[0.06] flex items-center justify-center text-success mb-5"><I size={28} strokeWidth={1.5}/></div>
+              <h3 className="font-semibold text-base mb-3">{item.title}</h3><p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+            </motion.div>
+          )})}
         </div>
       </SectionWrap>
 
       {/* HOW IT WORKS */}
       <SectionWrap>
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16"><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">It&apos;s simple: Create, Post, and Earn.</h2><p className="text-muted-foreground max-w-lg mx-auto">Three steps from track to payout.</p></div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[ { step: '01', icon: Search, title: 'Pick a Track You Love', desc: 'Browse new music from independent artists. Connect your TikTok, Instagram, or YouTube Shorts instantly.' }, { step: '02', icon: Camera, title: 'Create Authentic Content', desc: 'Use the track in your short-form videos in a way that feels natural to your style. No cheesy scripts.' }, { step: '03', icon: DollarSign, title: 'Get Paid for Real Views', desc: 'Artists approve your video. Every 1,000 verified views earns you cash. Watch your earnings grow in real-time.' } ].map((s, i) => { const I = s.icon; return (
-              <div key={i} className="group text-center">
-                <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-105"><I size={28} strokeWidth={1.5} /></div>
-                <p className="text-xs text-primary/60 font-mono tracking-wider mb-3">{s.step}</p><h3 className="font-bold text-lg mb-3">{s.title}</h3><p className="text-sm text-muted-foreground leading-relaxed max-w-[280px] mx-auto">{s.desc}</p>
-              </div>
-            )})}
-          </div>
+        <motion.div className="text-center mb-16" variants={fadeUp}><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">It&apos;s simple: Create, Post, and Earn.</h2><p className="text-muted-foreground max-w-lg mx-auto">Three steps from track to payout.</p></motion.div>
+        <div className="max-w-4xl mx-auto px-6 grid md:grid-cols-3 gap-8">
+          {[{step:'01',icon:Search,title:'Pick a Track You Love',desc:'Browse new music from independent artists. Connect your TikTok, Instagram, or YouTube instantly.'},{step:'02',icon:Camera,title:'Create Authentic Content',desc:'Use the track in your short-form videos in a way that feels natural to your style.'},{step:'03',icon:DollarSign,title:'Get Paid for Real Views',desc:'Artists approve your video. Every 1,000 verified views earns you cash.'}].map((s,i)=>{const I=s.icon;return(
+            <motion.div key={i} variants={fadeUp} className="group text-center">
+              <motion.div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] flex items-center justify-center text-primary" whileHover={{scale:1.08,backgroundColor:'rgba(91,127,255,0.08)'}}><I size={28} strokeWidth={1.5}/></motion.div>
+              <p className="text-xs text-primary/60 font-mono tracking-wider mb-3">{s.step}</p><h3 className="font-bold text-lg mb-3">{s.title}</h3><p className="text-sm text-muted-foreground leading-relaxed max-w-[280px] mx-auto">{s.desc}</p>
+            </motion.div>
+          )})}
         </div>
       </SectionWrap>
 
       {/* PROOF */}
-      <SectionWrap className="bg-muted/[0.25]">
-        <div className="max-w-2xl mx-auto px-6">
-          <div className="text-center mb-16"><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Join hundreds of creators already earning.</h2><p className="text-muted-foreground">Real payouts. Real stories.</p></div>
-          <div className="space-y-4">
-            {[{ name: 'Chloe B.', role: 'TikTok Creator', quote: 'I saw a track I loved, posted a 30-second Reel, and got paid $85 three days later. Selah is the most straightforward platform I\'ve ever used.' }, { name: 'Mia J.', role: 'Lifestyle Creator · 28K', quote: 'I love that I can browse and pick tracks that fit my style. Made $340 last month from 3 videos. Way better than brand deals.' }].map((t, i) => (
-              <div key={i} className="rounded-2xl bg-card border border-border/20 p-7 transition-all duration-300 hover:border-primary/10 hover:-translate-y-0.5">
-                <div className="flex gap-0.5 mb-4 text-primary/80">{[...Array(5)].map((_, j) => (<Star key={j} size={16} fill="currentColor" />))}</div>
-                <p className="text-sm leading-relaxed mb-5 italic text-foreground/90">&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">{t.name[0]}</div><div><div className="text-sm font-semibold">{t.name}</div><div className="text-xs text-muted-foreground">{t.role}</div></div></div>
-              </div>
-            ))}
-          </div>
+      <SectionWrap className="bg-white/[0.01]">
+        <motion.div className="text-center mb-16" variants={fadeUp}><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Join hundreds of creators already earning.</h2><p className="text-muted-foreground">Real payouts. Real stories.</p></motion.div>
+        <div className="max-w-2xl mx-auto px-6 space-y-4">
+          {[{name:'Chloe B.',role:'TikTok Creator',quote:'I saw a track I loved, posted a 30-second Reel, and got paid $85 three days later.'},{name:'Mia J.',role:'Lifestyle Creator · 28K',quote:'I love browsing and picking tracks that fit my style. Made $340 last month from 3 videos.'}].map((t,i)=>(
+            <motion.div key={i} variants={fadeUp} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-7" whileHover={{y:-1,borderColor:'rgba(91,127,255,0.15)'}}>
+              <div className="flex gap-0.5 mb-4 text-primary/80">{[...Array(5)].map((_,j)=><Star key={j} size={16} fill="currentColor"/>)}</div>
+              <p className="text-sm leading-relaxed mb-5 italic">&ldquo;{t.quote}&rdquo;</p>
+              <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">{t.name[0]}</div><div><div className="text-sm font-semibold">{t.name}</div><div className="text-xs text-muted-foreground">{t.role}</div></div></div>
+            </motion.div>
+          ))}
         </div>
       </SectionWrap>
 
       {/* FEES */}
       <SectionWrap>
-        <div className="max-w-lg mx-auto px-6">
-          <div className="text-center mb-16"><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">You keep the lion&apos;s share.</h2><p className="text-muted-foreground">80% of every payout goes to you. We take 20% to run the platform.</p></div>
-          <div className="rounded-2xl bg-card border border-border/20 overflow-hidden text-center p-10">
-            <div className="flex items-end justify-center gap-3 mb-6"><div className="flex flex-col items-center gap-2"><div className="w-28 h-28 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground text-3xl font-bold shadow-[0_8px_30px_rgba(91,127,255,0.2)]">80%</div><span className="text-xs font-medium">You Earn</span></div><div className="flex flex-col items-center gap-2"><div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-medium">20%</div><span className="text-xs text-muted-foreground">Platform</span></div></div>
-            <p className="text-sm">Platform fee covers Stripe, support, and operations.</p>
-            <p className="text-xs text-muted-foreground mt-3">Connect your Stripe account in under 2 minutes. Payouts process automatically.</p>
-          </div>
-        </div>
+        <motion.div className="text-center mb-16" variants={fadeUp}><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">You keep the lion&apos;s share.</h2><p className="text-muted-foreground">80% of every payout goes to you. We take 20% to run the platform.</p></motion.div>
+        <div className="max-w-lg mx-auto px-6"><div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden text-center p-10"><div className="flex items-end justify-center gap-3 mb-6"><div className="w-28 h-28 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground text-3xl font-bold">80%</div><div className="w-16 h-16 rounded-xl bg-white/[0.06] flex items-center justify-center text-muted-foreground text-xl font-medium">20%</div></div><p className="text-sm">Platform fee covers Stripe, support, and operations.</p><p className="text-xs text-muted-foreground mt-3">Connect Stripe in under 2 minutes. Payouts process automatically.</p></div></div>
       </SectionWrap>
 
       {/* FAQ */}
-      <SectionWrap className="bg-muted/[0.25]">
-        <div className="max-w-lg mx-auto px-6"><div className="text-center mb-16"><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Got questions?</h2></div>
-          <div className="space-y-3">
-            {[{ q: 'How do I know I\'ll actually get paid?', a: 'Payments through Stripe. Once an artist approves and views are verified, your payout is sent automatically.' },{ q: 'What if an artist doesn\'t approve my video?', a: 'That\'s fine. Artists review each video. You can try again with a different campaign anytime.' },{ q: 'Do I need millions of followers?', a: 'No minimum. We believe small creators drive big results. Quality matters more than follower count.' },{ q: 'How fast do I get paid?', a: 'Connect Stripe in 2 minutes. Payouts process when artists approve. See earnings in your dashboard.' }].map((faq, i) => (<div key={i} className="rounded-xl bg-card border border-border/20 p-5 transition-all duration-200 hover:border-primary/10"><h3 className="font-semibold text-sm mb-2">{faq.q}</h3><p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p></div>))}
-          </div>
+      <SectionWrap className="bg-white/[0.01]">
+        <motion.div className="text-center mb-16" variants={fadeUp}><h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Got questions?</h2></motion.div>
+        <div className="max-w-lg mx-auto px-6 space-y-3">
+          {[{q:'How do I know I\'ll actually get paid?',a:'Payments through Stripe. Once approved and views verified, your payout is sent automatically.'},{q:'What if an artist doesn\'t approve?',a:'That\'s fine. You can try again with a different campaign anytime.'},{q:'Do I need millions of followers?',a:'No minimum. We believe small creators drive big results.'},{q:'How fast do I get paid?',a:'Connect Stripe in 2 minutes. Payouts process when artists approve.'}].map((faq,i)=>(
+            <motion.div key={i} variants={fadeUp} className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5" whileHover={{borderColor:'rgba(91,127,255,0.15)'}}><h3 className="font-semibold text-sm mb-2">{faq.q}</h3><p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p></motion.div>
+          ))}
         </div>
       </SectionWrap>
 
       {/* CLOSER */}
-      <section className="relative py-24 md:py-36 text-center overflow-hidden bg-gradient-to-b from-background via-primary/[0.02] to-primary/[0.04]">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] rounded-full bg-primary/[0.03] blur-3xl" />
+      <section className="relative py-24 md:py-36 text-center overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] rounded-full opacity-10 blur-3xl" style={{background:'radial-gradient(circle, rgba(91,127,255,0.2) 0%, transparent 70%)'}}/>
         <div className="max-w-xl mx-auto px-6 relative z-10">
-          <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">Your content is worth more.</h2>
-          <p className="text-muted-foreground mb-10 text-base">Connect your accounts in under 2 minutes. No cost to join.</p>
-          <Link href="/browse" className="inline-flex items-center gap-2 px-10 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(91,127,255,0.3)] active:scale-[0.97]">Join Selah &amp; Start Earning <ArrowRight size={16} /></Link>
+          <motion.h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight" initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} viewport={{once:true}}>Your content is worth more.</motion.h2>
+          <motion.p className="text-muted-foreground mb-10 text-base" initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true}}>Connect your accounts in under 2 minutes. No cost to join.</motion.p>
+          <Link href="/browse" className="inline-flex items-center gap-2 px-10 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(91,127,255,0.3)] active:scale-[0.97]">Join Selah &amp; Start Earning <ArrowRight size={16}/></Link>
           <p className="text-xs text-muted-foreground mt-8"><Link href="/creators" className="hover:text-foreground transition-colors">Browse creators</Link><span className="mx-3 opacity-30">·</span><Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link></p>
         </div>
       </section>
