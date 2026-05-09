@@ -4,8 +4,8 @@ import sql from '@/lib/db';
 export async function GET(request: Request) {
   try {
     // ── Clean up stale data ───────────────────────────────────
-    const { searchParams } = new URL(request.url);
-    if (searchParams.get('reset') === 'true') {
+    const url = new URL(request.url, 'https://selah.fm');
+    if (url.searchParams.get('reset') === 'true') {
       await sql`DELETE FROM submissions`;
       await sql`DELETE FROM campaigns`;
       await sql`DELETE FROM users WHERE email LIKE '%@selah-demo.fm'`;
