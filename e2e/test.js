@@ -81,7 +81,8 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
 
   await check('3.3 Campaign cards have content', async () => {
     // Either campaign cards or empty state should be visible
-    const cards = await page.$$('text=budget');
+    await page.waitForTimeout(1000); // Let cards render
+    const cards = await page.$$('text=submissions');
     const empty = await page.$('text=No campaigns yet');
     if (!cards.length && !empty) throw new Error('No content on browse page');
   });

@@ -34,7 +34,11 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     fetch(`/api/campaigns/${params.id}`)
       .then(r => r.json())
-      .then(d => { setCampaign(d); setLoading(false); })
+      .then(d => {
+        if (d.error) { setCampaign(null); setLoading(false); return; }
+        setCampaign(d);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, [params.id]);
 
