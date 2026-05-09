@@ -13,7 +13,7 @@ const handler = NextAuth({
   debug: true,
   useSecureCookies: true,
   cookies: {
-    stateToken: {
+    state: {
       name: `__Secure-next-auth.state`,
       options: {
         httpOnly: true,
