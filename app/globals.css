@@ -4,47 +4,70 @@
 
 @layer base {
   :root {
-    /* Selah.fm Brand Colors — Brand Bible v1.0 */
-    --background: 40 20% 96%;       /* Parchment #F5F0E8 */
-    --foreground: 240 28% 14%;      /* Midnight #1A1A2E */
-    --card: 40 20% 98%;
-    --card-foreground: 240 28% 14%;
-    --popover: 40 20% 98%;
-    --popover-foreground: 240 28% 14%;
-    --primary: 240 28% 14%;         /* Midnight #1A1A2E */
-    --primary-foreground: 40 20% 96%;
-    --secondary: 240 15% 24%;       /* Deep Violet #2D2D44 */
-    --secondary-foreground: 40 20% 96%;
-    --muted: 40 15% 92%;
-    --muted-foreground: 250 8% 46%;  /* Stone #6B6B7B */
-    --accent: 45 52% 54%;           /* Sacred Gold #C9A84C */
-    --accent-foreground: 240 28% 14%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 43 74% 49%;
+    --accent-foreground: 43 74% 35%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 40 20% 96%;
-    --border: 40 10% 86%;
-    --input: 40 10% 86%;
-    --ring: 45 52% 54%;             /* Sacred Gold #C9A84C */
-    --radius: 0.5rem;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+    --radius: 0.75rem;
   }
 
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    -webkit-font-smoothing: antialiased;
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; }
 }
 
 @layer components {
-  .page-container {
-    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-24 md:pb-12;
+  .page-container { @apply max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12; }
+  .section-title { @apply text-2xl md:text-3xl font-bold tracking-tight; }
+  
+  /* Glass card — frosted glass effect */
+  .card-glass {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-2xl;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
   }
+  
+  /* Gradient card — subtle amber glow */
+  .card-gradient {
+    @apply rounded-2xl border border-accent/10;
+    background: linear-gradient(135deg, rgba(201,168,76,0.04) 0%, transparent 50%);
+  }
+  
+  /* Campaign grid — responsive masonry-like grid */
   .campaign-grid {
-    @apply grid gap-5 sm:grid-cols-2;
+    @apply grid gap-4 sm:gap-6;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
-  .section-title {
-    @apply text-2xl md:text-3xl font-bold tracking-tight;
+}
+
+@layer utilities {
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out forwards;
+    opacity: 0;
+    transform: translateY(8px);
   }
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out forwards;
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  to { opacity: 1; }
 }
