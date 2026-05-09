@@ -43,7 +43,7 @@
       const clientId = document.getElementById('clientId').value.trim();
       if (!clientId) { alert('Paste your GOOGLE_CLIENT_ID first'); return; }
 
-      const redirectUri = 'https://selah-fm-production.up.railway.app/api/auth/callback/google';
+      const redirectUri = 'https://selah.fm/api/auth/callback/google';
       const scope = 'openid profile email';
       const state = 'test-' + Date.now();
 

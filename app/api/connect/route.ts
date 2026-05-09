@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const platform = searchParams.get('platform');
 
-  const redirectUri = `${process.env.NEXTAUTH_URL || 'https://selah-fm-production.up.railway.app'}/api/connect/callback`;
+  const redirectUri = `${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/connect/callback`;
 
   switch (platform) {
     case 'tiktok':
