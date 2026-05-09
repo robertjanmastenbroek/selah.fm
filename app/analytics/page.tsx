@@ -1,115 +1,78 @@
 'use client';
 
 import { useState } from 'react';
-import BottomNav from '@/components/BottomNav';
-
-const PLATFORMS = [
-  { id: 'tiktok', name: 'TikTok', color: '#ff0050', icon: '🎵', connected: false },
-  { id: 'instagram', name: 'Instagram', color: '#E1306C', icon: '📸', connected: false },
-  { id: 'youtube', name: 'YouTube', color: '#FF0000', icon: '▶️', connected: false },
-  { id: 'x', name: 'X (Twitter)', color: '#1DA1F2', icon: '🐦', connected: false },
-];
-
-const MOCK_STATS = {
-  totalViews: 0,
-  totalPosts: 0,
-  totalEarnings: 0,
-  platforms: {} as Record<string, { views: number; posts: number; avgEngagement: number }>,
-};
+import TopNav from '@/components/TopNav';
 
 export default function AnalyticsPage() {
-  const [connected, setConnected] = useState<Set<string>>(new Set());
-
-  const handleConnect = (platform: string) => {
-    window.location.href = `/api/connect?platform=${platform}`;
-  };
-
-  const connectedCount = connected.size;
+  const [connected, setConnected] = useState<Set<string>>(new Set(['google']));
 
   return (
-    <div className="min-h-screen bg-void pb-20">
-      <div className="sticky top-0 bg-void/95 backdrop-blur border-b border-white/5 px-4 py-4 z-10">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <span className="font-display text-gold text-lg">Analytics</span>
-          <div className="w-8 h-8 rounded-full bg-gold/20 text-gold flex items-center justify-center text-sm font-bold">
-            {connectedCount > 0 ? connectedCount : '0'}
-          </div>
+    <div className="min-h-screen bg-void">
+      <TopNav />
+      <main className="max-w-2xl mx-auto px-4 py-8 md:py-10">
+        <div className="mb-8">
+          <h1 className="section-title mb-1">Analytics</h1>
+          <p className="text-muted/50 text-sm">Track your content performance and earnings.</p>
         </div>
-      </div>
 
-      <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
-        {/* Stats overview */}
-        {connectedCount > 0 ? (
-          <div className="card-elevated">
-            <h3 className="text-ivory font-semibold mb-4">Overview</h3>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-gold text-2xl font-bold">0</div>
-                <div className="text-muted text-xs">Total views</div>
-              </div>
-              <div>
-                <div className="text-gold text-2xl font-bold">0</div>
-                <div className="text-muted text-xs">Posts</div>
-              </div>
-              <div>
-                <div className="text-gold text-2xl font-bold">$0</div>
-                <div className="text-muted text-xs">Earned</div>
-              </div>
+        {/* Overview stats */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          {[
+            { label: 'Total views', value: '0', sub: 'Across all platforms' },
+            { label: 'Posts', value: '0', sub: 'Submitted content' },
+            { label: 'Earned', value: '$0', sub: 'Lifetime earnings' },
+          ].map(s => (
+            <div key={s.label} className="card-glass p-4 text-center">
+              <div className="text-gold font-bold text-xl mb-0.5">{s.value}</div>
+              <div className="text-ivory text-[11px] font-medium">{s.label}</div>
+              <div className="text-muted/30 text-[10px] mt-0.5">{s.sub}</div>
             </div>
-          </div>
-        ) : (
-          <div className="card-elevated text-center py-8">
-            <div className="text-4xl mb-3">📊</div>
-            <div className="font-semibold text-ivory mb-1">Connect your accounts</div>
-            <p className="text-muted text-sm">Link TikTok, Instagram, YouTube, or X to see your analytics.</p>
-          </div>
-        )}
+          ))}
+        </div>
 
         {/* Platform connections */}
-        <div className="space-y-3">
-          <h3 className="text-ivory font-semibold px-1">Connected accounts</h3>
-          {PLATFORMS.map((p) => {
-            const isConnected = connected.has(p.id);
-            return (
-              <div key={p.id} className="card-elevated !p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-                    style={{ backgroundColor: p.color + '20' }}>
-                    {p.icon}
+        <div className="card-glass p-6 mb-6">
+          <h2 className="text-ivory font-medium text-sm mb-4">Platforms</h2>
+          <p className="text-muted/40 text-xs mb-4 leading-relaxed">
+            Connect your social accounts to track real view counts and verify content performance.
+          </p>
+          <div className="space-y-3">
+            {[
+              { name: 'TikTok', color: '#ff0050' },
+              { name: 'Instagram', color: '#E1306C' },
+              { name: 'YouTube', color: '#FF0000' },
+            ].map(p => {
+              const isConn = connected.has(p.name.toLowerCase());
+              return (
+                <div key={p.name} className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-semibold"
+                      style={{ backgroundColor: p.color + '15', color: p.color }}>
+                      {p.name[0]}
+                    </div>
+                    <div className="text-ivory text-sm">{p.name}</div>
                   </div>
-                  <div>
-                    <div className="text-ivory font-semibold text-sm">{p.name}</div>
-                    {isConnected ? (
-                      <div className="text-green-400 text-xs">Connected · 0 posts</div>
-                    ) : (
-                      <div className="text-muted text-xs">Not connected</div>
-                    )}
-                  </div>
+                  {isConn ? (
+                    <span className="text-emerald-400/60 text-[11px] font-medium">Connected</span>
+                  ) : (
+                    <button onClick={() => setConnected(prev => new Set([...prev, p.name.toLowerCase()]))}
+                      className="text-gold/70 text-[11px] font-medium hover:text-gold transition-colors">
+                      Connect
+                    </button>
+                  )}
                 </div>
-                {isConnected ? (
-                  <button className="text-muted text-xs hover:text-ivory">Disconnect</button>
-                ) : (
-                  <button onClick={() => handleConnect(p.id)}
-                    className="text-gold text-xs font-semibold hover:underline">
-                    Connect →
-                  </button>
-                )}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Coming soon */}
-        <div className="card-elevated text-center py-6">
-          <div className="text-2xl mb-2">🚀</div>
-          <div className="text-muted text-sm">
-            Detailed analytics, view tracking, and engagement data coming soon.
-            Connect your accounts to start tracking.
-          </div>
+        <div className="card-glass p-6 text-center">
+          <div className="text-muted/30 text-4xl mb-3 font-light">↗</div>
+          <div className="text-ivory font-medium text-sm mb-1">Detailed analytics coming soon</div>
+          <p className="text-muted/40 text-xs">View tracking, engagement data, and payout history in real time.</p>
         </div>
-      </div>
-
-      <BottomNav role="creator" />
+      </main>
     </div>
   );
 }
