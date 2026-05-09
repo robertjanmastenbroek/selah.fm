@@ -447,6 +447,8 @@ export default function HomePage() {
           <div className="flex gap-6 justify-center text-xs text-muted-foreground">
             <Link href="/tos" className="hover:text-foreground transition-colors">Terms</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/artists" className="hover:text-foreground transition-colors">Artists</Link>
+            <span className="text-border">·</span>
             <Link href="/creators" className="hover:text-foreground transition-colors">Creators</Link>
           </div>
         </div>
