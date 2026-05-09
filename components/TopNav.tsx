@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +34,11 @@ export default function Header() {
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
@@ -56,30 +60,31 @@ export default function Header() {
           </nav>
         </div>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger className="rounded-full focus:outline-none">
-            <Avatar className="h-7 w-7">
-              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <p className="text-sm font-medium">{profile?.name || 'User'}</p>
-              <p className="text-xs text-muted-foreground">{profile?.email}</p>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/dashboard')}>Dashboard</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/earnings')}>Earnings</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/settings')}>Settings</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={async () => {
-              await fetch('/api/auth/logout', { method: 'POST' });
-              router.push('/login');
-            }} className="text-destructive">
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {profile ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-medium hover:bg-muted/80 transition-colors focus:outline-none">
+              {initials}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <p className="text-sm font-medium truncate">{profile?.name || 'User'}</p>
+                <p className="text-xs text-muted-foreground truncate">{profile?.email}</p>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => router.push('/dashboard')}>Dashboard</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => router.push('/earnings')}>Earnings</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => router.push('/settings')}>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleLogout} className="text-destructive focus:text-destructive">
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Sign in
+          </Link>
+        )}
       </div>
 
       <nav className="md:hidden flex items-center justify-around h-12 border-t bg-background/95 backdrop-blur">
