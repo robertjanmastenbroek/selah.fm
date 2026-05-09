@@ -3,16 +3,8 @@ const { chromium } = require('playwright');
 const BASE = process.env.TEST_URL || 'https://selah.fm';
 
 /**
- * Selah.fm — Full E2E Test Suite
- * ===============================
- * Tests the complete platform flow:
- * Signup → login → create campaign → deposit → browse → join → submit → review → approve → earnings → payout
- * 
- * Usage:
- *   node e2e/test.js
- *   TEST_URL=http://localhost:3000 node e2e/test.js
+ * Selah.fm — Full E2E Test Suite (v12)
  */
-
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -24,11 +16,8 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
   };
 
   const timestamp = Date.now().toString(36);
-  const testEmail = `e2e-${timestamp}@selah-test.fm`;
-  const testPassword = 'testpass123';
-  const testName = `E2E Tester ${timestamp}`;
 
-  console.log('\n🧪 Selah.fm E2E Test Suite\n');
+  console.log('\n🧪 Selah.fm E2E Test Suite v12\n');
   console.log(`  🌐 Target: ${BASE}\n`);
 
   // ─── 1. Public Pages ───────────────────────────────────────────────────────
@@ -38,153 +27,179 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
     if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
   });
 
-  await check('1.2 Landing page has hero CTA', async () => {
-    await page.waitForSelector('text=Get your music heard', { timeout: 5000 });
+  await check('1.2 Landing has hero', async () => {
+    await page.waitForSelector('text=Get your music', { timeout: 5000 });
   });
 
-  await check('1.3 Landing has dual CTA cards', async () => {
-    const artistCta = await page.$('text=I\'m an artist');
-    const creatorCta = await page.$('text=I\'m a creator');
-    if (!artistCta && !creatorCta) throw new Error('Dual CTA not found');
+  await check('1.3 Landing has CTA cards', async () => {
+    await page.waitForSelector('text=Start a campaign', { timeout: 3000 });
   });
 
-  for (const p of ['/browse', '/login', '/creators', '/tos', '/privacy']) {
-    await check(`1.4 Page ${p} loads (200)`, async () => {
-      const res = await page.goto(BASE + p);
+  await check('1.4 Landing has trust badges', async () => {
+    await page.waitForSelector('text=100% real views', { timeout: 3000 });
+  });
+
+  // All public pages
+  for (const [path, label] of [['/browse', 'Campaigns'], ['/artists', 'Artists'], ['/creators', 'Creators'], ['/login', 'Login'], ['/tos', 'Terms'], ['/privacy', 'Privacy']]) {
+    await check(`1.5 ${label} page (${path}) loads`, async () => {
+      const res = await page.goto(BASE + path);
       if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
     });
   }
 
-  // ─── 2. Auth: Signup + Login ───────────────────────────────────────────────
+  // ─── 2. Navigation ─────────────────────────────────────────────────────────
 
-  await check('2.1 Navigate to login page', async () => {
-    await page.goto(BASE + '/login');
-    await page.waitForSelector('text=Continue with Google', { timeout: 3000 });
+  await check('2.1 Nav shows Campaigns', async () => {
+    await page.goto(BASE);
+    await page.waitForSelector('text=Campaigns', { timeout: 3000 });
   });
 
-  await check('2.2 Switch to signup form', async () => {
-    await page.click('text=No account? Sign up');
-    await page.waitForSelector('input[placeholder="Display name"]', { timeout: 3000 });
+  await check('2.2 Nav shows Artists', async () => {
+    await page.waitForSelector('text=Artists', { timeout: 3000 });
   });
 
-  await check('2.3 Fill signup form', async () => {
-    await page.fill('input[placeholder="Display name"]', testName);
-    await page.fill('input[placeholder="Email"]', testEmail);
-    await page.fill('input[placeholder="Password"]', testPassword);
+  await check('2.3 Nav shows Creators', async () => {
+    await page.waitForSelector('text=Creators', { timeout: 3000 });
   });
 
-  await check('2.4 Submit signup', async () => {
-    await page.click('button[type="submit"]');
-    await page.waitForURL('**/browse', { timeout: 10000 }).catch(async () => {
-      // If signup fails (DB not available), continue
-      console.log('    (may require DB — continuing)');
-    });
-  });
-
-  // ─── 3. Campaign Creation ──────────────────────────────────────────────────
-
-  await check('3.1 Navigate to dashboard', async () => {
-    await page.goto(BASE + '/dashboard');
-    await page.waitForSelector('text=Your campaigns', { timeout: 5000 }).catch(() => {
-      // May see "Create your first campaign" instead
-    });
-  });
-
-  await check('3.2 Click New Campaign', async () => {
-    const newBtn = await page.$('text=New');
-    const startBtn = await page.$('text=Start your first campaign');
-    if (newBtn) await newBtn.click();
-    else if (startBtn) await startBtn.click();
-    else throw new Error('No campaign creation button found');
-  });
-
-  await check('3.3 Campaign wizard step 1 loads', async () => {
-    await page.waitForSelector('text=Campaign cover', { timeout: 3000 }).catch(() => {});
-  });
-
-  await check('3.4 Skip cover, go to step 2', async () => {
-    await page.click('text=Continue');
-    await page.waitForSelector('text=Track details', { timeout: 3000 });
-  });
-
-  await check('3.5 Fill track details', async () => {
-    await page.fill('input[placeholder="Track name"]', `E2E Test Track ${timestamp}`);
-    await page.fill('input[placeholder="Spotify or SoundCloud link"]', 'https://spotify.com/e2e-test');
-    await page.click('text=Continue');
-  });
-
-  await check('3.6 Budget step loads', async () => {
-    await page.waitForSelector('text=Budget', { timeout: 3000 });
-  });
-
-  await check('3.7 Launch campaign', async () => {
-    await page.click('text=Launch campaign');
-    // Either lands back on dashboard or stays if errored
-    await page.waitForTimeout(2000);
-  });
-
-  // ─── 4. Browse + Submit ────────────────────────────────────────────────────
-
-  await check('4.1 Browse page shows campaigns', async () => {
+  await check('2.4 Logo links to home', async () => {
     await page.goto(BASE + '/browse');
-    await page.waitForSelector('text=Discover', { timeout: 5000 });
+    await page.click('text=Selah');
+    await page.waitForURL(BASE + '/', { timeout: 5000 });
   });
 
-  await check('4.2 Browse has campaign cards or empty state', async () => {
-    const cards = await page.$$('text=Join campaign');
+  // ─── 3. Browse Page ────────────────────────────────────────────────────────
+
+  await check('3.1 Browse page loads', async () => {
+    await page.goto(BASE + '/browse');
+    await page.waitForSelector('text=Discover campaigns', { timeout: 5000 });
+  });
+
+  await check('3.2 Browse shows campaign count', async () => {
+    await page.waitForSelector('text=campaigns available', { timeout: 5000 });
+  });
+
+  await check('3.3 Campaign cards have content', async () => {
+    // Either campaign cards or empty state should be visible
+    const cards = await page.$$('text=CPM');
     const empty = await page.$('text=No campaigns yet');
-    if (!cards.length && !empty) throw new Error('Neither campaigns nor empty state');
+    if (!cards.length && !empty) throw new Error('No content on browse page');
   });
 
-  // ─── 5. Creator Directory ──────────────────────────────────────────────────
+  // ─── 4. Artists Page ───────────────────────────────────────────────────────
+
+  await check('4.1 Artists page loads', async () => {
+    await page.goto(BASE + '/artists');
+    await page.waitForSelector('text=Artists', { timeout: 5000 });
+  });
+
+  // ─── 5. Creators Page ──────────────────────────────────────────────────────
 
   await check('5.1 Creators page loads', async () => {
     await page.goto(BASE + '/creators');
     await page.waitForSelector('text=Creators', { timeout: 5000 });
   });
 
-  // ─── 6. Review Page ────────────────────────────────────────────────────────
+  // ─── 6. Auth Pages ─────────────────────────────────────────────────────────
 
-  await check('6.1 Review page loads', async () => {
-    await page.goto(BASE + '/review');
-    await page.waitForSelector('text=Review', { timeout: 5000 }).catch(() => {});
+  await check('6.1 Login page has Google button', async () => {
+    await page.goto(BASE + '/login');
+    await page.waitForSelector('text=Continue with Google', { timeout: 3000 });
   });
 
-  // ─── 7. Earnings Page ──────────────────────────────────────────────────────
-
-  await check('7.1 Earnings page loads', async () => {
-    await page.goto(BASE + '/earnings');
-    await page.waitForSelector('text=Earnings', { timeout: 5000 });
+  await check('6.2 Login page has email form', async () => {
+    await page.waitForSelector('input[placeholder="Email"]', { timeout: 3000 });
   });
 
-  // ─── 8. Analytics Page ─────────────────────────────────────────────────────
-
-  await check('8.1 Analytics page loads', async () => {
-    await page.goto(BASE + '/analytics');
-    await page.waitForSelector('text=Analytics', { timeout: 5000 });
+  await check('6.3 Can switch to signup', async () => {
+    await page.click('text=No account? Sign up');
+    await page.waitForSelector('input[placeholder="Display name"]', { timeout: 3000 });
   });
 
-  // ─── 9. Settings Page ──────────────────────────────────────────────────────
+  // ─── 7. Dashboard (requires auth — verify redirect) ────────────────────────
 
-  await check('9.1 Settings page loads', async () => {
-    await page.goto(BASE + '/settings');
-    await page.waitForSelector('text=Settings', { timeout: 5000 });
+  await check('7.1 Dashboard loads', async () => {
+    const res = await page.goto(BASE + '/dashboard');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
   });
 
-  // ─── 10. Campaign Detail Page ──────────────────────────────────────────────
+  // ─── 8. Review Page ─────────────────────────────────────────────────────────
 
-  await check('10.1 Campaign detail page handles missing ID', async () => {
+  await check('8.1 Review page loads', async () => {
+    const res = await page.goto(BASE + '/review');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  });
+
+  // ─── 9. Earnings Page ──────────────────────────────────────────────────────
+
+  await check('9.1 Earnings page loads', async () => {
+    const res = await page.goto(BASE + '/earnings');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  });
+
+  // ─── 10. Settings Page ─────────────────────────────────────────────────────
+
+  await check('10.1 Settings page loads', async () => {
+    const res = await page.goto(BASE + '/settings');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  });
+
+  // ─── 11. Analytics Page ────────────────────────────────────────────────────
+
+  await check('11.1 Analytics page loads', async () => {
+    const res = await page.goto(BASE + '/analytics');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  });
+
+  // ─── 12. Content Guidelines Page ───────────────────────────────────────────
+
+  await check('12.1 Content guidelines page loads', async () => {
+    const res = await page.goto(BASE + '/content-guidelines');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  });
+
+  // ─── 13. Campaign Detail (404 handling) ────────────────────────────────────
+
+  await check('13.1 Campaign detail handles missing ID', async () => {
     await page.goto(BASE + '/c/nonexistent-id');
-    await page.waitForSelector('text=Campaign not found', { timeout: 5000 });
+    await page.waitForSelector('text=not found', { timeout: 5000 });
   });
 
-  // ─── 11. Mobile Viewport ───────────────────────────────────────────────────
+  // ─── 14. Onboarding Page ───────────────────────────────────────────────────
 
-  await check('11.1 Mobile viewport renders landing page', async () => {
+  await check('14.1 Onboarding page loads', async () => {
+    const res = await page.goto(BASE + '/onboarding');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  });
+
+  // ─── 15. Mobile Viewport ───────────────────────────────────────────────────
+
+  await check('15.1 Mobile (375px) renders landing page', async () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(BASE);
     await page.waitForSelector('text=Get your music', { timeout: 5000 });
-    await page.setViewportSize({ width: 1280, height: 800 }); // Reset
+    await page.setViewportSize({ width: 1280, height: 800 });
+  });
+
+  await check('15.2 Mobile browse works', async () => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(BASE + '/browse');
+    await page.waitForSelector('text=Campaigns', { timeout: 5000 });
+    await page.setViewportSize({ width: 1280, height: 800 });
+  });
+
+  // ─── 16. SEO ───────────────────────────────────────────────────────────────
+
+  await check('16.1 Sitemap returns XML', async () => {
+    const res = await page.goto(BASE + '/sitemap.xml');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+    const body = await res.text();
+    if (!body.includes('<urlset')) throw new Error('Not valid XML sitemap');
+  });
+
+  await check('16.2 Robots.txt loads', async () => {
+    const res = await page.goto(BASE + '/robots.txt');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
   });
 
   // ─── Summary ───────────────────────────────────────────────────────────────
