@@ -4,7 +4,7 @@ import sql from '@/lib/db';
 export async function GET() {
   try {
     const campaigns = await sql`
-      SELECT * FROM campaign_stats WHERE status = 'active'
+      SELECT * FROM campaign_stats WHERE status IN ('active', 'draft')
       ORDER BY cpm_rate_cents DESC, budget_remaining_cents DESC
       LIMIT 50
     `;
@@ -18,8 +18,8 @@ export async function POST(request: Request) {
   try {
     const { trackTitle, trackUrl, cpmRate, budget, maxPayout } = await request.json();
     const result = await sql`
-      INSERT INTO campaigns (track_title, track_url, cpm_rate_cents, total_budget_cents, max_payout_per_submission_cents, budget_remaining_cents)
-      VALUES (${trackTitle}, ${trackUrl}, ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100})
+      INSERT INTO campaigns (track_title, track_url, cpm_rate_cents, total_budget_cents, max_payout_per_submission_cents, budget_remaining_cents, status)
+      VALUES (${trackTitle}, ${trackUrl}, ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100}, 'active')
       RETURNING *
     `;
     return NextResponse.json(result[0]);
