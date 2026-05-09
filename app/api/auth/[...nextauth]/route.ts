@@ -4,12 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 // Fix: force Node.js runtime — Edge runtime doesn't support cookies properly
 export const runtime = "nodejs";
 
-if (!process.env.NEXTAUTH_SECRET) {
-  console.error("❌ NEXTAUTH_SECRET is not set");
-}
-if (!process.env.GOOGLE_CLIENT_ID) {
-  console.error("❌ GOOGLE_CLIENT_ID is not set");
-}
+// Env vars set in Railway — these fire at build time but don't affect deployment
 
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
