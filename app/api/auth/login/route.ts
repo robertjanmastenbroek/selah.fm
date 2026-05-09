@@ -1,19 +1,10 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-
-declare global { var __users: Map<string, {email:string, hash:string, type:string, name:string}> | undefined }
-const users = (globalThis.__users = globalThis.__users || new Map());
+import sql from '@/lib/db';
+import crypto from 'crypto';
+import { setSessionCookie } from '@/lib/auth';
 
 function hashPassword(password: string): string {
-  const crypto = require('crypto');
   return crypto.createHash('sha256').update(password + 'selah-salt').digest('hex');
-}
-
-function createSession(user: { email: string; type: string; name: string }): string {
-  const crypto = require('crypto');
-  const payload = Buffer.from(JSON.stringify(user)).toString('base64');
-  const sig = crypto.createHmac('sha256', 'sendmusic-secret').update(payload).digest('hex');
-  return `${payload}.${sig}`;
 }
 
 export async function POST(request: Request) {
@@ -22,13 +13,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
-  const user = users.get(email);
-  if (!user || user.hash !== hashPassword(password)) {
-    return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
-  }
+  try {
+    const rows = await sql`
+      SELECT email, password_hash, user_type, display_name
+      FROM users
+      WHERE email = ${email}
+    `;
 
-  const session = createSession({ email: user.email, type: user.type, name: user.name });
-  const res = NextResponse.json({ ok: true, type: user.type });
-  res.cookies.set('session', session, { httpOnly: true, maxAge: 60 * 60 * 24 * 7, path: '/' });
-  return res;
+    if (rows.length === 0) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    const user = rows[0];
+    if (user.password_hash !== hashPassword(password)) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    const res = NextResponse.json({ ok: true, type: user.user_type });
+    setSessionCookie(res, {
+      email: user.email,
+      type: user.user_type,
+      name: user.display_name,
+    });
+    return res;
+  } catch (e: any) {
+    console.error('Login error:', e.message);
+    return NextResponse.json({ error: 'Authentication error — try again' }, { status: 500 });
+  }
 }

@@ -1,22 +1,21 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
     const { campaignId, contentUrl, platform } = await request.json();
     
-    // Get creator from session
-    const cookieHeader = request.headers.get('cookie') || '';
-    const sessionMatch = cookieHeader.match(/session=([^;]+)/);
-    let creatorId = null;
-    if (sessionMatch) {
-      try {
-        const [payload] = sessionMatch[1].split('.');
-        const user = JSON.parse(Buffer.from(payload, 'base64').toString());
-        const existing = await sql`SELECT id FROM users WHERE email = ${user.email}`;
-        if (existing.length > 0) creatorId = existing[0].id;
-      } catch {}
+    const session = getSession(request);
+    if (!session) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
+
+    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
+    if (users.length === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    const creatorId = users[0].id;
 
     // Try to get initial view count
     let initialViews = 0;
@@ -35,6 +34,26 @@ export async function POST(request: Request) {
       VALUES (${campaignId}, ${creatorId}, ${contentUrl}, ${platform}, ${initialViews}, ${initialViews})
       RETURNING *
     `;
+
+    // Notify the artist
+    try {
+      const campaign = await sql`SELECT artist_id, track_title FROM campaigns WHERE id = ${campaignId}`;
+      if (campaign.length > 0) {
+        await sql`
+          INSERT INTO notifications (user_id, type, message, link, metadata)
+          VALUES (
+            ${campaign[0].artist_id},
+            'submission',
+            ${`New submission on "${campaign[0].track_title}" from @${session.name}`},
+            '/review',
+            ${JSON.stringify({ campaign_id: campaignId, submission_id: result[0].id })}
+          )
+        `;
+      }
+    } catch (notifErr) {
+      console.error('Notification creation failed:', notifErr);
+    }
+
     return NextResponse.json(result[0]);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

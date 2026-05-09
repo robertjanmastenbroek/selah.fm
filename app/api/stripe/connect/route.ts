@@ -1,0 +1,71 @@
+import { NextResponse } from 'next/server';
+import Stripe from 'stripe';
+
+/**
+ * Create a Stripe Connect Standard account link for creators.
+ * Creators click this link to onboard with Stripe and receive payouts.
+ */
+export async function GET(request: Request) {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
+
+  const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
+
+  // Get user from session
+  const cookieHeader = request.headers.get('cookie') || '';
+  const sessionMatch = cookieHeader.match(/session=([^;]+)/);
+  let userEmail = '';
+  if (sessionMatch) {
+    try {
+      const [payload] = sessionMatch[1].split('.');
+      const user = JSON.parse(Buffer.from(payload, 'base64').toString());
+      userEmail = user.email;
+    } catch {}
+  }
+
+  if (!userEmail) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  try {
+    // Check if user already has a Connect account
+    const { default: sql } = await import('@/lib/db');
+    const users = await sql`SELECT stripe_connect_id FROM users WHERE email = ${userEmail}`;
+    
+    let connectId = users.length > 0 ? users[0].stripe_connect_id : null;
+
+    if (!connectId) {
+      // Create a new Express Connect account
+      const account = await stripe.accounts.create({
+        type: 'express',
+        country: 'US',
+        email: userEmail,
+        capabilities: {
+          transfers: { requested: true },
+        },
+        business_type: 'individual',
+      });
+      connectId = account.id;
+
+      // Save to DB
+      await sql`
+        UPDATE users SET stripe_connect_id = ${connectId}, updated_at = NOW()
+        WHERE email = ${userEmail}
+      `;
+    }
+
+    // Create an account link for onboarding
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
+    const accountLink = await stripe.accountLinks.create({
+      account: connectId,
+      refresh_url: `${baseUrl}/earnings?connect=refresh`,
+      return_url: `${baseUrl}/earnings?connect=success`,
+      type: 'account_onboarding',
+    });
+
+    return NextResponse.json({ url: accountLink.url });
+  } catch (e: any) {
+    console.error('Stripe Connect error:', e.message);
+    return NextResponse.json({ error: 'Failed to create Connect account' }, { status: 500 });
+  }
+}

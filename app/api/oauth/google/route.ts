@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-
-function createSession(user: { email: string; name: string; picture: string }) {
-  const crypto = require('crypto');
-  const payload = Buffer.from(JSON.stringify(user)).toString('base64');
-  const sig = crypto.createHmac('sha256', process.env.NEXTAUTH_SECRET || 'fallback').update(payload).digest('hex');
-  return `${payload}.${sig}`;
-}
+import { setSessionCookie } from '@/lib/auth';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -32,7 +26,6 @@ export async function GET(request: Request) {
       scope: 'openid email profile',
       prompt: 'select_account',
     }).toString();
-    console.log('Redirecting to Google:', url.substring(0, 150));
     return NextResponse.redirect(url);
   }
 
@@ -62,8 +55,6 @@ export async function GET(request: Request) {
     });
     const user = await userRes.json();
 
-    console.log('Google login success:', user.email);
-
     // Persist user to database
     try {
       const existing = await sql`SELECT id FROM users WHERE email = ${user.email}`;
@@ -77,12 +68,12 @@ export async function GET(request: Request) {
       console.error('DB insert failed:', dbErr);
     }
 
-    // Create session
-    const session = createSession({ email: user.email, name: user.name, picture: user.picture });
+    // Create session and redirect
     const res = NextResponse.redirect(`${process.env.NEXTAUTH_URL}/browse`);
-    res.cookies.set('session', session, {
-      httpOnly: true, secure: true, sameSite: 'lax', path: '/',
-      maxAge: 60 * 60 * 24 * 7,
+    setSessionCookie(res, {
+      email: user.email,
+      type: 'creator',
+      name: user.name || user.email.split('@')[0],
     });
     return res;
   } catch (e) {

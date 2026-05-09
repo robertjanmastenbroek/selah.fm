@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { getSession } from '@/lib/auth';
 
 export async function GET() {
-  const session = (await cookies()).get('session')?.value;
-  if (!session) return NextResponse.json({ user: null });
+  const session = getSession(new Request('http://localhost', {
+    headers: { cookie: '' },
+  }));
+
+  // Use cookies() for server component compatibility
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get('session')?.value;
+  
+  if (!sessionCookie) return NextResponse.json({ user: null });
 
   try {
-    const crypto = require('crypto');
-    const [payload, sig] = session.split('.');
+    const crypto = await import('crypto');
+    const [payload, sig] = sessionCookie.split('.');
     const expected = crypto
       .createHmac('sha256', process.env.NEXTAUTH_SECRET || 'selah-secret')
       .update(payload)
