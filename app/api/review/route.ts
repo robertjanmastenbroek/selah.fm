@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const { submissionId, status } = await request.json();
     const result = await sql`
       UPDATE submissions
-      SET review_status = ${status}, reviewed_at = NOW(), reviewed_by = 'artist-1'
+      SET review_status = ${status}, reviewed_at = NOW()
       WHERE id = ${submissionId}
       RETURNING *
     `;
