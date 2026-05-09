@@ -7,19 +7,19 @@ import { cn } from "@/lib/utils";
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: 'Selah.fm — Get your music heard.',
-  description: 'Get paid to post music you love. The transparent CPM marketplace connecting artists and creators on TikTok, Reels, and Shorts.',
+  title: 'Selah.fm — Music Promotion Marketplace | Pay Creators for TikTok, Reels & Shorts',
+  description: 'Get your music heard on TikTok, Instagram Reels, and YouTube Shorts. Set your CPM rate, approve every video, and pay only for verified views. Free to start.',
   icons: {
     icon: '/favicon.svg',
   },
   openGraph: {
-    title: 'Selah.fm — Get your music heard.',
+    title: 'Selah.fm — Music Promotion Marketplace | Pay Creators for TikTok, Reels & Shorts',
     description: 'Get paid to post music you love. The transparent CPM marketplace for music promotion.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Selah.fm — Get your music heard.',
+    title: 'Selah.fm — Music Promotion Marketplace | Pay Creators for TikTok, Reels & Shorts',
     description: 'Get paid to post music you love.',
   },
 };
