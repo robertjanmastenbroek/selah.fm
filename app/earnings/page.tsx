@@ -26,9 +26,11 @@ export default function EarningsPage() {
     totalPending: number;
     totalEarned: number;
   } | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.user) setProfile(d.user); });
     fetch('/api/earnings')
       .then(r => r.json())
       .then(d => {
@@ -89,7 +91,8 @@ export default function EarningsPage() {
               </CardContent>
             </Card>
 
-            {/* Stripe Connect prompt */}
+            {/* Stripe Connect prompt — only show if not connected */}
+            {!profile?.stripe_connect_id && (
             <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
               <CardContent className="p-5 text-center space-y-3">
                 <p className="text-sm font-medium">💳 Receive payouts</p>
@@ -102,6 +105,7 @@ export default function EarningsPage() {
                 <p className="text-[10px] text-muted-foreground">Takes 2 minutes. Works in 40+ countries.</p>
               </CardContent>
             </Card>
+            )}
 
             {/* Submissions list */}
             <div className="space-y-2">
