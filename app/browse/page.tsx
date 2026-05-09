@@ -143,7 +143,15 @@ export default function BrowsePage() {
                           </Link>
                           <p className="text-muted-foreground text-sm">${cpm} CPM · ${budget} budget</p>
                         </div>
-                        <Badge variant="secondary">${cpm}</Badge>
+                        <div className="flex items-center gap-1">
+                          {(c.platforms || []).map((p: string) => (
+                            <span key={p} className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                              p === 'tiktok' ? 'bg-pink-500/10 text-pink-400' :
+                              p === 'instagram' ? 'bg-purple-500/10 text-purple-400' :
+                              'bg-red-500/10 text-red-400'
+                            }`}>{p === 'youtube' ? 'YT' : p === 'instagram' ? 'IG' : 'TT'}</span>
+                          ))}
+                        </div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{c.approved_submissions || '0'} submissions</span>
@@ -156,11 +164,11 @@ export default function BrowsePage() {
                       )}
 
                       {!isJoined ? (
-                        <Button onClick={() => handleJoin(c.id)} className="w-full">Join campaign</Button>
+                        <Button onClick={() => handleJoin(c.id)} className="w-full transition-all duration-200 hover:shadow-md">Join campaign</Button>
                       ) : submitting === c.id ? (
                         <Button disabled className="w-full">Submitting...</Button>
                       ) : (
-                        <div className="space-y-2 animate-slide-up">
+                        <div className="space-y-2 animate-[slideUp_0.25s_ease-out]">
                           <div className="flex gap-2">
                             <select value={submitPlatform[c.id] || 'tiktok'}
                               onChange={e => setSubmitPlatform(prev => ({ ...prev, [c.id]: e.target.value }))}

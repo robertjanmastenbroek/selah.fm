@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
 import CreatorAvatar from '@/components/CreatorAvatar';
+import { useDebounce } from '@/lib/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,8 +45,9 @@ export default function CreatorsPage() {
       .finally(() => setLoading(false));
   };
 
+  const debouncedSearch = useDebounce(searchText, 300);
+  useEffect(() => { fetchCreators(debouncedSearch); }, [debouncedSearch]);
   useEffect(() => { fetchCreators(); }, []);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchCreators(searchText);
