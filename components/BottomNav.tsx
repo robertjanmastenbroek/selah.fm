@@ -10,8 +10,8 @@ const ARTIST_NAV = [
 
 const CREATOR_NAV = [
   { href: '/browse', label: 'Browse', icon: '🔍' },
+  { href: '/analytics', label: 'Stats', icon: '📊' },
   { href: '/earnings', label: 'Earnings', icon: '💰' },
-  { href: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
 export default function BottomNav({ role = 'artist' }: { role?: 'artist' | 'creator' }) {
