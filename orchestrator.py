@@ -34,11 +34,12 @@ BUILD_PLAN = {
             {"id": "verification", "name": "View verification service (needs YouTube key)", "done": True},
             {"id": "landing_seo", "name": "Landing page polish, SEO, structured data", "done": True},
             {"id": "notifications", "name": "Notification bell + dropdown", "done": True},
-            {"id": "hire_flow", "name": "Creator hire flow with custom CPM", "done": False},
+            {"id": "hire_flow", "name": "Creator hire flow with custom CPM", "done": True},
         ]},
         {"id": "outreach", "name": "Outreach & Launch", "tasks": [
             {"id": "outreach_agent", "name": "DM outreach to artists + creators", "done": True},
             {"id": "autonomous", "name": "Autonomous agent fleet (DeepSeek)", "done": True},
+            {"id": "social_templates", "name": "Social media content templates", "done": False},
             {"id": "social", "name": "Social media content + presence", "done": False},
             {"id": "launch", "name": "Pilot launch with seed users", "done": False},
         ]},
