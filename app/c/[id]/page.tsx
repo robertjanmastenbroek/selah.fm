@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/TopNav';
+import CampaignCover from '@/components/CampaignCover';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -77,11 +78,7 @@ export default function CampaignPage({ params }: { params: { id: string } }) {
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
         {/* Cover image */}
-        {campaign.cover_art_url && (
-          <div className="h-48 md:h-64 rounded-2xl overflow-hidden mb-8">
-            <img src={campaign.cover_art_url} alt={campaign.track_title} className="w-full h-full object-cover" />
-          </div>
-        )}
+        <CampaignCover src={campaign.cover_art_url} title={campaign.track_title} className="h-48 md:h-64 rounded-2xl mb-8" />
 
         <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
           <div>

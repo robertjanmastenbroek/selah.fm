@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
 import CampaignSearch from '@/components/CampaignSearch';
+import CampaignCover from '@/components/CampaignCover';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -123,11 +124,7 @@ export default function BrowsePage() {
 
                 return (
                   <Card key={c.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
-                    {c.cover_art_url && (
-                      <div className="h-40 overflow-hidden">
-                        <img src={c.cover_art_url} alt={c.track_title} className="w-full h-full object-cover" />
-                      </div>
-                    )}
+                    <CampaignCover src={c.cover_art_url} title={c.track_title} className="h-40" />
                     <CardContent className="p-5 space-y-4">
                       <div className="flex items-start justify-between">
                         <div>
