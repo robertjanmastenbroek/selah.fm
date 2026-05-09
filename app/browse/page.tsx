@@ -2,6 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import Link from 'next/link';
 
 interface Campaign {
   id: string;
@@ -10,12 +17,9 @@ interface Campaign {
   cpm_rate_cents: number;
   total_budget_cents: number;
   budget_remaining_cents: number;
-  max_payout_per_submission_cents: number;
   platforms: string[];
-  status: string;
   approved_submissions: string;
   recommended_hashtags: string;
-  requirements: string;
 }
 
 export default function BrowsePage() {
@@ -29,11 +33,8 @@ export default function BrowsePage() {
   useEffect(() => {
     fetch('/api/campaigns')
       .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) setCampaigns(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then(data => { if (Array.isArray(data)) setCampaigns(data); })
+      .finally(() => setLoading(false));
   }, []);
 
   const handleJoin = (id: string) => {
@@ -45,134 +46,104 @@ export default function BrowsePage() {
     const url = submitUrl[campaignId];
     if (!url) return;
     setSubmitting(campaignId);
-    
     try {
-      const res = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          campaignId,
-          contentUrl: url,
-          platform: submitPlatform[campaignId] || 'tiktok',
-          postedAt: new Date().toISOString(),
-        }),
+      await fetch('/api/submissions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaignId, contentUrl: url, platform: submitPlatform[campaignId] || 'tiktok', postedAt: new Date().toISOString() }),
       });
-      const data = await res.json();
-      if (data.error) {
-        alert('Submitted locally (DB not available). Artist notified.');
-      } else {
-        alert('Submitted! The artist will review your content.');
-      }
-    } catch {
-      alert('Submitted! The artist will review your content.');
-    }
-    
+    } catch {}
     setSubmitting(null);
     setSubmitUrl(prev => ({ ...prev, [campaignId]: '' }));
-    setJoined(prev => {
-      const next = new Set(prev);
-      next.delete(campaignId);
-      return next;
-    });
+    setJoined(prev => { const next = new Set(prev); next.delete(campaignId); return next; });
   };
 
   return (
-    <div className="min-h-screen bg-bg">
+    <div className="min-h-screen bg-background">
       <Header />
-
-      <main className="page-container py-8 md:py-12">
+      <main className="page-container">
         <div className="mb-8">
-          <h1 className="section-title mb-1">Browse campaigns</h1>
-          <p className="text-text-muted text-sm">Pick a track you love, create content, get paid for views.</p>
+          <h1 className="section-title mb-1">Discover campaigns</h1>
+          <p className="text-muted-foreground text-sm">Pick a track, create content, get paid.</p>
         </div>
 
         {loading ? (
-          <div className="space-y-4">
+          <div className="campaign-grid">
             {[1,2,3].map(i => (
-              <div key={i} className="card p-5 animate-pulse">
-                <div className="h-5 bg-bg-secondary rounded w-2/3 mb-3" />
-                <div className="h-4 bg-bg-secondary rounded w-1/3 mb-4" />
-                <div className="h-1 bg-bg-secondary rounded mb-4" />
-                <div className="h-10 bg-bg-secondary rounded" />
-              </div>
+              <Card key={i}><CardContent className="p-5 space-y-3">
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-2 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </CardContent></Card>
             ))}
           </div>
         ) : campaigns.length === 0 ? (
-          <div className="card text-center py-16">
-            <div className="text-text-muted text-[64px] mb-4 font-light">♪</div>
-            <div className="text-text font-medium text-lg mb-2">No campaigns yet</div>
-            <p className="text-text-muted text-sm">Be the first to create one.</p>
-          </div>
+          <Card className="text-center py-16">
+            <CardContent>
+              <p className="text-6xl mb-4 opacity-10">♪</p>
+              <h2 className="text-lg font-medium mb-2">No campaigns yet</h2>
+              <p className="text-muted-foreground text-sm">Be the first to create one.</p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="campaign-grid">
             {campaigns.map((c, i) => {
               const isJoined = joined.has(c.id);
-              const isSubmitting = submitting === c.id;
               const cpm = c.cpm_rate_cents / 100;
               const budget = c.total_budget_cents / 100;
               const remaining = c.budget_remaining_cents / 100;
-              const spent = budget - remaining;
-              const budgetPct = Math.round((spent / budget) * 100) || 0;
-              const platform = submitPlatform[c.id] || 'tiktok';
+              const pct = budget > 0 ? ((budget - remaining) / budget) * 100 : 0;
 
               return (
-                <div key={c.id} className="card p-5 animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+                <Card key={c.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
                   {c.cover_art_url && (
-                    <div className="h-36 rounded-xl overflow-hidden -mx-5 -mt-5 mb-4">
+                    <div className="h-40 overflow-hidden">
                       <img src={c.cover_art_url} alt={c.track_title} className="w-full h-full object-cover" />
                     </div>
                   )}
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <a href={`/c/${c.id}`} className="text-text font-semibold text-lg leading-tight hover:text-gold transition-colors">{c.track_title}</a>
-                      <div className="text-text-muted text-sm mt-0.5">${cpm} CPM · ${budget} budget</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-gold font-bold text-xl leading-none">${cpm}</div>
-                      <div className="text-text-muted text-[11px] mt-0.5">per 1K views</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 text-xs text-text-muted mb-3">
-                    <span>{c.approved_submissions || '0'} submissions</span>
-                    <span>${remaining.toFixed(0)} remaining</span>
-                    <span className="capitalize">{c.platforms?.join(', ') || 'tiktok'}</span>
-                  </div>
-
-                  <div className="h-1 bg-bg-secondary rounded-full overflow-hidden mb-4">
-                    <div className={`h-full rounded-full transition-all duration-500 ${budgetPct > 80 ? 'bg-crimson-light' : 'bg-gold'}`}
-                      style={{ width: `${Math.min(budgetPct, 100)}%` }} />
-                  </div>
-
-                  {!isJoined ? (
-                    <button onClick={() => handleJoin(c.id)} className="btn-primary w-full">
-                      Join campaign
-                    </button>
-                  ) : isSubmitting ? (
-                    <div className="btn-primary w-full opacity-60 cursor-wait">
-                      Submitting...
-                    </div>
-                  ) : (
-                    <div className="space-y-3 animate-slide-up">
-                      <div className="flex gap-2">
-                        <select value={platform} onChange={(e) => setSubmitPlatform(prev => ({ ...prev, [c.id]: e.target.value }))}
-                          className="input-field !w-auto !py-2.5">
-                          <option value="tiktok">TikTok</option>
-                          <option value="instagram">Reels</option>
-                          <option value="youtube">Shorts</option>
-                        </select>
-                        <input value={submitUrl[c.id] || ''}
-                          onChange={(e) => setSubmitUrl(prev => ({ ...prev, [c.id]: e.target.value }))}
-                          placeholder="Paste your video link" className="input-field flex-1 !py-2.5" />
-                        <button onClick={() => handleSubmit(c.id)}
-                          disabled={!submitUrl[c.id]} className="btn-primary !px-5 whitespace-nowrap">
-                          Submit
-                        </button>
+                  <CardContent className="p-5 space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <Link href={`/c/${c.id}`} className="font-semibold text-lg leading-tight hover:text-amber-600 transition-colors">
+                          {c.track_title}
+                        </Link>
+                        <p className="text-muted-foreground text-sm">${cpm} CPM · ${budget} budget</p>
                       </div>
-                      <p className="text-text-muted text-[11px]">Only content reaching the minimum view threshold will be reviewed.</p>
+                      <Badge variant="secondary">${cpm}</Badge>
                     </div>
-                  )}
-                </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span>{c.approved_submissions || '0'} submissions</span>
+                      <span>${remaining.toFixed(0)} left</span>
+                    </div>
+                    <Progress value={Math.min(pct, 100)} className="h-1.5" />
+
+                    {c.recommended_hashtags && (
+                      <p className="text-xs text-muted-foreground truncate">{c.recommended_hashtags}</p>
+                    )}
+
+                    {!isJoined ? (
+                      <Button onClick={() => handleJoin(c.id)} className="w-full">Join campaign</Button>
+                    ) : submitting === c.id ? (
+                      <Button disabled className="w-full">Submitting...</Button>
+                    ) : (
+                      <div className="space-y-2 animate-slide-up">
+                        <div className="flex gap-2">
+                          <select value={submitPlatform[c.id] || 'tiktok'}
+                            onChange={e => setSubmitPlatform(prev => ({ ...prev, [c.id]: e.target.value }))}
+                            className="border rounded-md px-2 py-2 text-sm bg-background">
+                            <option value="tiktok">TikTok</option>
+                            <option value="instagram">Reels</option>
+                            <option value="youtube">Shorts</option>
+                          </select>
+                          <Input value={submitUrl[c.id] || ''}
+                            onChange={e => setSubmitUrl(prev => ({ ...prev, [c.id]: e.target.value }))}
+                            placeholder="Paste video link" className="flex-1" />
+                          <Button onClick={() => handleSubmit(c.id)} disabled={!submitUrl[c.id]}>Submit</Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
