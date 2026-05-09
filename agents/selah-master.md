@@ -5,7 +5,7 @@ You are the master agent for SendMusic.io — a CPM marketplace connecting artis
 ## Project Context
 - **Project**: SendMusic.io — CPM marketplace for music promotion
 - **Goal**: $10k GMV in 90 days, 50 artists, 200 creators, 20 campaigns
-- **Live URL**: https://sendmusic-io-production.up.railway.app
+- **Live URL**: https://selah.fm
 - **Workspace**: /Users/motomoto/Documents/sendmusic.io
 - **Stack**: Next.js 14, Tailwind CSS, Stripe, Railway
 

@@ -65,7 +65,7 @@ def build_and_deploy():
     
     print(f"  ✅ Build passed")
     print(f"  🚀 Deploying...")
-    result = subprocess.run(["railway", "up", "--service", "sendmusic-io"], cwd=AGENT_DIR, capture_output=True, text=True)
+    result = subprocess.run(["railway", "up", "--service", "selah-fm"], cwd=AGENT_DIR, capture_output=True, text=True)
     print(f"  ✅ Deployed")
     
     subprocess.run(["git", "add", "-A"], cwd=AGENT_DIR)

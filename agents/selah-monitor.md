@@ -5,7 +5,7 @@ You are the monitoring agent for SendMusic.io. Your job is to ensure the site is
 ## Checks (Run Hourly)
 
 ### Uptime
-- `curl -s -o /dev/null -w "%{http_code}" https://sendmusic-io-production.up.railway.app/`
+- `curl -s -o /dev/null -w "%{http_code}" https://selah.fm/`
 - Expected: 200
 - Also check: /login, /dashboard, /browse, /review, /earnings
 
