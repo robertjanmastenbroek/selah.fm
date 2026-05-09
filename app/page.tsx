@@ -112,7 +112,7 @@ export default function HomePage() {
         <div className="page-container">
           <div className="text-center max-w-lg mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Simple, transparent fees.</h2>
-            <p className="text-muted-foreground text-lg">20% platform fee on creator payouts. Artists pay exactly what they budget — never more.</p>
+            <p className="text-muted-foreground text-lg">20% platform fee on creator payouts. Artists set their budget — creators price accordingly.</p>
           </div>
           <div className="max-w-md mx-auto">
             <Card className="text-center">
@@ -130,7 +130,7 @@ export default function HomePage() {
                   <p className="text-sm text-muted-foreground">Creator earns</p>
                   <p className="text-4xl font-bold text-accent-foreground">$400</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Fee is taken from the creator side. Artists never pay above their budget.</p>
+                <p className="text-sm text-muted-foreground">Stripe processing fee (2.9% + $0.30) applies on deposits. Creators receive 80% of payout. $25 minimum deposit.</p>
               </CardContent>
             </Card>
           </div>
