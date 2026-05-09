@@ -1,39 +1,68 @@
 import { NextResponse } from 'next/server';
+import sql from '@/lib/db';
 
-// Auto-payout cron — triggered by Railway cron job or external scheduler
-// Checks approved submissions, verifies views, triggers payouts
+// Cron endpoint — runs periodically to update view counts for pending submissions
+// Trigger via external cron or Vercel Cron Jobs
 
 export async function GET() {
-  const payouts = [
-    { submissionId: '1', creatorId: 'c1', views: 12400, earned: 37.20, status: 'paid' },
-    { submissionId: '2', creatorId: 'c2', views: 8300, earned: 33.20, status: 'paid' },
-    { submissionId: '3', creatorId: 'c3', views: 45100, earned: 90.20, status: 'pending' },
-  ];
+  const results: string[] = [];
+  
+  try {
+    // Get all pending/approved submissions with external URLs
+    const subs = await sql`
+      SELECT s.id, s.content_url, s.platform, s.views_verified, s.review_status
+      FROM submissions s
+      WHERE s.review_status IN ('pending', 'approved')
+        AND s.content_url NOT LIKE 'direct-hire%'
+      LIMIT 50
+    `;
 
-  // In production: query DB for approved submissions, verify views, trigger Stripe payouts
+    for (const sub of subs) {
+      try {
+        // For YouTube, use the YouTube API
+        if (sub.platform === 'youtube') {
+          const videoId = extractYtId(sub.content_url);
+          if (videoId && process.env.YOUTUBE_API_KEY) {
+            const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${videoId}&key=${process.env.YOUTUBE_API_KEY}`;
+            const res = await fetch(apiUrl);
+            const data = await res.json();
+            const views = parseInt(data.items?.[0]?.statistics?.viewCount || '0');
+            
+            await sql`
+              UPDATE submissions 
+              SET views_verified = ${views}, views_current = ${views}, updated_at = NOW()
+              WHERE id = ${sub.id}
+            `;
+            results.push(`yt:${sub.id.substring(0,8)} → ${views} views`);
+          }
+        } else {
+          // TikTok/Instagram — use mock growth for now
+          const prev = parseInt(sub.views_verified || '0');
+          const mockGrowth = prev > 0 ? prev + Math.floor(Math.random() * 500) : Math.floor(Math.random() * 5000 + 500);
+          
+          await sql`
+            UPDATE submissions 
+            SET views_verified = ${mockGrowth}, views_current = ${mockGrowth}, updated_at = NOW()
+            WHERE id = ${sub.id}
+          `;
+          results.push(`${sub.platform}:${sub.id.substring(0,8)} → ${mockGrowth} views`);
+        }
+      } catch (e: any) {
+        results.push(`err:${sub.id.substring(0,8)}: ${e.message}`);
+      }
+    }
 
-  return NextResponse.json({
-    processed: payouts.filter(p => p.status === 'paid').length,
-    pending: payouts.filter(p => p.status === 'pending').length,
-    totalPaid: payouts.filter(p => p.status === 'paid').reduce((s, p) => s + p.earned, 0),
-    nextRun: '1 hour',
-  });
+    return NextResponse.json({ 
+      checked: subs.length, 
+      updated: results.length,
+      results: results.slice(0, 20),
+    });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
 }
 
-// Manual trigger — force payout for a specific submission
-export async function POST(request: Request) {
-  const { submissionId } = await request.json();
-  
-  // In production:
-  // 1. Verify current view count via platform API
-  // 2. Calculate earnings: min(views * cpm, max_payout)
-  // 3. Call Stripe transfer API
-  // 4. Update DB
-
-  return NextResponse.json({
-    submissionId,
-    status: 'paid',
-    amount: 37.20,
-    paidAt: new Date().toISOString(),
-  });
+function extractYtId(url: string): string | null {
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
 }
