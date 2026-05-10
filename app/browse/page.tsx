@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
 import CampaignSearch from '@/components/CampaignSearch';
@@ -25,6 +26,7 @@ export default function BrowsePage() {
   const [submitUrl, setSubmitUrl] = useState<Record<string, string>>({});
   const [submitPlatform, setSubmitPlatform] = useState<Record<string, string>>({});
   const [filters, setFilters] = useState<{ search?: string; platform?: string; minCpm?: number; offset?: number }>({});
+  const router = useRouter();
   const { addToast } = useToast();
 
   const fetchCampaigns = (f: typeof filters = {}) => {
@@ -74,7 +76,7 @@ export default function BrowsePage() {
           <>
             <div className="campaign-grid">
               {campaigns.map((c,i)=>{const isJoined=joined.has(c.id);const cpm=c.cpm_rate_cents/100;const budget=c.total_budget_cents/100;const remaining=c.budget_remaining_cents/100;const pct=budget>0?((budget-remaining)/budget)*100:0;return(
-                <motion.div key={c.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.05,duration:0.4,ease:[0.25,0.1,0.25,1]}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex flex-col">
+                <motion.div key={c.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.05,duration:0.4,ease:[0.25,0.1,0.25,1]}} whileHover={{y:-2}} onClick={() => router.push(`/c/${c.id}`)} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex flex-col cursor-pointer">
                   <CampaignCover src={c.cover_art_url} title={c.track_title} className="h-40"/>
                   <div className="p-5 flex flex-col flex-1 gap-4">
                     <div className="flex items-start justify-between">
@@ -89,7 +91,8 @@ export default function BrowsePage() {
                     {c.recommended_hashtags&&<p className="text-xs text-muted-foreground truncate">{c.recommended_hashtags}</p>}
                     {/* Spacer pushes button to bottom */}
                     <div className="flex-1" />
-                    <div>
+                    {/* Buttons — stop click from navigating to detail */}
+                    <div onClick={e => e.stopPropagation()}>
                     {!isJoined?(
                       <Button onClick={()=>handleJoin(c.id)} className="w-full transition-all duration-200 hover:shadow-[0_0_20px_rgba(91,127,255,0.2)]">Join campaign</Button>
                     ):submitting===c.id?(
