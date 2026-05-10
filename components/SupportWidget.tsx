@@ -50,6 +50,12 @@ export default function SupportWidget() {
       const data = await res.json();
       if (data.reply) {
         setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: data.reply, timestamp: new Date() }]);
+        // Log to support_chats
+        fetch('/api/support/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userMessage: userMsg, botReply: data.reply, source: data.source }),
+        }).catch(() => {});
         if (data.source === 'human') setEmailForwarded(true);
       } else {
         setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: "Sorry, something went wrong. Try again or email support@selah.fm.", timestamp: new Date() }]);
