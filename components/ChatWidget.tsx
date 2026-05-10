@@ -90,6 +90,13 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
     return () => window.removeEventListener('open-chat', handler);
   }, []);
 
+  // ── Poll conversations list every 30s (even when closed, to update badge) ──
+  useEffect(() => {
+    fetchConversations();
+    const interval = setInterval(fetchConversations, 30000);
+    return () => clearInterval(interval);
+  }, [fetchConversations]);
+
   // ── Load conversations when opened ────────────────────────────
   useEffect(() => {
     if (open) {
@@ -193,7 +200,9 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ markReadFrom: conv.other_id }),
-      }).catch(() => {});
+      })
+        .then(() => fetchConversations()) // Refresh after marking read
+        .catch(() => {});
       // Optimistically clear unread count
       setConversations(prev =>
         prev.map(c => c.other_id === conv.other_id ? { ...c, unread: 0 } : c)
