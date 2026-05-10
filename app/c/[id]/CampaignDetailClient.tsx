@@ -35,7 +35,7 @@ function ShareModal({ open, onClose, url, title, campaignId }: { open: boolean; 
               {/* Pre-written share text */}
               <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3">
                 <p className="text-xs text-muted-foreground leading-relaxed">{shareText}</p>
-                <button onClick={() => { navigator.clipboard.writeText(shareText); addToast('Text copied!', 'success'); }} className="mt-2 text-[10px] text-primary hover:underline">Copy text</button>
+              <button onClick={() => { navigator.clipboard.writeText(shareText); }} className="mt-2 text-[10px] text-primary hover:underline">Copy text</button>
               </div>
 
               <div className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]"><Link2 size={16} className="text-muted-foreground shrink-0" /><code className="text-xs text-muted-foreground truncate flex-1 select-all">{url}</code><button onClick={copyLink} className="shrink-0 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold active:scale-[0.97]">{copied ? 'Copied!' : 'Copy'}</button></div>
@@ -250,7 +250,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       {/* Sticky CTA */}
       <AnimatePresence>{showSticky && (<motion.div initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.08] p-3"><div className="max-w-2xl mx-auto flex gap-2"><Button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 active:scale-[0.97]"><Send size={16} className="mr-1.5" />Submit Video</Button><Button onClick={() => router.push(`/c/${id}/donate`)} variant="outline" className="flex-[0.5] py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Heart size={16} /></Button><Button onClick={() => setShareOpen(true)} variant="outline" className="flex-[0.5] py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Share2 size={16} /></Button></div></motion.div>)}</AnimatePresence>
 
-      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={campaign.track_title} />
+      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={campaign.track_title} campaignId={id} />
       <StripePaymentModal open={paymentModal} onClose={() => setPaymentModal(false)} onSuccess={() => { setPaymentModal(false); setSuccessOpen(true); }} clientSecret={clientSecret} title={campaign.track_title} subtitle="Your donation goes directly to the campaign budget" coverArtUrl={campaign.cover_art_url} amount={donationAmount} mode="donation" />
       <PaymentSuccess open={successOpen} mode="donation" amount={donationAmount} campaignTitle={campaign.track_title} campaignId={id} onClose={() => setSuccessOpen(false)} />
     </div>
