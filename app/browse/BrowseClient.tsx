@@ -70,7 +70,15 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
     if (!submitModal || !submitUrl) return;
     setSubmitting(true);
     const campaignId = submitModal.id;
+
     try {
+      // Client-side pre-validation for instant feedback
+      if (!submitUrl.startsWith('https://')) {
+        addToast('Please paste a valid HTTPS link from TikTok, Instagram, YouTube, or Facebook', 'error');
+        setSubmitting(false);
+        return;
+      }
+
       const res = await fetch('/api/submissions', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -79,7 +87,6 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
       if (res.ok) {
         trackSubmitContent(submitPlatform);
         addToast('Submitted! Artist will review your video.', 'success');
-        // Optimistically increment pending count on the card
         setCampaigns(prev => prev.map(c =>
           c.id === campaignId
             ? { ...c, pending_submissions: String(parseInt(c.pending_submissions || '0') + 1) }

@@ -1,105 +1,74 @@
 /**
- * Selah.fm — Input Validation Utilities
- * ======================================
- * Shared validation functions for API routes.
+ * URL validation for video submissions.
+ * Only accepts links from approved content platforms.
  */
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const URL_REGEX = /^https?:\/\/.+/;
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ALLOWLIST: { pattern: RegExp; platform: string }[] = [
+  // TikTok
+  { pattern: /^https?:\/\/(www\.)?tiktok\.com\/.+/i, platform: 'tiktok' },
+  { pattern: /^https?:\/\/(vm|vt|m)\.tiktok\.com\/.+/i, platform: 'tiktok' },
+  // Instagram
+  { pattern: /^https?:\/\/(www\.)?instagram\.com\/(reel|p|tv|share)\/.+/i, platform: 'instagram' },
+  { pattern: /^https?:\/\/(www\.)?instagram\.com\/.+/i, platform: 'instagram' },
+  // YouTube
+  { pattern: /^https?:\/\/(www\.)?youtube\.com\/watch\?.+/i, platform: 'youtube' },
+  { pattern: /^https?:\/\/(www\.)?youtube\.com\/shorts\/.+/i, platform: 'youtube' },
+  { pattern: /^https?:\/\/(www\.)?youtube\.com\/.+/i, platform: 'youtube' },
+  { pattern: /^https?:\/\/(youtu\.be|m\.youtube\.com)\/.+/i, platform: 'youtube' },
+  // Facebook
+  { pattern: /^https?:\/\/(www\.)?facebook\.com\/(reel|share|watch|video)\/.+/i, platform: 'facebook' },
+  { pattern: /^https?:\/\/(www\.)?facebook\.com\/.+/i, platform: 'facebook' },
+  { pattern: /^https?:\/\/(fb\.watch|fb\.com)\/.+/i, platform: 'facebook' },
+];
 
-export function validateEmail(email: unknown): email is string {
-  return typeof email === 'string' && EMAIL_REGEX.test(email) && email.length <= 254;
-}
-
-export function validatePassword(password: unknown): password is string {
-  return typeof password === 'string' && password.length >= 6 && password.length <= 128;
-}
-
-export function validateName(name: unknown): name is string {
-  return typeof name === 'string' && name.trim().length >= 1 && name.length <= 100;
-}
-
-export function validateUrl(url: unknown): url is string {
-  return typeof url === 'string' && URL_REGEX.test(url) && url.length <= 2048;
-}
-
-export function validateUuid(id: unknown): id is string {
-  return typeof id === 'string' && UUID_REGEX.test(id);
-}
-
-export function validatePositiveNumber(n: unknown, max?: number): n is number {
-  if (typeof n !== 'number' || isNaN(n) || n <= 0) return false;
-  if (max !== undefined && n > max) return false;
-  return true;
-}
-
-export function validatePlatform(p: unknown): p is 'tiktok' | 'instagram' | 'youtube' {
-  return p === 'tiktok' || p === 'instagram' || p === 'youtube';
-}
-
-export function validateUserType(t: unknown): t is 'artist' | 'creator' {
-  return t === 'artist' || t === 'creator';
-}
-
-/**
- * Sanitize a string for safe display — strip HTML tags.
- */
-export function sanitizeText(input: string): string {
-  return input.replace(/<[^>]*>/g, '').trim();
-}
-
-/**
- * Validate and sanitize a create campaign request body.
- */
-export function validateCampaignInput(body: any): {
-  valid: boolean;
-  errors: string[];
-  sanitized?: {
-    trackTitle: string;
-    trackUrl: string;
-    cpmRate: number;
-    budget: number;
-    maxPayout: number;
-    requirements?: string;
-    driveUrl?: string;
-    hashtags?: string;
-    coverArtUrl?: string;
-  };
-} {
-  const errors: string[] = [];
-
-  if (!body.trackTitle || typeof body.trackTitle !== 'string' || body.trackTitle.trim().length === 0) {
-    errors.push('trackTitle is required');
-  }
-  if (!body.trackUrl || !validateUrl(body.trackUrl)) {
-    errors.push('trackUrl must be a valid URL');
-  }
-  if (!validatePositiveNumber(body.cpmRate, 100)) {
-    errors.push('cpmRate must be a positive number (max $100)');
-  }
-  if (!validatePositiveNumber(body.budget, 100000)) {
-    errors.push('budget must be a positive number (max $100,000)');
-  }
-  if (!validatePositiveNumber(body.maxPayout, body.budget || 100000)) {
-    errors.push('maxPayout must be a positive number within budget');
+export function isValidSubmissionUrl(url: string): { valid: false; error: string } | { valid: true; platform: string } {
+  if (!url || typeof url !== 'string') {
+    return { valid: false, error: 'URL is required' };
   }
 
-  if (errors.length > 0) return { valid: false, errors };
+  const trimmed = url.trim();
+
+  // Basic URL structure check
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    return { valid: false, error: 'URL must start with https://' };
+  }
+
+  if (trimmed.length > 2048) {
+    return { valid: false, error: 'URL is too long' };
+  }
+
+  if (trimmed.length < 15) {
+    return { valid: false, error: 'URL is too short to be valid' };
+  }
+
+  // Check against allowlist
+  for (const { pattern, platform } of ALLOWLIST) {
+    if (pattern.test(trimmed)) {
+      return { valid: true, platform };
+    }
+  }
 
   return {
-    valid: true,
-    errors: [],
-    sanitized: {
-      trackTitle: sanitizeText(body.trackTitle).slice(0, 200),
-      trackUrl: body.trackUrl.slice(0, 2048),
-      cpmRate: body.cpmRate,
-      budget: body.budget,
-      maxPayout: body.maxPayout,
-      requirements: body.requirements ? sanitizeText(body.requirements).slice(0, 2000) : undefined,
-      driveUrl: body.driveUrl ? body.driveUrl.slice(0, 2048) : undefined,
-      hashtags: body.hashtags ? sanitizeText(body.hashtags).slice(0, 500) : undefined,
-      coverArtUrl: body.coverArtUrl || undefined,
-    },
+    valid: false,
+    error: 'Only links from TikTok, Instagram Reels, YouTube Shorts, and Facebook are accepted. Please paste a direct link to your video.',
   };
+}
+
+// ── Existing validation helpers ──────────────────────────────
+
+export function sanitizeInput(input: string, maxLength: number = 500): string {
+  return input.trim().slice(0, maxLength).replace(/[<>]/g, '');
+}
+
+export function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+export function isValidUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return url.startsWith('http://') || url.startsWith('https://');
+  } catch {
+    return false;
+  }
 }
