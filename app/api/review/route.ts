@@ -76,9 +76,7 @@ export async function POST(request: Request) {
         `;
         const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
         if (creatorData.length > 0) {
-          const { sendEmail, submissionApprovedEmail } = await import('@/lib/email');
-          const { subject, html } = submissionApprovedEmail(creatorData[0].display_name, sub.track_title, netDollars);
-          sendEmail({ to: creatorData[0].email, subject, html });
+          // Creator notified via NotificationBell above. Welcome emails handled via info@selah.fm
         }
       } catch {}
 
@@ -122,9 +120,7 @@ export async function POST(request: Request) {
         `;
         const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
         if (creatorData.length > 0) {
-          const { sendEmail, submissionRejectedEmail } = await import('@/lib/email');
-          const { subject, html } = submissionRejectedEmail(creatorData[0].display_name, sub.track_title);
-          sendEmail({ to: creatorData[0].email, subject, html });
+          // Creator notified via NotificationBell above. Rejection emails handled via info@selah.fm
         }
       } catch {}
     }

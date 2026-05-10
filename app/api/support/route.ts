@@ -15,7 +15,7 @@ Key facts about Selah.fm:
 - Dashboard: selah.fm/dashboard | Browse: selah.fm/browse
 - FAQ: selah.fm/faq | Bug report: selah.fm/report-bug
 - All code is MIT licensed: github.com/robertjanmastenbroek/selah.fm
-- Support email: support@selah.fm
+- Support email: support@selah.fm | Info: info@selah.fm
 - Referrals: artists get 5% bonus on referred artist's first deposit (both get 5%)
 - Campaign crowdfunding: fans can donate to artist campaigns at selah.fm/c/[id]
 - Mobile-responsive: works on phones, tablets, desktop — no app needed
@@ -34,7 +34,7 @@ Rules:
  */
 export async function POST(request: Request) {
   try {
-    const { message, history, urgent } = await request.json();
+    const { message, history } = await request.json();
 
     if (!message) {
       return NextResponse.json({ error: 'Missing message' }, { status: 400 });
@@ -73,12 +73,6 @@ export async function POST(request: Request) {
           const data = await res.json();
           const reply = data.choices?.[0]?.message?.content;
           if (reply) {
-            // Also forward to email for logging if urgent
-            if (urgent) {
-              try {
-                await forwardToEmail(message, history);
-              } catch {}
-            }
             return NextResponse.json({ reply, source: 'ai' });
           }
         }
@@ -93,10 +87,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply, source: 'keyword' });
     }
 
-    // ── No response available — forward to email ──────────────
-    await forwardToEmail(message, history).catch(() => {});
+    // ── No response available — suggest email support ──────────
     return NextResponse.json({
-      reply: "I'm not sure about that — let me connect you with our team. They'll get back to you by email, usually within a few hours.",
+      reply: "I'm not sure about that — please email support@selah.fm and our team will get back to you, usually within a few hours.",
       source: 'human',
     });
   } catch (e: any) {
@@ -140,19 +133,4 @@ function keywordMatch(msg: string): string | null {
     return "Fully open source under MIT! github.com/robertjanmastenbroek/selah.fm — you can contribute, audit, or run your own instance.";
   }
   return null;
-}
-
-// ── Email forwarding ─────────────────────────────────────────
-async function forwardToEmail(message: string, history: any[]) {
-  try {
-    const { sendSupportEmail } = await import('@/lib/email');
-    const historyText = Array.isArray(history)
-      ? history.map((h: string) => `  ${h}`).join('\n')
-      : 'No history';
-    await sendSupportEmail({
-      to: 'support@selah.fm',
-      subject: `Support: ${message.slice(0, 80)}`,
-      html: `<div style="font-family:system-ui;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px"><h2 style="color:#5B7FFF">Support Request</h2><p>${message}</p><pre style="color:#8C8C8C;font-size:11px">${historyText}</pre></div>`,
-    });
-  } catch {}
 }
