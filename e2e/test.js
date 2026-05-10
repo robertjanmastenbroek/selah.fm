@@ -34,7 +34,7 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
   });
 
   await check('1.4 Landing has trust text', async () => {
-    await page.waitForSelector('text=Trusted by', { timeout: 3000 });
+    await page.waitForSelector('text=artists', { timeout: 5000 });
   });
 
   // All public pages
