@@ -1,18 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import useSWR from 'swr';
-import { swrConfig } from '@/lib/swr-config';
-
-// Public fetcher — no credentials, so the API returns all campaigns
-const publicFetcher = (url: string) =>
-  fetch(url).then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  }).catch(err => {
-    console.error('Browse fetch failed:', err);
-    throw err;
-  });
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -28,6 +16,8 @@ import { Megaphone } from 'lucide-react';
 import { trackSubmitContent } from '@/lib/analytics';
 import { PlatformBadge } from '@/components/SocialIcons';
 
+export const dynamic = 'force-dynamic';
+
 interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; approved_submissions: string; recommended_hashtags: string; }
 
 function buildQuery(filters: Record<string, any>) {
@@ -36,11 +26,23 @@ function buildQuery(filters: Record<string, any>) {
   if (filters.platform) params.set('platform', filters.platform);
   if (filters.minCpm) params.set('minCpm', String(filters.minCpm));
   if (filters.offset) params.set('offset', String(filters.offset || 0));
-  return params.toString();
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}
+
+async function fetchCampaigns(filters: Record<string, any>) {
+  const url = `/api/campaigns${buildQuery(filters)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
 }
 
 export default function BrowsePage() {
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [joined, setJoined] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitUrl, setSubmitUrl] = useState<Record<string, string>>({});
@@ -48,13 +50,31 @@ export default function BrowsePage() {
   const router = useRouter();
   const { addToast } = useToast();
 
-  const query = buildQuery(filters);
-  const { data, error, isLoading } = useSWR(`/api/campaigns?${query}`, publicFetcher, swrConfig);
+  // Direct fetch — no SWR dependency
+  const loadCampaigns = useCallback(async (f: Record<string, any> = filters) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await fetchCampaigns(f);
+      setCampaigns(data.campaigns || []);
+      setTotal(data.total || 0);
+    } catch (e: any) {
+      setError(e.message || 'Failed to load');
+      setCampaigns([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
 
-  const campaigns: Campaign[] = data?.campaigns || [];
-  const total = data?.total || 0;
+  useEffect(() => {
+    loadCampaigns();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleFilter = useCallback((f: any) => { setFilters(f); }, []);
+  const handleFilter = useCallback((f: any) => {
+    setFilters(f);
+    loadCampaigns(f);
+  }, [loadCampaigns]);
 
   const handleJoin = (id: string) => {
     setJoined(prev => new Set([...prev, id]));
@@ -105,10 +125,10 @@ export default function BrowsePage() {
         {error ? (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
             <h2 className="text-xl font-semibold mb-2">Couldn't load campaigns</h2>
-            <p className="text-muted-foreground text-sm mb-6">Check your connection and try again.</p>
-            <Button variant="outline" onClick={() => window.location.reload()}>Retry</Button>
+            <p className="text-muted-foreground text-sm mb-6">{error}</p>
+            <Button variant="outline" onClick={() => loadCampaigns()}>Retry</Button>
           </motion.div>
-        ) : isLoading ? (
+        ) : loading ? (
           <div className="campaign-grid">{[1, 2, 3].map(i => (
             <div key={i} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06]">
               <div className="p-5 space-y-3">
@@ -127,7 +147,7 @@ export default function BrowsePage() {
             )}
             <h2 className="text-xl font-semibold mb-2">{Object.keys(filters).length > 0 ? 'No matching campaigns' : 'No campaigns yet'}</h2>
             <p className="text-muted-foreground text-sm mb-6">{Object.keys(filters).length > 0 ? 'Try adjusting your filters.' : "Be the first to create one — and share it with your fans!"}</p>
-            {Object.keys(filters).length > 0 ? <Button variant="outline" onClick={() => setFilters({})}>Clear filters</Button> : <Link href="/dashboard"><Button>Create a campaign</Button></Link>}
+            {Object.keys(filters).length > 0 ? <Button variant="outline" onClick={() => { setFilters({}); loadCampaigns({}); }}>Clear filters</Button> : <Link href="/dashboard"><Button>Create a campaign</Button></Link>}
           </motion.div>
         ) : (
           <div className="campaign-grid">
