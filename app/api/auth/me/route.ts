@@ -12,7 +12,16 @@ export async function GET() {
     const [payload, sig] = sessionCookie.split('.');
     const expected = crypto.createHmac('sha256', process.env.NEXTAUTH_SECRET || 'selah-secret').update(payload).digest('hex');
     if (sig !== expected) return NextResponse.json({ user: null });
-    return NextResponse.json({ user: JSON.parse(Buffer.from(payload, 'base64').toString()) });
+    const session = JSON.parse(Buffer.from(payload, 'base64').toString());
+
+    // Fetch the actual DB user ID for the chat system
+    let dbUser = null;
+    try {
+      const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
+      if (users.length > 0) dbUser = { ...session, id: users[0].id };
+    } catch {}
+
+    return NextResponse.json({ user: dbUser || session });
   } catch { return NextResponse.json({ user: null }); }
 }
 

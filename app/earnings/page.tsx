@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/TopNav';
-import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -98,9 +97,25 @@ export default function EarningsPage() {
                 <p className="text-sm font-medium">💳 Receive payouts</p>
                 <p className="text-xs text-muted-foreground">Connect your bank account via Stripe to receive payments directly. Payouts are processed after your submissions are approved.</p>
                 <div className="flex gap-2 justify-center">
-                  <Link href="/api/stripe/connect" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/stripe/connect');
+                        if (!res.ok) {
+                          const err = await res.json().catch(() => ({ error: 'Failed to connect' }));
+                          alert(err.error || 'Failed to connect Stripe. Try again.');
+                          return;
+                        }
+                        const data = await res.json();
+                        if (data.url) window.location.href = data.url;
+                      } catch {
+                        alert('Network error. Check your connection and try again.');
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity"
+                  >
                     Set up Stripe Connect →
-                  </Link>
+                  </button>
                 </div>
                 <p className="text-[10px] text-muted-foreground">Takes 2 minutes. Works in 40+ countries.</p>
               </CardContent>

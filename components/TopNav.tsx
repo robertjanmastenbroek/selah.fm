@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import NotificationBell from '@/components/NotificationBell';
 import ChatWidget from '@/components/ChatWidget';
-import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug } from 'lucide-react';
 
 const mainLinks = [
   { href: '/browse', label: 'Campaigns' },
@@ -45,7 +45,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-xl">
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-4 sm:gap-6">
-          <Link href="/" className="flex items-center gap-2 group shrink-0">
+          <Link href={profile ? '/browse' : '/'} className="flex items-center gap-2 group shrink-0">
             <Music size={18} strokeWidth={1.5} className="text-primary" />
             <span className="font-bold text-lg tracking-tight group-hover:text-primary transition-colors">
               Selah<span className="text-primary">.fm</span>
@@ -86,6 +86,7 @@ export default function Header() {
                   <Link href="/review" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><ClipboardCheck size={16} strokeWidth={1.5} /> Review</Link>
                   <Link href="/earnings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Banknote size={16} strokeWidth={1.5} /> Earnings</Link>
                   <Link href="/settings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Settings size={16} strokeWidth={1.5} /> Settings</Link>
+                  <Link href="/report-bug" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-muted/50 transition-colors"><Bug size={16} strokeWidth={1.5} /> Report a bug</Link>
                   <div className="border-t border-border/20 my-1" />
                   <button onClick={handleLogout} className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm text-destructive hover:bg-muted/50 transition-colors"><LogOut size={16} strokeWidth={1.5} /> Log out</button>
                 </div>

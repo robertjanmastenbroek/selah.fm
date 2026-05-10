@@ -29,72 +29,19 @@ Creator: Get paid per verified view (80% of CPM)
 | Database | PostgreSQL (Neon Serverless) |
 | Auth | Google OAuth + email/password |
 | Payments | Stripe (Checkout + Connect) |
+| Email | Nodemailer (SMTP — Resend, Brevo, or any provider) |
+| Analytics | Google Analytics (6 conversion events) |
+| View Verification | YouTube Data API v3 + TikTok oEmbed |
+| Artist Data | Spotify Web API (client credentials) |
 | Deployment | Railway |
-| Testing | Playwright E2E |
+| Testing | Playwright E2E (34 tests) |
 | Automation | Python orchestrator + DeepSeek AI agents |
 
 ---
 
 ## Project Structure
 
-```
-selah.fm/
-├── app/                    # Next.js App Router pages + API routes
-│   ├── api/                # REST API endpoints
-│   │   ├── auth/           # Authentication (signup, login, logout, me)
-│   │   ├── campaigns/      # Campaign CRUD
-│   │   ├── submissions/    # Submission create + list
-│   │   ├── review/         # Artist review (approve/reject)
-│   │   ├── creators/       # Creator directory + hire
-│   │   ├── earnings/       # Creator earnings
-│   │   ├── notifications/  # User notifications
-│   │   ├── stripe/         # Stripe checkout, webhooks, payouts, connect
-│   │   └── verify/         # YouTube view verification
-│   ├── browse/             # Campaign discovery
-│   ├── c/[id]/             # Campaign detail
-│   ├── creators/           # Creator marketplace
-│   ├── dashboard/          # Artist campaign management
-│   ├── earnings/           # Creator earnings page
-│   ├── review/             # Artist review page
-│   ├── analytics/          # Content analytics
-│   ├── settings/           # User profile settings
-│   └── login/              # Login + signup page
-├── components/             # React components
-│   ├── TopNav.tsx          # Main navigation header
-│   ├── BottomNav.tsx       # Mobile bottom nav
-│   ├── NotificationBell.tsx # Real-time notifications
-│   ├── Toast.tsx           # Toast notification system
-│   ├── ErrorBoundary.tsx   # React error boundary
-│   ├── ImageUpload.tsx     # Drag-and-drop image upload
-│   ├── CampaignSearch.tsx  # Campaign filter/search
-│   └── ui/                 # shadcn/ui components
-├── lib/                    # Shared utilities
-│   ├── db.ts               # PostgreSQL client (Neon serverless)
-│   ├── db/schema.sql       # Full database schema
-│   ├── db/migrations/      # Migration scripts
-│   ├── db/seed.sql         # Demo data seeder
-│   ├── fees.ts             # Fee calculation engine
-│   ├── notifications.ts    # Notification creation utility
-│   ├── validation.ts       # Input validation + sanitization
-│   └── utils.ts            # Tailwind class merging
-├── types/                  # Shared TypeScript types
-│   └── index.ts            # User, Campaign, Submission, Notification types
-├── e2e/                    # End-to-end tests
-│   └── test.js             # Playwright test suite (25+ tests)
-├── agents/                 # AI agent instruction files
-│   ├── selah-master.md     # Strategic overseer
-│   ├── selah-improve.md    # Continuous improvement
-│   ├── selah-monitor.md    # Site health monitoring
-│   └── selah-outreach.md   # Artist/creator outreach
-├── autonomous/             # Autonomous agent system
-│   ├── agent.py            # DeepSeek-powered improvement agent
-│   ├── cron_runner.py      # Cron-based task runner
-│   └── task_queue.py       # Priority task queue with file locking
-├── orchestrator.py         # Build plan + task manager
-├── outreach_agent.py       # Instagram/TikTok DM automation
-├── image_generator.py      # Midjourney image generation
-└── build_loop.py           # Continuous build + deploy pipeline
-```
+See [STATUS.md](./STATUS.md) for the full module registry, API reference, database schema, security notes, and deployment instructions.
 
 ---
 
@@ -112,15 +59,39 @@ selah.fm/
 Copy `.env.local.example` to `.env.local` and fill in:
 
 ```bash
-DATABASE_URL=postgresql://...          # PostgreSQL connection
-NEXTAUTH_SECRET=...                    # Random 32-byte secret
-NEXTAUTH_URL=https://selah.fm          # Your domain
-GOOGLE_CLIENT_ID=...                   # Google OAuth
-GOOGLE_CLIENT_SECRET=...               # Google OAuth
-STRIPE_SECRET_KEY=sk_test_...          # Stripe secret key
+# ── Critical (required for core functionality) ──────────────────
+DATABASE_URL=postgresql://...          # PostgreSQL connection (Neon)
+NEXTAUTH_SECRET=...                    # Random 32-byte secret for session HMAC
+NEXTAUTH_URL=https://selah.fm          # Your production domain
+GOOGLE_CLIENT_ID=...                   # Google OAuth client ID
+GOOGLE_CLIENT_SECRET=...               # Google OAuth client secret
+STRIPE_SECRET_KEY=sk_live_...          # Stripe secret key (live mode)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=... # Stripe publishable key
-YOUTUBE_API_KEY=...                    # For view verification (optional)
+
+# ── Recommended (enhances features) ────────────────────────────
+NEXT_PUBLIC_GA_ID=G-XXXXXXXX           # Google Analytics measurement ID
+YOUTUBE_API_KEY=...                    # YouTube Data API v3 (auto view verification)
+SMTP_HOST=smtp.resend.com              # Email provider (Resend free: 100/day)
+SMTP_PORT=587
+SMTP_USER=resend
+SMTP_PASS=re_...                       # Resend API key (or any SMTP password)
+SMTP_FROM=noreply@selah.fm
+CRON_SECRET=...                        # Protects /api/cron endpoint
+
+# ── Optional (social proof + OAuth) ────────────────────────────
+SPOTIFY_CLIENT_ID=...                  # Spotify Web API (artist follower counts)
+SPOTIFY_CLIENT_SECRET=...
+TIKTOK_CLIENT_KEY=...                  # TikTok OAuth (creator verification)
+TIKTOK_CLIENT_SECRET=...
+INSTAGRAM_APP_ID=...                   # Instagram OAuth
+INSTAGRAM_APP_SECRET=...
+YOUTUBE_CLIENT_ID=...                  # YouTube OAuth (creator channel connect)
+YOUTUBE_CLIENT_SECRET=...
+FACEBOOK_APP_ID=...                    # Facebook OAuth
+FACEBOOK_APP_SECRET=...
 ```
+
+**Note:** The platform runs without optional env vars — features gracefully degrade. Missing SMTP logs emails to console instead of sending. Missing Spotify shows "0 monthly listeners." Missing YouTube API key falls back to manual view verification.
 
 ### Install & Run
 
@@ -165,21 +136,67 @@ TEST_URL=http://localhost:3000 node e2e/test.js
 
 ## API Overview
 
+### Auth
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/auth/signup` | Create account |
-| POST | `/api/auth/login` | Login |
+| POST | `/api/auth/signup` | Create account (email/password + role) |
+| POST | `/api/auth/login` | Login with email/password |
+| POST | `/api/auth/logout` | Logout |
 | GET | `/api/auth/me` | Current user |
-| GET/POST | `/api/campaigns` | List / create campaigns |
+| PATCH | `/api/auth/me` | Update profile (social handles, bio, CPM) |
+| GET | `/api/oauth/google` | Google OAuth callback |
+
+### Marketplace
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/campaigns` | List campaigns (search, filter, paginate) |
+| POST | `/api/campaigns` | Create campaign (artist only) |
 | GET | `/api/campaigns/[id]` | Campaign detail |
-| GET/POST | `/api/submissions` | List / submit content |
-| POST | `/api/review` | Approve / reject submission |
+| PATCH | `/api/campaigns/[id]` | Pause/resume campaign (owner only) |
+| GET | `/api/artists` | Artist directory |
+| GET | `/api/artists/[id]` | Artist profile + campaigns |
 | GET | `/api/creators` | Creator directory |
-| GET | `/api/earnings` | Creator earnings |
-| GET/PATCH | `/api/notifications` | Get / mark read notifications |
-| POST | `/api/stripe` | Create checkout session |
-| POST | `/api/stripe/payout` | Process creator payout |
+| GET | `/api/creators/[id]` | Creator profile + submissions |
+
+### Submissions & Review
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/submissions` | List submissions (by campaign) |
+| POST | `/api/submissions` | Submit content (creator only) |
+| POST | `/api/review` | Approve / reject submission (artist/owner only) |
+| POST | `/api/verify` | Verify video views (YouTube API / TikTok oEmbed) |
+
+### Payments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/stripe` | Create Stripe checkout session |
+| POST | `/api/stripe/webhook` | Stripe webhook handler |
+| POST | `/api/stripe/payout` | Process creator payout (auto on approval) |
 | GET | `/api/stripe/connect` | Stripe Connect onboarding |
+
+### Social Connect
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/connect` | OAuth redirect (TikTok, Instagram, YouTube, Facebook) |
+| GET | `/api/connect/callback` | OAuth callback handler |
+
+### Chat & Notifications
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET/POST | `/api/messages` | List / send chat messages |
+| PATCH | `/api/messages` | Mark messages read |
+| GET | `/api/notifications` | List notifications + unread count |
+| PATCH | `/api/notifications` | Mark notifications read |
+
+### Other
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/earnings` | Creator earnings |
+| GET | `/api/health` | Health check |
+| GET | `/api/cron` | YouTube view auto-update (requires CRON_SECRET) |
+| GET/POST | `/api/admin/seed` | Seed demo data (admin only) |
+| GET | `/api/admin/overview` | Platform metrics (admin only) |
+| GET | `/api/admin/users` | User list (admin only) |
 
 ---
 

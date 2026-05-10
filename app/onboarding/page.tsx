@@ -32,7 +32,7 @@ export default function OnboardingPage() {
     setSaving(true);
     try {
       await fetch('/api/auth/me', {
-        method: 'PATCH',
+        method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,

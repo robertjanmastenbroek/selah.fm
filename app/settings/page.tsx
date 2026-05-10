@@ -47,7 +47,7 @@ export default function SettingsPage() {
     setSaving(true);
     try {
       const res = await fetch('/api/auth/me', {
-        method: 'PATCH',
+        method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, bio, genres, preferredCpm: cpm,
           tiktok_handle: tiktok||null, instagram_handle: instagram||null, youtube_handle: youtube||null, facebook_handle: facebook||null }),

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { getSession } from '@/lib/auth';
 
 /**
  * Create a Stripe Connect Standard account link for creators.
@@ -12,20 +13,11 @@ export async function GET(request: Request) {
   const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
 
   // Get user from session
-  const cookieHeader = request.headers.get('cookie') || '';
-  const sessionMatch = cookieHeader.match(/session=([^;]+)/);
-  let userEmail = '';
-  if (sessionMatch) {
-    try {
-      const [payload] = sessionMatch[1].split('.');
-      const user = JSON.parse(Buffer.from(payload, 'base64').toString());
-      userEmail = user.email;
-    } catch {}
-  }
-
-  if (!userEmail) {
+  const session = getSession(request);
+  if (!session) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
+  const userEmail = session.email;
 
   try {
     // Check if user already has a Connect account
