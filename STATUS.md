@@ -8,9 +8,9 @@
 
 | Category | Status |
 |----------|--------|
-| Pages built | ✅ 16/16 |
-| API routes live | ✅ 26/26 |
-| E2E tests | ✅ 34/34 (100%) |
+| Pages built | ✅ 22/22 |
+| API routes live | ✅ 28/28 |
+| E2E tests | ✅ 43/43 (100%) |
 | Google OAuth | ✅ Live |
 | YouTube view verification | ✅ Auto-verified |
 | Google Analytics | ✅ 6 conversion events |
@@ -84,7 +84,7 @@
 | View Verification | YouTube Data API v3 + TikTok oEmbed |
 | Artist Data | Spotify Web API (client credentials) |
 | Deployment | Railway (auto-deploy on push to main) |
-| Testing | Playwright E2E (34 tests) |
+| Testing | Playwright E2E (43 tests) |
 
 ---
 
@@ -165,12 +165,11 @@ selah.fm/
 │   ├── utils.ts                # Tailwind class merging
 │   └── validation.ts           # Input validation + sanitization
 ├── types/index.ts              # Shared TypeScript types
-├── e2e/test.js                 # Playwright E2E tests (34 scenarios)
-├── middleware.ts               # Next.js middleware (admin passthrough)
+├── e2e/test.js                 # Playwright E2E tests (43 scenarios)
+├── middleware.ts               # Next.js middleware (admin session check)
 ├── next.config.js              # Security headers, image domains, env
 ├── tailwind.config.js          # Dark mode design tokens
-├── railway.json                # Railway deployment config
-└── tasks.json                  # Orchestrator state
+└── railway.json                # Railway deployment config
 ```
 
 ---
@@ -308,10 +307,10 @@ selah.fm/
 | Area | Status |
 |------|--------|
 | Broken Access Control | ✅ Ownership checks on review (403), admin guard on admin routes |
-| Cryptographic Failures | ⚠️ SHA-256 for passwords — no salt rounds (acceptable for MVP) |
+| Cryptographic Failures | ✅ bcrypt (12 rounds) for password hashing |
 | Injection | ✅ Tagged template SQL prevents injection; input validation on all routes |
-| Rate Limiting | ✅ Auth endpoints: login 10/min, signup 5/min. In-memory (resets on deploy) |
-| Stripe Webhooks | ✅ Signature verified via `STRIPE_WEBHOOK_SECRET` in production |
+| Rate Limiting | ✅ Auth (10/min), campaigns (5/min), submissions (10/min), review (30/min), Stripe (10/min) |
+| Stripe Webhooks | ✅ Signature verified via STRIPE_WEBHOOK_SECRET (required) |
 | Session | ⚠️ Fallback to 'selah-secret' if `NEXTAUTH_SECRET` not set. Ensure strong random secret in Railway. |
 
 ### Known Limitations (Not MVP Blocking)
@@ -352,24 +351,22 @@ selah.fm/
 ## E2E Test Coverage
 
 ```
-🧪 Selah.fm E2E Test Suite v12  —  34/34 passing (100%)
+🧪 Selah.fm E2E Test Suite v13  —  43/43 passing (100%)
 ─────────────────────────────────────────────────
-1. Public Pages      6/6   ✅  Landing, browse, artists, creators, login, TOS/privacy
-2. Navigation        4/4   ✅  Campaigns, artists, creators nav links, logo link
-3. Browse            3/3   ✅  Loads, campaign count, card content
-4. Artists           1/1   ✅  Page loads with content
-5. Creators          1/1   ✅  Page loads with content
-6. Auth              3/3   ✅  Google button, email form, signup toggle
-7. Dashboard         1/1   ✅  Page returns 200
-8. Review            1/1   ✅  Page returns 200
-9. Earnings          1/1   ✅  Page returns 200
-10. Settings         1/1   ✅  Page returns 200
-11. Analytics        1/1   ✅  Page returns 200
-12. Content          1/1   ✅  Guidelines page loads
-13. Campaign Detail  1/1   ✅  Missing ID shows "not found"
-14. Onboarding       1/1   ✅  Page returns 200
-15. Mobile           2/2   ✅  375px viewport verified
-16. SEO              2/2   ✅  Sitemap XML + robots.txt
+1. Public Pages      8/8   ✅  Landing, browse, artists, creators, login, TOS/privacy, guidelines, open source
+2. Welcome Pages     2/2   ✅  Artist welcome, creator welcome
+3. Navigation        4/4   ✅  Campaigns, artists, creators nav links, logo link
+4. Browse            3/3   ✅  Loads, campaign count, create button
+5. Artists           1/1   ✅  Page loads
+6. Creators          1/1   ✅  Page loads
+7. Auth              4/4   ✅  Google button, email form, signup toggle, role selector
+8. Protected Pages   6/6   ✅  Dashboard, review, earnings, settings, analytics, onboarding
+9. Campaign Detail   1/1   ✅  Missing ID shows "not found"
+10. 404              1/1   ✅  Custom 404 page renders
+11. Mobile           3/3   ✅  375px: landing, browse, login
+12. SEO              2/2   ✅  Sitemap XML + robots.txt
+13. API Health       2/2   ✅  Health check 200, stats endpoint returns data
+14. Accessibility    2/2   ✅  Skip-to-content link, main landmark
 ─────────────────────────────────────────────────
 ```
 

@@ -34,8 +34,7 @@ Creator: Get paid per verified view (80% of CPM)
 | View Verification | YouTube Data API v3 + TikTok oEmbed |
 | Artist Data | Spotify Web API (client credentials) |
 | Deployment | Railway |
-| Testing | Playwright E2E (34 tests) |
-| Automation | Python orchestrator + DeepSeek AI agents |
+| Testing | Playwright E2E (43 tests) |
 
 ---
 
@@ -197,18 +196,6 @@ TEST_URL=http://localhost:3000 node e2e/test.js
 | GET/POST | `/api/admin/seed` | Seed demo data (admin only) |
 | GET | `/api/admin/overview` | Platform metrics (admin only) |
 | GET | `/api/admin/users` | User list (admin only) |
-
----
-
-## Autonomous Agents
-
-Selah.fm uses a fleet of AI agents for continuous improvement:
-
-```bash
-python3 orchestrator.py status    # View build progress
-python3 autonomous/agent.py once  # Run one improvement cycle
-python3 autonomous/agent.py plan  # Show improvement areas
-```
 
 ---
 
