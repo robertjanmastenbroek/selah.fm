@@ -104,16 +104,18 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
     }
   }, [open, fetchConversations]);
 
-  // ── Load messages + start polling when conversation active ────
+  // Only poll when a conversation is active AND the widget is open
   useEffect(() => {
-    if (!activeConv?.other_id) return;
+    if (!activeConv?.other_id || !open) {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      return;
+    }
     fetchMessages(activeConv.other_id);
-    // Poll every 10 seconds
     pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 10000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [activeConv, fetchMessages]);
+  }, [activeConv, open, fetchMessages]);
 
   // ── Auto-scroll to bottom when messages change ────────────────
   useEffect(() => {

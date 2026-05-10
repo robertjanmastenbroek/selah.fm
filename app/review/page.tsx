@@ -2,14 +2,13 @@
 
 import { useState } from 'react';
 import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
 import Header from '@/components/TopNav';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
 
 interface Submission {
   id: string; creator_name: string; track_title: string; platform: string;
@@ -22,11 +21,11 @@ export default function ReviewPage() {
   const [statusFilter, setStatusFilter] = useState('pending');
   const { addToast } = useToast();
 
-  const { data: campaignsData } = useSWR('/api/campaigns', fetcher, { revalidateOnFocus: false });
+  const { data: campaignsData } = useSWR('/api/campaigns', fetcher, swrConfig);
   const campaigns = (campaignsData?.campaigns || []).map((c: any) => ({ id: c.id, track_title: c.track_title }));
 
   const campaignId = selectedCampaign === 'all' ? 'all' : selectedCampaign;
-  const { data: submissions, error, isLoading, mutate } = useSWR(`/api/submissions?campaignId=${campaignId}`, fetcher, { revalidateOnFocus: false });
+  const { data: submissions, error, isLoading, mutate } = useSWR(`/api/submissions?campaignId=${campaignId}`, fetcher, swrConfig);
 
   const subs: Submission[] = submissions ? (Array.isArray(submissions) ? submissions.filter((s: Submission) => s.review_status === statusFilter) : []) : [];
 

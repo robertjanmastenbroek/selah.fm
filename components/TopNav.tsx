@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
 import NotificationBell from '@/components/NotificationBell';
 import ChatWidget from '@/components/ChatWidget';
 import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug } from 'lucide-react';
@@ -14,12 +15,8 @@ const mainLinks = [
   { href: '/creators', label: 'Creators' },
 ];
 
-const fetcher = (url: string) => fetch(url).then(r => r.json());
-
 export default function Header() {
-  const { data } = useSWR('/api/auth/me', fetcher, {
-    revalidateOnFocus: false, dedupingInterval: 30000,
-  });
+  const { data } = useSWR('/api/auth/me', fetcher, swrConfig);
   const profile = data?.user || null;
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

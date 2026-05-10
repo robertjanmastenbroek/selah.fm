@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
 import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
@@ -12,8 +14,8 @@ import { TikTok, Instagram, YouTube, Spotify } from '@/components/SocialIcons';
 import { User, Music4, DollarSign, Save, LogOut, Check, ArrowRight } from 'lucide-react';
 
 export default function SettingsPage() {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: profileData, isLoading: profileLoading } = useSWR('/api/auth/me', fetcher, swrConfig);
+  const profile = profileData?.user || null;
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [genres, setGenres] = useState('');
@@ -26,22 +28,18 @@ export default function SettingsPage() {
   const router = useRouter();
   const { addToast } = useToast();
 
+  // Fill form fields when profile loads (via shared SWR cache)
   useEffect(() => {
-    fetch('/api/auth/me').then(r=>r.json()).then(d=>{
-      if (d.user) {
-        setProfile(d.user);
-        setName(d.user.name||'');
-        setBio(d.user.bio||'');
-        setGenres(d.user.genres||'');
-        setCpm(d.user.preferred_cpm_cents?((d.user.preferred_cpm_cents/100).toFixed(0)):'');
-        setTikTok(d.user.tiktok_handle||'');
-        setInstagram(d.user.instagram_handle||'');
-        setYouTube(d.user.youtube_handle||'');
-        setFacebook(d.user.facebook_handle||'');
-      }
-      setLoading(false);
-    }).catch(()=>setLoading(false));
-  }, []);
+    if (!profile) return;
+    setName(profile.name || '');
+    setBio(profile.bio || '');
+    setGenres(profile.genres || '');
+    setCpm(profile.preferred_cpm_cents ? (profile.preferred_cpm_cents / 100).toFixed(0) : '');
+    setTikTok(profile.tiktok_handle || '');
+    setInstagram(profile.instagram_handle || '');
+    setYouTube(profile.youtube_handle || '');
+    setFacebook(profile.facebook_handle || '');
+  }, [profile]);
 
   const save = async () => {
     setSaving(true);
@@ -70,7 +68,7 @@ export default function SettingsPage() {
   ];
   const connectedCount = socials.filter(s=>s.value).length;
 
-  if (loading) return (
+  if (profileLoading) return (
     <div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A'}}>
       <Header /><main className="page-container max-w-lg"><Skeleton className="h-10 w-1/3 mb-8"/><Skeleton className="h-48 w-full mb-6 rounded-2xl"/><Skeleton className="h-40 w-full mb-6 rounded-2xl"/><Skeleton className="h-12 w-full rounded-xl"/></main>
     </div>

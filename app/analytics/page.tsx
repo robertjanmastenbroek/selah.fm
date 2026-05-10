@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
 import { Card, CardContent } from '@/components/ui/card';
@@ -117,19 +119,7 @@ function BarChart({ data, maxValue, color }: { data: { label: string; value: num
 }
 
 export default function AnalyticsPage() {
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetch('/api/analytics', { credentials: 'include' })
-      .then(r => {
-        if (!r.ok) throw new Error('Failed to load');
-        return r.json();
-      })
-      .then(d => { setData(d); setLoading(false); })
-      .catch(() => { setError('Could not load analytics'); setLoading(false); });
-  }, []);
+  const { data, error, isLoading } = useSWR('/api/analytics', fetcher, swrConfig);
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,7 +133,7 @@ export default function AnalyticsPage() {
           <p className="text-muted-foreground text-sm mb-8">Track your content performance and earnings across platforms.</p>
         </motion.div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-6">
             <div className="grid grid-cols-3 gap-3">
               {[1, 2, 3].map(i => <Card key={i}><CardContent className="p-5"><Skeleton className="h-4 w-16 mx-auto mb-2" /><Skeleton className="h-8 w-20 mx-auto" /></CardContent></Card>)}
@@ -201,12 +191,12 @@ export default function AnalyticsPage() {
                     </h2>
                     <p className="text-xs text-muted-foreground mb-6">Total verified views per platform</p>
                     <BarChart
-                      data={data!.byPlatform.map(p => ({ label: p.platform, value: p.total_views }))}
-                      maxValue={Math.max(...data!.byPlatform.map(p => p.total_views))}
+                      data={data!.byPlatform.map((p: any) => ({ label: p.platform, value: p.total_views }))}
+                      maxValue={Math.max(...data!.byPlatform.map((p: any) => p.total_views))}
                       color="linear-gradient(90deg, #5B7FFF, #8B9FFF)"
                     />
                     <div className="mt-6 grid grid-cols-3 gap-3">
-                      {data!.byPlatform.map(p => (
+                      {data!.byPlatform.map((p: any) => (
                         <div key={p.platform} className="text-center p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                           <div className="flex items-center justify-center gap-1.5 mb-1" style={{ color: platformColor(p.platform) }}>
                             {platformIcon(p.platform)}
@@ -232,11 +222,11 @@ export default function AnalyticsPage() {
                     <h2 className="font-semibold text-sm mb-1">Monthly earnings</h2>
                     <p className="text-xs text-muted-foreground mb-6">Last 6 months</p>
                     <BarChart
-                      data={data!.monthly.map(m => ({
+                      data={data!.monthly.map((m: any) => ({
                         label: m.month.slice(5),
                         value: m.earned_cents,
                       }))}
-                      maxValue={Math.max(...data!.monthly.map(m => m.earned_cents), 1)}
+                      maxValue={Math.max(...data!.monthly.map((m: any) => m.earned_cents), 1)}
                       color="linear-gradient(90deg, #81C784, #A5D6A7)"
                     />
                   </CardContent>
@@ -257,7 +247,7 @@ export default function AnalyticsPage() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {data!.recent.map((s, i) => (
+                      {data!.recent.map((s: any, i: number) => (
                         <motion.div
                           key={s.id}
                           initial={{ opacity: 0, y: 8 }}

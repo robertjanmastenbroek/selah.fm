@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
 import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
 import ImageUpload from '@/components/ImageUpload';
@@ -17,8 +18,6 @@ import { useToast } from '@/components/Toast';
 import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
 import { Plus } from 'lucide-react';
 
-const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
-
 interface Campaign {
   id: string; trackTitle: string; coverArt: string; cpmRate: number;
   budget: number; spent: number; views: number; submissions: number; status: string;
@@ -30,12 +29,11 @@ function DashboardContent() {
   const hireCreatorCpm = searchParams.get('cpm') || '';
   const hireCreatorName = searchParams.get('name') || '';
 
-  const { data: profileData } = useSWR('/api/auth/me', fetcher, { revalidateOnFocus: false });
+  // Profile is already fetched by TopNav via SWR shared cache — reuse it
+  const { data: profileData } = useSWR('/api/auth/me', fetcher, swrConfig);
   const profile = profileData?.user || null;
 
-  const { data: campaignsData, error, isLoading, mutate } = useSWR('/api/campaigns', fetcher, {
-    revalidateOnFocus: false, dedupingInterval: 5000,
-  });
+  const { data: campaignsData, error, isLoading, mutate } = useSWR('/api/campaigns', fetcher, swrConfig);
 
   const rawCampaigns = campaignsData?.campaigns || [];
   const campaigns: Campaign[] = rawCampaigns.map((c: any) => ({

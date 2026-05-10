@@ -2,10 +2,15 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import SupportWidgetClient from '@/components/SupportWidgetClient';
 import PageTransition from '@/components/PageTransition';
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
+import dynamic from 'next/dynamic';
+
+const SupportWidgetClient = dynamic(() => import('@/components/SupportWidgetClient'), {
+  ssr: false,
+  loading: () => null,
+});
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
@@ -36,6 +41,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={cn("font-sans", inter.variable)}>
       <head>
+        {/* Preconnect external domains to resolve DNS + TLS early */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link rel="dns-prefetch" href="https://accounts.google.com" />
+        <link rel="dns-prefetch" href="https://api.stripe.com" />
+        <link rel="dns-prefetch" href="https://js.stripe.com" />
         {gaId && (
           <>
             <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />

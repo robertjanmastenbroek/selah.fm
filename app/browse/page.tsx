@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -18,8 +19,6 @@ import { trackSubmitContent } from '@/lib/analytics';
 import { PlatformBadge } from '@/components/SocialIcons';
 
 interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; approved_submissions: string; recommended_hashtags: string; }
-
-const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
 
 function buildQuery(filters: Record<string, any>) {
   const params = new URLSearchParams();
@@ -40,10 +39,7 @@ export default function BrowsePage() {
   const { addToast } = useToast();
 
   const query = buildQuery(filters);
-  const { data, error, isLoading } = useSWR(`/api/campaigns?${query}`, fetcher, {
-    revalidateOnFocus: false,
-    dedupingInterval: 5000,
-  });
+  const { data, error, isLoading } = useSWR(`/api/campaigns?${query}`, fetcher, swrConfig);
 
   const campaigns: Campaign[] = data?.campaigns || [];
   const total = data?.total || 0;

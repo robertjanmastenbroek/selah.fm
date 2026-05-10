@@ -1,12 +1,11 @@
 'use client';
 
 import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
 import Header from '@/components/TopNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
 
 interface Submission {
   id: string; track_title: string; platform: string; views_verified: number;
@@ -15,10 +14,10 @@ interface Submission {
 }
 
 export default function EarningsPage() {
-  const { data: profileData } = useSWR('/api/auth/me', fetcher, { revalidateOnFocus: false });
+  const { data: profileData } = useSWR('/api/auth/me', fetcher, swrConfig);
   const profile = profileData?.user || null;
 
-  const { data, error, isLoading, mutate } = useSWR('/api/earnings', fetcher, { revalidateOnFocus: false });
+  const { data, error, isLoading, mutate } = useSWR('/api/earnings', fetcher, swrConfig);
   const earnings = data?.submissions ? data : { submissions: [], totalPaid: 0, totalPending: 0, totalEarned: 0 };
 
   const statusBadge = (s: Submission) => {
