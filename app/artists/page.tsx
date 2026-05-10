@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
 import CreatorAvatar from '@/components/CreatorAvatar';
@@ -57,7 +58,7 @@ export default function ArtistsPage() {
         ):(
           <div className="campaign-grid">
             {artists.map((a,i)=>{const spent=(a.total_spent_cents||0)/100;const views=a.total_views||0;return(
-              <motion.div key={a.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.06,duration:0.4}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex flex-col">
+              <motion.div key={a.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.06,duration:0.4}} whileHover={{y:-2}} onClick={() => router.push(`/artists/${a.id}`)} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex flex-col cursor-pointer">
                 {/* Gradient header */}
                 <div className="h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent relative flex items-center justify-center">
                   <CreatorAvatar name={a.display_name} size="xl"/>
@@ -91,7 +92,7 @@ export default function ArtistsPage() {
                     )})}
                   </div>
 
-                  <div className="mt-auto">
+                  <div className="mt-auto" onClick={e => e.stopPropagation()}>
                     <Link href={`/browse?search=${encodeURIComponent(a.display_name)}`}>
                       <Button variant="outline" size="sm" className="w-full text-xs group">
                         View campaigns <ArrowRight size={12} className="ml-1 transition-transform group-hover:translate-x-0.5"/>
