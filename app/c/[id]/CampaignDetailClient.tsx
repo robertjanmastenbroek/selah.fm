@@ -206,9 +206,15 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-2xl bg-white/[0.04] border border-primary/10 p-5 space-y-4">
                   <p className="text-sm font-semibold flex items-center gap-2"><Camera size={16} className="text-primary" />Submit your video</p>
                   <div className="grid grid-cols-3 gap-2">
-                    {[{ id: 'tiktok', label: 'TikTok', color: '#ff0050' }, { id: 'instagram', label: 'Reels', color: '#E1306C' }, { id: 'youtube', label: 'Shorts', color: '#FF0000' }].map(p => (
+                    {[
+                      { id: 'tiktok' as const, label: 'TikTok', bgClass: 'bg-[#ff005015]', textClass: 'text-[#ff0050]', letter: 'T' },
+                      { id: 'instagram' as const, label: 'Reels', bgClass: 'bg-[#E1306C15]', textClass: 'text-[#E1306C]', letter: 'R' },
+                      { id: 'youtube' as const, label: 'Shorts', bgClass: 'bg-[#FF000015]', textClass: 'text-[#FF0000]', letter: 'S' },
+                    ].map(p => (
                       <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: p.color + '15' }}><span style={{ color: p.color, fontSize: 12 }}>{p.label[0]}</span></div>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center ${p.bgClass}`}>
+                          <span className={`text-xs font-bold ${p.textClass}`}>{p.letter}</span>
+                        </div>
                         <span className="text-[10px] font-medium">{p.label}</span>
                       </button>
                     ))}

@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
     const redirectTo = userType === 'artist' ? '/onboarding' : '/browse';
     const response = NextResponse.json({ ok: true, type: userType, redirectTo });
-    setSessionCookie(response, { id: user.id, email: user.email, name: user.display_name, type: user.type }, sessionToken);
+    setSessionCookie(response, { id: user.id, email: user.email, name: user.display_name, type: user.type });
     return response;
   } catch (e: any) {
     console.error('Signup error:', e.message);
