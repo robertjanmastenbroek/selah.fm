@@ -15,6 +15,8 @@ import { PlatformBadge, Spotify } from '@/components/SocialIcons';
 import VideoEmbed from '@/components/VideoEmbed';
 import { Eye, DollarSign, Users, ArrowRight, ArrowLeft, Shield, Zap, CheckCircle, Clock, Star, Send, Music, TrendingUp, Heart, Share2, Copy } from 'lucide-react';
 import { trackSubmitContent } from '@/lib/analytics';
+import StripePaymentModal from '@/components/StripePaymentModal';
+import PaymentSuccess from '@/components/PaymentSuccess';
 
 export default function CampaignDetailClient({ id, initialCampaign }: { id: string; initialCampaign: any }) {
   const [campaign, setCampaign] = useState<any>(initialCampaign);
@@ -34,6 +36,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const [donorName, setDonorName] = useState('');
   const [donorMessage, setDonorMessage] = useState('');
   const [donating, setDonating] = useState(false);
+  const [paymentModal, setPaymentModal] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [successOpen, setSuccessOpen] = useState(false);
   const [donationSuccess, setDonationSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -89,6 +94,31 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           <Skeleton className="aspect-video rounded-2xl" />
           <div className="space-y-4"><Skeleton className="h-8 w-3/4" /><Skeleton className="h-6 w-1/2" /><Skeleton className="h-20 w-full" /><Skeleton className="h-12 w-full" /></div>
         </div>
+
+        {/* On-platform payment modal + celebration */}
+        <StripePaymentModal
+          open={paymentModal}
+          onClose={() => setPaymentModal(false)}
+          onSuccess={() => { setPaymentModal(false); setSuccessOpen(true); }}
+          clientSecret={clientSecret}
+          title={campaign.track_title}
+          subtitle="Your donation goes directly to the campaign budget"
+          coverArtUrl={campaign.cover_art_url}
+          amount={donationAmount}
+          mode="donation"
+          donorName={donorName}
+          donorMessage={donorMessage}
+        />
+        <PaymentSuccess
+          open={successOpen}
+          mode="donation"
+          amount={donationAmount}
+          campaignTitle={campaign.track_title}
+          campaignId={id}
+          donorName={donorName}
+          donorMessage={donorMessage}
+          onClose={() => setSuccessOpen(false)}
+        />
       </main>
     </div>
   );
@@ -126,14 +156,15 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           amount: donationAmount,
           donorName: donorName || undefined,
           message: donorMessage || undefined,
-          anonymous: !donorName,
         }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
+        setPaymentModal(true);
+        setDonating(false);
       } else {
-        addToast(data.error || 'Could not start donation', 'error');
+        addToast(data.error || 'Could not start payment', 'error');
         setDonating(false);
       }
     } catch {
@@ -658,6 +689,31 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </Button>
           </Link>
         </div>
+
+        {/* On-platform payment modal + celebration */}
+        <StripePaymentModal
+          open={paymentModal}
+          onClose={() => setPaymentModal(false)}
+          onSuccess={() => { setPaymentModal(false); setSuccessOpen(true); }}
+          clientSecret={clientSecret}
+          title={campaign.track_title}
+          subtitle="Your donation goes directly to the campaign budget"
+          coverArtUrl={campaign.cover_art_url}
+          amount={donationAmount}
+          mode="donation"
+          donorName={donorName}
+          donorMessage={donorMessage}
+        />
+        <PaymentSuccess
+          open={successOpen}
+          mode="donation"
+          amount={donationAmount}
+          campaignTitle={campaign.track_title}
+          campaignId={id}
+          donorName={donorName}
+          donorMessage={donorMessage}
+          onClose={() => setSuccessOpen(false)}
+        />
       </main>
     </div>
   );
