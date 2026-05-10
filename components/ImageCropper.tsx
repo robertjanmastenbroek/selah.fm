@@ -188,7 +188,7 @@ export default function ImageCropper({
         <div
           ref={containerRef}
           className="relative rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing select-none touch-none bg-[#0A0A0A] border border-white/[0.08]"
-          style={{ aspectRatio: `${aspectRatio}` }}
+          style={{ aspectRatio: `${aspectRatio}`, minHeight: 200 }}
           onMouseDown={handlePointerDown}
           onMouseMove={handlePointerMove}
           onMouseUp={handlePointerUp}
