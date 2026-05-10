@@ -86,13 +86,21 @@ function DashboardContent() {
   const createCampaign = async () => {
     setLoading(true);
     try {
-      await fetch('/api/campaigns', {
+      const res = await fetch('/api/campaigns', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq }),
       });
+      if (!res.ok) {
+        const err = await res.json();
+        addToast(err.error || 'Failed to create campaign', 'error');
+        setLoading(false);
+        return;
+      }
       fetchCampaigns();
       addToast('Campaign live', 'success');
-    } catch {}
+    } catch {
+      addToast('Network error — try again', 'error');
+    }
     setCoverArt(''); setTrackTitle(''); setCpm('1'); setBudget('25');
     setWizardStep(1); setStep('list'); setLoading(false);
   };
@@ -100,13 +108,14 @@ function DashboardContent() {
   const toggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'paused' : 'active';
     try {
-      await fetch(`/api/campaigns/${id}`, {
+      const res = await fetch(`/api/campaigns/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
+      if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to update', 'error'); return; }
       fetchCampaigns();
       addToast(newStatus === 'active' ? 'Campaign resumed' : 'Campaign paused', 'info');
-    } catch {}
+    } catch { addToast('Network error', 'error'); }
   };
 
   const estimatedViews = Math.floor((parseInt(budget || '0') / parseFloat(cpm || '1')) * 1000);
