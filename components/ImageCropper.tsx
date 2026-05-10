@@ -143,12 +143,15 @@ export default function ImageCropper({
       img.onload = () => {
         try {
           const c = document.createElement('canvas');
-          c.width = img.naturalWidth;
-          c.height = img.naturalHeight;
+          // Scale down to max 1200px wide to keep data URL under API body limits
+          const maxW = Math.min(img.naturalWidth, 1200);
+          const ratio = maxW / img.naturalWidth;
+          c.width = maxW;
+          c.height = Math.round(img.naturalHeight * ratio);
           const ctx = c.getContext('2d');
           if (!ctx) { reject(new Error('No context')); return; }
-          ctx.drawImage(img, 0, 0);
-          resolve(c.toDataURL('image/jpeg', 0.85));
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', 0.7));
         } catch { reject(new Error('Canvas error')); }
       };
       img.onerror = () => reject(new Error('Image load failed'));

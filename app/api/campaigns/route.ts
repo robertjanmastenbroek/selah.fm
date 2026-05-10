@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { generateCampaignDefaults } from '@/lib/defaults';
 
+// Allow larger request bodies for campaign creation (cover art can be 5MB+ as data URL)
+export const maxDuration = 30; // 30 seconds timeout
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
