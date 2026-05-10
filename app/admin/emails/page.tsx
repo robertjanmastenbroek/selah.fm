@@ -19,6 +19,7 @@ function EmailsContent() {
   const [fromAddr, setFromAddr] = useState('info');
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
 
   const loadLogs = async () => {
     setLoading(true);
@@ -41,13 +42,13 @@ function EmailsContent() {
       const res = await fetch('/api/admin/emails/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: to.trim(), subject: subject.trim(), body: body.trim(), from: fromAddr }),
+        body: JSON.stringify({ to: to.trim(), subject: subject.trim(), body: body.trim(), from: fromAddr, imageUrl: imageUrl.trim() || undefined }),
       });
       const data = await res.json();
       if (data.sent) {
         setStatus('Sent ✓');
         setCompose(false);
-        setTo(''); setSubject(''); setBody('');
+        setTo(''); setSubject(''); setBody(''); setImageUrl('');
         loadLogs();
       } else {
         setStatus(`Failed: ${data.reason || 'Unknown'}`);
@@ -114,6 +115,11 @@ function EmailsContent() {
           </div>
           <textarea value={body} onChange={e => setBody(e.target.value)} placeholder="Write your message..."
             className="w-full h-40 rounded-lg bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 resize-none" />
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground w-10 shrink-0">Img:</span>
+            <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Image URL (optional, for screenshots)"
+              className="flex-1 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" />
+          </div>
           <button onClick={handleSend} disabled={sending || !to || !subject || !body}
             className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity">
             {sending ? 'Sending...' : 'Send email'}
