@@ -14,7 +14,7 @@ function BugsContent() {
   const [bugs, setBugs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('new');
   const [toast, setToast] = useState('');
 
   const loadBugs = async () => {
