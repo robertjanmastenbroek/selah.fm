@@ -148,9 +148,11 @@ async function detectBug(message: string, history: any[]) {
     /\b(not working|doesn'?t work|isn'?t working|broken|broke)\b/,
     /\b(error|bug|glitch|crash|freeze|stuck|hang)\b/,
     /\b(won'?t load|can'?t load|not loading|empty|blank|missing)\b/,
-    /\b(can'?t (?:click|submit|save|upload|sign|log|create|edit|delete))\b/,
+    /\b(can'?t (?:click|submit|save|upload|sign|log|create|edit|delete|connect|link|crop|pay|deposit))\b/,
     /\b(404|500|page not found|something went wrong)\b/,
     /\b(showing (?:0|zero|nothing|no ))\b/,
+    /\b(problem|issue|fail|failing|won't connect)\b.*(?:stripe|connect|payment|account|upload|image|crop|save|campaign)/i,
+    /(?:gives?|shows?|throws?|returns?).*(?:error|problem|issue)/i,
   ];
 
   const isBugLike = bugPatterns.some(p => p.test(msg));

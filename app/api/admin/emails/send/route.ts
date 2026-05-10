@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
-    const { to, subject, body, from } = await request.json();
+    const { to, subject, body, imageUrl, from } = await request.json();
 
     if (!to || !subject || !body) {
       return NextResponse.json({ error: 'to, subject, and body are required' }, { status: 400 });
@@ -18,10 +18,15 @@ export async function POST(request: Request) {
     const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey) {
-      // Log as failed attempt
       await logEmail(to, subject, false, 'RESEND_API_KEY not configured');
       return NextResponse.json({ sent: false, reason: 'Email service not configured. Set RESEND_API_KEY in Railway.' }, { status: 500 });
     }
+
+    // Build HTML body with optional image
+    const imageHtml = imageUrl
+      ? `<img src="${imageUrl}" alt="Screenshot" style="max-width:100%;border-radius:8px;margin:12px 0" />`
+      : '';
+    const htmlBody = `<div style="font-family:system-ui,sans-serif;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;max-width:600px">${body.replace(/\n/g, '<br>')}${imageHtml}</div>`;
 
     const res = await fetch(RESEND_API, {
       method: 'POST',
@@ -33,7 +38,7 @@ export async function POST(request: Request) {
         from: fromAddress,
         to: [to],
         subject,
-        html: body.replace(/\n/g, '<br>'),
+        html: htmlBody,
       }),
     });
 
