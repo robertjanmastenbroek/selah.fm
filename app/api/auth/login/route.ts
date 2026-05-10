@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import crypto from 'crypto';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
@@ -26,9 +25,6 @@ export async function POST(request: Request) {
     if (!valid) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
-
-    const sessionToken = crypto.randomBytes(32).toString('hex');
-    await sql`UPDATE users SET session_token = ${sessionToken} WHERE id = ${user.id}`;
 
     const sessionData = {
       id: user.id,
