@@ -91,7 +91,7 @@ export default function ArtistsClient({ initialArtists }: { initialArtists: Arti
                   </div>
                   <div className="mt-auto" onClick={e => e.stopPropagation()}>
                     <Link href={`/browse?search=${encodeURIComponent(a.display_name)}`}>
-                      <Button variant="outline" size="sm" className="w-full text-xs group">View campaigns <ArrowRight size={12} className="ml-1 transition-transform group-hover:translate-x-0.5"/></Button>
+                      <Button variant="outline" size="sm" className="w-full text-xs group min-h-[44px]">View campaigns <ArrowRight size={12} className="ml-1 transition-transform group-hover:translate-x-0.5"/></Button>
                     </Link>
                   </div>
                 </div>
