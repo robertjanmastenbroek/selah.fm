@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Music } from 'lucide-react';
+import { trackSubmitContent } from '@/lib/analytics';
 import { PlatformBadge } from '@/components/SocialIcons';
 
 interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; approved_submissions: string; recommended_hashtags: string; }

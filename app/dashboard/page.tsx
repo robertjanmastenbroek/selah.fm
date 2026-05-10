@@ -288,7 +288,7 @@ function DashboardContent() {
                               if (amt < 5) { addToast('Minimum $5', 'error'); return; }
                               const r = await fetch('/api/stripe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: amt, campaignId: c.id }) });
                               const d = await r.json();
-                              d.url ? window.location.href = d.url : addToast('Stripe not configured', 'error');
+                              if (d.url) { trackFundCampaign(amt); window.location.href = d.url; } else { addToast('Stripe not configured', 'error'); }
                               setFundingId(null);
                             }}>Fund ${fundingAmount}</Button>
                           </div>
