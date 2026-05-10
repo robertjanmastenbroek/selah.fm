@@ -17,6 +17,18 @@ export async function GET(request: Request) {
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS min_video_length_seconds INTEGER`;
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS caption_requirements TEXT`;
     await sql`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS rejection_feedback TEXT`;
+    // Create bugs table if missing (for in-app bug reporting)
+    await sql`CREATE TABLE IF NOT EXISTS bugs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+      description TEXT NOT NULL,
+      steps_to_reproduce TEXT,
+      severity VARCHAR(20) NOT NULL DEFAULT 'medium' CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+      status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'in_progress', 'fixed', 'closed')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_bugs_status_new ON bugs(status, created_at) WHERE status = 'new'`;
 
     // ── Always clean up: fix NULL artist_ids first ───────────
     const artists = await sql`SELECT id FROM users WHERE user_type = 'artist' LIMIT 3`;
