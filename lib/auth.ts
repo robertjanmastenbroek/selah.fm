@@ -34,7 +34,7 @@ function getSecret(): string {
 
 // ── Session user type ────────────────────────────────────────────
 export interface SessionUser {
-  id: string;       // Database user UUID — eliminates DB lookups on every auth check
+  id?: string;      // Database user UUID (present in new sessions, may be absent in old ones)
   email: string;
   type: 'artist' | 'creator';
   name: string;
@@ -55,8 +55,8 @@ function parseSessionCookie(cookieValue: string): SessionUser | null {
 
     const user = JSON.parse(Buffer.from(payload, 'base64').toString());
 
-    // Validate shape
-    if (!user.id || !user.email || !user.type || !user.name) return null;
+    // Validate required fields (id is optional for backward compat with old sessions)
+    if (!user.email || !user.type || !user.name) return null;
     if (!['artist', 'creator'].includes(user.type)) return null;
 
     return user as SessionUser;
@@ -100,6 +100,16 @@ export function isAdminRequest(request: Request): boolean {
 
 // Re-export for convenience (used by admin routes)
 export { ADMIN_EMAILS };
+
+// ── Helper: resolve user ID from session (handles old sessions without id) ──
+export async function resolveUserId(session: SessionUser): Promise<string> {
+  if (session.id) return session.id;
+  // Old session without id — look up from DB
+  const { default: sql } = await import('@/lib/db');
+  const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
+  if (users.length === 0) throw new Error('User not found');
+  return users[0].id;
+}
 
 // ── Cookie helpers ───────────────────────────────────────────────
 function cookieOptions(maxAge: number) {
