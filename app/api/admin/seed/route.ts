@@ -11,6 +11,12 @@ export async function GET(request: Request) {
     // Create messages table if missing
     await sql`CREATE TABLE IF NOT EXISTS messages (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), sender_id UUID NOT NULL, receiver_id UUID NOT NULL, campaign_id UUID, content TEXT NOT NULL, read BOOLEAN NOT NULL DEFAULT false, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
     await sql`CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(sender_id, receiver_id)`;
+    // Ensure campaign metadata columns exist
+    await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS required_hashtags TEXT`;
+    await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS require_ftc BOOLEAN DEFAULT false`;
+    await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS min_video_length_seconds INTEGER`;
+    await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS caption_requirements TEXT`;
+    await sql`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS rejection_feedback TEXT`;
 
     // ── Always clean up: fix NULL artist_ids first ───────────
     const artists = await sql`SELECT id FROM users WHERE user_type = 'artist' LIMIT 3`;
