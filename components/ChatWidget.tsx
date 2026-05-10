@@ -8,7 +8,7 @@ import { ArrowLeft, Send, MessageCircle, X } from 'lucide-react';
 interface Conversation { id: string; other_name: string; other_id: string; other_avatar: string; content: string; created_at: string; unread: number; }
 interface Message { id: string; sender_id: string; receiver_id: string; content: string; created_at: string; sender_name: string; }
 
-export default function ChatWidget() {
+export default function ChatWidget({ startWithUserId }: { startWithUserId?: string }) {
   const [open, setOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
@@ -26,6 +26,19 @@ export default function ChatWidget() {
   const fetchMessages = (userId: string) => {
     fetch(`/api/messages?userId=${userId}`).then(r=>r.json()).then(d=>{if(Array.isArray(d)) setMessages(d);setOwnId(d[0]?.receiver_id||'');}).catch(()=>{});
   };
+
+  // Listen for external open-chat events
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.userId) {
+        setActiveConv({ other_id: detail.userId, other_name: detail.name || 'User', other_avatar: '', id: '', content: '', created_at: '', unread: 0 });
+        setOpen(true);
+      }
+    };
+    window.addEventListener('open-chat', handler);
+    return () => window.removeEventListener('open-chat', handler);
+  }, []);
 
   useEffect(() => { if (open) fetchConversations(); }, [open]);
 

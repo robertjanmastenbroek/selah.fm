@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TikTok, Instagram, YouTube } from '@/components/SocialIcons';
 import { DollarSign, Eye, CheckCircle, Music4, ArrowLeft } from 'lucide-react';
+import { MessageButton } from '@/components/MessageButton';
 
 interface Creator {
   id: string; display_name: string; bio: string; genres: string;
@@ -133,8 +134,9 @@ export default function CreatorProfilePage() {
 
         {/* Hire CTA */}
         <motion.div className="mb-6" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.3}}>
-          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-primary/10 p-6">
+          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-primary/10 p-6 space-y-3">
             <HireButton creatorId={creator.id} creatorName={creator.display_name} cpm={creator.preferred_cpm_cents}/>
+            <div className="text-center"><MessageButton userId={creator.id} name={creator.display_name} className="justify-center" /></div>
           </div>
         </motion.div>
       </main>
