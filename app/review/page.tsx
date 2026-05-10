@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import RatingPrompt from '@/components/RatingPrompt';
+import VideoEmbed from '@/components/VideoEmbed';
 
 interface Submission {
   id: string; creator_name: string; track_title: string; platform: string;
@@ -144,6 +145,7 @@ export default function ReviewPage() {
                       {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> → <span className="text-foreground font-semibold">${net.toFixed(2)}</span> creator earns
                     </CardContent></Card>
                     <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-accent-foreground hover:underline">Watch on {s.platform} →</a>
+                    {(s.content_url) && <VideoEmbed url={s.content_url} className="mt-2" />}
                     <div className="flex gap-2">
                       <Button variant="outline" onClick={() => handleAction(s.id, 'rejected')} className="flex-1">Reject</Button>
                       <Button onClick={() => handleAction(s.id, 'approved')} className="flex-1">Approve</Button>

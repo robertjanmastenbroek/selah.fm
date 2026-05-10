@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlatformBadge, Spotify } from '@/components/SocialIcons';
+import VideoEmbed from '@/components/VideoEmbed';
 import { Eye, DollarSign, Users, ArrowRight, ArrowLeft, Shield, Zap, CheckCircle, Clock, Star, Send, Music, TrendingUp, Heart, Share2, Copy } from 'lucide-react';
 import { trackSubmitContent } from '@/lib/analytics';
 
@@ -197,9 +198,14 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             animate={{ opacity: 1, y: 0 }}
             className="grid md:grid-cols-2 gap-6 md:gap-8 mb-8"
           >
-            {/* Left: Cover + Track Preview */}
+            {/* Left: Cover + Video */}
             <div className="space-y-4">
               <CampaignCover src={campaign.cover_art_url} title={campaign.track_title} className="aspect-video rounded-2xl" />
+
+              {/* Video embed if track or content URL is a video */}
+              {(campaign.track_url || campaign.content_assets_url) && (
+                <VideoEmbed url={campaign.content_assets_url || campaign.track_url} className="aspect-video" />
+              )}
 
               {/* Spotify: monthly listeners + link — no heavy iframe */}
               {spotifyData?.monthlyListeners ? (

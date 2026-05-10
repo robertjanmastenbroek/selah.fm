@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
@@ -26,7 +28,8 @@ interface Creator {
 function HireButton({ creatorId, creatorName, cpm }: { creatorId: string; creatorName: string; cpm: number }) {
   const [profile, setProfileState] = useState<any>(null);
   const router = useRouter();
-  useEffect(() => { fetch('/api/auth/me').then(r => r.json()).then(d => setProfileState(d.user)); }, []);
+  const { data: swrProfile } = useSWR('/api/auth/me', fetcher, swrConfig);
+  useEffect(() => { if (swrProfile?.user) setProfileState(swrProfile.user); }, [swrProfile]);
 
   if (!profile) return (
     <div className="text-center space-y-3"><h3 className="font-semibold">Want this creator to promote your music?</h3><p className="text-sm text-muted-foreground">Sign in as an artist to hire them for your campaign.</p><Button className="w-full" onClick={() => router.push(`/login?redirect=/creators/${creatorId}`)}>Sign in to hire</Button></div>
