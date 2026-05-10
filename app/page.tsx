@@ -17,7 +17,7 @@ function formatMoney(cents: number): string {
 
 export default function RootPage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [stats, setStats] = useState({ artists: 0, creators: 0, totalPaidCents: 0 });
+  const [stats, setStats] = useState({ artists: 0, creators: 0, totalPaidCents: 0, totalViews: 0, donors: 0 });
 
   useEffect(() => {
     fetch('/api/stats')
@@ -153,11 +153,14 @@ export default function RootPage() {
             <Link href="/login" className="inline-block text-sm text-muted-foreground hover:text-[#A0A0A0] transition-colors duration-200">
               Already have an account? Sign in
             </Link>
-            <p className="text-xs text-muted-foreground/50">
-              {stats.artists > 0 || stats.creators > 0
-                ? `Trusted by ${formatCount(stats.artists)} artists and ${formatCount(stats.creators)} creators`
-                : 'The marketplace for music promotion'}
-            </p>
+            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground/60 flex-wrap">
+              {stats.artists > 0 && <span>{formatCount(stats.artists)} artists</span>}
+              {stats.creators > 0 && <span>{formatCount(stats.creators)} creators</span>}
+              {stats.donors > 0 && <span>{formatCount(stats.donors)} supporters</span>}
+              {stats.totalViews > 0 && <span>{formatCount(stats.totalViews)} views</span>}
+              {stats.totalPaidCents > 0 && <span>{formatMoney(stats.totalPaidCents)} paid</span>}
+              {stats.artists === 0 && <span>The marketplace for music promotion</span>}
+            </div>
             <a
               href="/open-source"
               className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors mt-2"
