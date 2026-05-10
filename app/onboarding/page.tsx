@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Music4, Clapperboard, ArrowRight, Check, ArrowLeft, Sparkles } from 'lucide-react';
 
 const genreOptions = ['Pop','Hip-Hop','Electronic','Rock','Indie','R&B','Jazz','Classical','Country','Metal'];
-const platformOptions = ['TikTok','Instagram Reels','YouTube Shorts'];
+const platformOptions = ['TikTok','Instagram Reels','YouTube Shorts','Facebook'];
 const cpmPresets = [1, 2, 3, 5];
 
 export default function OnboardingPage() {
@@ -40,6 +40,7 @@ export default function OnboardingPage() {
           tiktok_handle: platforms.includes('TikTok') ? '@pending' : null,
           instagram_handle: platforms.includes('Instagram Reels') ? '@pending' : null,
           youtube_handle: platforms.includes('YouTube Shorts') ? '@pending' : null,
+          facebook_handle: platforms.includes('Facebook') ? '@pending' : null,
           preferredCpm: cpm * 100,
         }),
       });
