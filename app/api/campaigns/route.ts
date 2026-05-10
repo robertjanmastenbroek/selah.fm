@@ -13,12 +13,13 @@ export async function GET(request: Request) {
 
     // If user is authenticated, show only their campaigns (dashboard).
     // If not, show all active/draft campaigns (public browse).
-    const { getSession } = await import('@/lib/auth');
+    const { getSession, resolveUserId } = await import('@/lib/auth');
     const session = getSession(request);
     const isOwnerView = !!session;
 
     let campaigns;
     if (isOwnerView) {
+      const userId = session.id || await resolveUserId(session);
       campaigns = await sql`
         SELECT c.*, 
           COALESCE(v.approved_submissions, '0') as approved_submissions,
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
         FROM campaigns c
         LEFT JOIN campaign_stats v ON v.id = c.id
         LEFT JOIN users u ON u.id = c.artist_id
-        WHERE c.artist_id = ${session.id}
+        WHERE c.artist_id = ${userId}
         ORDER BY c.created_at DESC
         LIMIT ${limit}
       `;
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { validateCampaignInput } = await import('@/lib/validation');
-    const { getSession } = await import('@/lib/auth');
+    const { getSession, resolveUserId } = await import('@/lib/auth');
 
     const validation = validateCampaignInput(body);
     if (!validation.valid) {
@@ -107,8 +108,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    const userId = session.id || await resolveUserId(session);
+
     // Fetch display_name and genres for auto-generated defaults
-    const profile = await sql`SELECT display_name, genres FROM users WHERE id = ${session.id}`;
+    const profile = await sql`SELECT display_name, genres FROM users WHERE id = ${userId}`;
     const artistName = profile.length > 0 ? profile[0].display_name : session.name;
     const artistGenres = profile.length > 0 ? profile[0].genres : null;
 
@@ -128,7 +131,7 @@ export async function POST(request: Request) {
         required_hashtags, require_ftc, min_video_length_seconds, caption_requirements
       )
       VALUES (
-        ${session.id}, ${trackTitle}, ${trackUrl}, 
+        ${userId}, ${trackTitle}, ${trackUrl}, 
         ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100},
         'active', ${driveUrl || ''}, ${finalHashtags}, ${finalRequirements}, ${coverArtUrl || null},
         ${requiredHashtags || null}, ${requireFtc || false}, ${finalMinLength}, ${finalCaption}
