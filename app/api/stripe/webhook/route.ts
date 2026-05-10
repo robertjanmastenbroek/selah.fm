@@ -43,11 +43,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
-    // Prevent duplicate processing
-    const idempotencyKey = paymentIntent?.id || session?.id || '';
-    const existingPayout = await sql`SELECT id FROM submissions WHERE payout_reference = ${idempotencyKey} LIMIT 1`;
-    if (existingPayout.length > 0) {
-      return NextResponse.json({ received: true, duplicate: true });
+    // Idempotency: prevent duplicate processing
+    const intentId = paymentIntent?.id || session?.id || '';
+    if (intentId) {
+      const existing = await sql`SELECT id FROM campaign_donations WHERE payment_intent_id = ${intentId} LIMIT 1`;
+      if (existing.length > 0) return NextResponse.json({ received: true, duplicate: true });
     }
 
     const stripeFeeCents = Math.round(grossCents * 0.029 + 30);
