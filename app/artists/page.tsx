@@ -50,8 +50,8 @@ export default function ArtistsPage() {
         ):(
           <div className="campaign-grid">
             {artists.map((a,i)=>{const spent=(a.total_spent_cents||0)/100;const views=a.total_views||0;return(
-              <motion.div key={a.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.05,duration:0.4}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06]">
-                <div className="p-5 space-y-4">
+              <motion.div key={a.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.05,duration:0.4}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] flex flex-col">
+                <div className="p-5 flex flex-col flex-1 space-y-4">
                   <div className="flex items-center gap-3">
                     <CreatorAvatar name={a.display_name} size="md"/>
                     <div><h3 className="font-semibold">{a.display_name}</h3><p className="text-xs text-muted-foreground">{a.active_campaigns} active · {a.total_campaigns} total</p></div>
@@ -61,7 +61,7 @@ export default function ArtistsPage() {
                     <div><div className="font-bold text-sm">{views>=1000?`${(views/1000).toFixed(1)}K`:views}</div><div className="text-muted-foreground text-[10px]">views</div></div>
                     <div><div className="font-bold text-sm">{a.total_submissions}</div><div className="text-muted-foreground text-[10px]">submissions</div></div>
                   </div>
-                  <Link href={`/browse?search=${encodeURIComponent(a.display_name)}`}><Button variant="outline" size="sm" className="w-full text-xs">View campaigns →</Button></Link>
+                  <div className="mt-auto"><Link href={`/browse?search=${encodeURIComponent(a.display_name)}`}><Button variant="outline" size="sm" className="w-full text-xs">View campaigns →</Button></Link></div>
                 </div>
               </motion.div>
             )})}

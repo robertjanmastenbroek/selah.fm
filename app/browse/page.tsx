@@ -74,9 +74,9 @@ export default function BrowsePage() {
           <>
             <div className="campaign-grid">
               {campaigns.map((c,i)=>{const isJoined=joined.has(c.id);const cpm=c.cpm_rate_cents/100;const budget=c.total_budget_cents/100;const remaining=c.budget_remaining_cents/100;const pct=budget>0?((budget-remaining)/budget)*100:0;return(
-                <motion.div key={c.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.05,duration:0.4,ease:[0.25,0.1,0.25,1]}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden">
+                <motion.div key={c.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.05,duration:0.4,ease:[0.25,0.1,0.25,1]}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex flex-col">
                   <CampaignCover src={c.cover_art_url} title={c.track_title} className="h-40"/>
-                  <div className="p-5 space-y-4">
+                  <div className="p-5 flex flex-col flex-1 space-y-4">
                     <div className="flex items-start justify-between">
                       <div>
                         <Link href={`/c/${c.id}`} className="font-semibold text-lg leading-tight hover:text-primary transition-colors">{c.track_title}</Link>
@@ -87,6 +87,7 @@ export default function BrowsePage() {
                     <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{c.approved_submissions||'0'} submissions</span><span>{pct>0?`${Math.round(pct)}% paid`:`${(c as any).budget_consumed_pct||0}% used`}</span></div>
                     <Progress value={Math.min(pct,100)} className="h-1.5"/>
                     {c.recommended_hashtags&&<p className="text-xs text-muted-foreground truncate">{c.recommended_hashtags}</p>}
+                    <div className="mt-auto">
                     {!isJoined?(
                       <Button onClick={()=>handleJoin(c.id)} className="w-full transition-all duration-200 hover:shadow-[0_0_20px_rgba(91,127,255,0.2)]">Join campaign</Button>
                     ):submitting===c.id?(
@@ -102,6 +103,7 @@ export default function BrowsePage() {
                         </div>
                       </div>
                     )}
+                    </div>
                   </div>
                 </motion.div>
               )})}

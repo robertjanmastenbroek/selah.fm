@@ -50,8 +50,8 @@ export default function CreatorsPage() {
         ):(
           <div className="campaign-grid">
             {creators.map((c,i)=>{const earned=(c.total_earned_cents||0)/100;const views=c.total_verified_views||0;const acceptance=Math.round((c.acceptance_rate||0)*100);return(
-              <motion.div key={c.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.05,duration:0.4}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06]">
-                <div className="p-5 space-y-4">
+              <motion.div key={c.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.05,duration:0.4}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] flex flex-col">
+                <div className="p-5 flex flex-col flex-1 space-y-4">
                   <div className="flex items-center gap-3">
                     <Link href={`/creators/${c.id}`}><CreatorAvatar src={c.profile_image_url} name={c.display_name||'Creator'} size="md"/></Link>
                     <div className="min-w-0">
@@ -71,7 +71,7 @@ export default function CreatorsPage() {
                     <div><div className="font-bold text-sm">{views>=1000?`${(views/1000).toFixed(1)}K`:views}</div><div className="text-muted-foreground text-[10px]">views</div></div>
                     <div><div className="font-bold text-sm">{acceptance}%</div><div className="text-muted-foreground text-[10px]">accepted</div></div>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mt-auto">
                     <span className="text-xs text-muted-foreground">{c.total_submissions||0} submissions</span>
                     <Link href={`/creators/${c.id}`}><Button variant="outline" size="sm" className="text-xs">View profile →</Button></Link>
                   </div>
