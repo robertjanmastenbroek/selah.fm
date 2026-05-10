@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Megaphone, FileCheck, Banknote, TrendingUp } from 'lucide-react';
+import { Users, Megaphone, FileCheck, Banknote, TrendingUp, Bug } from 'lucide-react';
 
 export default function AdminOverviewPage() {
   const [data, setData] = useState<any>(null);
@@ -21,6 +21,14 @@ export default function AdminOverviewPage() {
     { label: 'Paid Payouts', value: data.paidPayouts, icon: Banknote },
   ];
 
+  const [bugs, setBugs] = useState<number>(0);
+  useEffect(() => {
+    fetch('/api/bugs')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setBugs(d.filter((b: any) => b.status === 'new').length); })
+      .catch(() => {});
+  }, []);
+
   return (
     <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="space-y-8">
       <div><h1 className="text-2xl font-bold mb-1">Admin Overview</h1><p className="text-muted-foreground text-sm">Platform metrics at a glance.</p></div>
@@ -33,6 +41,12 @@ export default function AdminOverviewPage() {
             <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
           </div>
         )})}
+        {/* Bugs card */}
+        <a href="/admin/bugs" className="block rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5 hover:border-red-500/20 transition-all">
+          <Bug size={20} className="text-red-400 mb-3" strokeWidth={1.5}/>
+          <div className="text-2xl font-bold">{bugs}</div>
+          <div className="text-xs text-muted-foreground mt-1">New Bugs</div>
+        </a>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -50,6 +64,7 @@ export default function AdminOverviewPage() {
           <h3 className="font-semibold text-sm mb-4 flex items-center gap-2"><TrendingUp size={16} className="text-primary/60"/>Quick Actions</h3>
           <div className="space-y-2">
             <a href="/admin/users" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Manage Users →</a>
+            <a href="/admin/bugs" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Review Bugs →</a>
             <a href="/admin/campaigns" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">View Campaigns →</a>
             <a href="/admin/seed" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Seed Demo Data →</a>
             <a href="/api/admin/seed" target="_blank" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Run Seeder (API) →</a>

@@ -86,14 +86,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Mobile nav */}
+      {/* Mobile nav — scrollable, all items */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/[0.02] backdrop-blur-xl border-t border-white/[0.06] flex overflow-x-auto">
         {nav.map(item => {
           const I = item.icon;
           const active = pathname === item.href;
           return (
-            <Link key={item.href} href={item.href} className={`flex flex-col items-center gap-0.5 px-3 py-2 text-[10px] shrink-0 ${active ? 'text-primary' : 'text-muted-foreground'}`}>
-              <I size={16} strokeWidth={1.5} />{item.label}
+            <Link key={item.href} href={item.href} className={`flex flex-col items-center gap-0.5 px-2 py-1.5 text-[9px] shrink-0 ${active ? 'text-primary' : 'text-muted-foreground'}`}>
+              <I size={15} strokeWidth={1.5} />{item.label}
             </Link>
           );
         })}
