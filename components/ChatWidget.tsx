@@ -45,7 +45,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
   useEffect(() => {
     if (!activeConv) return;
     fetchMessages(activeConv.other_id);
-    pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 3000);
+    pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 10000);
     return () => clearInterval(pollRef.current);
   }, [activeConv]);
 
