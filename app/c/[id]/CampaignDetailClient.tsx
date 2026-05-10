@@ -191,6 +191,27 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
     <div className="min-h-screen" style={{ background: bg }}>
       <Header />
       <main className="max-w-5xl mx-auto px-4 py-6 md:py-10">
+        {/* Donation success banner */}
+        {donationSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 text-center"
+          >
+            <CheckCircle size={28} className="mx-auto mb-2 text-emerald-400" />
+            <h3 className="font-bold text-lg mb-1">Thank you for your support!</h3>
+            <p className="text-sm text-muted-foreground">
+              Your donation has been added to this campaign&apos;s budget. The artist has been notified and will see your message.
+            </p>
+            <button
+              onClick={() => setDonationSuccess(false)}
+              className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
+
         {/* ── HERO SECTION (Above the Fold) ────────────────────── */}
         <div ref={heroRef}>
           <motion.div

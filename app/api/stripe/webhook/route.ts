@@ -59,21 +59,49 @@ export async function POST(request: Request) {
             VALUES (${campaignId}, ${donorId || null}, ${netCents}, ${displayName}, ${message || null}, ${isAnon})
           `;
 
-          // Notify the artist
+          // Notify the artist + send email
           const campaignRows = await sql`
-            SELECT artist_id, track_title FROM campaigns WHERE id = ${campaignId}
+            SELECT c.artist_id, c.track_title, u.email, u.display_name
+            FROM campaigns c JOIN users u ON u.id = c.artist_id
+            WHERE c.id = ${campaignId}
           `;
           if (campaignRows.length > 0) {
+            const artist = campaignRows[0];
             const donationDollars = (netCents / 100).toFixed(2);
+            
+            // In-app notification
             await sql`
               INSERT INTO notifications (user_id, type, message, link)
               VALUES (
-                ${campaignRows[0].artist_id},
+                ${artist.artist_id},
                 'earning',
-                ${`${displayName} donated $${donationDollars} to "${campaignRows[0].track_title}" — it's been added to your campaign budget!`},
+                ${`${displayName} donated $${donationDollars} to "${artist.track_title}" — it's been added to your campaign budget!`},
                 ${`/c/${campaignId}`}
               )
             `;
+
+            // Email notification
+            const resendKey = process.env.RESEND_API_KEY;
+            if (resendKey && artist.email) {
+              try {
+                await fetch('https://api.resend.com/emails', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendKey}` },
+                  body: JSON.stringify({
+                    from: 'Selah.fm <info@selah.fm>',
+                    to: [artist.email],
+                    subject: `${displayName} donated $${donationDollars} to "${artist.track_title}"`,
+                    html: `<div style="font-family:system-ui,sans-serif;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;max-width:480px">
+                      <h2 style="color:#5B7FFF">Someone supported your campaign!</h2>
+                      <p style="color:#A0A0A0;font-size:24px;font-weight:bold">$${donationDollars}</p>
+                      <p style="color:#A0A0A0">${displayName} donated to your campaign <strong>"${artist.track_title}"</strong>${message ? ` with a message: "${message}"` : '.'}</p>
+                      <p style="color:#A0A0A0">The amount has been added to your campaign budget.</p>
+                      <a href="https://selah.fm/c/${campaignId}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#5B7FFF;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">View campaign</a>
+                    </div>`,
+                  }),
+                }).catch(() => {});
+              } catch {}
+            }
           }
         } catch (donationErr) {
           console.error('Donation recording failed:', donationErr);
