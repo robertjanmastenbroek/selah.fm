@@ -309,19 +309,19 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 {/* Earnings calculator */}
                 <div className="space-y-2">
                   <label className="text-[10px] text-muted-foreground">Estimate your earnings:</label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Input
                       type="number"
                       value={viewEstimate}
                       onChange={e => setViewEstimate(parseInt(e.target.value) || 0)}
                       min={1000}
                       step={1000}
-                      className="w-32 text-sm"
+                      className="w-24 sm:w-32 text-sm"
                     />
                     <span className="text-xs text-muted-foreground">views</span>
-                    <span className="text-xs text-muted-foreground">→</span>
-                    <span className="text-lg font-bold text-primary">${estimatedEarnings}</span>
-                    <span className="text-xs text-muted-foreground">earned (80%)</span>
+                    <span className="text-xs text-muted-foreground hidden sm:inline">→</span>
+                    <span className="text-lg font-bold text-primary ml-auto sm:ml-0">${estimatedEarnings}</span>
+                    <span className="text-xs text-muted-foreground">earned</span>
                   </div>
                 </div>
 
@@ -423,9 +423,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
               {/* Social proof */}
               <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                <span className="flex items-center gap-1"><Users size={12} /> {submissions} creators submitted</span>
-                <span className="flex items-center gap-1"><Eye size={12} /> {views >= 1000 ? `${(views / 1000).toFixed(1)}K` : views} views</span>
-                <span className="flex items-center gap-1"><DollarSign size={12} /> ${spent.toFixed(0)} paid out</span>
+                <span className="flex items-center gap-1 whitespace-nowrap"><Users size={12} /> {submissions} creators</span>
+                <span className="flex items-center gap-1 whitespace-nowrap"><Eye size={12} /> {views >= 1000 ? `${(views / 1000).toFixed(1)}K` : views} views</span>
+                <span className="flex items-center gap-1 whitespace-nowrap"><DollarSign size={12} /> ${spent.toFixed(0)} paid</span>
               </div>
             </div>
           </motion.div>
@@ -434,9 +434,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
         {/* ── BUDGET BAR ──────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="mb-8">
           <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
               <span className="text-sm text-muted-foreground">Campaign budget</span>
-              <span className="text-sm font-medium">${spent.toFixed(0)} of ${budget.toFixed(0)} spent</span>
+              <span className="text-sm font-medium whitespace-nowrap">${spent.toFixed(0)} of ${budget.toFixed(0)} spent</span>
             </div>
             <Progress value={progress} className="h-2" />
             <p className="text-[10px] text-muted-foreground/60 mt-2">Budget is used to pay creators. The more submissions, the faster it goes!</p>
@@ -460,13 +460,13 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={handleShare}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs font-medium hover:bg-white/[0.08] transition-colors active:scale-[0.97]"
                 >
                   {copied ? <CheckCircle size={14} className="text-success" /> : <Share2 size={14} />}
-                  {copied ? 'Copied!' : 'Share'}
+                  <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
                 </button>
                 {!showSupport ? (
                   <button
@@ -525,7 +525,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid sm:grid-cols-2 gap-3">
                       <Input
                         value={donorName}
                         onChange={e => setDonorName(e.target.value)}
@@ -639,7 +639,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 { q: 'How long does approval take?', a: 'Artists typically review submissions within 24–48 hours. You\'ll get a notification when they decide.' },
               ].map((faq, i) => (
                 <details key={i} className="group">
-                  <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-1">
+                  <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2 min-h-[44px] flex items-center">
                     {faq.q}
                   </summary>
                   <p className="text-sm text-muted-foreground mt-1 pl-1">{faq.a}</p>

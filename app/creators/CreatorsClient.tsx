@@ -86,16 +86,16 @@ export default function CreatorsClient({ initialCreators }: { initialCreators: C
                       <div key={s.label} className="text-center"><I size={12} className="mx-auto mb-1 text-primary/40"/><div className="text-sm font-bold">{s.value}</div><div className="text-[10px] text-muted-foreground">{s.label}</div></div>
                     )})}
                   </div>
-                  <div className="mt-auto flex items-center justify-between">
+                  <div className="mt-auto flex items-center justify-between flex-wrap gap-2">
                     <span className="text-xs text-muted-foreground">{c.total_submissions||0} submissions</span>
                     <div className="flex gap-2">
-                      <a href={`/dashboard?hire=${c.id}&cpm=${(c.preferred_cpm_cents/100).toFixed(0)}&name=${encodeURIComponent(c.display_name)}`} onClick={e => e.stopPropagation()}>
-                        <Button variant="default" size="sm" className="text-xs bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.97]">
+                      <a href={`/dashboard?hire=${c.id}&cpm=${(c.preferred_cpm_cents/100).toFixed(0)}&name=${encodeURIComponent(c.display_name)}`} onClick={e => e.stopPropagation()} className="flex-1">
+                        <Button variant="default" size="sm" className="text-xs bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.97] w-full min-w-[60px]">
                           Hire
                         </Button>
                       </a>
-                      <Link href={`/creators/${c.id}`}>
-                        <Button variant="outline" size="sm" className="text-xs group">View <ArrowRight size={12} className="ml-1 transition-transform group-hover:translate-x-0.5"/></Button>
+                      <Link href={`/creators/${c.id}`} className="flex-1">
+                        <Button variant="outline" size="sm" className="text-xs group w-full min-w-[60px]">View</Button>
                       </Link>
                     </div>
                   </div>
