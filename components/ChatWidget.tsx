@@ -262,7 +262,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
                 <div>
                   {conversations.length === 0 ? (
                     <div className="p-8 text-center text-sm text-muted-foreground">
-                      <MessageCircle size={32} className="mx-auto mb-3 text-muted-foreground/20" strokeWidth={1} />
+                      <img src="/images/empty-messages.png" alt="No messages" className="mx-auto mb-4 w-24 h-24 object-contain opacity-70" />
                       <p>No messages yet</p>
                       <p className="text-xs mt-1 text-muted-foreground/60">
                         Find artists or creators and click Message to start a conversation.

@@ -127,10 +127,10 @@ export default function EarningsPage() {
               {data?.submissions.length === 0 ? (
                 <Card className="text-center py-16 animate-fade-in">
                   <CardContent>
-                    <p className="text-4xl mb-4 opacity-10">💰</p>
+                    <img src="/images/empty-earnings.png" alt="No earnings yet" className="mx-auto mb-6 w-40 h-40 object-contain opacity-80" />
                     <h2 className="text-lg font-medium mb-2">No earnings yet</h2>
-                    <p className="text-muted-foreground text-sm">
-                      Browse campaigns, submit content, and start earning.
+                    <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                      Browse campaigns, submit content, and start earning per verified view.
                     </p>
                   </CardContent>
                 </Card>

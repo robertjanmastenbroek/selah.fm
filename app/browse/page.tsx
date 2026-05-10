@@ -76,11 +76,13 @@ export default function BrowsePage() {
         {loading ? (
           <div className="campaign-grid">{[1,2,3].map(i=><div key={i} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06]"><div className="p-5 space-y-3"><Skeleton className="h-40 w-full rounded-t-2xl"/><Skeleton className="h-5 w-2/3"/><Skeleton className="h-4 w-1/3"/><Skeleton className="h-2 w-full"/><Skeleton className="h-10 w-full"/></div></div>)}</div>
         ) : campaigns.length === 0 ? (
-          <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="text-center py-20">
-            <Music size={48} className="mx-auto mb-6 text-muted-foreground/20" strokeWidth={1}/>
+          <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="text-center py-16">
+            {Object.keys(filters).length === 0 && (
+              <img src="/images/empty-campaigns.png" alt="No campaigns yet" className="mx-auto mb-6 w-48 h-48 object-contain opacity-80" />
+            )}
             <h2 className="text-xl font-semibold mb-2">{Object.keys(filters).length>0?'No matching campaigns':'No campaigns yet'}</h2>
-            <p className="text-muted-foreground text-sm mb-6">{Object.keys(filters).length>0?'Try adjusting your filters.':'Be the first to create one.'}</p>
-            {Object.keys(filters).length>0?<Button variant="outline" onClick={()=>{setFilters({});fetchCampaigns();}}>Clear filters</Button>:null}
+            <p className="text-muted-foreground text-sm mb-6">{Object.keys(filters).length>0?'Try adjusting your filters.':"Be the first to create one — and share it with your fans!"}</p>
+            {Object.keys(filters).length>0?<Button variant="outline" onClick={()=>{setFilters({});fetchCampaigns();}}>Clear filters</Button>:<Link href="/dashboard"><Button>Create a campaign</Button></Link>}
           </motion.div>
         ) : (
           <>

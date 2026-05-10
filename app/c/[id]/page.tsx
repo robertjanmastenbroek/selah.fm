@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       return { title: 'Campaign not found — Selah.fm' };
     }
     const c = campaigns[0];
-    const imageUrl = c.cover_art_url || 'https://selah.fm/images/og-image.svg';
+    const imageUrl = c.cover_art_url || 'https://selah.fm/images/og-social.png';
     const desc = c.requirements
       ? `Promote "${c.track_title}" on TikTok, Reels & Shorts. ${c.requirements.slice(0, 120)}…`
       : `Promote "${c.track_title}" on TikTok, Instagram Reels, and YouTube Shorts. Creators earn per verified view.`;
