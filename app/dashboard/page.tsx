@@ -69,7 +69,19 @@ function DashboardContent() {
   const [requireFtc, setRequireFtc] = useState(false);
   const [minVideoLength, setMinVideoLength] = useState('');
   const [captionReq, setCaptionReq] = useState('');
+  const [platforms, setPlatforms] = useState<string[]>(['tiktok', 'instagram', 'youtube', 'facebook']);
   const [shareCampaign, setShareCampaign] = useState<{ id: string; title: string } | null>(null);
+
+  const togglePlatform = (p: string) => {
+    setPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
+  };
+
+  const platformOptions = [
+    { id: 'tiktok', label: 'TikTok', color: '#ff0050' },
+    { id: 'instagram', label: 'Reels', color: '#E1306C' },
+    { id: 'youtube', label: 'Shorts', color: '#FF0000' },
+    { id: 'facebook', label: 'Facebook', color: '#1877F2' },
+  ];
 
   const totalViews = campaigns.reduce((s, c) => s + c.views, 0);
   const totalSpent = campaigns.reduce((s, c) => s + c.spent, 0);
@@ -81,7 +93,7 @@ function DashboardContent() {
     try {
       const res = await fetch('/api/campaigns', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq }),
+        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq, platforms }),
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to create campaign', 'error'); setLoading(false); return; }
       const created = await res.json();
@@ -124,6 +136,11 @@ function DashboardContent() {
     setMinVideoLength(raw.min_video_length_seconds ? String(raw.min_video_length_seconds) : '');
     setCaptionReq(raw.caption_requirements || '');
     setCoverArt(raw.cover_art_url || '');
+    // Parse platforms from JSON array or default to all
+    try {
+      const existingPlatforms = raw.platforms ? JSON.parse(raw.platforms) : null;
+      if (Array.isArray(existingPlatforms)) setPlatforms(existingPlatforms);
+    } catch { setPlatforms(['tiktok', 'instagram', 'youtube', 'facebook']); }
   };
 
   const handleEditSave = async () => {
@@ -142,6 +159,7 @@ function DashboardContent() {
           minVideoLength: minVideoLength ? parseInt(minVideoLength) : null,
           captionRequirements: captionReq,
           coverArtUrl: coverArt || undefined,
+          platforms,
         }),
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to save', 'error'); setEditSaving(false); return; }
@@ -196,7 +214,47 @@ function DashboardContent() {
                 </div>
                 <Input value={minVideoLength} onChange={e => setMinVideoLength(e.target.value)} type="number" placeholder="Minimum video length (seconds)" />
                 <Input value={captionReq} onChange={e => setCaptionReq(e.target.value)} placeholder="Caption requirements (optional)" />
-                <Input value={requirements} onChange={e => setRequirements(e.target.value)} placeholder="Content requirements & guidelines" />
+                
+                {/* Platform selector */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Accepted platforms</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {platformOptions.map(p => {
+                      const active = platforms.includes(p.id);
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => togglePlatform(p.id)}
+                          className={`flex items-center gap-2 p-2.5 rounded-xl border text-sm font-medium transition-all ${
+                            active
+                              ? 'border-primary/40 bg-primary/[0.06] text-foreground'
+                              : 'border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:border-white/[0.12]'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                            active ? 'border-primary bg-primary' : 'border-white/[0.12]'
+                          }`}>
+                            {active && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
+                          </div>
+                          <span>{p.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Content requirements & guidelines</label>
+                  <textarea
+                    value={requirements}
+                    onChange={e => setRequirements(e.target.value)}
+                    placeholder={`Tell creators what kind of content you want:\n\n• Dance challenge using the chorus hook\n• Behind-the-scenes studio footage\n• Reaction video to the drop\n• Duet with your vocals\n• 15-30 seconds minimum\n• Show your face or keep it anonymous\n\nBe specific — the clearer your requirements, the better the submissions.`}
+                    rows={6}
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/30 resize-y"
+                  />
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <Button variant="outline" onClick={() => setWizardStep(1)} className="flex-1">Back</Button>
                   <Button onClick={() => setWizardStep(3)} disabled={!trackTitle} className="flex-1">Continue</Button>
@@ -317,7 +375,28 @@ function DashboardContent() {
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-xs text-muted-foreground mb-1 block">Requirements & guidelines</label>
-                    <Input value={requirements} onChange={e => setRequirements(e.target.value)} className="text-sm" />
+                    <textarea value={requirements} onChange={e => setRequirements(e.target.value)} rows={4} className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/30 resize-y" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-2 block">Accepted platforms</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {platformOptions.map(p => {
+                        const active = platforms.includes(p.id);
+                        return (
+                          <button key={p.id} type="button" onClick={() => togglePlatform(p.id)}
+                            className={`flex items-center gap-1.5 p-2 rounded-lg border text-xs font-medium transition-all ${
+                              active ? 'border-primary/40 bg-primary/[0.06]' : 'border-white/[0.06] bg-white/[0.02] text-muted-foreground'
+                            }`}>
+                            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${
+                              active ? 'border-primary bg-primary' : 'border-white/[0.12]'
+                            }`}>
+                              {active && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
+                            </div>
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pt-2">
