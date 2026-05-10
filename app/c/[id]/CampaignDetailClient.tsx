@@ -293,9 +293,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               <div>
                 <Badge variant="outline" className="border-primary/20 text-primary text-xs mb-3">{campaign.status === 'active' ? '🟢 Active campaign' : campaign.status === 'paused' ? '⏸ Paused — creators have 7 days grace period' : campaign.status}</Badge>
                 <h1 className="text-2xl md:text-4xl font-bold tracking-tight mb-2">{campaign.track_title}</h1>
-                <a href={campaign.track_url} target="_blank" rel="noopener" className="text-primary hover:underline text-sm inline-flex items-center gap-1">
-                  <Spotify size={14} /> Listen on Spotify
-                </a>
               </div>
 
               {/* Earnings Card */}
@@ -456,7 +453,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   <p className="text-xs text-muted-foreground">
                     {totalRaised > 0
                       ? `$${totalRaised.toFixed(2)} raised from ${donations.count} supporter${donations.count !== 1 ? 's' : ''}`
-                      : 'Be the first to support this artist'}
+                      : 'Not a video creator? Share or donate to help this artist reach more listeners.'}
                   </p>
                 </div>
               </div>
