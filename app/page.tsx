@@ -117,13 +117,11 @@ export default function RootPage() {
                     </motion.div>
                     <h2 className="text-2xl font-semibold text-foreground mb-2 tracking-tight">{card.title}</h2>
                     <p className="text-sm text-muted-foreground mb-8 leading-relaxed max-w-[220px]">{card.desc}</p>
-                    <motion.div
-                      className="w-full py-3 px-6 rounded-xl bg-primary text-primary-foreground font-medium text-sm text-center"
-                      whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(91,127,255,0.3)' }}
-                      whileTap={{ scale: 0.96 }}
-                    >
-                      {card.label}
-                    </motion.div>
+                    <Link href={card.href} className="block w-full">
+                      <div className="w-full py-3 px-6 rounded-xl bg-primary text-primary-foreground font-medium text-sm text-center active:scale-[0.97] transition-transform hover:shadow-[0_0_30px_rgba(91,127,255,0.3)]">
+                        {card.label}
+                      </div>
+                    </Link>
                   </motion.article>
                 </Link>
               );
