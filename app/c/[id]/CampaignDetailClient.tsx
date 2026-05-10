@@ -15,9 +15,9 @@ import { PlatformBadge, Spotify } from '@/components/SocialIcons';
 import { Eye, DollarSign, Users, ArrowRight, ArrowLeft, Shield, Zap, CheckCircle, Clock, Star, Send, Music, TrendingUp, Heart, Share2, Copy } from 'lucide-react';
 import { trackSubmitContent } from '@/lib/analytics';
 
-export default function CampaignDetailClient({ id }: { id: string }) {
-  const [campaign, setCampaign] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+export default function CampaignDetailClient({ id, initialCampaign }: { id: string; initialCampaign: any }) {
+  const [campaign, setCampaign] = useState<any>(initialCampaign);
+  const [loading, setLoading] = useState(!initialCampaign);
   const [joined, setJoined] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitUrl, setSubmitUrl] = useState('');
@@ -36,11 +36,12 @@ export default function CampaignDetailClient({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    if (initialCampaign) return; // Already have data from server
     fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => {
       if (d.error) { setCampaign(null); } else { setCampaign(d); }
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [id]);
+  }, [id, initialCampaign]);
 
   // Sticky CTA detection
   useEffect(() => {
