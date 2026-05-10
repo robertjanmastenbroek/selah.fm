@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Music } from 'lucide-react';
+import { PlatformBadge } from '@/components/SocialIcons';
 
 interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; approved_submissions: string; recommended_hashtags: string; }
 
@@ -81,7 +82,7 @@ export default function BrowsePage() {
                         <Link href={`/c/${c.id}`} className="font-semibold text-lg leading-tight hover:text-primary transition-colors">{c.track_title}</Link>
                         <p className="text-muted-foreground text-sm">${cpm} CPM · ${budget} budget</p>
                       </div>
-                      <div className="flex items-center gap-1">{(c.platforms||[]).map((p:string)=><span key={p} className={`text-xs px-1.5 py-0.5 rounded font-medium ${p==='tiktok'?'bg-pink-500/10 text-pink-400':p==='instagram'?'bg-purple-500/10 text-purple-400':'bg-red-500/10 text-red-400'}`}>{p==='youtube'?'YT':p==='instagram'?'IG':'TT'}</span>)}</div>
+                      <div className="flex items-center gap-1">{(c.platforms||[]).map((p:string)=><PlatformBadge key={p} platform={p}/>)}</div>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{c.approved_submissions||'0'} submissions</span><span>{pct>0?`${Math.round(pct)}% paid`:`${(c as any).budget_consumed_pct||0}% used`}</span></div>
                     <Progress value={Math.min(pct,100)} className="h-1.5"/>
