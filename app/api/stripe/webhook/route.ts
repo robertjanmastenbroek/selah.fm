@@ -27,29 +27,65 @@ export async function POST(request: Request) {
   try {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const { campaignId } = session.metadata || {};
+      const metadata = session.metadata || {};
+      const { campaignId, type } = metadata;
       const grossCents = session.amount_total || 0;
+      if (!campaignId || grossCents <= 0) {
+        return NextResponse.json({ received: true });
+      }
 
-      if (campaignId && grossCents > 0) {
-        const stripeFeeCents = Math.round(grossCents * 0.029 + 30);
-        const netCents = grossCents - stripeFeeCents;
-        
-        await sql`
-          UPDATE campaigns 
-          SET total_budget_cents = total_budget_cents + ${netCents},
-              budget_remaining_cents = budget_remaining_cents + ${netCents},
-              status = CASE WHEN status = 'draft' THEN 'active' ELSE status END,
-              updated_at = NOW()
-          WHERE id = ${campaignId}
-        `;
+      const stripeFeeCents = Math.round(grossCents * 0.029 + 30);
+      const netCents = grossCents - stripeFeeCents;
 
-        // ── Referral bonus: 10% of deposit split between referrer & referred ──
-        // Only fires on the first deposit from a referred user
+      // ── Always add funds to campaign budget ─────────────────
+      await sql`
+        UPDATE campaigns 
+        SET total_budget_cents = total_budget_cents + ${netCents},
+            budget_remaining_cents = budget_remaining_cents + ${netCents},
+            status = CASE WHEN status = 'draft' THEN 'active' ELSE status END,
+            updated_at = NOW()
+        WHERE id = ${campaignId}
+      `;
+
+      // ── Fan donation: record + notify ───────────────────────
+      if (type === 'campaign_donation') {
+        try {
+          const { donorId, donorName, message, anonymous } = metadata;
+          const isAnon = anonymous === 'true';
+          const displayName = isAnon ? 'Anonymous' : (donorName || 'A fan');
+
+          await sql`
+            INSERT INTO campaign_donations (campaign_id, donor_id, amount_cents, donor_name, message, anonymous)
+            VALUES (${campaignId}, ${donorId || null}, ${netCents}, ${displayName}, ${message || null}, ${isAnon})
+          `;
+
+          // Notify the artist
+          const campaignRows = await sql`
+            SELECT artist_id, track_title FROM campaigns WHERE id = ${campaignId}
+          `;
+          if (campaignRows.length > 0) {
+            const donationDollars = (netCents / 100).toFixed(2);
+            await sql`
+              INSERT INTO notifications (user_id, type, message, link)
+              VALUES (
+                ${campaignRows[0].artist_id},
+                'earning',
+                ${`${displayName} donated $${donationDollars} to "${campaignRows[0].track_title}" — it's been added to your campaign budget!`},
+                ${`/c/${campaignId}`}
+              )
+            `;
+          }
+        } catch (donationErr) {
+          console.error('Donation recording failed:', donationErr);
+        }
+      }
+
+      // ── Referral bonus: only on artist self-funding ──────────
+      if (!type || type === 'campaign_deposit') {
         try {
           const campaignRows = await sql`
             SELECT c.artist_id, u.email
-            FROM campaigns c
-            JOIN users u ON u.id = c.artist_id
+            FROM campaigns c JOIN users u ON u.id = c.artist_id
             WHERE c.id = ${campaignId}
           `;
           if (campaignRows.length > 0) {
@@ -57,62 +93,42 @@ export async function POST(request: Request) {
             const artistId = campaignRows[0].artist_id;
 
             const referralRows = await sql`
-              SELECT r.referrer_id, r.referred_email
-              FROM referrals r
-              WHERE r.referred_email = ${artistEmail}
-                AND r.status = 'pending'
+              SELECT referrer_id FROM referrals
+              WHERE referred_email = ${artistEmail} AND status = 'pending'
               LIMIT 1
             `;
 
             if (referralRows.length > 0) {
               const referrerId = referralRows[0].referrer_id;
-              // 10% of net deposit, split 50/50
               const bonusTotal = Math.floor(netCents * 0.10);
               const bonusEach = Math.floor(bonusTotal / 2);
 
               if (bonusEach > 0) {
-                // Credit referrer's active campaign
                 await sql`
-                  UPDATE campaigns
-                  SET total_budget_cents = total_budget_cents + ${bonusEach},
-                      budget_remaining_cents = budget_remaining_cents + ${bonusEach},
-                      updated_at = NOW()
-                  WHERE artist_id = ${referrerId}
-                    AND status = 'active'
-                  LIMIT 1
+                  UPDATE campaigns SET total_budget_cents = total_budget_cents + ${bonusEach},
+                    budget_remaining_cents = budget_remaining_cents + ${bonusEach}, updated_at = NOW()
+                  WHERE artist_id = ${referrerId} AND status = 'active' LIMIT 1
                 `;
-
-                // Credit referred artist's campaign (the one who just deposited)
                 await sql`
-                  UPDATE campaigns
-                  SET total_budget_cents = total_budget_cents + ${bonusEach},
-                      budget_remaining_cents = budget_remaining_cents + ${bonusEach},
-                      updated_at = NOW()
+                  UPDATE campaigns SET total_budget_cents = total_budget_cents + ${bonusEach},
+                    budget_remaining_cents = budget_remaining_cents + ${bonusEach}, updated_at = NOW()
                   WHERE id = ${campaignId}
                 `;
-
-                // Mark referral as completed
                 await sql`
-                  UPDATE referrals
-                  SET status = 'completed', completed_at = NOW()
-                  WHERE referred_email = ${artistEmail}
-                    AND status = 'pending'
+                  UPDATE referrals SET status = 'completed', completed_at = NOW()
+                  WHERE referred_email = ${artistEmail} AND status = 'pending'
                 `;
-
-                // Notify both users
                 const bonusDollars = (bonusEach / 100).toFixed(2);
                 await sql`
-                  INSERT INTO notifications (user_id, type, message, link)
-                  VALUES 
-                    (${referrerId}, 'earning', ${`You earned $${bonusDollars} referral bonus! It's been added to your active campaign.`}, '/dashboard'),
-                    (${artistId}, 'earning', ${`You received a $${bonusDollars} referral welcome bonus! It's been added to your campaign.`}, '/dashboard')
+                  INSERT INTO notifications (user_id, type, message, link) VALUES 
+                    (${referrerId}, 'earning', ${`You earned $${bonusDollars} referral bonus!`}, '/dashboard'),
+                    (${artistId}, 'earning', ${`You received a $${bonusDollars} referral welcome bonus!`}, '/dashboard')
                 `;
               }
             }
           }
         } catch (refErr) {
-          // Referral bonus is non-critical — don't block the webhook
-          console.error('Referral bonus processing failed:', refErr);
+          console.error('Referral bonus failed:', refErr);
         }
       }
     }

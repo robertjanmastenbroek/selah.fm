@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PlatformBadge, Spotify } from '@/components/SocialIcons';
-import { Eye, DollarSign, Users, ArrowRight, ArrowLeft, Shield, Zap, CheckCircle, Clock, Star, Send, Music, TrendingUp } from 'lucide-react';
+import { Eye, DollarSign, Users, ArrowRight, ArrowLeft, Shield, Zap, CheckCircle, Clock, Star, Send, Music, TrendingUp, Heart, Share2, Copy } from 'lucide-react';
 import { trackSubmitContent } from '@/lib/analytics';
 
 export default function CampaignDetailClient({ id }: { id: string }) {
@@ -26,6 +26,14 @@ export default function CampaignDetailClient({ id }: { id: string }) {
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
   const { addToast } = useToast();
+
+  // Support/donation state
+  const [showSupport, setShowSupport] = useState(false);
+  const [donationAmount, setDonationAmount] = useState(10);
+  const [donorName, setDonorName] = useState('');
+  const [donorMessage, setDonorMessage] = useState('');
+  const [donating, setDonating] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => {
@@ -101,6 +109,37 @@ export default function CampaignDetailClient({ id }: { id: string }) {
   const submissions = parseInt(campaign.approved_submissions || '0');
   const views = parseInt(campaign.total_verified_views || '0');
   const estimatedEarnings = ((viewEstimate / 1000) * cpm * 0.8).toFixed(2);
+  const donations = campaign.donations || { totalCents: 0, count: 0, supporters: [] };
+  const totalRaised = donations.totalCents / 100;
+
+  const handleDonate = async () => {
+    if (donationAmount < 1) return;
+    setDonating(true);
+    try {
+      const res = await fetch(`/api/campaigns/${id}/support`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: donationAmount,
+          donorName: donorName || undefined,
+          message: donorMessage || undefined,
+          anonymous: !donorName,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        addToast(data.error || 'Could not start donation', 'error');
+        setDonating(false);
+      }
+    } catch {
+      addToast('Network error — try again', 'error');
+      setDonating(false);
+    }
+  };
+
+  const shareUrl = `https://selah.fm/c/${id}`;
 
   // Extract Spotify track ID for embed
   const spotifyId = campaign.track_url?.match(/track\/([a-zA-Z0-9]+)/)?.[1];
@@ -237,6 +276,144 @@ export default function CampaignDetailClient({ id }: { id: string }) {
             </div>
             <Progress value={progress} className="h-2" />
             <p className="text-[10px] text-muted-foreground/60 mt-2">Budget is used to pay creators. The more submissions, the faster it goes!</p>
+          </div>
+        </motion.div>
+
+        {/* ── CROWDFUNDING: Support + Share ──────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="mb-8">
+          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6">
+            <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Heart size={20} className="text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm">Support this campaign</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {totalRaised > 0
+                      ? `$${totalRaised.toFixed(2)} raised from ${donations.count} supporter${donations.count !== 1 ? 's' : ''}`
+                      : 'Be the first to support this artist'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareUrl);
+                    setCopied(true);
+                    addToast('Campaign link copied!', 'success');
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs font-medium hover:bg-white/[0.08] transition-colors"
+                >
+                  {copied ? <CheckCircle size={14} className="text-success" /> : <Share2 size={14} />}
+                  {copied ? 'Copied!' : 'Share'}
+                </button>
+                {!showSupport ? (
+                  <button
+                    onClick={() => setShowSupport(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity active:scale-[0.97]"
+                  >
+                    <Heart size={14} /> Support
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowSupport(false)}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Donation form */}
+            <AnimatePresence>
+              {showSupport && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pt-4 border-t border-white/[0.06] space-y-4">
+                    <p className="text-xs text-muted-foreground">
+                      Your donation goes directly to this campaign&apos;s budget — helping the artist reach more listeners through creator content.
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {[5, 10, 25, 50, 100].map(amt => (
+                        <button
+                          key={amt}
+                          onClick={() => setDonationAmount(amt)}
+                          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                            donationAmount === amt
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-white/[0.04] border border-white/[0.06] hover:border-primary/20'
+                          }`}
+                        >
+                          ${amt}
+                        </button>
+                      ))}
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm text-muted-foreground">$</span>
+                        <Input
+                          type="number"
+                          value={donationAmount}
+                          onChange={e => setDonationAmount(parseInt(e.target.value) || 0)}
+                          min={1}
+                          className="w-20 text-sm"
+                          placeholder="Custom"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        value={donorName}
+                        onChange={e => setDonorName(e.target.value)}
+                        placeholder="Your name (optional)"
+                        className="text-sm"
+                      />
+                      <Input
+                        value={donorMessage}
+                        onChange={e => setDonorMessage(e.target.value)}
+                        placeholder="Message to the artist (optional)"
+                        className="text-sm"
+                      />
+                    </div>
+                    <Button
+                      onClick={handleDonate}
+                      disabled={donationAmount < 1 || donating}
+                      className="w-full py-3 font-semibold"
+                    >
+                      {donating ? 'Redirecting to Stripe...' : `Support with $${donationAmount}`}
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Recent supporters */}
+            {donations.supporters.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-white/[0.06]">
+                <p className="text-[10px] text-muted-foreground mb-3">Recent supporters</p>
+                <div className="space-y-2">
+                  {donations.supporters.slice(0, 5).map((s: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                          {(s.donor_name || 'A')[0].toUpperCase()}
+                        </div>
+                        <span className="truncate">{s.anonymous ? 'Anonymous' : s.donor_name}</span>
+                        {s.message && (
+                          <span className="text-xs text-muted-foreground truncate hidden sm:inline">— &quot;{s.message.slice(0, 60)}{s.message.length > 60 ? '...' : ''}&quot;</span>
+                        )}
+                      </div>
+                      <span className="font-semibold text-primary shrink-0 ml-2">${(s.amount_cents / 100).toFixed(0)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
 
