@@ -5,7 +5,14 @@ import useSWR from 'swr';
 import { swrConfig } from '@/lib/swr-config';
 
 // Public fetcher — no credentials, so the API returns all campaigns
-const publicFetcher = (url: string) => fetch(url).then(r => r.json());
+const publicFetcher = (url: string) =>
+  fetch(url).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }).catch(err => {
+    console.error('Browse fetch failed:', err);
+    throw err;
+  });
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
