@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       metadata: {
         type: 'campaign_deposit',
         campaignId,
-        userId: session.id,
+        userId: session.id || '',
       },
       description: `Deposit to "${campaign.track_title}" campaign`,
       statement_descriptor_suffix: 'SELAHFM DEPOSIT',
