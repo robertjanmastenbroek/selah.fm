@@ -4,12 +4,15 @@ let _pool: Pool | null = null;
 
 function getPool(): Pool {
   if (!_pool) {
-    const dbUrl = process.env.DATABASE_URL || process.env.DATABASE_PUBLIC_URL || '';
+    // Prefer private endpoint to avoid Railway egress fees.
+    // Railway auto-creates DATABASE_PRIVATE_URL for internal network access.
+    // DATABASE_URL (public) is used as fallback for local development.
+    const dbUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL || '';
     if (!dbUrl) throw new Error('DATABASE_URL not set');
 
     _pool = new Pool({
       connectionString: dbUrl,
-      ssl: { rejectUnauthorized: false },
+      ssl: dbUrl.includes('railway.internal') ? false : { rejectUnauthorized: false },
       max: 5,
     });
   }
