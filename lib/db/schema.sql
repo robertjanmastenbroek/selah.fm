@@ -265,6 +265,21 @@ CREATE INDEX idx_notifications_user ON notifications(user_id);
 CREATE INDEX idx_notifications_user_unread ON notifications(user_id) WHERE read = false;
 CREATE INDEX idx_notifications_created ON notifications(created_at DESC);
 
+-- ─── Messages / Chat ─────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS messages (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sender_id       UUID NOT NULL REFERENCES users(id),
+    receiver_id     UUID NOT NULL REFERENCES users(id),
+    campaign_id     UUID REFERENCES campaigns(id),
+    content         TEXT NOT NULL,
+    read            BOOLEAN NOT NULL DEFAULT false,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(sender_id, receiver_id);
+CREATE INDEX IF NOT EXISTS idx_messages_receiver_unread ON messages(receiver_id) WHERE read = false;
+
 -- ─── Seed data (for development) ─────────────────────────────────────────────
 
 -- Example campaign
