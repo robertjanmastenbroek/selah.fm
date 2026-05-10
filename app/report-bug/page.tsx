@@ -1,3 +1,5 @@
+'use client';
+
 import Header from '@/components/TopNav';
 import BugReportForm from '@/components/BugReportForm';
 import { motion } from 'framer-motion';
