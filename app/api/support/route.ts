@@ -1,8 +1,31 @@
 import { NextResponse } from 'next/server';
 
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
+const DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions';
+
+const SYSTEM_PROMPT = `You are Selah AI, the support assistant for Selah.fm — an open-source CPM marketplace for music promotion.
+
+Key facts about Selah.fm:
+- Artists create campaigns with budgets, set CPM rates, and deposit via Stripe
+- Creators browse campaigns, make TikToks/Reels/Shorts, submit for review
+- Artists approve/reject submissions, creators get paid for verified views
+- 20% platform fee on creator payouts, Stripe takes 2.9% + $0.30 on deposits
+- YouTube views auto-verified via API, TikTok/Instagram via oEmbed
+- Google OAuth + email/password signup, account at selah.fm/login
+- Dashboard at selah.fm/dashboard, browse at selah.fm/browse
+- All code is MIT licensed on GitHub: github.com/robertjanmastenbroek/selah.fm
+- For password resets or account issues: support@selah.fm
+
+Rules:
+- Be warm, concise, and helpful. Never mention you're an AI.
+- Answer in 1-3 short paragraphs max.
+- If you don't know something specific about the user's account, suggest they email support@selah.fm.
+- Use emojis sparingly — one per message max.
+- Never make up features that don't exist.`;
+
 /**
- * Support API — forwards conversations to support@selah.fm via email.
- * Called when the Selah AI bot can't answer a question or when a user requests a human.
+ * Chat with DeepSeek for support responses.
+ * Falls back to keyword matching if API key is not configured.
  */
 export async function POST(request: Request) {
   try {
@@ -12,49 +35,119 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing message' }, { status: 400 });
     }
 
-    // Try to send email via SMTP if configured
-    let emailSent = false;
-    try {
-      const { sendEmail } = await import('@/lib/email');
+    // ── Try DeepSeek API ──────────────────────────────────────
+    if (DEEPSEEK_API_KEY) {
+      try {
+        const messages = [
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...(Array.isArray(history) ? history.slice(-6).map((h: string) => {
+            const [role, ...rest] = h.split(': ');
+            return {
+              role: role === 'user' ? 'user' : 'assistant',
+              content: rest.join(': '),
+            };
+          }) : []),
+          { role: 'user', content: message },
+        ];
 
-      const historyText = Array.isArray(history)
-        ? history.map((h: string) => `  ${h}`).join('\n')
-        : 'No history';
+        const res = await fetch(DEEPSEEK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages,
+            max_tokens: 300,
+            temperature: 0.7,
+          }),
+        });
 
-      const html = `
-        <div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;border:1px solid rgba(255,255,255,0.06)">
-          <h2 style="color:#5B7FFF">${urgent ? '🚨 Urgent: ' : ''}Support Request</h2>
-          <p style="color:#A0A0A0"><strong>Message:</strong> ${message}</p>
-          <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:8px;margin:16px 0">
-            <p style="color:#8C8C8C;font-size:12px;margin-bottom:8px"><strong>Conversation history:</strong></p>
-            <pre style="color:#8C8C8C;font-size:11px;white-space:pre-wrap;margin:0">${historyText}</pre>
-          </div>
-          <p style="color:#555;font-size:11px">Sent from Selah.fm Support Widget · ${new Date().toISOString()}</p>
-        </div>`;
-
-      const result = await sendEmail({
-        to: 'support@selah.fm',
-        subject: `${urgent ? '[URGENT] ' : ''}Support request: ${message.slice(0, 60)}${message.length > 60 ? '...' : ''}`,
-        html,
-      });
-
-      emailSent = result.sent;
-    } catch (emailErr) {
-      console.error('Support email failed:', emailErr);
+        if (res.ok) {
+          const data = await res.json();
+          const reply = data.choices?.[0]?.message?.content;
+          if (reply) {
+            // Also forward to email for logging if urgent
+            if (urgent) {
+              try {
+                await forwardToEmail(message, history);
+              } catch {}
+            }
+            return NextResponse.json({ reply, source: 'ai' });
+          }
+        }
+      } catch (aiErr) {
+        console.error('DeepSeek API error:', aiErr);
+      }
     }
 
-    // Always log the request
-    console.log(`[SUPPORT] ${urgent ? 'URGENT ' : ''}Message: ${message}`);
+    // ── Fallback: keyword matching ────────────────────────────
+    const reply = keywordMatch(message);
+    if (reply) {
+      return NextResponse.json({ reply, source: 'keyword' });
+    }
 
+    // ── No response available — forward to email ──────────────
+    await forwardToEmail(message, history).catch(() => {});
     return NextResponse.json({
-      ok: true,
-      emailSent,
-      note: emailSent
-        ? 'Your message has been forwarded to our team.'
-        : 'Message received. Our team will review it. (Email delivery was unavailable, but your message is logged.)',
+      reply: "I'm not sure about that — let me connect you with our team. They'll get back to you by email, usually within a few hours.",
+      source: 'human',
     });
   } catch (e: any) {
     console.error('Support API error:', e.message);
-    return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
+    return NextResponse.json({ reply: 'Something went wrong. Please try again or email support@selah.fm.' }, { status: 500 });
   }
+}
+
+// ── Keyword fallback ──────────────────────────────────────────
+function keywordMatch(msg: string): string | null {
+  const m = msg.toLowerCase();
+
+  if (/^(hi|hello|hey|yo|sup|hola|greetings)/.test(m.trim())) {
+    return "Hey there! 👋 I'm Selah AI, your support assistant. I can help with campaigns, payments, creator questions, or anything about the platform. What can I help you with?";
+  }
+  if (/(create|campaign|promote|launch).*(track|song|music)/.test(m)) {
+    return "To create a campaign: go to your Dashboard, click New, choose a track, set your CPM rate and budget, and launch. Creators will find it on the Browse page and start making content!";
+  }
+  if (/(cpm|rate|budget|cost|price|pricing)/.test(m)) {
+    return "You set your own CPM rate (cost per 1,000 views). The platform takes a 20% service fee from creator payouts. There are no hidden costs.";
+  }
+  if (/(fee|fees|charge|commission)/.test(m)) {
+    return "Selah.fm charges a 20% platform fee on creator payouts. Artists pay exactly what they budget — no surprise costs.";
+  }
+  if (/(earn|payout|get paid|money|cash)/.test(m)) {
+    return "Creators earn per 1,000 verified views at the campaign's CPM rate, minus 20%. Payouts via Stripe Connect. Set up in the Earnings page.";
+  }
+  if (/(stripe|payment|bank|payout|connect)/.test(m)) {
+    return "We use Stripe for all payments. Artists deposit via Stripe Checkout. Creators connect via Stripe Connect. Works in 40+ countries.";
+  }
+  if (/(verify|views|fake|bot|real)/.test(m)) {
+    return "We verify views through YouTube's API, TikTok oEmbed, and manual review for Instagram. Only organic, verified views count.";
+  }
+  if (/(login|sign.*in|sign.*up|register|account|password|google|oauth)/.test(m)) {
+    return "Sign up with email/password or Google. Google sign-in users must use 'Continue with Google'. For password resets: support@selah.fm.";
+  }
+  if (/(about|what is|how does|platform|marketplace)/.test(m)) {
+    return "Selah.fm is an open-source CPM marketplace for music promotion. Artists set budgets, creators make content, artists approve and pay for verified views. MIT licensed on GitHub!";
+  }
+  if (/(open.source|github|code|mit|license)/.test(m)) {
+    return "Fully open source under MIT! github.com/robertjanmastenbroek/selah.fm — you can contribute, audit, or run your own instance.";
+  }
+  return null;
+}
+
+// ── Email forwarding ─────────────────────────────────────────
+async function forwardToEmail(message: string, history: any[]) {
+  try {
+    const { sendEmail } = await import('@/lib/email');
+    const historyText = Array.isArray(history)
+      ? history.map((h: string) => `  ${h}`).join('\n')
+      : 'No history';
+    await sendEmail({
+      to: 'support@selah.fm',
+      subject: `Support: ${message.slice(0, 80)}`,
+      html: `<div style="font-family:system-ui;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px"><h2 style="color:#5B7FFF">Support Request</h2><p>${message}</p><pre style="color:#8C8C8C;font-size:11px">${historyText}</pre></div>`,
+    });
+  } catch {}
 }
