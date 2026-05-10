@@ -74,10 +74,7 @@ export default function RootPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
           >
-            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.06]">
-              <Sparkles size={14} className="text-primary" />
-              <span className="text-sm font-medium text-muted-foreground tracking-wide">Selah<span className="text-primary">.fm</span></span>
-            </span>
+            <img src="/logo-icon.svg" alt="Selah.fm" className="mx-auto h-12 w-auto" />
           </motion.div>
 
           {/* Two routing cards */}

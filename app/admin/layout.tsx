@@ -64,7 +64,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-56 border-r border-white/[0.06] bg-white/[0.02] backdrop-blur-xl p-4 gap-1">
         <div className="mb-6 px-3 py-2">
-          <Link href="/" className="text-sm font-bold tracking-tight flex items-center gap-1.5"><ArrowLeft size={14} className="text-muted-foreground"/>Selah<span className="text-primary">.fm</span></Link>
+          <Link href="/" className="flex items-center gap-1.5 mb-6">
+            <img src="/logo-horizontal.svg" alt="Selah.fm" className="h-5 w-auto" />
+          </Link>
           <p className="text-[10px] text-muted-foreground mt-1">Admin · {email}</p>
         </div>
         {nav.map(item => {
