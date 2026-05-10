@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { generateCampaignDefaults } from '@/lib/defaults';
 
 export async function GET(request: Request) {
   try {
@@ -79,12 +80,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
+    const users = await sql`SELECT id, display_name, genres FROM users WHERE email = ${session.email}`;
     if (users.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const artistId = users[0].id;
+    const artistName = users[0].display_name;
+    const artistGenres = users[0].genres;
+
+    // Auto-generate defaults for empty fields
+    const defaults = generateCampaignDefaults(trackTitle, artistGenres, artistName);
+
+    const finalRequirements = requirements || defaults.requirements;
+    const finalHashtags = hashtags || defaults.hashtags;
+    const finalCaption = captionRequirements || defaults.captionRequirements;
+    const finalMinLength = minVideoLength || defaults.minVideoLengthSeconds;
 
     const result = await sql`
       INSERT INTO campaigns (
@@ -96,8 +107,8 @@ export async function POST(request: Request) {
       VALUES (
         ${artistId}, ${trackTitle}, ${trackUrl}, 
         ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100},
-        'active', ${driveUrl || ''}, ${hashtags || '#selahfm'}, ${requirements || ''}, ${coverArtUrl || null},
-        ${requiredHashtags || null}, ${requireFtc || false}, ${minVideoLength || null}, ${captionRequirements || null}
+        'active', ${driveUrl || ''}, ${finalHashtags}, ${finalRequirements}, ${coverArtUrl || null},
+        ${requiredHashtags || null}, ${requireFtc || false}, ${finalMinLength}, ${finalCaption}
       )
       RETURNING *
     `;
