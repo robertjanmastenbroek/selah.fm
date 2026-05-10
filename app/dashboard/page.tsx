@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
 import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
-import { Plus } from 'lucide-react';
+import { Plus, Edit3 } from 'lucide-react';
 
 interface Campaign {
   id: string; trackTitle: string; coverArt: string; cpmRate: number;
@@ -53,6 +53,8 @@ function DashboardContent() {
   const { addToast } = useToast();
   const [fundingId, setFundingId] = useState<string | null>(null);
   const [fundingAmount, setFundingAmount] = useState('10');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   const [coverArt, setCoverArt] = useState('');
   const [trackTitle, setTrackTitle] = useState('');
@@ -103,6 +105,51 @@ function DashboardContent() {
       mutate();
       addToast(newStatus === 'active' ? 'Campaign resumed' : 'Campaign paused', 'info');
     } catch { addToast('Network error', 'error'); }
+  };
+
+  const startEdit = (c: Campaign) => {
+    // Pre-fill edit fields from campaign data
+    const raw = rawCampaigns.find((r: any) => r.id === c.id);
+    if (!raw) return;
+    setEditingId(c.id);
+    setTrackTitle(raw.track_title || '');
+    setTrackUrl(raw.track_url || '');
+    setCpm(String(c.cpmRate));
+    setBudget(String(c.budget));
+    setMaxPayout(String((raw.max_payout_per_submission_cents || 1000) / 100));
+    setRequirements(raw.requirements || '');
+    setHashtags(raw.recommended_hashtags || '#selahfm');
+    setRequiredHashtags(raw.required_hashtags || '');
+    setRequireFtc(raw.require_ftc || false);
+    setMinVideoLength(raw.min_video_length_seconds ? String(raw.min_video_length_seconds) : '');
+    setCaptionReq(raw.caption_requirements || '');
+    setCoverArt(raw.cover_art_url || '');
+  };
+
+  const handleEditSave = async () => {
+    if (!editingId) return;
+    setEditSaving(true);
+    try {
+      const res = await fetch(`/api/campaigns/${editingId}`, {
+        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trackTitle, trackUrl,
+          cpmRate: parseFloat(cpm),
+          budget: parseInt(budget),
+          maxPayout: parseInt(maxPayout),
+          requirements, hashtags,
+          requiredHashtags, requireFtc,
+          minVideoLength: minVideoLength ? parseInt(minVideoLength) : null,
+          captionRequirements: captionReq,
+          coverArtUrl: coverArt || undefined,
+        }),
+      });
+      if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to save', 'error'); setEditSaving(false); return; }
+      await mutate();
+      addToast('Campaign updated!', 'success');
+      setEditingId(null);
+    } catch { addToast('Network error', 'error'); }
+    setEditSaving(false);
   };
 
   const estimatedViews = Math.floor((parseInt(budget || '0') / parseFloat(cpm || '1')) * 1000);
@@ -223,6 +270,67 @@ function DashboardContent() {
               <h1 className="section-title">Your campaigns</h1>
               <Button onClick={() => setStep('wizard')} size="sm"><Plus className="h-4 w-4 mr-1" /> New</Button>
             </div>
+
+            {/* Inline edit form — appears when editing a campaign */}
+            {editingId && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-primary/10 p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold text-sm">Edit campaign</h2>
+                  <button onClick={() => setEditingId(null)} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Track title</label>
+                    <Input value={trackTitle} onChange={e => setTrackTitle(e.target.value)} className="text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Spotify/SoundCloud URL</label>
+                    <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} className="text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">CPM rate ($/1K views)</label>
+                    <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} className="text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Budget ($)</label>
+                    <Input type="number" min="5" step="5" value={budget} onChange={e => setBudget(e.target.value)} className="text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Max payout per submission ($)</label>
+                    <Input type="number" min="1" value={maxPayout} onChange={e => setMaxPayout(e.target.value)} className="text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Min video length (seconds)</label>
+                    <Input type="number" min="0" value={minVideoLength} onChange={e => setMinVideoLength(e.target.value)} className="text-sm" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Recommended hashtags</label>
+                    <Input value={hashtags} onChange={e => setHashtags(e.target.value)} className="text-sm" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Required hashtags</label>
+                    <Input value={requiredHashtags} onChange={e => setRequiredHashtags(e.target.value)} className="text-sm" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Caption requirements</label>
+                    <Input value={captionReq} onChange={e => setCaptionReq(e.target.value)} className="text-sm" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Requirements & guidelines</label>
+                    <Input value={requirements} onChange={e => setRequirements(e.target.value)} className="text-sm" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 pt-2">
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <input type="checkbox" checked={requireFtc} onChange={e => setRequireFtc(e.target.checked)} /> Require FTC (#ad)
+                  </label>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setEditingId(null)} className="flex-1">Cancel</Button>
+                  <Button onClick={handleEditSave} disabled={editSaving || !trackTitle} className="flex-1">{editSaving ? 'Saving...' : 'Save changes'}</Button>
+                </div>
+              </motion.div>
+            )}
 
             {error ? (
               <Card className="text-center py-16"><CardContent><h2 className="text-lg font-medium mb-2">Couldn't load campaigns</h2><p className="text-muted-foreground text-sm mb-4">Check your connection.</p><Button variant="outline" onClick={() => mutate()}>Retry</Button></CardContent></Card>
