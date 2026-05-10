@@ -49,7 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </>
         )}
       </head>
-      <body className="min-h-screen bg-background">
+      <body className="min-h-screen bg-background overflow-x-hidden">
         {/* Skip to content */}
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium focus:outline-none">
           Skip to content
