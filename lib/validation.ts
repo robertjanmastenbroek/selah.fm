@@ -99,7 +99,7 @@ export function validateCampaignInput(body: any): {
       requirements: body.requirements ? sanitizeText(body.requirements).slice(0, 2000) : undefined,
       driveUrl: body.driveUrl ? body.driveUrl.slice(0, 2048) : undefined,
       hashtags: body.hashtags ? sanitizeText(body.hashtags).slice(0, 500) : undefined,
-      coverArtUrl: body.coverArtUrl ? body.coverArtUrl.slice(0, 2048) : undefined,
+      coverArtUrl: body.coverArtUrl || undefined,
     },
   };
 }
