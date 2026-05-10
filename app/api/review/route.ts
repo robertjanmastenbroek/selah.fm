@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         RETURNING *
       `;
 
-      // Notify the creator
+      // Notify the creator + send email
       try {
         const netDollars = (netCents / 100).toFixed(2);
         await sql`
@@ -72,9 +72,13 @@ export async function POST(request: Request) {
             ${JSON.stringify({ submission_id: submissionId, amount_cents: netCents })}
           )
         `;
-      } catch (notifErr) {
-        console.error('Approval notification failed:', notifErr);
-      }
+        const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
+        if (creatorData.length > 0) {
+          const { sendEmail, submissionApprovedEmail } = await import('@/lib/email');
+          const { subject, html } = submissionApprovedEmail(creatorData[0].display_name, sub.track_title, netDollars);
+          sendEmail({ to: creatorData[0].email, subject, html });
+        }
+      } catch {}
 
       // Attempt auto-payout via Stripe
       try {
@@ -112,9 +116,13 @@ export async function POST(request: Request) {
             ${JSON.stringify({ submission_id: submissionId })}
           )
         `;
-      } catch (notifErr) {
-        console.error('Rejection notification failed:', notifErr);
-      }
+        const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
+        if (creatorData.length > 0) {
+          const { sendEmail, submissionRejectedEmail } = await import('@/lib/email');
+          const { subject, html } = submissionRejectedEmail(creatorData[0].display_name, sub.track_title);
+          sendEmail({ to: creatorData[0].email, subject, html });
+        }
+      } catch {}
     }
 
     return NextResponse.json(result[0]);
