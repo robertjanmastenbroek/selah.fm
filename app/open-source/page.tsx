@@ -101,9 +101,9 @@ export default function OpenSourcePage() {
                   Full platform code
                 </h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Next.js 14 frontend (16 pages, glassmorphism UI)</li>
-                  <li>• 26 REST API endpoints</li>
-                  <li>• Stripe payment integration</li>
+                  <li>• Next.js 14 frontend (22 pages, glassmorphism UI)</li>
+                  <li>• 28 REST API endpoints</li>
+                  <li>• Stripe payment + Connect integration</li>
                   <li>• Google OAuth authentication</li>
                   <li>• Real-time chat and notifications</li>
                   <li>• Admin dashboard</li>
@@ -112,14 +112,12 @@ export default function OpenSourcePage() {
               <div>
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <Zap size={18} className="text-primary" />
-                  Automation & tools
+                  Testing & ops
                 </h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Python orchestrator for task management</li>
-                  <li>• AI agent instruction files</li>
-                  <li>• E2E test suite (Playwright, 34 tests)</li>
+                  <li>• E2E test suite (Playwright, 43 tests)</li>
                   <li>• Database migrations and seeding</li>
-                  <li>• Railway deployment configuration</li>
+                  <li>• Railway deployment with auto-deploy</li>
                   <li>• GitHub Actions CI/CD</li>
                 </ul>
               </div>
