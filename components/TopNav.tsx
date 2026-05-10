@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import NotificationBell from '@/components/NotificationBell';
+import ChatWidget from '@/components/ChatWidget';
 import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music } from 'lucide-react';
 
 const mainLinks = [
@@ -68,6 +69,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {profile ? (
             <div className="relative flex items-center gap-2" ref={dropdownRef}>
+              <ChatWidget />
               <NotificationBell />
               <button onClick={() => setOpen(!open)}
                 className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold

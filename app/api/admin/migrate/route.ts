@@ -34,6 +34,22 @@ export async function GET(request: Request) {
   try {
     await sql`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS rejection_feedback TEXT`;
     results.push('rejection_feedback column OK');
+
+  try {
+    await sql`CREATE TABLE IF NOT EXISTS messages (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      sender_id UUID NOT NULL REFERENCES users(id),
+      receiver_id UUID NOT NULL REFERENCES users(id),
+      campaign_id UUID REFERENCES campaigns(id),
+      content TEXT NOT NULL,
+      read BOOLEAN NOT NULL DEFAULT false,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id))`;
+    results.push('messages table OK');
+  } catch (e: any) { results.push(`messages: ${e.message}`); }
   } catch (e: any) { results.push(`rejection_feedback: ${e.message}`); }
   } catch (e: any) { results.push(`campaign columns: ${e.message}`); }
 
