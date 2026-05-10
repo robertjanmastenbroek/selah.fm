@@ -205,8 +205,29 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
         {donations.supporters.length > 0 && (
           <motion.div className="mb-8" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2"><Users size={14} className="text-primary/60" />Supporters ({donations.count})</h3>
+              <h3 className="font-semibold text-sm flex items-center gap-2"><Users size={14} className="text-primary/60" />Recent support ({donations.count})</h3>
             </div>
+            {/* Live ticker */}
+            <div className="space-y-2 mb-4">
+              <AnimatePresence>
+                {donations.supporters.slice(0, 5).map((s: any, i: number) => (
+                  <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                    className="flex items-center gap-3 py-2 border-b border-white/[0.04] last:border-0">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                      {(s.donor_name || 'A')[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold truncate">{s.donor_name || 'Anonymous'}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {s.message && <span className="text-[10px] text-muted-foreground italic truncate max-w-32 hidden sm:inline">&ldquo;{s.message.slice(0, 40)}...&rdquo;</span>}
+                        <span className="text-xs font-bold text-primary">${(s.amount_cents / 100).toFixed(0)}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+            {/* Horizontal scrollable cards */}
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
               {donations.supporters.map((s: any, i: number) => (
                 <motion.div key={i} initial={{ opacity: 0, x: -8 }} whileInView={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} viewport={{ once: true }}
