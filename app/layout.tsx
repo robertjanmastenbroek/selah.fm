@@ -89,10 +89,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-muted-foreground/15 select-none">·</span>
             <a href="/faq" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">FAQ</a>
             <span className="text-muted-foreground/15 select-none">·</span>
-            <a href="/faq" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">FAQ</a>
-            <span className="text-muted-foreground/15 select-none">·</span>
-            <a href="/faq" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">FAQ</a>
-            <span className="text-muted-foreground/15 select-none">·</span>
             <a
               href="https://github.com/robertjanmastenbroek/selah.fm"
               target="_blank"
