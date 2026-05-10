@@ -141,6 +141,35 @@ export default function CampaignDetailClient({ id }: { id: string }) {
 
   const shareUrl = `https://selah.fm/c/${id}`;
 
+  const handleShare = async () => {
+    const shareData = {
+      title: campaign.track_title,
+      text: `Support "${campaign.track_title}" on Selah.fm — help this artist get more views on TikTok, Reels & Shorts.`,
+      url: shareUrl,
+    };
+
+    // Web Share API — opens native share sheet on mobile (WhatsApp, Instagram, Messages, etc.)
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share(shareData);
+        addToast('Shared!', 'success');
+        return;
+      } catch {
+        // User cancelled — fall through to clipboard
+      }
+    }
+
+    // Desktop fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      addToast('Campaign link copied!', 'success');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      addToast('Could not copy link', 'error');
+    }
+  };
+
   // Fetch Spotify stats (monthly listeners) — lightweight alternative to iframe embed
   const [spotifyData, setSpotifyData] = useState<{ monthlyListeners: number | null; artistName: string | null } | null>(null);
   useEffect(() => {
@@ -313,13 +342,8 @@ export default function CampaignDetailClient({ id }: { id: string }) {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(shareUrl);
-                    setCopied(true);
-                    addToast('Campaign link copied!', 'success');
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs font-medium hover:bg-white/[0.08] transition-colors"
+                  onClick={handleShare}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-xs font-medium hover:bg-white/[0.08] transition-colors active:scale-[0.97]"
                 >
                   {copied ? <CheckCircle size={14} className="text-success" /> : <Share2 size={14} />}
                   {copied ? 'Copied!' : 'Share'}
