@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import CampaignCover from '@/components/CampaignCover';
 import { PlatformBadge, TikTok, Instagram, YouTube } from '@/components/SocialIcons';
 import { Megaphone, Eye, FileText, DollarSign, ArrowRight, Music4 } from 'lucide-react';
+import { MessageButton } from '@/components/MessageButton';
 
 const BG = 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A';
 
@@ -83,6 +84,7 @@ export default function ArtistProfilePage() {
                   {artist.instagram_handle && <Badge variant="outline" className="text-[10px]">{artist.instagram_handle}</Badge>}
                   {artist.youtube_handle && <Badge variant="outline" className="text-[10px]">{artist.youtube_handle}</Badge>}
                   <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">{active} active</Badge>
+                  <div className="mt-2"><MessageButton userId={artist.id} name={artist.display_name} /></div>
                 </div>
               </div>
             </div>
