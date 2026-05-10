@@ -8,7 +8,7 @@ export default function AdminOverviewPage() {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    fetch('/api/admin/overview').then(r=>r.json()).then(setData);
+    fetch('/api/admin/overview', { credentials: 'include' }).then(r=>r.json()).then(setData);
   }, []);
 
   if (!data) return <div className="py-20 text-center text-muted-foreground">Loading...</div>;
@@ -23,7 +23,7 @@ export default function AdminOverviewPage() {
 
   const [bugs, setBugs] = useState<number>(0);
   useEffect(() => {
-    fetch('/api/bugs')
+    fetch('/api/bugs', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setBugs(d.filter((b: any) => b.status === 'new').length); })
       .catch(() => {});

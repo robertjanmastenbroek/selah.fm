@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
+    fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).then(d => {
       const userEmail = d.user?.email || '';
       setEmail(userEmail);
       setChecking(false);

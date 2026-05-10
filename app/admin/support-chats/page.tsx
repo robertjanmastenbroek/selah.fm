@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdminLayout from '../layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MessageCircle, RefreshCw, User, Bot } from 'lucide-react';
 
 export default function SupportChatsPage() {
-  return <AdminLayout><SupportChatsContent /></AdminLayout>;
+  return <SupportChatsContent />;
 }
 
 function SupportChatsContent() {
@@ -19,7 +18,7 @@ function SupportChatsContent() {
   const loadChats = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/support-chats');
+      const res = await fetch('/api/admin/support-chats', { credentials: 'include' });
       const data = await res.json();
       if (Array.isArray(data)) setChats(data);
       else setError('Failed to load');

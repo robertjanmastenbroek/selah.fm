@@ -11,7 +11,7 @@ export default function AdminPayoutsPage() {
   const showToast = (msg: string, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 2500); };
 
   useEffect(() => {
-    fetch('/api/admin/manage?type=payouts').then(r => r.json()).then(d => { if (Array.isArray(d)) setPayouts(d); });
+    fetch('/api/admin/manage?type=payouts', { credentials: 'include' }).then(r => r.json()).then(d => { if (Array.isArray(d)) setPayouts(d); });
   }, []);
 
   const saveEdit = async () => {
@@ -23,7 +23,7 @@ export default function AdminPayoutsPage() {
     const res = await fetch(`/api/admin/manage?type=submissions&id=${editing.id}`, {
       method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     });
-    if (res.ok) { setEditing(null); showToast('Updated'); fetch('/api/admin/manage?type=payouts').then(r => r.json()).then(d => { if (Array.isArray(d)) setPayouts(d); }); }
+    if (res.ok) { setEditing(null); showToast('Updated'); fetch('/api/admin/manage?type=payouts', { credentials: 'include' }).then(r => r.json()).then(d => { if (Array.isArray(d)) setPayouts(d); }); }
     else { const e = await res.json(); showToast(e.error || 'Failed', 'error'); }
   };
 
