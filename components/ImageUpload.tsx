@@ -49,8 +49,8 @@ export default function ImageUpload({ onImage, currentImage }: ImageUploadProps)
   }, []);
 
   const handleCrop = useCallback((croppedDataUrl: string) => {
-    // Clean up object URL
-    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    // Only revoke the blob URL if the cropped result is different (i.e., it was converted to data URL)
+    if (cropSrc && cropSrc !== croppedDataUrl) URL.revokeObjectURL(cropSrc);
     setCropSrc(null);
     setPreview(croppedDataUrl);
     onImage(croppedDataUrl);

@@ -99,7 +99,7 @@ export default function ImageCropper({
     });
   };
 
-  // ── Crop: translate preview coordinates to image coordinates ──
+  // ── Crop: use the visible image as-is, scaled to output size ──
   const handleCrop = () => {
     const img = imgRef.current;
     if (!img) {
@@ -108,17 +108,6 @@ export default function ImageCropper({
     }
 
     const container = getContainerSize();
-    const totalScale = coverScale * zoom;
-
-    // Center of displayed image
-    const imgCenterX = container.w / 2 - pan.x;
-    const imgCenterY = container.h / 2 - pan.y;
-
-    // Top-left of displayed image in source image pixel coordinates
-    const srcX = (imgCenterX - displayW / 2) / totalScale;
-    const srcY = (imgCenterY - displayH / 2) / totalScale;
-    const srcW = container.w / totalScale;
-    const srcH = container.h / totalScale;
 
     try {
       const canvas = document.createElement('canvas');
@@ -129,6 +118,13 @@ export default function ImageCropper({
 
       ctx.fillStyle = '#0D0D0D';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Source pixel coordinates of the top-left of the visible area
+      const srcX = (displayW / 2 - container.w / 2 - pan.x) / (coverScale * zoom);
+      const srcY = (displayH / 2 - container.h / 2 - pan.y) / (coverScale * zoom);
+      const srcW = container.w / (coverScale * zoom);
+      const srcH = container.h / (coverScale * zoom);
+
       ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
       onCrop(canvas.toDataURL('image/jpeg', 0.85));
     } catch {
