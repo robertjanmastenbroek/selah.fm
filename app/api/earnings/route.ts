@@ -20,22 +20,23 @@ export async function GET(request: Request) {
       ORDER BY s.submitted_at DESC
     `;
 
-    const totalPaid = submissions
+    // All totals in CENTS — consistent with payout_amount_cents in submissions
+    const totalPaidCents = submissions
       .filter((s: any) => s.payout_status === 'paid')
-      .reduce((sum: number, s: any) => sum + (s.payout_amount_cents || 0), 0) / 100;
+      .reduce((sum: number, s: any) => sum + (s.payout_amount_cents || 0), 0);
 
-    const totalPending = submissions
+    const totalPendingCents = submissions
       .filter((s: any) => s.payout_status === 'pending' || s.review_status === 'approved')
-      .reduce((sum: number, s: any) => sum + (s.payout_amount_cents || 0), 0) / 100;
+      .reduce((sum: number, s: any) => sum + (s.payout_amount_cents || 0), 0);
 
-    const totalEarned = submissions
-      .reduce((sum: number, s: any) => sum + (s.payout_amount_cents || 0), 0) / 100;
+    const totalEarnedCents = submissions
+      .reduce((sum: number, s: any) => sum + (s.payout_amount_cents || 0), 0);
 
     return NextResponse.json({
       submissions,
-      totalPaid: Math.round(totalPaid * 100) / 100,
-      totalPending: Math.round(totalPending * 100) / 100,
-      totalEarned: Math.round(totalEarned * 100) / 100,
+      totalPaid: totalPaidCents,
+      totalPending: totalPendingCents,
+      totalEarned: totalEarnedCents,
     });
   } catch (e: any) {
     console.error('Earnings GET error:', e.message);
