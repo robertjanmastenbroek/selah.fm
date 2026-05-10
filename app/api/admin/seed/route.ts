@@ -9,9 +9,18 @@ export async function GET(request: Request) {
     // Add facebook_handle column if missing on live DB
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS facebook_handle TEXT`;
 
-    // ── Always start clean: delete all demo data ──────────────
+    // ── Always clean up: fix NULL artist_ids first ───────────
+    const artists = await sql`SELECT id FROM users WHERE user_type = 'artist' LIMIT 3`;
+    if (artists.length > 0) {
+      // Assign orphaned campaigns to artists round-robin
+      const orphaned = await sql`SELECT id FROM campaigns WHERE artist_id IS NULL`;
+      for (let i = 0; i < orphaned.length; i++) {
+        await sql`UPDATE campaigns SET artist_id = ${artists[i % artists.length].id} WHERE id = ${orphaned[i].id}`;
+      }
+    }
+
+    // ── Clean demo submissions ───────────────────────────────
     await sql`DELETE FROM submissions WHERE content_url LIKE '%tiktok.com%' OR content_url LIKE '%youtube.com%' OR content_url LIKE '%instagram.com%'`;
-    await sql`DELETE FROM campaigns WHERE track_title ILIKE '%midnight%' OR track_title ILIKE '%desert%' OR track_title ILIKE '%summer%' OR track_title ILIKE '%neon%' OR track_title ILIKE '%crystal%' OR track_title ILIKE '%bass%' OR track_title IN ('test', 'A', 'test campaign') OR artist_id IS NULL`;
     await sql`DELETE FROM users WHERE email LIKE '%@selah-demo.fm'`;
 
     // ── Seed Artists ──────────────────────────────────────────
