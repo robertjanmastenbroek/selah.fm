@@ -238,7 +238,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             {/* Right: The Offer + CTA */}
             <div className="flex flex-col justify-center space-y-5">
               <div>
-                <Badge variant="outline" className="border-primary/20 text-primary text-xs mb-3">{campaign.status === 'active' ? '🟢 Active campaign' : campaign.status}</Badge>
+                <Badge variant="outline" className="border-primary/20 text-primary text-xs mb-3">{campaign.status === 'active' ? '🟢 Active campaign' : campaign.status === 'paused' ? '⏸ Paused — creators have 7 days grace period' : campaign.status}</Badge>
                 <h1 className="text-2xl md:text-4xl font-bold tracking-tight mb-2">{campaign.track_title}</h1>
                 <a href={campaign.track_url} target="_blank" rel="noopener" className="text-primary hover:underline text-sm inline-flex items-center gap-1">
                   <Spotify size={14} /> Listen on Spotify
