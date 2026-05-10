@@ -11,72 +11,6 @@ interface Message {
   timestamp: Date;
 }
 
-// ── Selah AI response engine ──────────────────────────────────────
-function getBotResponse(userMessage: string): string | null {
-  const msg = userMessage.toLowerCase();
-
-  // Campaign / artist questions
-  if (/(create|campaign|promote|launch).*(track|song|music)/.test(msg)) {
-    return "To create a campaign: go to your Dashboard, click New, choose a track, set your CPM rate and budget, and launch. Creators will find it on the Browse page and start making content!";
-  }
-  if (/(cpm|rate|budget|cost|price|pricing)/.test(msg)) {
-    return "You set your own CPM rate (cost per 1,000 views). The platform takes a 20% service fee from creator payouts. There are no hidden costs — you only pay for verified views you approve.";
-  }
-  if (/(fee|fees|charge|commission|platform fee)/.test(msg)) {
-    return "Selah.fm charges a 20% platform fee on creator payouts. Artists pay exactly what they budget — no surprise costs. Creators earn 80% of the CPM for verified views.";
-  }
-
-  // Creator questions
-  if (/(join|submit|content|video).*(campaign|promote)/.test(msg)) {
-    return "Browse campaigns at selah.fm/browse, click 'Join campaign' on any track you like, paste your video link, and submit. The artist reviews it — if approved, you earn based on verified views!";
-  }
-  if (/(earn|payout|get paid|money|cash)/.test(msg)) {
-    return "Creators earn per 1,000 verified views at the campaign's CPM rate, minus the 20% platform fee. Payouts are processed via Stripe Connect. Set up your Stripe account in the Earnings page.";
-  }
-
-  // Payments / Stripe
-  if (/(stripe|payment|bank|payout|connect)/.test(msg)) {
-    return "We use Stripe for all payments. Artists deposit via Stripe Checkout. Creators connect their bank account via Stripe Connect in the Earnings page to receive payouts. It's secure and works in 40+ countries.";
-  }
-  if (/(deposit|fund|add.*budget)/.test(msg)) {
-    return "You can add budget to an active campaign from your Dashboard — click 'Add budget' on any campaign card. Payments are processed securely through Stripe.";
-  }
-
-  // Verification
-  if (/(verify|views|fake|bot|real)/.test(msg)) {
-    return "We verify views through YouTube's public API, TikTok's oEmbed, and manual review for Instagram. Only organic, verified views count toward creator earnings. We take fraud seriously.";
-  }
-
-  // Account / login issues
-  if (/(login|sign.*in|sign.*up|register|account|password|google|oauth)/.test(msg)) {
-    return "You can sign up with email/password or continue with Google. If you signed up via Google, use the 'Continue with Google' button — password login won't work for Google accounts. For password resets, contact support@selah.fm.";
-  }
-  if (/(forgot|reset|change.*password)/.test(msg)) {
-    return "Password reset isn't self-service yet — but we're building it! For now, email support@selah.fm and we'll help you reset within 24 hours.";
-  }
-
-  // General platform info
-  if (/(about|what is|how does|platform|marketplace)/.test(msg)) {
-    return "Selah.fm is an open-source CPM marketplace for music promotion. Artists create campaigns with budgets, creators make TikToks/Reels/Shorts using the track, artists review and approve, and creators get paid for verified views. We're transparent — all code is MIT licensed on GitHub!";
-  }
-  if (/(open.source|github|code|mit|license)/.test(msg)) {
-    return "Selah.fm is fully open source under the MIT license! Check out the code at github.com/robertjanmastenbroek/selah.fm. You can contribute, audit, or run your own instance.";
-  }
-
-  // Greetings
-  if (/^(hi|hello|hey|yo|sup|hola|greetings)/.test(msg.trim())) {
-    return "Hey there! 👋 I'm Selah AI, your support assistant. I can help with campaigns, payments, creator questions, or anything about the platform. What can I help you with?";
-  }
-
-  // Thanks
-  if (/(thanks|thank you|thx|appreciate)/.test(msg.trim())) {
-    return "You're welcome! Happy to help. If you need anything else, just ask. 🎵";
-  }
-
-  // Fallback — offer human escalation
-  return null;
-}
-
 // ── Component ────────────────────────────────────────────────────
 export default function SupportWidget() {
   const [open, setOpen] = useState(false);
@@ -103,32 +37,27 @@ export default function SupportWidget() {
     const userMessage: Message = { id: `u-${Date.now()}`, role: 'user', content: userMsg, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
 
-    // Get bot response
-    setTimeout(() => {
-      const botReply = getBotResponse(userMsg);
-      if (botReply) {
-        setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: botReply, timestamp: new Date() }]);
-        setSending(false);
-      } else {
-        // Bot couldn't answer — offer escalation
-        setMessages(prev => [...prev, {
-          id: `b-${Date.now()}`,
-          role: 'bot',
-          content: "I'm not sure about that one — let me connect you with our team. They'll get back to you by email, usually within a few hours.",
-          timestamp: new Date(),
-        }]);
-        setEmailForwarded(true);
-        setSending(false);
+    try {
+      const res = await fetch('/api/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMsg,
+          history: messages.slice(-6).map(m => `${m.role}: ${m.content}`),
+        }),
+      });
 
-        // Forward to email via API
-        fetch('/api/support', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userMsg, history: messages.slice(-4).map(m => `${m.role}: ${m.content}`) }),
-        }).catch(() => {});
+      const data = await res.json();
+      if (data.reply) {
+        setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: data.reply, timestamp: new Date() }]);
+        if (data.source === 'human') setEmailForwarded(true);
+      } else {
+        setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: "Sorry, something went wrong. Try again or email support@selah.fm.", timestamp: new Date() }]);
       }
-    }, 600 + Math.random() * 800); // Simulate typing delay
+    } catch {
+      setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: "Sorry, I couldn't reach our servers. Please try again or email support@selah.fm.", timestamp: new Date() }]);
+    }
+    setSending(false);
   };
 
   const reportBug = () => {
