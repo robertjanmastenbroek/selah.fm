@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import useSWR from 'swr';
+import { fetcher, swrConfig } from '@/lib/swr-config';
 import { motion, AnimatePresence } from 'framer-motion';
 import CreatorAvatar from '@/components/CreatorAvatar';
 import { ArrowLeft, Send, MessageCircle, X } from 'lucide-react';
@@ -31,6 +33,12 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [ownUserId, setOwnUserId] = useState('');
+
+  // Get own user ID from shared SWR cache (TopNav already warmed it)
+  const { data: me } = useSWR('/api/auth/me', fetcher, swrConfig);
+  useEffect(() => {
+    if (me?.user?.id && !ownUserId) setOwnUserId(me.user.id);
+  }, [me, ownUserId]);
   const msgEnd = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -101,13 +109,6 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
   useEffect(() => {
     if (open) {
       fetchConversations();
-      // Also load own user ID from the auth/me endpoint
-      fetch('/api/auth/me')
-        .then(r => r.json())
-        .then(d => {
-          if (d.user?.id) setOwnUserId(d.user.id);
-        })
-        .catch(() => {});
     }
   }, [open, fetchConversations]);
 
@@ -118,7 +119,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       return;
     }
     fetchMessages(activeConv.other_id);
-    pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 10000);
+    pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 30000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };

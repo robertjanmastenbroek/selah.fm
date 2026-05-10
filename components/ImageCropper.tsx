@@ -126,7 +126,7 @@ export default function ImageCropper({
       const srcH = container.h / (coverScale * zoom);
 
       ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
-      onCrop(canvas.toDataURL('image/jpeg', 0.85));
+      onCrop(canvas.toDataURL('image/jpeg', 0.7));
     } catch {
       fallback();
     }
