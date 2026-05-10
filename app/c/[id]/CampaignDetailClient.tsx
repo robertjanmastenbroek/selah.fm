@@ -285,26 +285,86 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   Submit Your Video — Earn ${(cpm * 0.8).toFixed(2)}/1K views
                 </Button>
               ) : (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
-                  <p className="text-sm font-semibold">Paste your video link</p>
-                  <div className="flex gap-2">
-                    <select value={submitPlatform} onChange={e => setSubmitPlatform(e.target.value)}
-                      className="rounded-xl bg-white/[0.04] border border-white/[0.06] px-3 py-3 text-sm text-foreground" style={{ colorScheme: 'dark' }}>
-                      <option value="tiktok">TikTok</option>
-                      <option value="instagram">Reels</option>
-                      <option value="youtube">Shorts</option>
-                    </select>
-                    <Input
-                      value={submitUrl}
-                      onChange={e => setSubmitUrl(e.target.value)}
-                      placeholder="https://..."
-                      className="flex-1"
-                    />
-                    <Button onClick={handleSubmit} disabled={!submitUrl || submitting} className="shrink-0">
-                      {submitting ? '...' : 'Submit'}
-                    </Button>
+                <motion.div
+                  initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                  className="rounded-2xl bg-gradient-to-b from-white/[0.05] to-white/[0.02] border border-white/[0.08] overflow-hidden"
+                >
+                  {/* Platform selector — large clickable cards */}
+                  <div className="p-5 space-y-4">
+                    <p className="text-sm font-semibold flex items-center gap-2">
+                      <Send size={16} className="text-primary" />
+                      Submit your video
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { platform: 'tiktok', label: 'TikTok', color: '#ff0050', desc: 'Short video' },
+                        { platform: 'instagram', label: 'Reels', color: '#E1306C', desc: 'Instagram' },
+                        { platform: 'youtube', label: 'Shorts', color: '#FF0000', desc: 'YouTube' },
+                      ].map(p => (
+                        <button
+                          key={p.platform}
+                          onClick={() => setSubmitPlatform(p.platform)}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
+                            submitPlatform === p.platform
+                              ? 'border-primary bg-primary/[0.06]'
+                              : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]'
+                          }`}
+                        >
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: p.color + '15' }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill={p.color}>
+                              {p.platform === 'tiktok' && <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>}
+                              {p.platform === 'instagram' && <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke={p.color} strokeWidth="2"/><circle cx="12" cy="12" r="5" fill="none" stroke={p.color} strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1.5" fill={p.color}/></>}
+                              {p.platform === 'youtube' && <><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.94 2C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58z" fill="none" stroke={p.color} strokeWidth="2"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill={p.color}/></>}
+                            </svg>
+                          </div>
+                          <span className="text-xs font-medium">{p.label}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* URL input */}
+                    <div className="flex gap-2">
+                      <Input
+                        value={submitUrl}
+                        onChange={e => setSubmitUrl(e.target.value)}
+                        placeholder="Paste your video link..."
+                        className="flex-1 text-sm"
+                        autoFocus
+                      />
+                      <Button
+                        onClick={handleSubmit}
+                        disabled={!submitUrl || submitting}
+                        className="shrink-0 px-5 bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_20px_rgba(91,127,255,0.25)]"
+                      >
+                        {submitting ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          'Submit'
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Earnings preview */}
+                    {submitUrl && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-3 flex items-center gap-3"
+                      >
+                        <DollarSign size={16} className="text-emerald-400" />
+                        <div>
+                          <p className="text-sm font-semibold text-emerald-400">${(cpm * 0.8).toFixed(2)} per 1K views</p>
+                          <p className="text-[10px] text-emerald-400/70">You keep 80% · Paid after approval</p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    <button onClick={() => setJoined(false)} className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1">
+                      Cancel
+                    </button>
                   </div>
-                  <button onClick={() => setJoined(false)} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
                 </motion.div>
               )}
 
