@@ -47,6 +47,7 @@ export async function PATCH(request: Request) {
     if (body.instagram_handle !== undefined) { updates.push(`instagram_handle = $${updates.length + 1}`); values.push(body.instagram_handle); }
     if (body.youtube_handle !== undefined) { updates.push(`youtube_handle = $${updates.length + 1}`); values.push(body.youtube_handle); }
     if (body.facebook_handle !== undefined) { updates.push(`facebook_handle = $${updates.length + 1}`); values.push(body.facebook_handle); }
+    if (body.facebook_handle !== undefined) { updates.push(`facebook_handle = $${updates.length + 1}`); values.push(body.facebook_handle); }
 
     if (updates.length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });

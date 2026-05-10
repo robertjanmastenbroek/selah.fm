@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [tiktok, setTikTok] = useState('');
   const [instagram, setInstagram] = useState('');
   const [youtube, setYouTube] = useState('');
+  const [facebook, setFacebook] = useState('');
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
@@ -36,6 +37,7 @@ export default function SettingsPage() {
         setTikTok(d.user.tiktok_handle||'');
         setInstagram(d.user.instagram_handle||'');
         setYouTube(d.user.youtube_handle||'');
+        setFacebook(d.user.facebook_handle||'');
       }
       setLoading(false);
     }).catch(()=>setLoading(false));
@@ -48,7 +50,7 @@ export default function SettingsPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, bio, genres, preferredCpm: cpm,
-          tiktok_handle: tiktok||null, instagram_handle: instagram||null, youtube_handle: youtube||null }),
+          tiktok_handle: tiktok||null, instagram_handle: instagram||null, youtube_handle: youtube||null, facebook_handle: facebook||null }),
       });
       if (res.ok) {
         addToast('Profile saved', 'success');
@@ -64,6 +66,7 @@ export default function SettingsPage() {
     { key: 'tiktok', value: tiktok, set: setTikTok, label: 'TikTok', icon: TikTok, color: 'text-[#ff0050]', bg: 'bg-[#ff0050]/5' },
     { key: 'instagram', value: instagram, set: setInstagram, label: 'Instagram', icon: Instagram, color: 'text-[#E1306C]', bg: 'bg-[#E1306C]/5' },
     { key: 'youtube', value: youtube, set: setYouTube, label: 'YouTube', icon: YouTube, color: 'text-[#FF0000]', bg: 'bg-[#FF0000]/5' },
+    { key: 'facebook', value: facebook, set: setFacebook, label: 'Facebook', icon: null, color: 'text-blue-400', bg: 'bg-blue-500/5' },
   ];
   const connectedCount = socials.filter(s=>s.value).length;
 
@@ -128,8 +131,8 @@ export default function SettingsPage() {
               <div className="p-6 pt-0 space-y-3">
                 {socials.map(s=>{const Icon=s.icon;const connected=!!s.value;return(
                   <div key={s.key} className={`rounded-xl ${s.bg} border ${connected?'border-white/[0.08]':'border-white/[0.04]'} p-4 flex items-center gap-3 transition-all`}>
-                    <div className={`w-10 h-10 rounded-xl ${connected?`${s.bg}`:'bg-white/[0.02]'} flex items-center justify-center shrink-0`}>
-                      <Icon size={18}/>
+                    <div className={`w-10 h-10 rounded-xl ${connected?`${s.bg}`:'bg-white/[0.02]'} flex items-center justify-center shrink-0 ${s.color}`}>
+                      {Icon?<Icon size={18}/>:<span className="text-xs font-bold" style={{color:'inherit'}}>f</span>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -155,6 +158,7 @@ export default function SettingsPage() {
                   { name:'TikTok', status:!!tiktok, color:'text-[#ff0050]', bg:'bg-[#ff0050]/10', icon:TikTok },
                   { name:'Instagram', status:!!instagram, color:'text-[#E1306C]', bg:'bg-[#E1306C]/10', icon:Instagram },
                   { name:'YouTube', status:!!youtube, color:'text-[#FF0000]', bg:'bg-[#FF0000]/10', icon:YouTube },
+                  { name:'Facebook', status:!!facebook, color:'text-blue-400', bg:'bg-blue-500/10' },
                 ].map(p=>{const Icon=p.icon;return(
                   <div key={p.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
