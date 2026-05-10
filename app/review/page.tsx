@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useSWR from 'swr';
 import Header from '@/components/TopNav';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
@@ -8,89 +9,65 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
+const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
+
 interface Submission {
-  id: string;
-  creator_name: string;
-  track_title: string;
-  platform: string;
-  content_url: string;
-  views_verified: number;
-  cpm_rate_cents: number;
-  max_payout_per_submission_cents: number;
-  review_status: string;
-  campaign_id: string;
+  id: string; creator_name: string; track_title: string; platform: string;
+  content_url: string; views_verified: number; cpm_rate_cents: number;
+  max_payout_per_submission_cents: number; review_status: string; campaign_id: string;
 }
 
 export default function ReviewPage() {
-  const [subs, setSubs] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedCampaign, setSelectedCampaign] = useState('all');
   const [statusFilter, setStatusFilter] = useState('pending');
-  const [campaigns, setCampaigns] = useState<{ id: string; track_title: string }[]>([]);
   const { addToast } = useToast();
 
-  useEffect(() => {
-    // Fetch artist's campaigns first
-    fetch('/api/campaigns')
-      .then(r => r.json())
-      .then(d => {
-        const artistCampaigns = d.campaigns || [];
-        setCampaigns(artistCampaigns.map((c: any) => ({ id: c.id, track_title: c.track_title })));
-      })
-      .catch(() => {});
-  }, []);
+  const { data: campaignsData } = useSWR('/api/campaigns', fetcher, { revalidateOnFocus: false });
+  const campaigns = (campaignsData?.campaigns || []).map((c: any) => ({ id: c.id, track_title: c.track_title }));
 
-  useEffect(() => { fetchSubmissions(); }, [selectedCampaign, statusFilter]);
+  const campaignId = selectedCampaign === 'all' ? 'all' : selectedCampaign;
+  const { data: submissions, error, isLoading, mutate } = useSWR(`/api/submissions?campaignId=${campaignId}`, fetcher, { revalidateOnFocus: false });
+
+  const subs: Submission[] = submissions ? (Array.isArray(submissions) ? submissions.filter((s: Submission) => s.review_status === statusFilter) : []) : [];
 
   const [undoState, setUndoState] = useState<{ id: string; status: string; timer: any } | null>(null);
 
   const handleAction = async (id: string, status: string) => {
-    // Optimistic removal with undo
-    const subToUndo = subs.find(s => s.id === id);
-    setSubs(prev => prev.filter(s => s.id !== id));
-    
+    // Optimistic update: remove from local list
+    mutate(
+      (currentData: any) => {
+        if (!Array.isArray(currentData)) return currentData;
+        return currentData.filter((s: Submission) => s.id !== id);
+      },
+      false // Don't revalidate immediately — wait for the API call
+    );
+
     try {
       await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
       addToast(status === 'approved' ? 'Submission approved — creator will be paid' : 'Submission rejected', status === 'approved' ? 'success' : 'info');
+      mutate(); // Revalidate after API call
     } catch {
       addToast('Failed to update — try again', 'error');
-      if (subToUndo) setSubs(prev => [...prev, subToUndo]);
+      mutate(); // Revert optimistic update
       return;
     }
 
     // Show undo option
-    if (subToUndo) {
-      const timer = setTimeout(() => setUndoState(null), 4000);
-      setUndoState({ id, status, timer });
-    }
+    const timer = setTimeout(() => setUndoState(null), 4000);
+    setUndoState({ id, status, timer });
   };
 
   const handleUndo = async () => {
     if (!undoState) return;
     clearTimeout(undoState.timer);
-    const reverseStatus = undoState.status === 'approved' ? 'pending' : undoState.status === 'rejected' ? 'pending' : 'pending';
     try {
-      await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: undoState.id, status: reverseStatus }) });
+      await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: undoState.id, status: 'pending' }) });
       addToast('Review undone', 'info');
+      mutate();
     } catch {
       addToast('Failed to undo', 'error');
     }
     setUndoState(null);
-    // Refresh list
-    fetchSubmissions();
-  };
-
-  const fetchSubmissions = () => {
-    setLoading(true);
-    const campaignId = selectedCampaign === 'all' ? 'all' : selectedCampaign;
-    fetch(`/api/submissions?campaignId=${campaignId}`)
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setSubs(data.filter((s: Submission) => s.review_status === statusFilter));
-        }
-      })
-      .finally(() => setLoading(false));
   };
 
   return (
@@ -109,7 +86,7 @@ export default function ReviewPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="section-title mb-1">Review</h1>
-            <p className="text-muted-foreground text-sm">{loading ? 'Loading...' : `${subs.length} ${statusFilter}`}</p>
+            <p className="text-muted-foreground text-sm">{isLoading ? 'Loading...' : `${subs.length} ${statusFilter}`}</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex rounded-lg border overflow-hidden">
@@ -129,14 +106,16 @@ export default function ReviewPage() {
               className="border rounded-md px-3 py-2 text-sm bg-background"
             >
               <option value="all">All campaigns</option>
-              {campaigns.map(c => (
+              {campaigns.map((c: { id: string; track_title: string }) => (
                 <option key={c.id} value={c.id}>{c.track_title}</option>
               ))}
             </select>
           </div>
         </div>
 
-        {loading ? (
+        {error ? (
+          <Card className="text-center py-16"><CardContent><h2 className="text-lg font-medium mb-2">Couldn't load submissions</h2><p className="text-muted-foreground text-sm mb-4">Check your connection.</p><Button variant="outline" onClick={() => mutate()}>Retry</Button></CardContent></Card>
+        ) : isLoading ? (
           <div className="space-y-4">
             {[1,2].map(i => <Card key={i}><CardContent className="p-5 space-y-3"><Skeleton className="h-5 w-1/2" /><Skeleton className="h-4 w-3/4" /><Skeleton className="h-16 w-full" /><div className="flex gap-2"><Skeleton className="h-10 flex-1" /><Skeleton className="h-10 flex-1" /></div></CardContent></Card>)}
           </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import useSWR from 'swr';
 import NotificationBell from '@/components/NotificationBell';
 import ChatWidget from '@/components/ChatWidget';
 import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug } from 'lucide-react';
@@ -13,15 +14,16 @@ const mainLinks = [
   { href: '/creators', label: 'Creators' },
 ];
 
+const fetcher = (url: string) => fetch(url).then(r => r.json());
+
 export default function Header() {
-  const [profile, setProfile] = useState<any>(null);
+  const { data } = useSWR('/api/auth/me', fetcher, {
+    revalidateOnFocus: false, dedupingInterval: 30000,
+  });
+  const profile = data?.user || null;
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-
-  useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.user) setProfile(d.user); });
-  }, []);
 
   const initials = profile?.name?.[0]?.toUpperCase() || '?';
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');

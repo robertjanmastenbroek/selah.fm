@@ -1,44 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import Header from '@/components/TopNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
+const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(r => r.json());
+
 interface Submission {
-  id: string;
-  track_title: string;
-  platform: string;
-  views_verified: number;
-  payout_amount_cents: number;
-  payout_status: string;
-  review_status: string;
-  submitted_at: string;
-  content_url: string;
+  id: string; track_title: string; platform: string; views_verified: number;
+  payout_amount_cents: number; payout_status: string; review_status: string;
+  submitted_at: string; content_url: string;
 }
 
 export default function EarningsPage() {
-  const [data, setData] = useState<{
-    submissions: Submission[];
-    totalPaid: number;
-    totalPending: number;
-    totalEarned: number;
-  } | null>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: profileData } = useSWR('/api/auth/me', fetcher, { revalidateOnFocus: false });
+  const profile = profileData?.user || null;
 
-  useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.user) setProfile(d.user); });
-    fetch('/api/earnings')
-      .then(r => r.json())
-      .then(d => {
-        if (d.submissions) setData(d);
-        else setData({ submissions: [], totalPaid: 0, totalPending: 0, totalEarned: 0 });
-      })
-      .catch(() => setData({ submissions: [], totalPaid: 0, totalPending: 0, totalEarned: 0 }))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data, error, isLoading, mutate } = useSWR('/api/earnings', fetcher, { revalidateOnFocus: false });
+  const earnings = data?.submissions ? data : { submissions: [], totalPaid: 0, totalPending: 0, totalEarned: 0 };
 
   const statusBadge = (s: Submission) => {
     if (s.payout_status === 'paid') return <Badge className="text-xs bg-emerald-500/10 text-emerald-400 border-emerald-500/20">paid</Badge>;
@@ -53,7 +34,15 @@ export default function EarningsPage() {
       <main className="page-container">
         <h1 className="section-title mb-8">Earnings</h1>
 
-        {loading ? (
+        {error ? (
+          <Card className="text-center py-16">
+            <CardContent>
+              <h2 className="text-lg font-medium mb-2">Couldn't load earnings</h2>
+              <p className="text-muted-foreground text-sm mb-4">Check your connection.</p>
+              <button onClick={() => mutate()} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold">Retry</button>
+            </CardContent>
+          </Card>
+        ) : isLoading ? (
           <>
             <Card className="text-center mb-6">
               <CardContent className="p-8 space-y-2">
@@ -80,11 +69,11 @@ export default function EarningsPage() {
               <CardContent className="p-8">
                 <p className="text-muted-foreground text-xs uppercase tracking-widest mb-2">Available balance</p>
                 <p className="text-5xl font-bold tracking-tight">
-                  ${(data?.totalPaid || 0).toFixed(2)}
+                  ${(earnings.totalPaid || 0).toFixed(2)}
                 </p>
-                {(data?.totalPending || 0) > 0 && (
+                {(earnings.totalPending || 0) > 0 && (
                   <p className="text-muted-foreground text-sm mt-1">
-                    +${(data?.totalPending || 0).toFixed(2)} pending
+                    +${(earnings.totalPending || 0).toFixed(2)} pending
                   </p>
                 )}
               </CardContent>
@@ -124,7 +113,7 @@ export default function EarningsPage() {
 
             {/* Submissions list */}
             <div className="space-y-2">
-              {data?.submissions.length === 0 ? (
+              {earnings.submissions.length === 0 ? (
                 <Card className="text-center py-16 animate-fade-in">
                   <CardContent>
                     <img src="/images/empty-earnings.png" alt="No earnings yet" className="mx-auto mb-6 w-40 h-40 object-contain opacity-80" />
@@ -135,7 +124,7 @@ export default function EarningsPage() {
                   </CardContent>
                 </Card>
               ) : (
-                data?.submissions.map((s, i) => (
+                earnings.submissions.map((s: Submission, i: number) => (
                   <Card key={s.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                     <CardContent className="p-4 flex items-center justify-between">
                       <div>
