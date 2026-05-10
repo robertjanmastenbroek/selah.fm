@@ -61,6 +61,13 @@ export async function POST(request: Request) {
       }
     }
 
+    // Send welcome email (non-blocking)
+    try {
+      const { sendEmail, welcomeEmail } = await import('@/lib/email');
+      const { subject, html } = welcomeEmail(name || email.split('@')[0]);
+      sendEmail({ to: email, subject, html });
+    } catch {}
+
     const res = NextResponse.json({ ok: true, redirectTo: '/onboarding' });
     setSessionCookie(res, {
       email,
