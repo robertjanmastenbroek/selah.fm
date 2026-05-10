@@ -36,7 +36,7 @@ function LoginForm() {
       <div className="w-full max-w-sm space-y-4">
         {refCode && (
           <div className="bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 text-sm text-accent-foreground text-center">
-            🎁 You&apos;ve been referred! Sign up and both of you get a $5 bonus.
+            🎁 You&apos;ve been referred! When you make your first deposit, you and your referrer both get a 5% bonus.
           </div>
         )}
         <a href="/api/oauth/google" className="flex items-center justify-center gap-2 w-full border rounded-xl py-3 text-sm font-medium hover:bg-muted transition-colors">

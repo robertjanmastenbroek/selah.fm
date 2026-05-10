@@ -66,29 +66,19 @@ export async function POST(request: Request) {
 
     const userId = result[0].id;
 
-    // Process referral if code present
+    // Track referral as pending — bonus is only awarded on actual deposit
     if (refCode) {
       try {
         const referrer = await sql`SELECT id FROM users WHERE email = ${refCode}`;
-        if (referrer.length > 0) {
-          const referrerId = referrer[0].id;
+        if (referrer.length > 0 && referrer[0].id !== userId) {
           await sql`
             INSERT INTO referrals (referrer_id, referred_email, status)
-            VALUES (${referrerId}, ${email}, 'completed')
+            VALUES (${referrer[0].id}, ${email}, 'pending')
             ON CONFLICT DO NOTHING
-          `;
-          await sql`
-            UPDATE campaigns 
-            SET total_budget_cents = total_budget_cents + 500,
-                budget_remaining_cents = budget_remaining_cents + 500,
-                updated_at = NOW()
-            WHERE artist_id = ${referrerId}
-              AND status = 'active'
-            LIMIT 1
           `;
         }
       } catch (refErr) {
-        console.error('Referral processing failed:', refErr);
+        console.error('Referral tracking failed:', refErr);
       }
     }
 
