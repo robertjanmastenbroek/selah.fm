@@ -3,6 +3,7 @@ import './globals.css';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import SupportWidgetClient from '@/components/SupportWidgetClient';
+import PageTransition from '@/components/PageTransition';
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -43,13 +44,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         )}
       </head>
       <body className="min-h-screen bg-background">
+        {/* Skip to content */}
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium focus:outline-none">
+          Skip to content
+        </a>
+
+        {/* ARIA live region for dynamic announcements */}
+        <div id="aria-live" aria-live="polite" aria-atomic="true" className="sr-only" />
+
         {/* Grain texture overlay */}
         <div className="fixed inset-0 pointer-events-none z-[9999] opacity-[0.015]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
           backgroundSize: '256px 256px',
         }} />
         <ErrorBoundary>
-          <ToastProvider>{children}</ToastProvider>
+          <PageTransition>
+            <main id="main-content" tabIndex={-1}>
+              <ToastProvider>{children}</ToastProvider>
+            </main>
+          </PageTransition>
           <SupportWidgetClient />
         </ErrorBoundary>
         {/* Open source footer */}

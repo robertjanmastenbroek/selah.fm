@@ -3,6 +3,10 @@ import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
+  const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
+  const rl = rateLimit(getRateLimitKey(request), { maxRequests: 10, windowMs: 60_000 });
+  if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
+
   try {
     const { campaignId, contentUrl, platform } = await request.json();
     

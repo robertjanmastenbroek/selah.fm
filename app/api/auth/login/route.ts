@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 
-function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password + 'selah-salt').digest('hex');
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(password, hash);
 }
 
 export async function POST(request: Request) {
@@ -39,7 +39,8 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    if (user.password_hash !== hashPassword(password)) {
+    const valid = await verifyPassword(password, user.password_hash);
+    if (!valid) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 

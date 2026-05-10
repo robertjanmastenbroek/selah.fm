@@ -1,5 +1,5 @@
 # Selah.fm — Status & Reference
-**Last updated:** 2026-05-10 · **Versions:** 29
+**Last updated:** 2026-05-10 · **Versions:** 30
 **Live:** https://selah.fm · **Admin:** https://selah.fm/admin
 
 ---
@@ -19,6 +19,20 @@
 | Spotify artist data | ⚠️ Not configured (shows "0 monthly") |
 | Social OAuth (TikTok/IG/YT/FB) | ⚠️ Infrastructure built, keys not set |
 | CRON_SECRET | ⚠️ Not set |
+
+### v30 — Security & Polish (2026-05-10)
+- bcrypt password hashing (replaced SHA-256) — 12 salt rounds
+- Stripe webhook signature verification enforced in all environments
+- Rate limiting on campaign create, submissions, review, Stripe checkout
+- Admin middleware with server-side session validation
+- Real-time platform stats API (`/api/stats`) replacing hardcoded trust metrics
+- Full analytics page with live data: platform breakdown, monthly trends, recent submissions
+- Root loading.tsx, error.tsx, not-found.tsx, global-error.tsx — zero dead ends
+- Page transitions via layout-level AnimatePresence (respects prefers-reduced-motion)
+- Skip-to-content + aria-live region for accessibility
+- Onboarding persistence via localStorage — survives page refresh
+- E2E suite expanded to 43 tests: API health, stats, 404, a11y, mobile login
+- Ripple effect hook for micro-reward interactions
 
 ### Config Tasks Remaining (Zero Code Changes)
 

@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 
-function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password + 'selah-salt').digest('hex');
+const BCRYPT_ROUNDS = 12;
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_ROUNDS);
 }
 
 function validatePassword(password: string): string | null {
@@ -54,9 +56,11 @@ export async function POST(request: Request) {
 
     const displayName = name || email.split('@')[0];
 
+    const hashedPassword = await hashPassword(password);
+
     const result = await sql`
       INSERT INTO users (email, password_hash, user_type, display_name)
-      VALUES (${email}, ${hashPassword(password)}, ${userType}, ${displayName})
+      VALUES (${email}, ${hashedPassword}, ${userType}, ${displayName})
       RETURNING id
     `;
 

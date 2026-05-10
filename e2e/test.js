@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 const BASE = process.env.TEST_URL || 'https://selah.fm';
 
 /**
- * Selah.fm — Full E2E Test Suite (v12)
+ * Selah.fm — Full E2E Test Suite (v13)
  */
 (async () => {
   const browser = await chromium.launch({ headless: true });
@@ -15,9 +15,7 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
     catch(e) { console.log(`  ❌ ${name}: ${e.message}`); fail++; }
   };
 
-  const timestamp = Date.now().toString(36);
-
-  console.log('\n🧪 Selah.fm E2E Test Suite v12\n');
+  console.log('\n🧪 Selah.fm E2E Test Suite v13\n');
   console.log(`  🌐 Target: ${BASE}\n`);
 
   // ─── 1. Public Pages ───────────────────────────────────────────────────────
@@ -35,13 +33,25 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
     await page.waitForSelector("text=I'm an artist", { timeout: 3000 });
   });
 
-  await check('1.4 Landing has trust badges', async () => {
+  await check('1.4 Landing has trust text', async () => {
     await page.waitForSelector('text=Trusted by', { timeout: 3000 });
   });
 
   // All public pages
-  for (const [path, label] of [['/browse', 'Campaigns'], ['/artists', 'Artists'], ['/creators', 'Creators'], ['/login', 'Login'], ['/tos', 'Terms'], ['/privacy', 'Privacy']]) {
+  for (const [path, label] of [
+    ['/browse', 'Campaigns'], ['/artists', 'Artists'], ['/creators', 'Creators'],
+    ['/login', 'Login'], ['/tos', 'Terms'], ['/privacy', 'Privacy'],
+    ['/content-guidelines', 'Content Guidelines'], ['/open-source', 'Open Source']
+  ]) {
     await check(`1.5 ${label} page (${path}) loads`, async () => {
+      const res = await page.goto(BASE + path);
+      if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+    });
+  }
+
+  // Welcome landing pages
+  for (const [path, label] of [['/welcome-artists', 'Artist Welcome'], ['/welcome-creators', 'Creator Welcome']]) {
+    await check(`1.6 ${label} (${path}) loads`, async () => {
       const res = await page.goto(BASE + path);
       if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
     });
@@ -81,12 +91,8 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
     await page.waitForSelector('text=campaigns available', { timeout: 5000 });
   });
 
-  await check('3.3 Campaign cards have content', async () => {
-    // Either campaign cards or empty state should be visible
-    await page.waitForTimeout(1000); // Let cards render
-    const cards = await page.$$('text=submissions');
-    const empty = await page.$('text=No campaigns yet');
-    if (!cards.length && !empty) throw new Error('No content on browse page');
+  await check('3.3 Browse has create campaign button', async () => {
+    await page.waitForSelector('text=Create campaign', { timeout: 3000 });
   });
 
   // ─── 4. Artists Page ───────────────────────────────────────────────────────
@@ -119,90 +125,104 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
     await page.waitForSelector('input[placeholder="Display name"]', { timeout: 3000 });
   });
 
-  // ─── 7. Dashboard (requires auth — verify redirect) ────────────────────────
-
-  await check('7.1 Dashboard loads', async () => {
-    const res = await page.goto(BASE + '/dashboard');
-    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  await check('6.4 Signup has role selector', async () => {
+    await page.waitForSelector('text=🎵 Artist', { timeout: 3000 });
+    await page.waitForSelector('text=📱 Creator', { timeout: 3000 });
   });
 
-  // ─── 8. Review Page ─────────────────────────────────────────────────────────
+  // ─── 7. Auth-protected pages (should return 200 even unauthenticated) ──────
 
-  await check('8.1 Review page loads', async () => {
-    const res = await page.goto(BASE + '/review');
-    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
-  });
+  for (const [path, label] of [
+    ['/dashboard', 'Dashboard'], ['/review', 'Review'],
+    ['/earnings', 'Earnings'], ['/settings', 'Settings'],
+    ['/analytics', 'Analytics'], ['/onboarding', 'Onboarding'],
+  ]) {
+    await check(`7.1 ${label} page (${path}) loads 200`, async () => {
+      const res = await page.goto(BASE + path);
+      if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+    });
+  }
 
-  // ─── 9. Earnings Page ──────────────────────────────────────────────────────
+  // ─── 8. Campaign Detail (404 handling) ─────────────────────────────────────
 
-  await check('9.1 Earnings page loads', async () => {
-    const res = await page.goto(BASE + '/earnings');
-    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
-  });
-
-  // ─── 10. Settings Page ─────────────────────────────────────────────────────
-
-  await check('10.1 Settings page loads', async () => {
-    const res = await page.goto(BASE + '/settings');
-    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
-  });
-
-  // ─── 11. Analytics Page ────────────────────────────────────────────────────
-
-  await check('11.1 Analytics page loads', async () => {
-    const res = await page.goto(BASE + '/analytics');
-    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
-  });
-
-  // ─── 12. Content Guidelines Page ───────────────────────────────────────────
-
-  await check('12.1 Content guidelines page loads', async () => {
-    const res = await page.goto(BASE + '/content-guidelines');
-    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
-  });
-
-  // ─── 13. Campaign Detail (404 handling) ────────────────────────────────────
-
-  await check('13.1 Campaign detail handles missing ID', async () => {
+  await check('8.1 Campaign detail handles missing ID', async () => {
     await page.goto(BASE + '/c/nonexistent-id');
     await page.waitForSelector('text=Campaign not found', { timeout: 5000 });
   });
 
-  // ─── 14. Onboarding Page ───────────────────────────────────────────────────
+  // ─── 9. 404 Page ──────────────────────────────────────────────────────────
 
-  await check('14.1 Onboarding page loads', async () => {
-    const res = await page.goto(BASE + '/onboarding');
-    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  await check('9.1 Custom 404 page renders', async () => {
+    await page.goto(BASE + '/this-page-does-not-exist-ever');
+    await page.waitForSelector('text=Page not found', { timeout: 5000 });
   });
 
-  // ─── 15. Mobile Viewport ───────────────────────────────────────────────────
+  // ─── 10. Mobile Viewport ───────────────────────────────────────────────────
 
-  await check('15.1 Mobile (375px) renders landing page', async () => {
+  await check('10.1 Mobile (375px) renders landing page', async () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(BASE);
     await page.waitForSelector('text=Get your music', { timeout: 5000 });
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 
-  await check('15.2 Mobile browse works', async () => {
+  await check('10.2 Mobile browse works', async () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(BASE + '/browse');
     await page.waitForSelector('text=Discover', { timeout: 5000 });
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 
-  // ─── 16. SEO ───────────────────────────────────────────────────────────────
+  await check('10.3 Mobile login works', async () => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto(BASE + '/login');
+    await page.waitForSelector('text=Continue with Google', { timeout: 5000 });
+    await page.setViewportSize({ width: 1280, height: 800 });
+  });
 
-  await check('16.1 Sitemap returns XML', async () => {
+  // ─── 11. SEO ───────────────────────────────────────────────────────────────
+
+  await check('11.1 Sitemap returns XML', async () => {
     const res = await page.goto(BASE + '/sitemap.xml');
     if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
     const body = await res.text();
     if (!body.includes('<urlset')) throw new Error('Not valid XML sitemap');
   });
 
-  await check('16.2 Robots.txt loads', async () => {
+  await check('11.2 Robots.txt loads', async () => {
     const res = await page.goto(BASE + '/robots.txt');
     if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+  });
+
+  // ─── 12. API Health ────────────────────────────────────────────────────────
+
+  await check('12.1 Health check returns 200', async () => {
+    const res = await page.goto(BASE + '/api/health');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+    const body = await res.json();
+    if (body.status !== 'ok') throw new Error('Health check failed: ' + JSON.stringify(body));
+  });
+
+  await check('12.2 Stats API returns data', async () => {
+    const res = await page.goto(BASE + '/api/stats');
+    if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+    const body = await res.json();
+    if (typeof body.artists !== 'number' || typeof body.creators !== 'number') {
+      throw new Error('Stats API missing fields');
+    }
+  });
+
+  // ─── 13. Skip-to-content accessibility ─────────────────────────────────────
+
+  await check('13.1 Skip-to-content link exists', async () => {
+    await page.goto(BASE);
+    const skipLink = await page.$('a[href="#main-content"]');
+    if (!skipLink) throw new Error('Skip-to-content link not found');
+  });
+
+  await check('13.2 Main content landmark exists', async () => {
+    const main = await page.$('main#main-content');
+    if (!main) throw new Error('Main content landmark not found');
   });
 
   // ─── Summary ───────────────────────────────────────────────────────────────

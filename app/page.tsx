@@ -5,8 +5,22 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Music4, Clapperboard, Sparkles } from 'lucide-react';
 
+function formatCount(n: number): string {
+  if (n >= 1000) return Math.floor(n / 100) / 10 + 'K';
+  if (n >= 100) return Math.floor(n / 10) * 10 + '+';
+  return n.toString();
+}
+
 export default function SplitterPage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [stats, setStats] = useState({ artists: 0, creators: 0, totalPaidCents: 0 });
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(d => setStats(d))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => setMousePos({ x: (e.clientX / window.innerWidth - 0.5) * 20, y: (e.clientY / window.innerHeight - 0.5) * 20 });
@@ -119,7 +133,11 @@ export default function SplitterPage() {
           <Link href="/login" className="inline-block text-sm text-muted-foreground hover:text-[#A0A0A0] transition-colors duration-200">
             Already have an account? Sign in
           </Link>
-          <p className="text-xs text-muted-foreground/50">Trusted by 200+ artists and 390+ creators</p>
+          <p className="text-xs text-muted-foreground/50">
+            {stats.artists > 0 || stats.creators > 0
+              ? `Trusted by ${formatCount(stats.artists)} artists and ${formatCount(stats.creators)} creators`
+              : 'The marketplace for music promotion'}
+          </p>
           <a
             href="/open-source"
             className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors mt-2"

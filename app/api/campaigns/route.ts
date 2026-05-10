@@ -62,6 +62,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
+  const rl = rateLimit(getRateLimitKey(request), { maxRequests: 5, windowMs: 60_000 });
+  if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
+
   try {
     const body = await request.json();
     const { validateCampaignInput } = await import('@/lib/validation');

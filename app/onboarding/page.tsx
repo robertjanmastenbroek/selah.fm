@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music4, Clapperboard, ArrowRight, Check, ArrowLeft, Sparkles } from 'lucide-react';
@@ -19,6 +19,28 @@ export default function OnboardingPage() {
   const [cpm, setCpm] = useState(2);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Persist onboarding state to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('selah-onboarding');
+    if (saved) {
+      try {
+        const state = JSON.parse(saved);
+        if (state.role) setRole(state.role);
+        if (state.name) setName(state.name);
+        if (state.genres) setGenres(state.genres);
+        if (state.platforms) setPlatforms(state.platforms);
+        if (state.cpm) setCpm(state.cpm);
+        if (typeof state.step === 'number' && state.step > 0) setStep(state.step);
+      } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('selah-onboarding', JSON.stringify({ step, role, name, genres, platforms, cpm }));
+  }, [step, role, name, genres, platforms, cpm]);
 
   // Artist: 3 steps. Creator: 5 steps.
   const artistSteps = 3;
@@ -45,6 +67,8 @@ export default function OnboardingPage() {
           preferredCpm: cpm * 100,
         }),
       });
+      // Clear onboarding state on completion
+      localStorage.removeItem('selah-onboarding');
       setDone(true);
       setTimeout(() => router.push(role === 'artist' ? '/dashboard' : '/browse'), 2000);
     } catch { setSaving(false); }
