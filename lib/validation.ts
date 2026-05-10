@@ -72,3 +72,47 @@ export function isValidUrl(url: string): boolean {
     return false;
   }
 }
+
+/**
+ * Validate campaign input for creation.
+ */
+export function validateCampaignInput(body: any): { valid: false; errors: string[] } | { valid: true; sanitized: any } {
+  const errors: string[] = [];
+
+  if (!body.trackTitle || typeof body.trackTitle !== 'string' || body.trackTitle.trim().length === 0) {
+    errors.push('trackTitle is required');
+  }
+  if (!body.trackUrl || !isValidUrl(body.trackUrl)) {
+    errors.push('trackUrl must be a valid URL');
+  }
+  const cpmRate = parseFloat(body.cpmRate);
+  if (isNaN(cpmRate) || cpmRate <= 0 || cpmRate > 100) {
+    errors.push('cpmRate must be a positive number (max $100)');
+  }
+  const budget = parseInt(body.budget);
+  if (isNaN(budget) || budget <= 0 || budget > 100000) {
+    errors.push('budget must be a positive number (max $100,000)');
+  }
+
+  if (errors.length > 0) return { valid: false, errors };
+
+  return {
+    valid: true,
+    sanitized: {
+      trackTitle: sanitizeInput(body.trackTitle, 200),
+      trackUrl: body.trackUrl.slice(0, 2048),
+      cpmRate,
+      budget,
+      maxPayout: parseInt(body.maxPayout) || budget,
+      requirements: body.requirements ? sanitizeInput(body.requirements, 2000) : undefined,
+      driveUrl: body.driveUrl || undefined,
+      hashtags: body.hashtags ? sanitizeInput(body.hashtags, 500) : undefined,
+      coverArtUrl: body.coverArtUrl || undefined,
+      requiredHashtags: body.requiredHashtags || undefined,
+      requireFtc: !!body.requireFtc,
+      minVideoLength: body.minVideoLength ? parseInt(body.minVideoLength) : null,
+      captionRequirements: body.captionRequirements || undefined,
+      platforms: body.platforms || undefined,
+    },
+  };
+}
