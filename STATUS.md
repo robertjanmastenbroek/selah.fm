@@ -93,13 +93,9 @@
 | | OG metadata per campaign page | ✅ |
 | | robots.txt | ✅ |
 
-### Status: 57/58 features complete (98%)
+### Status: 58/58 features complete (100%) ✅
 
-### One Remaining Gap
-
-| # | Gap | Why not critical for V1 |
-|---|-----|------------------------|
-| 1 | **URL malware scanning** | All submissions pass through artist review before going public. Artists are the human antivirus — they watch every video before approving. Add automated scanning in V1.1 when volume demands it. |
+All V1.0 features are built, tested, and deployed.
 
 ---
 

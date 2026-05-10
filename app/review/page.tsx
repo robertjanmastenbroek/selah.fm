@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import VideoEmbed from '@/components/VideoEmbed';
 import RatingPrompt from '@/components/RatingPrompt';
-import VideoEmbed from '@/components/VideoEmbed';
 
 interface Submission {
   id: string; creator_name: string; track_title: string; platform: string;
