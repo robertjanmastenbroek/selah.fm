@@ -30,6 +30,11 @@ export async function GET(request: Request) {
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS min_video_length_seconds INTEGER`;
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS caption_requirements TEXT`;
     results.push('campaign metadata columns OK');
+
+  try {
+    await sql`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS rejection_feedback TEXT`;
+    results.push('rejection_feedback column OK');
+  } catch (e: any) { results.push(`rejection_feedback: ${e.message}`); }
   } catch (e: any) { results.push(`campaign columns: ${e.message}`); }
 
   return NextResponse.json({ migrated: true, results });
