@@ -5,31 +5,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
-import { Shield, Lock, DollarSign, Heart } from 'lucide-react';
+import { Shield, Lock, DollarSign, Heart, AlertCircle } from 'lucide-react';
 
-// Initialize Stripe outside component to avoid recreating
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder');
+const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
 
 interface PaymentModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: (paymentIntentId: string) => void;
   clientSecret: string;
-  // Display info
   title: string;
   subtitle: string;
   coverArtUrl?: string;
   amount: number;
   mode: 'donation' | 'deposit';
-  // Optional donor info
   donorName?: string;
   donorMessage?: string;
 }
 
-function CheckoutForm({ onSuccess, onClose, title, amount, mode }: {
+function CheckoutForm({ onSuccess, onClose, amount, mode }: {
   onSuccess: (piId: string) => void;
   onClose: () => void;
-  title: string;
   amount: number;
   mode: 'donation' | 'deposit';
 }) {
@@ -40,30 +37,34 @@ function CheckoutForm({ onSuccess, onClose, title, amount, mode }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      setError('Payment system is initializing — please wait a moment.');
+      return;
+    }
 
     setProcessing(true);
     setError('');
 
     const { error: submitError, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: {
-        return_url: window.location.href,
-      },
+      confirmParams: { return_url: window.location.href },
       redirect: 'if_required',
     });
 
     if (submitError) {
-      setError(submitError.message || 'Payment failed');
+      setError(submitError.message || 'Payment failed. Please try again.');
       setProcessing(false);
-    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+    } else if (paymentIntent?.status === 'succeeded') {
       onSuccess(paymentIntent.id);
+    } else if (paymentIntent?.status === 'requires_action') {
+      setError('Additional verification needed. Please follow your bank\'s instructions.');
+      setProcessing(false);
     } else {
       setProcessing(false);
     }
   };
 
-  const feeCents = Math.round(amount * 2.9 + 30);
+  const feeCents = Math.round(amount * 100 * 0.029 + 30);
   const netCents = Math.round(amount * 100) - feeCents;
   const netDollars = (netCents / 100).toFixed(2);
 
@@ -77,20 +78,27 @@ function CheckoutForm({ onSuccess, onClose, title, amount, mode }: {
       </div>
 
       {/* Payment Element */}
-      <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4">
-        <PaymentElement
-          options={{
-            layout: 'tabs',
-            wallets: { applePay: 'auto', googlePay: 'auto' },
-          }}
-        />
+      <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 min-h-[80px] flex items-center justify-center">
+        {!stripe ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            Loading payment form...
+          </div>
+        ) : (
+          <PaymentElement
+            options={{
+              layout: { type: 'tabs', defaultCollapsed: false },
+              wallets: { applePay: 'auto', googlePay: 'auto' },
+            }}
+          />
+        )}
       </div>
 
       {/* Fee breakdown */}
       <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 space-y-1 text-xs">
         <div className="flex justify-between text-muted-foreground">
           <span>{mode === 'donation' ? 'Your donation' : 'Your deposit'}</span>
-          <span>${(amount).toFixed(2)}</span>
+          <span>${amount.toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-muted-foreground/60">
           <span>Processing fee (2.9% + $0.30)</span>
@@ -103,15 +111,16 @@ function CheckoutForm({ onSuccess, onClose, title, amount, mode }: {
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">
-          {error}
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400 flex items-start gap-2">
+          <AlertCircle size={14} className="shrink-0 mt-0.5" />
+          <span>{error}</span>
         </div>
       )}
 
       <Button
         type="submit"
         disabled={!stripe || processing}
-        className="w-full py-5 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.25)]"
+        className="w-full py-5 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.25)] disabled:opacity-50"
       >
         {processing ? (
           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -131,14 +140,46 @@ function CheckoutForm({ onSuccess, onClose, title, amount, mode }: {
 
 export default function StripePaymentModal({
   open, onClose, onSuccess, clientSecret,
-  title, subtitle, coverArtUrl, amount, mode, donorName, donorMessage,
+  title, subtitle, coverArtUrl, amount, mode,
 }: PaymentModalProps) {
   if (!open || !clientSecret) return null;
+
+  // Stripe not configured — show clear message
+  if (!PUBLISHABLE_KEY || !stripePromise) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            onClick={e => e.stopPropagation()}
+            className="relative z-10 w-full max-w-sm rounded-2xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-hidden"
+          >
+            <div className="p-8 text-center space-y-4">
+              <AlertCircle size={40} className="mx-auto text-yellow-400/60" />
+              <h3 className="font-semibold text-lg">Payment system not configured</h3>
+              <p className="text-sm text-muted-foreground">
+                Stripe is not connected yet. Add <code className="text-xs bg-white/[0.04] px-1.5 py-0.5 rounded">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> to your environment.
+              </p>
+              <button onClick={onClose} className="px-6 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-sm">
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   const options: StripeElementsOptions = {
     clientSecret,
     appearance: {
-      theme: 'night' as const,
+      theme: 'night',
       variables: {
         colorPrimary: '#5B7FFF',
         colorBackground: '#0D0D0D',
@@ -155,9 +196,7 @@ export default function StripePaymentModal({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
@@ -174,12 +213,12 @@ export default function StripePaymentModal({
           <div className="p-5 border-b border-white/[0.06]">
             <div className="flex items-center gap-3 mb-3">
               {coverArtUrl && (
-                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-white/[0.04]">
+                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
                   <img src={coverArtUrl} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
-              <div>
-                <h3 className="font-semibold text-sm">{title}</h3>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-sm truncate">{title}</h3>
                 <p className="text-xs text-muted-foreground">{subtitle}</p>
               </div>
             </div>
@@ -192,7 +231,7 @@ export default function StripePaymentModal({
           {/* Body */}
           <div className="p-5">
             <Elements stripe={stripePromise} options={options}>
-              <CheckoutForm onSuccess={onSuccess} onClose={onClose} title={title} amount={amount} mode={mode} />
+              <CheckoutForm onSuccess={onSuccess} onClose={onClose} amount={amount} mode={mode} />
             </Elements>
           </div>
         </motion.div>
