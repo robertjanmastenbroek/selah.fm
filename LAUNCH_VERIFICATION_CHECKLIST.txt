@@ -1,0 +1,83 @@
+======================================================================
+  SELAH.FM — LAUNCH VERIFICATION CHECKLIST
+  Tick each item manually on https://selah.fm
+======================================================================
+
+── AUTH ──────────────────────────────────────────────────────────
+[ ] Sign up with email + select "Artist" role → lands on onboarding
+[ ] Sign up with email + select "Creator" role → lands on onboarding 
+[ ] Sign in with Google OAuth → lands on correct post-onboarding page
+[ ] Log out and log back in → does NOT go to onboarding again
+[ ] Signup with referral code → shows bonus banner
+
+── ONBOARDING ────────────────────────────────────────────────────
+[ ] Artist path: Step 0 (role) → Step 1 (name) → Step 2 (genres) → Dashboard
+[ ] Creator path: Step 0 → Step 1 (name) → Step 2 (platforms) → Step 3 (genres) → Step 4 (CPM) → Browse
+[ ] Confetti appears on completion for both paths
+
+── MARKETPLACE ───────────────────────────────────────────────────
+[ ] /browse loads campaign cards with covers, CPM, platform badges
+[ ] Click campaign card → navigates to campaign detail page
+[ ] Click "Join campaign" → shows submit form (URL + platform + submit)
+[ ] Submit a YouTube link → success toast appears
+[ ] /artists loads artist cards with social badges
+[ ] Click artist card → navigates to artist profile page
+[ ] Artist profile shows campaigns list, stats, social handles
+[ ] /creators loads creator cards with avatar, genres, stats
+[ ] Click creator card → navigates to creator profile page
+[ ] Creator profile shows submissions, CPM, hire button, message button
+
+── CAMPAIGNS ─────────────────────────────────────────────────────
+[ ] /dashboard → create campaign wizard works (cover → details → budget)
+[ ] Auto-generated defaults fill when artist skips fields
+[ ] Pause/resume button works on active campaigns
+[ ] "Add budget" opens Stripe checkout (test mode)
+[ ] Campaign detail page shows all metadata correctly
+
+── REVIEW ───────────────────────────────────────────────────────
+[ ] /review shows pending submissions
+[ ] Approve button works → notification sent to creator
+[ ] Reject with feedback → notification includes feedback text
+[ ] Status tabs (Pending/Approved/Rejected) filter correctly
+[ ] Undo button appears after action (4s window)
+
+── EARNINGS ─────────────────────────────────────────────────────
+[ ] /earnings shows balance amount
+[ ] Submission history shows with status badges
+[ ] Stripe Connect prompt appears (if not connected)
+[ ] Stripe Connect prompt hides (if already connected)
+
+── SETTINGS ─────────────────────────────────────────────────────
+[ ] Profile fields pre-filled from account data
+[ ] Social handles save correctly (TikTok, Instagram, YouTube, Facebook)
+[ ] Connected platforms status updates after save
+[ ] Avatar displays correctly
+
+── CHAT ─────────────────────────────────────────────────────────
+[ ] Chat bell in top nav opens ChatWidget
+[ ] Conversation list loads (or empty state)
+[ ] Send message → appears in real-time (10s poll)
+[ ] Click "Message" on artist/creator profile → opens chat to that user
+
+── NOTIFICATIONS ────────────────────────────────────────────────
+[ ] Bell icon shows unread count badge
+[ ] Clicking notification → marks as read, navigates to target page
+[ ] "Mark all read" clears all unread
+
+── ADMIN ───────────────────────────────────────────────────────
+[ ] /admin shows access denied for non-admin users
+[ ] /admin shows overview stats for admin user
+[ ] Admin users page loads with searchable table
+[ ] Admin campaigns page loads
+[ ] Admin submissions page loads
+[ ] Admin payouts page loads
+[ ] Admin seed page → "Run Seed" button works
+
+── MOBILE ───────────────────────────────────────────────────────
+[ ] All pages render correctly at 375px width (no overflow)
+[ ] TopNav shows mobile bottom navigation
+[ ] Touch targets ≥ 48px on all buttons
+[ ] Forms single-column, font-size ≥ 16px
+
+── E2E TESTS ────────────────────────────────────────────────────
+[ ] node e2e/test.js → 33+ of 34 passing
