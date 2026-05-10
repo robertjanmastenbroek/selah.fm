@@ -87,6 +87,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply, source: 'keyword' });
     }
 
+    // ── Auto-detect potential bugs ─────────────────────────────
+    // Runs in background — doesn't affect user response
+    detectBug(message, history).catch(() => {});
+
     // ── No response available — suggest email support ──────────
     return NextResponse.json({
       reply: "I'm not sure about that — please email support@selah.fm and our team will get back to you, usually within a few hours.",
@@ -133,4 +137,44 @@ function keywordMatch(msg: string): string | null {
     return "Fully open source under MIT! github.com/robertjanmastenbroek/selah.fm — you can contribute, audit, or run your own instance.";
   }
   return null;
+}
+
+// ── Auto bug detection ───────────────────────────────────────
+async function detectBug(message: string, history: any[]) {
+  const msg = message.toLowerCase();
+
+  // Bug-like patterns
+  const bugPatterns = [
+    /\b(not working|doesn'?t work|isn'?t working|broken|broke)\b/,
+    /\b(error|bug|glitch|crash|freeze|stuck|hang)\b/,
+    /\b(won'?t load|can'?t load|not loading|empty|blank|missing)\b/,
+    /\b(can'?t (?:click|submit|save|upload|sign|log|create|edit|delete))\b/,
+    /\b(404|500|page not found|something went wrong)\b/,
+    /\b(showing (?:0|zero|nothing|no ))\b/,
+  ];
+
+  const isBugLike = bugPatterns.some(p => p.test(msg));
+  if (!isBugLike) return;
+
+  // Don't log if it's a known FAQ
+  const knownTopics = /(?:how (?:do|can|to)|what is|where (?:is|can)|when (?:can|will))/i;
+  if (knownTopics.test(msg)) return;
+
+  try {
+    const { default: sql } = await import('@/lib/db');
+    const historyText = Array.isArray(history) ? history.join('\n') : '';
+
+    await sql`
+      INSERT INTO bugs (description, steps_to_reproduce, severity, status)
+      VALUES (
+        ${message.slice(0, 2000)},
+        ${historyText.slice(0, 2000) || 'No conversation history'},
+        'medium',
+        'new'
+      )
+    `;
+    console.log('[BUG] Auto-captured:', message.slice(0, 80));
+  } catch {
+    // Table might not exist — non-critical
+  }
 }
