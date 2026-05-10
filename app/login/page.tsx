@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { trackSignUp, trackLogin } from '@/lib/analytics';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -25,7 +26,7 @@ function LoginForm() {
     if (refCode && mode === 'signup') body.refCode = refCode;
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
-    if (data.ok) window.location.href = redirect || data.redirectTo || '/browse';
+    if (data.ok) { mode === 'signup' ? trackSignUp('email') : trackLogin('email'); window.location.href = redirect || data.redirectTo || '/browse'; }
     else { setError(data.error); setLoading(false); }
   };
 

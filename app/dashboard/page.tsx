@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
+import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
 import { Plus } from 'lucide-react';
 
 interface Campaign {
