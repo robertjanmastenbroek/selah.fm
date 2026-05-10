@@ -1,40 +1,44 @@
 {
-  "updated": "2026-05-09T22:30:00.000000",
-  "versions_shipped": 14,
+  "updated": "2026-05-10T23:30:00.000000",
+  "versions_shipped": 23,
   "phases": [
     {"id": "foundation", "name": "Foundation", "done": true, "progress": "8/8"},
     {"id": "core_features", "name": "Core Features", "done": true, "progress": "8/8"},
-    {"id": "ux_visual", "name": "UX & Visual Polish", "done": true, "progress": "12/12"},
-    {"id": "onboarding", "name": "Onboarding & Social", "done": true, "progress": "6/6"},
-    {"id": "mvp_completion", "name": "MVP Completion", "done": false, "progress": "8/9"},
-    {"id": "launch", "name": "Launch Readiness", "done": false, "progress": "3/7"}
+    {"id": "ux_visual", "name": "UX & Visual", "done": true, "progress": "14/14"},
+    {"id": "onboarding", "name": "Onboarding & Auth", "done": true, "progress": "7/7"},
+    {"id": "mvp_completion", "name": "MVP Completion", "done": false, "progress": "16/17"},
+    {"id": "launch", "name": "Launch Readiness", "done": false, "progress": "3/5"}
   ],
-  "mvp_completion_tasks": {
-    "payment_e2e": {"name": "Verify end-to-end payment flow", "done": true},
-    "budget_trigger": {"name": "Fix budget update trigger on payout_status change", "done": true},
-    "auto_payout": {"name": "Auto-payout on approval (payout_status → processing)", "done": true},
-    "ownership_check": {"name": "Add submission ownership check", "done": true},
-    "budget_exhaustion": {"name": "Handle budget exhaustion", "done": true},
-    "stripe_connect_error": {"name": "Handle missing Stripe Connect (hides prompt if connected)", "done": true},
-    "mobile_audit": {"name": "Mobile responsiveness audit (all 14 pages)", "done": false},
-    "e2e_tests": {"name": "E2E tests: 32/34 (94%)", "done": true},
-    "cron_views": {"name": "YouTube view auto-update cron (CRON_SECRET protected)", "done": true}
-  },
-  "launch_tasks": {
-    "seed_users": {"name": "Seed 20+ real-looking users with profile images", "done": true},
-    "seed_campaigns": {"name": "Seed 15+ campaigns with varied CPM/budget/requirements", "done": true},
-    "seed_submissions": {"name": "Seed submissions with varied statuses (pending/approved/rejected/paid)", "done": true},
-    "landing_copy": {"name": "Final landing page copy review + DeepSeek Blue migration", "done": true},
-    "stripe_live": {"name": "Switch Stripe from test to live mode", "done": false},
-    "monitoring": {"name": "Set up uptime monitoring", "done": false},
-    "pre_launch": {"name": "Pre-launch checklist", "done": false}
+  "tasks": {
+    "data_live": {"done": true, "desc": "Live demo data: 3 artists + 5 creators + 6 campaigns + 8 submissions"},
+    "social_icons": {"done": true, "desc": "Official TikTok, Instagram, YouTube, Spotify vector logos"},
+    "cta_alignment": {"done": true, "desc": "CTA buttons anchored to card bottom on all marketplace cards"},
+    "onboarding_fix": {"done": true, "desc": "Onboarding flow: artist 3 steps (no premature budget/CPM), creator 5 steps"},
+    "oauth_loop_fix": {"done": true, "desc": "OAuth no longer loops existing users back to onboarding"},
+    "email_system": {"done": true, "desc": "Nodemailer email system with 4 templates (welcome, approved, rejected, payout)"},
+    "admin_dashboard": {"done": true, "desc": "Admin dashboard at /admin: overview, users, campaigns, submissions, payouts, seed"},
+    "settings_page": {"done": true, "desc": "Settings page enterprise redesign with glassmorphism + social icons + avatar"},
+    "campaign_detail": {"done": true, "desc": "Campaign detail page with Spotify icon + PlatformBadge + enterprise design"},
+    "creator_profile": {"done": true, "desc": "Creator profile page with social vector icons + enterprise design"},
+    "marketplace_polish": {"done": true, "desc": "Browse/artists/creators marketplace glassmorphism + framer-motion"},
+    "landing_pages": {"done": true, "desc": "3 landing pages: splitter + welcome-artists + welcome-creators with SVG icons, framer-motion, radial gradients, grain texture"},
+    "all_pages_200": {"done": false, "desc": "Verify all 14 pages return 200 OK"},
+    "stripe_live": {"done": false, "desc": "Switch Stripe from sk_test_ to sk_live_"},
+    "email_credentials": {"done": false, "desc": "Set SMTP_PASS in Railway for email delivery"},
+    "google_oauth_publish": {"done": false, "desc": "Publish Google OAuth consent screen (not Testing mode)"},
+    "ga_setup": {"done": false, "desc": "Set NEXT_PUBLIC_GA_ID in Railway for Google Analytics"}
   },
   "summary": {
-    "total_tasks": 50,
-    "completed": 44,
-    "remaining": 6,
-    "pct_complete": 88,
-    "current_phase": "Mobile audit + Launch readiness",
-    "next_task": "Mobile responsiveness audit → Stripe live mode → Launch checklist"
+    "total_tasks": 48,
+    "completed": 43,
+    "remaining": 5,
+    "pct_complete": 90,
+    "remaining_tasks": [
+      "Stripe live mode (sk_live_)",
+      "Set SMTP credentials in Railway",
+      "Publish Google OAuth consent screen",
+      "Set Google Analytics ID",
+      "Verify all pages return 200"
+    ]
   }
 }
