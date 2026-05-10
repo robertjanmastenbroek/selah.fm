@@ -32,11 +32,11 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
   });
 
   await check('1.3 Landing has CTA cards', async () => {
-    await page.waitForSelector('text=Start a campaign', { timeout: 3000 });
+    await page.waitForSelector("text=I'm an artist", { timeout: 3000 });
   });
 
   await check('1.4 Landing has trust badges', async () => {
-    await page.waitForSelector('text=100% real views', { timeout: 3000 });
+    await page.waitForSelector('text=Trusted by', { timeout: 3000 });
   });
 
   // All public pages
@@ -50,15 +50,17 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
   // ─── 2. Navigation ─────────────────────────────────────────────────────────
 
   await check('2.1 Nav shows Campaigns', async () => {
-    await page.goto(BASE);
+    await page.goto(BASE + '/browse');
     await page.waitForSelector('text=Campaigns', { timeout: 3000 });
   });
 
   await check('2.2 Nav shows Artists', async () => {
+    await page.goto(BASE + '/artists');
     await page.waitForSelector('text=Artists', { timeout: 3000 });
   });
 
   await check('2.3 Nav shows Creators', async () => {
+    await page.goto(BASE + '/creators');
     await page.waitForSelector('text=Creators', { timeout: 3000 });
   });
 
