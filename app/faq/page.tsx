@@ -133,7 +133,12 @@ const faqs: { section: string; items: FAQItem[] }[] = [
       },
       {
         q: 'How do I reset my password?',
-        a: 'Currently, email support@selah.fm from your account email and we\'ll help you reset it. We\'re working on self-service password reset.',
+        a: 'Click "Forgot your password?" on the login page. Enter your email and we\'ll send you a reset link (valid for 1 hour). Click the link, set a new password, and you\'re back in.',
+        section: 'Account & Billing',
+      },
+      {
+        q: 'Do I need to verify my email?',
+        a: 'When you sign up, we send a verification email. Click the link to verify your account. You can use the platform without verifying, but we recommend it for full access and account recovery.',
         section: 'Account & Billing',
       },
     ],
