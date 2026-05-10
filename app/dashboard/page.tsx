@@ -231,7 +231,7 @@ function DashboardContent() {
             ) : campaigns.length === 0 ? (
               <Card className="text-center py-16 animate-fade-in">
                 <CardContent>
-                  <img src="/images/dashboard-mockup.png" alt="Create your first campaign" className="mx-auto mb-6 w-64 h-48 object-contain opacity-80 rounded-xl" />
+                  <img src="/images/dashboard-mockup.png" alt="Create your first campaign" className="mx-auto mb-6 w-64 h-48 object-contain opacity-80 rounded-xl" loading="lazy" />
                   <h2 className="text-lg font-medium mb-2">Create your first campaign</h2>
                   <p className="text-muted-foreground text-sm mb-8 max-w-sm mx-auto">Upload your track, set a CPM rate, and creators will promote it.</p>
                   <Button onClick={() => setStep('wizard')}>Start your first campaign</Button>

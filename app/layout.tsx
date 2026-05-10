@@ -12,7 +12,7 @@ const SupportWidgetClient = dynamic(() => import('@/components/SupportWidgetClie
   loading: () => null,
 });
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({subsets:['latin'],variable:'--font-sans',display:'swap',preload:true});
 
 export const metadata: Metadata = {
   title: 'Selah.fm — Open Source Music Promotion Marketplace | Pay Creators for TikTok, Reels & Shorts',
@@ -63,11 +63,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* ARIA live region for dynamic announcements */}
         <div id="aria-live" aria-live="polite" aria-atomic="true" className="sr-only" />
 
-        {/* Grain texture overlay */}
-        <div className="fixed inset-0 pointer-events-none z-[9999] opacity-[0.015]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-          backgroundSize: '256px 256px',
-        }} />
         <ErrorBoundary>
           <PageTransition>
             <main id="main-content" tabIndex={-1}>
