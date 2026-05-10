@@ -143,6 +143,7 @@ export default function NotificationBell() {
               </div>
             ) : notifs.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+                <img src="/images/empty-notifications.png" alt="No notifications" className="mx-auto mb-3 w-20 h-20 object-contain opacity-60" />
                 No notifications yet
               </div>
             ) : (

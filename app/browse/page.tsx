@@ -117,7 +117,7 @@ export default function BrowsePage() {
         ) : campaigns.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
             {Object.keys(filters).length === 0 && (
-              <img src="/images/empty-campaigns.png" alt="No campaigns yet" className="mx-auto mb-6 w-48 h-48 object-contain opacity-80" />
+              <img src="/images/browse-mockup.png" alt="Browse campaigns" className="mx-auto mb-6 w-64 h-48 object-contain opacity-80 rounded-xl" />
             )}
             <h2 className="text-xl font-semibold mb-2">{Object.keys(filters).length > 0 ? 'No matching campaigns' : 'No campaigns yet'}</h2>
             <p className="text-muted-foreground text-sm mb-6">{Object.keys(filters).length > 0 ? 'Try adjusting your filters.' : "Be the first to create one — and share it with your fans!"}</p>

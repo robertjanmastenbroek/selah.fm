@@ -16,6 +16,9 @@ export default function WelcomeCreatorsPage() {
     <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.35) 0%, #0A0A0A 60%), #0A0A0A' }}>
       {/* HERO */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/creator-hero.png" alt="" className="w-full h-full object-cover opacity-20" />
+        </div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-15 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(91,127,255,0.25) 0%, transparent 70%)' }} />
         <div className="max-w-3xl mx-auto px-6 py-20 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}><span className="inline-flex items-center gap-1.5 bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] text-primary/90 text-xs font-medium px-4 py-2 rounded-full mb-10"><span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"/>Free to join. No weird contracts.</span></motion.div>

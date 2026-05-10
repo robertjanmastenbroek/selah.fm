@@ -65,7 +65,8 @@ export default function EarningsPage() {
         ) : (
           <>
             {/* Balance card */}
-            <Card className="text-center mb-6 animate-fade-in">
+            <Card className="text-center mb-6 animate-fade-in overflow-hidden">
+              <img src="/images/earnings-visual.png" alt="Earnings" className="w-full h-32 object-cover opacity-15" />
               <CardContent className="p-8">
                 <p className="text-muted-foreground text-xs uppercase tracking-widest mb-2">Available balance</p>
                 <p className="text-5xl font-bold tracking-tight">

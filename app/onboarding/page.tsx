@@ -79,6 +79,9 @@ export default function OnboardingPage() {
 
   if (done) return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.35) 0%, #0A0A0A 60%), #0A0A0A'}}>
+      <div className="absolute inset-0 z-0">
+        <img src="/images/success.png" alt="" className="w-full h-full object-cover opacity-10" />
+      </div>
       {particles.map(p=><div key={p.id} className="absolute rounded-full" style={{left:`${p.x}%`,top:'50%',width:`${p.size}px`,height:`${p.size}px`,backgroundColor:p.color,animationDelay:`${p.delay}s`,opacity:0,animation:`confettiFall ${1.5+p.delay}s ease-out forwards`}}/>)}
       <motion.div className="text-center space-y-4 z-10" initial={{opacity:0,scale:0.9}} animate={{opacity:1,scale:1}} transition={{duration:0.5}}>
         <Sparkles size={48} className="mx-auto text-primary" />

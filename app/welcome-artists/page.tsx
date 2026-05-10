@@ -22,6 +22,9 @@ export default function WelcomeArtistsPage() {
       <div className="absolute top-4 right-6 z-20"><Link href="/login" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Sign In</Link></div>
       {/* HERO */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img src="/images/artist-hero.png" alt="" className="w-full h-full object-cover opacity-20" />
+        </div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-15 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(91,127,255,0.25) 0%, transparent 70%)' }} />
         <div className="max-w-3xl mx-auto px-6 py-20 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
