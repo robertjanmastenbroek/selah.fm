@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import SupportWidgetClient from '@/components/SupportWidgetClient';
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         }} />
         <ErrorBoundary>
           <ToastProvider>{children}</ToastProvider>
+          <SupportWidgetClient />
         </ErrorBoundary>
         {/* Open source footer */}
         <footer className="border-t border-white/[0.04] py-4 px-4 text-center">
