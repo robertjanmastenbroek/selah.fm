@@ -37,12 +37,11 @@ export function PlatformBadge({ platform }: { platform: string }) {
   const p = platform.toLowerCase();
   const color = platformColors[p] || 'bg-white/[0.04] text-muted-foreground';
   return (
-    <span className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${color}`}>
-      {p === 'tiktok' && <TikTok size={10} />}
-      {p === 'instagram' && <Instagram size={10} />}
-      {p === 'youtube' && <YouTube size={10} />}
-      {p === 'spotify' && <Spotify size={10} />}
-      <span>{p === 'youtube' ? 'YT' : p === 'instagram' ? 'IG' : p === 'tiktok' ? 'TT' : p}</span>
+    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${color}`}>
+      {p === 'tiktok' && <TikTok size={12} />}
+      {p === 'instagram' && <Instagram size={12} />}
+      {p === 'youtube' && <YouTube size={12} />}
+      {p === 'spotify' && <Spotify size={12} />}
     </span>
   );
 }
