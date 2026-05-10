@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
-    const { submissionId, status } = await request.json();
+    const { submissionId, status, feedback } = await request.json();
     
     // Verify the submission exists and get campaign ownership
     const subs = await sql`
@@ -100,20 +100,22 @@ export async function POST(request: Request) {
     // Rejection
     const result = await sql`
       UPDATE submissions
-      SET review_status = ${status}, reviewed_at = NOW(), reviewed_by = ${users[0].id}
+      SET review_status = ${status}, reviewed_at = NOW(), reviewed_by = ${users[0].id},
+          rejection_feedback = ${feedback || null}
       WHERE id = ${submissionId}
       RETURNING *
     `;
 
     if (status === 'rejected' && result.length > 0) {
+      const feedbackMsg = feedback ? `Reason: "${feedback}"` : 'No specific reason given.';
       try {
         await sql`
           INSERT INTO notifications (user_id, type, message, link, metadata)
           VALUES (
             ${sub.creator_id}, 'rejection',
-            ${`Your submission on "${sub.track_title}" was rejected — check the artist's feedback`},
+            ${`Your submission on "${sub.track_title}" was rejected. ${feedbackMsg}`},
             '/earnings',
-            ${JSON.stringify({ submission_id: submissionId })}
+            ${JSON.stringify({ submission_id: submissionId, feedback })}
           )
         `;
         const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
