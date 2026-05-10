@@ -31,7 +31,7 @@ export async function PATCH(request: Request) {
         display_name = COALESCE(${body.name || null}, display_name),
         bio = COALESCE(${body.bio ?? null}, bio),
         genres = COALESCE(${body.genres ?? null}, genres),
-        preferred_cpm_cents = COALESCE(${body.preferredCpm !== undefined ? parseInt(body.preferredCpm) : null}::int, preferred_cpm_cents),
+        preferred_cpm_cents = COALESCE(${body.preferredCpm ? parseInt(body.preferredCpm) || null : null}::int, preferred_cpm_cents),
         tiktok_handle = COALESCE(${body.tiktok_handle ?? null}, tiktok_handle),
         instagram_handle = COALESCE(${body.instagram_handle ?? null}, instagram_handle),
         youtube_handle = COALESCE(${body.youtube_handle ?? null}, youtube_handle),
