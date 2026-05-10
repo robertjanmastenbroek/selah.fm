@@ -12,20 +12,20 @@ const inter = Inter({subsets:['latin'],variable:'--font-sans',display:'swap',pre
 export const metadata: Metadata = {
   title: 'Selah.fm — Open Source Music Promotion Marketplace | Pay Creators for TikTok, Reels & Shorts',
   description: 'Open source CPM marketplace for music promotion. Artists set budgets, creators make TikToks/Reels/Shorts, artists approve and pay for verified views. MIT licensed.',
-  icons: { icon: '/images/Selah Logo no text.png' },
+  icons: { icon: '/images/Selah Logo transparant no text.png' },
   openGraph: {
     title: 'Selah.fm — Open Source Music Promotion Marketplace',
     description: 'Set your CPM rate, approve every video, pay only for verified views. Fully open source under MIT license. Star us on GitHub.',
     type: 'website',
     siteName: 'Selah.fm',
     url: 'https://selah.fm',
-    images: [{ url: 'https://selah.fm/images/Selah Logo.png', width: 1200, height: 630 }],
+    images: [{ url: 'https://selah.fm/images/Selah Logo Transparant.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Selah.fm — Open Source Music Promotion Marketplace',
     description: 'Set your CPM, approve every video, pay only for verified views. Fully open source.',
-    images: ['https://selah.fm/images/Selah Logo.png'],
+    images: ['https://selah.fm/images/Selah Logo Transparant.png'],
   },
   robots: { index: true, follow: true },
 };

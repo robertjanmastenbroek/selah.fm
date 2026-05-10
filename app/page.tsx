@@ -89,7 +89,7 @@ export default function RootPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
           >
-            <img src="/images/Selah Logo no text.png" alt="Selah.fm" className="mx-auto h-12 w-auto" />
+            <img src="/images/Selah Logo transparant no text.png" alt="Selah.fm" className="mx-auto h-12 w-auto" />
           </motion.div>
 
           {/* Two routing cards */}

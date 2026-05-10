@@ -45,7 +45,7 @@ export default function Header() {
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-4 sm:gap-6">
           <Link href={profile ? '/browse' : '/'} className="flex items-center gap-2 group shrink-0">
-            <img src="/images/Selah Logo no text.png" alt="Selah.fm" className="h-8 w-auto" />
+            <img src="/images/Selah Logo transparant no text.png" alt="Selah.fm" className="h-8 w-auto" />
           </Link>
           <nav className="hidden md:flex items-center gap-0.5">
             {mainLinks.map(link => {
