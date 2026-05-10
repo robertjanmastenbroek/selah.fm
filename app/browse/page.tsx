@@ -12,7 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Music } from 'lucide-react';
+import { Search, Music, Megaphone } from 'lucide-react';
+
+// Alias for brevity
+const MegaphoneIcon = Megaphone;
 import { trackSubmitContent } from '@/lib/analytics';
 import { PlatformBadge } from '@/components/SocialIcons';
 
@@ -59,9 +62,15 @@ export default function BrowsePage() {
     <div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A'}}>
       <Header />
       <main className="page-container">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div><h1 className="text-3xl font-bold tracking-tight mb-1">Discover campaigns</h1><p className="text-muted-foreground text-sm">{total} campaigns available</p></div>
-          <CampaignSearch onFilter={handleFilter} />
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all duration-200 hover:shadow-[0_0_24px_rgba(91,127,255,0.25)] active:scale-[0.97]">
+              <MegaphoneIcon size={16} />
+              Create campaign
+            </Link>
+            <CampaignSearch onFilter={handleFilter} />
+          </div>
         </div>
 
         {loading ? (

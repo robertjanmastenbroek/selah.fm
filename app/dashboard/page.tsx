@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
 import ImageUpload from '@/components/ImageUpload';
 import CampaignCover from '@/components/CampaignCover';
@@ -59,6 +60,7 @@ function DashboardContent() {
   const [requireFtc, setRequireFtc] = useState(false);
   const [minVideoLength, setMinVideoLength] = useState('');
   const [captionReq, setCaptionReq] = useState('');
+  const [shareCampaign, setShareCampaign] = useState<{ id: string; title: string } | null>(null);
 
   const fetchCampaigns = () => {
     fetch('/api/campaigns', { credentials: 'include' }).then(r => r.json()).then(data => {
@@ -97,8 +99,11 @@ function DashboardContent() {
         setLoading(false);
         return;
       }
+      const created = await res.json();
       fetchCampaigns();
-      addToast('Campaign live', 'success');
+      addToast('Campaign live! Share it with your fans.', 'success');
+      // Show share prompt with the new campaign
+      setShareCampaign({ id: created.id, title: trackTitle });
     } catch {
       addToast('Network error — try again', 'error');
     }
@@ -205,6 +210,32 @@ function DashboardContent() {
           </>
         ) : (
           <>
+            {/* Share campaign prompt — shown after creating a new campaign */}
+            {shareCampaign && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6 rounded-2xl bg-primary/[0.06] backdrop-blur-xl border border-primary/20 p-6">
+                <div className="flex items-start justify-between flex-wrap gap-4">
+                  <div className="space-y-2">
+                    <h3 className="font-bold text-lg">🎉 &quot;{shareCampaign.title}&quot; is live!</h3>
+                    <p className="text-sm text-muted-foreground max-w-md">
+                      Share your campaign link with your fans and on social media. Anyone can create content for your track and earn from your budget — the more creators, the more reach.
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      <code className="text-xs bg-white/[0.06] border border-white/[0.08] px-3 py-2 rounded-lg font-mono select-all">
+                        https://selah.fm/c/{shareCampaign.id}
+                      </code>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(`https://selah.fm/c/${shareCampaign.id}`); addToast('Link copied!', 'success'); }}
+                        className="shrink-0 px-4 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-medium hover:bg-white/[0.1] transition-colors active:scale-[0.97]"
+                      >
+                        Copy link
+                      </button>
+                    </div>
+                  </div>
+                  <button onClick={() => setShareCampaign(null)} className="text-muted-foreground hover:text-foreground text-sm shrink-0">Dismiss</button>
+                </div>
+              </motion.div>
+            )}
+
             {/* Referral banner */}
             <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
               <CardContent className="p-4 text-center space-y-2">
