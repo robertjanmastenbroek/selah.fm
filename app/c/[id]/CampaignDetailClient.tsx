@@ -34,6 +34,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const [donorName, setDonorName] = useState('');
   const [donorMessage, setDonorMessage] = useState('');
   const [donating, setDonating] = useState(false);
+  const [donationSuccess, setDonationSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
