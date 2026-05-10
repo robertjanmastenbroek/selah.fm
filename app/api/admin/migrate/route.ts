@@ -88,6 +88,17 @@ export async function GET(request: Request) {
   } catch (e: any) { results.push(`email_logs: ${e.message}`); }
 
   try {
+    await sql`CREATE TABLE IF NOT EXISTS support_chats (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_message TEXT NOT NULL,
+      bot_reply TEXT,
+      reply_source TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`;
+    results.push('support_chats table OK');
+  } catch (e: any) { results.push(`support_chats: ${e.message}`); }
+
+  try {
     await sql`CREATE TABLE IF NOT EXISTS ratings (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,

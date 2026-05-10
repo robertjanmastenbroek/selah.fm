@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Users, Megaphone, FileCheck, Banknote, Database, Mail, Bug, LogOut, ArrowLeft, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, Megaphone, FileCheck, Banknote, Database, Mail, Bug, MessageCircle, LogOut, ArrowLeft, Shield } from 'lucide-react';
 import { ADMIN_EMAILS } from '@/lib/constants';
 
 const nav = [
@@ -15,6 +15,7 @@ const nav = [
   { href: '/admin/payouts', label: 'Payouts', icon: Banknote },
   { href: '/admin/emails', label: 'Emails', icon: Mail },
   { href: '/admin/bugs', label: 'Bugs', icon: Bug },
+  { href: '/admin/support-chats', label: 'Chats', icon: MessageCircle },
   { href: '/admin/seed', label: 'Seed Data', icon: Database },
 ];
 
