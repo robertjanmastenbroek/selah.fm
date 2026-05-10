@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import StripePaymentModal from '@/components/StripePaymentModal';
 import PaymentSuccess from '@/components/PaymentSuccess';
 import { Heart, Share2, Send, Users, ChevronRight, ChevronLeft, X, Link2, Play, Camera } from 'lucide-react';
+import SubmissionsFeed from '@/components/SubmissionsFeed';
 
 // ── Share Modal ───────────────────────────────────────────────
 function ShareModal({ open, onClose, url, title }: { open: boolean; onClose: () => void; url: string; title: string }) {
@@ -184,8 +185,10 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
         {/* Recent support */}
         {donations.supporters.length > 0 && (
-          <motion.div className="mb-8" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h3 className="font-semibold text-sm flex items-center gap-2 mb-3"><Users size={14} className="text-primary/60" />Recent support ({donations.count})</h3>
+          <motion.div className="mb-10" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
+              <Users size={14} className="text-primary/60" />Recent support ({donations.count})
+            </h3>
             <div className="space-y-2">
               {donations.supporters.slice(0, 5).map((s: any, i: number) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="flex items-center gap-3 py-2 border-b border-white/[0.04] last:border-0">
@@ -196,6 +199,31 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </div>
           </motion.div>
         )}
+
+        {/* Submissions Feed — social proof */}
+        {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && (
+          <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />
+        )}
+
+        {/* Trust Footer — three-column security */}
+        <motion.div className="mb-10" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6">
+            <h3 className="font-semibold text-sm mb-5 text-center">Why creators love Selah.fm</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[
+                { icon: <Camera size={20} className="text-primary/70" />, title: 'Create & Earn', desc: 'Pick a track, make a video, submit the link. Done in 30 seconds.' },
+                { icon: <Send size={20} className="text-primary/70" />, title: 'Transparent', desc: 'Artists review every submission before paying. Only verified views count.' },
+                { icon: <Users size={20} className="text-primary/70" />, title: 'Protected', desc: 'Built on Stripe. 80% of CPM goes to you. No hidden fees.' },
+              ].map((item) => (
+                <div key={item.title} className="text-center space-y-2">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/[0.08] flex items-center justify-center mx-auto">{item.icon}</div>
+                  <h4 className="text-sm font-semibold">{item.title}</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
 
         {/* More campaigns */}
         <motion.div className="mb-8" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
