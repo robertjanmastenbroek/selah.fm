@@ -10,15 +10,32 @@ export interface SessionUser {
 
 /**
  * Extract and verify session from request cookies.
+ * Uses Next.js cookies() API (reliable on Railway/reverse-proxy setups),
+ * falling back to raw cookie header parsing.
  * Returns the user payload if valid, null otherwise.
  */
 export function getSession(request: Request): SessionUser | null {
-  const cookieHeader = request.headers.get('cookie') || '';
-  const sessionMatch = cookieHeader.match(/session=([^;]+)/);
-  if (!sessionMatch) return null;
+  let sessionCookie: string | undefined;
+
+  // Primary: Next.js cookies() API — handles forwarded headers correctly on Railway
+  try {
+    const { cookies } = require('next/headers') as typeof import('next/headers');
+    sessionCookie = cookies().get('session')?.value;
+  } catch {
+    // cookies() throws outside of Next.js request context — fall through
+  }
+
+  // Fallback: raw cookie header (works everywhere but may miss cookies on some proxies)
+  if (!sessionCookie) {
+    const cookieHeader = request.headers.get('cookie') || '';
+    const match = cookieHeader.match(/session=([^;]+)/);
+    sessionCookie = match ? match[1] : undefined;
+  }
+
+  if (!sessionCookie) return null;
 
   try {
-    const [payload, sig] = sessionMatch[1].split('.');
+    const [payload, sig] = sessionCookie.split('.');
     const expected = crypto
       .createHmac('sha256', SESSION_SECRET)
       .update(payload)

@@ -50,7 +50,7 @@ export default function ReviewPage() {
     setSubs(prev => prev.filter(s => s.id !== id));
     
     try {
-      await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
+      await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
       addToast(status === 'approved' ? 'Submission approved — creator will be paid' : 'Submission rejected', status === 'approved' ? 'success' : 'info');
     } catch {
       addToast('Failed to update — try again', 'error');
@@ -70,7 +70,7 @@ export default function ReviewPage() {
     clearTimeout(undoState.timer);
     const reverseStatus = undoState.status === 'approved' ? 'pending' : undoState.status === 'rejected' ? 'pending' : 'pending';
     try {
-      await fetch('/api/review', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: undoState.id, status: reverseStatus }) });
+      await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: undoState.id, status: reverseStatus }) });
       addToast('Review undone', 'info');
     } catch {
       addToast('Failed to undo', 'error');
