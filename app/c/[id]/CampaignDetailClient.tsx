@@ -141,8 +141,20 @@ export default function CampaignDetailClient({ id }: { id: string }) {
 
   const shareUrl = `https://selah.fm/c/${id}`;
 
-  // Extract Spotify track ID for embed
-  const spotifyId = campaign.track_url?.match(/track\/([a-zA-Z0-9]+)/)?.[1];
+  // Fetch Spotify stats (monthly listeners) — lightweight alternative to iframe embed
+  const [spotifyData, setSpotifyData] = useState<{ monthlyListeners: number | null; artistName: string | null } | null>(null);
+  useEffect(() => {
+    fetch(`/api/campaigns/${id}/spotify`)
+      .then(r => r.json())
+      .then(d => setSpotifyData(d))
+      .catch(() => {});
+  }, [id]);
+
+  function formatListeners(n: number): string {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+    return n.toLocaleString();
+  }
 
   return (
     <div className="min-h-screen" style={{ background: bg }}>
@@ -159,21 +171,24 @@ export default function CampaignDetailClient({ id }: { id: string }) {
             <div className="space-y-4">
               <CampaignCover src={campaign.cover_art_url} title={campaign.track_title} className="aspect-video rounded-2xl" />
 
-              {/* Spotify embed */}
-              {spotifyId && (
-                <div className="rounded-2xl overflow-hidden border border-white/[0.06]">
-                  <iframe
-                    src={`https://open.spotify.com/embed/track/${spotifyId}?utm_source=selah.fm`}
-                    width="100%"
-                    height="80"
-                    frameBorder="0"
-                    allow="autoplay; clipboard-write; encrypted-media"
-                    loading="lazy"
-                    title={`Listen to ${campaign.track_title}`}
-                    className="block"
-                  />
+              {/* Spotify: monthly listeners + link — no heavy iframe */}
+              {spotifyData?.monthlyListeners ? (
+                <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3">
+                  <span className="text-[#1DB954]"><Spotify size={18} /></span>
+                  <div>
+                    <p className="text-sm font-semibold">{formatListeners(spotifyData.monthlyListeners)}</p>
+                    <p className="text-[10px] text-muted-foreground">monthly listeners{spotifyData.artistName ? ` · ${spotifyData.artistName}` : ''}</p>
+                  </div>
+                  <a href={campaign.track_url} target="_blank" rel="noopener" className="ml-auto text-xs text-primary hover:underline shrink-0">
+                    Listen →
+                  </a>
                 </div>
-              )}
+              ) : campaign.track_url ? (
+                <a href={campaign.track_url} target="_blank" rel="noopener" className="flex items-center gap-2 rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <span className="text-[#1DB954]"><Spotify size={16} /></span>
+                  Listen on Spotify →
+                </a>
+              ) : null}
 
               {/* Platform badges */}
               {campaign.platforms?.length > 0 && (
