@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { isAdminRequest } from '@/lib/auth';
+import { emailSimple } from '@/lib/email-templates';
 
 /**
  * POST — Reply to an inbound email from admin
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
         from: fromAddress,
         to: [to],
         subject,
-        html: `<div style="font-family:system-ui,sans-serif;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;max-width:600px">${body.replace(/\n/g, '<br>')}</div>`,
+        html: emailSimple({ body }),
         reply_to: from === 'info' ? 'info@selah.fm' : 'support@selah.fm',
       }),
     });

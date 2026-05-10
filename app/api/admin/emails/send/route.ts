@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { isAdminRequest } from '@/lib/auth';
+import { emailSimple } from '@/lib/email-templates';
 
 const RESEND_API = 'https://api.resend.com/emails';
 
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     const imageHtml = imageUrl
       ? `<img src="${imageUrl}" alt="Screenshot" style="max-width:100%;border-radius:8px;margin:12px 0" />`
       : '';
-    const htmlBody = `<div style="font-family:system-ui,sans-serif;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;max-width:600px">${body.replace(/\n/g, '<br>')}${imageHtml}</div>`;
+    const htmlBody = emailSimple({ body: body + (imageUrl ? `<br><br><img src="${imageUrl}" alt="Attachment" style="max-width:100%;border-radius:8px;margin-top:12px">` : '') });
 
     const res = await fetch(RESEND_API, {
       method: 'POST',

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import sql from '@/lib/db';
+import { emailWrapper } from '@/lib/email-templates';
 
 export async function POST(request: Request) {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -91,13 +92,11 @@ export async function POST(request: Request) {
                     from: 'Selah.fm <info@selah.fm>',
                     to: [artist.email],
                     subject: `${displayName} donated $${donationDollars} to "${artist.track_title}"`,
-                    html: `<div style="font-family:system-ui,sans-serif;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;max-width:480px">
-                      <h2 style="color:#5B7FFF">Someone supported your campaign!</h2>
-                      <p style="color:#A0A0A0;font-size:24px;font-weight:bold">$${donationDollars}</p>
-                      <p style="color:#A0A0A0">${displayName} donated to your campaign <strong>"${artist.track_title}"</strong>${message ? ` with a message: "${message}"` : '.'}</p>
-                      <p style="color:#A0A0A0">The amount has been added to your campaign budget.</p>
-                      <a href="https://selah.fm/c/${campaignId}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#5B7FFF;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">View campaign</a>
-                    </div>`,
+                    html: emailWrapper({
+                      title: 'Someone supported your campaign!',
+                      body: `<strong style="font-size:24px;color:#1A1A2E">$${donationDollars}</strong><br><br>${displayName} donated to your campaign <strong>"${artist.track_title}"</strong>${message ? ` with a message: "${message}"` : '.'}<br><br>The amount has been added to your campaign budget.`,
+                      cta: { text: 'View campaign', url: `https://selah.fm/c/${campaignId}` },
+                    }),
                   }),
                 }).catch(() => {});
               } catch {}

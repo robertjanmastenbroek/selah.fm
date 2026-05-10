@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
+import { emailWrapper } from '@/lib/email-templates';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -84,7 +85,11 @@ export async function POST(request: Request) {
           from: 'Selah.fm <info@selah.fm>',
           to: [email],
           subject: 'Verify your Selah.fm account',
-          html: `<div style="font-family:system-ui,sans-serif;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;max-width:480px"><h2 style="color:#5B7FFF">Welcome to Selah.fm, ${displayName}!</h2><p style="color:#A0A0A0">Click the button below to verify your email and get started.</p><a href="${verifyUrl}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#5B7FFF;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Verify email</a><p style="margin-top:24px;font-size:11px;color:#555">— The Selah.fm team</p></div>`,
+          html: emailWrapper({
+            title: 'Welcome to Selah.fm',
+            body: `Hi ${displayName}! Click the button below to verify your email and get started.`,
+            cta: { text: 'Verify email', url: verifyUrl },
+          }),
         }),
       }).catch(() => {});
     }
