@@ -20,8 +20,32 @@ export async function GET(
     if (campaigns.length === 0) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
-    
-    return NextResponse.json(campaigns[0]);
+
+    const campaign = campaigns[0];
+
+    // Fetch donation stats
+    let donations = { totalCents: 0, count: 0, supporters: [] as any[] };
+    try {
+      const [totalRow] = await sql`
+        SELECT COALESCE(SUM(amount_cents)::int, 0) as total, COUNT(*)::int as count
+        FROM campaign_donations WHERE campaign_id = ${params.id}
+      `;
+      donations.totalCents = totalRow?.total || 0;
+      donations.count = totalRow?.count || 0;
+
+      const supporters = await sql`
+        SELECT donor_name, amount_cents, message, anonymous, created_at
+        FROM campaign_donations
+        WHERE campaign_id = ${params.id}
+        ORDER BY created_at DESC
+        LIMIT 20
+      `;
+      donations.supporters = supporters;
+    } catch {
+      // Table may not exist yet — graceful degradation
+    }
+
+    return NextResponse.json({ ...campaign, donations });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
@@ -40,7 +64,6 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    // Verify ownership
     const campaign = await sql`SELECT artist_id FROM campaigns WHERE id = ${params.id}`;
     if (campaign.length === 0) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     if (campaign[0].artist_id !== session.id) {
