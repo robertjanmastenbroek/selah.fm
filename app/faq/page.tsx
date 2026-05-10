@@ -1,32 +1,35 @@
 'use client';
 
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
-import { motion } from 'framer-motion';
-import { ChevronDown, ExternalLink } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
-const faqData = [
+interface FAQItem { q: string; a: string; section: string; }
+
+const faqs: { section: string; items: FAQItem[] }[] = [
   {
     section: 'About Selah.fm',
     items: [
       {
         q: 'What is Selah.fm?',
-        a: 'Selah.fm is an open-source CPM marketplace for music promotion. Artists create campaigns with budgets, set their own CPM (cost per 1,000 views) rates, and deposit funds via Stripe. Creators browse campaigns, make TikToks, Reels, or YouTube Shorts using the track, and submit their videos. Artists review and approve every submission — creators get paid only for verified views.',
-      },
-      {
-        q: 'What does "Selah" mean?',
-        a: '"Selah" is a Hebrew word found throughout the Psalms, often interpreted as "pause and reflect." Our platform creates a space where artists and creators can connect meaningfully — a pause from the noise of traditional music promotion.',
+        a: 'Selah.fm is an open-source CPM marketplace for music promotion. Artists create campaigns with budgets, set CPM (cost per 1,000 views) rates, and deposit funds via Stripe. Creators browse campaigns, make TikToks, Reels, or YouTube Shorts, and submit their videos. Artists review and approve submissions — creators get paid only for verified views.',
+        section: 'About Selah.fm',
       },
       {
         q: 'Is Selah.fm really open source?',
-        a: 'Yes! The entire platform code is MIT licensed and available on GitHub: <a href="https://github.com/robertjanmastenbroek/selah.fm" target="_blank" rel="noopener">github.com/robertjanmastenbroek/selah.fm</a>. You can audit the code, contribute, or run your own instance.',
+        a: 'Yes. All code is publicly available under the MIT license on GitHub: github.com/robertjanmastenbroek/selah.fm. You can audit the code, contribute, or run your own instance.',
+        section: 'About Selah.fm',
       },
       {
         q: 'Who is Selah.fm for?',
-        a: 'Independent artists who want real, verified promotion (no bots, no fake streams) and content creators who want to earn money making TikToks, Reels, and Shorts using music they genuinely enjoy.',
+        a: 'Independent artists who want real organic promotion on short-form video platforms, and creators who want to earn money making content they enjoy.',
+        section: 'About Selah.fm',
       },
       {
-        q: 'How is this different from playlist pitching or ads?',
+        q: 'How is this different from playlist bots or ads?',
         a: 'Playlist bots give you fake streams from fake accounts. Ads charge for impressions with zero guarantee. On Selah.fm, you pay only for verified views on real creator content that you personally approve. No bots, no black boxes.',
+        section: 'About Selah.fm',
       },
     ],
   },
@@ -35,31 +38,33 @@ const faqData = [
     items: [
       {
         q: 'How do I create a campaign?',
-        a: 'Go to your <a href="/dashboard">Dashboard</a>, click "New Campaign", upload your track (Spotify or SoundCloud link), set your CPM rate and budget, and launch. It takes about 2 minutes.',
+        a: 'Go to your Dashboard, click "New", upload your track, set your CPM rate and budget, and launch. Creators will find your campaign on the Browse page and start submitting content. It takes about 3 minutes.',
+        section: 'For Artists',
+      },
+      {
+        q: 'What is CPM and how do I set it?',
+        a: 'CPM stands for Cost Per Mille (1,000 views). You choose how much you want to pay per 1,000 verified views on a creator\'s video. A higher CPM attracts more creators. Typical rates range from $0.50 to $5.00 per 1,000 views.',
+        section: 'For Artists',
+      },
+      {
+        q: 'Do I have to approve every submission?',
+        a: 'Yes — you review every video before paying a cent. This ensures you only pay for content that genuinely promotes your track. You can approve or reject submissions from your Review page.',
+        section: 'For Artists',
       },
       {
         q: 'How much does it cost?',
-        a: 'There are no monthly fees or subscriptions. You only pay when you run a campaign. You set your own budget (minimum $25). Stripe charges 2.9% + $0.30 on deposits. The platform takes a 20% service fee from creator payouts.',
+        a: 'You decide your budget (minimum $5). The platform takes a 20% fee from creator payouts. Stripe takes 2.9% + $0.30 on deposits. There are no setup fees, monthly fees, or hidden costs.',
+        section: 'For Artists',
       },
       {
-        q: 'What happens to my money?',
-        a: 'When you deposit $100: approximately $96.80 reaches your campaign budget after Stripe fees. Creators earn based on verified views. You approve every video before any payment is made. Unspent funds stay in your campaign until used.',
-      },
-      {
-        q: 'Can I reject a video I don\'t like?',
-        a: 'Absolutely. You review every submission. If a video doesn\'t meet your standards or requirements, you can reject it — you pay nothing for rejected submissions.',
-      },
-      {
-        q: 'How are views verified?',
-        a: 'YouTube views are verified automatically via YouTube\'s Data API. TikTok views are checked via oEmbed. Instagram views are manually reviewed. We never count bot views or fake engagement.',
+        q: 'Can I pause or cancel my campaign?',
+        a: 'Yes — from your Dashboard you can pause any campaign at any time. Paused campaigns won\'t accept new submissions. You can also cancel a campaign entirely. Your remaining budget stays in your account.',
+        section: 'For Artists',
       },
       {
         q: 'Can fans support my campaign?',
-        a: 'Yes! Your campaign page at <code>selah.fm/c/[your-campaign-id]</code> has a crowdfunding section. Share the link with your fans — they can donate directly to your campaign budget to help you reach more listeners.',
-      },
-      {
-        q: 'How do I pause or stop a campaign?',
-        a: 'From your <a href="/dashboard">Dashboard</a>, click the pause button (⏸) on any active campaign. You can resume it anytime. Unspent budget stays in the campaign.',
+        a: 'Yes. Every campaign page has a crowdfunding section where fans can donate to your promotion budget. Share your campaign link and let your fans help you get discovered.',
+        section: 'For Artists',
       },
     ],
   },
@@ -68,31 +73,38 @@ const faqData = [
     items: [
       {
         q: 'How do I start earning?',
-        a: 'Browse campaigns at <a href="/browse">selah.fm/browse</a>, find a track you love, click "Join Campaign", paste your TikTok/Reels/Shorts link, and submit. Wait for the artist to approve — once approved, you earn based on verified views.',
+        a: 'Browse campaigns at selah.fm/browse, find a track you like, create a TikTok/Reel/Short using that track, paste the video link, and submit. Once the artist approves it, you earn based on verified views.',
+        section: 'For Creators',
       },
       {
         q: 'How much can I earn?',
-        a: 'Your earnings depend on the campaign\'s CPM rate and your video\'s view count. For example: 50,000 views at $3 CPM = $150 gross, minus 20% platform fee = $120 net earnings. Top creators earn $50–500+ per campaign.',
+        a: 'You earn 80% of the CPM rate per 1,000 verified views. For example, at a $2.00 CPM rate, 50,000 views would earn you $80. Top creators earn $50–500+ per campaign.',
+        section: 'For Creators',
       },
       {
-        q: 'How do I get paid?',
-        a: 'Go to your <a href="/earnings">Earnings</a> page and click "Set up Stripe Connect." Connect your bank account — it takes about 2 minutes and works in 40+ countries. Payouts are processed automatically after the artist approves your submission.',
+        q: 'When and how do I get paid?',
+        a: 'Payouts are processed via Stripe Connect after the artist reviews and approves your video. Connect your bank account in the Earnings page. Payment typically arrives 1–3 business days after approval.',
+        section: 'For Creators',
       },
       {
-        q: 'Do I need millions of followers?',
-        a: 'No minimum follower count. We believe small creators with authentic audiences drive real results. You just need to create content that genuinely features the artist\'s track.',
+        q: 'Do I own my videos?',
+        a: 'You do — 100%. Selah.fm never claims ownership of your content. The artist gets promotion; you keep full rights to your video.',
+        section: 'For Creators',
       },
       {
         q: 'What kind of content should I make?',
-        a: 'Each campaign has specific requirements set by the artist. Generally: use the track as background audio, keep it authentic to your style, and follow any hashtag or caption requirements. Check the campaign page for details.',
+        a: 'Anything creative that features the track. Dance challenges, lip-syncs, storytelling, duets, aesthetic edits, behind-the-scenes — as long as it showcases the music, you\'re good. Check each campaign\'s requirements for specific guidelines.',
+        section: 'For Creators',
       },
       {
-        q: 'Who owns my video?',
-        a: 'You do — 100%. Selah.fm never claims ownership of your content. The artist gets promotion; you keep full rights to your video.',
+        q: 'How long does approval take?',
+        a: 'Artists typically review submissions within 24–48 hours. You\'ll get a notification when they make a decision.',
+        section: 'For Creators',
       },
       {
-        q: 'Can I submit to multiple campaigns?',
-        a: 'Yes! You can submit to as many campaigns as you want. Each submission is independent.',
+        q: 'Can I submit the same video to multiple campaigns?',
+        a: 'No. Each video should be made specifically for one campaign. Authentic content performs better anyway.',
+        section: 'For Creators',
       },
     ],
   },
@@ -100,164 +112,169 @@ const faqData = [
     section: 'Account & Billing',
     items: [
       {
-        q: 'How do I create an account?',
-        a: 'Go to <a href="/login">selah.fm/login</a>. You can sign up with email/password or continue with Google. Pick whether you\'re an artist or creator during signup.',
+        q: 'How do I sign up?',
+        a: 'Go to selah.fm/login and sign up with email/password or Google. Choose whether you\'re an artist or creator during onboarding. It\'s free to join.',
+        section: 'Account & Billing',
       },
       {
-        q: 'I forgot my password — how do I reset it?',
-        a: 'Password reset is available via email support. Contact <a href="mailto:support@selah.fm">support@selah.fm</a> and we\'ll help you reset within 24 hours. (Self-service password reset is coming soon.)',
+        q: 'Are there any fees to join?',
+        a: 'No. Signing up and creating campaigns is free. You only pay when you deposit funds into a campaign budget (for artists) or earn money from content (for creators, minus the 20% platform fee).',
+        section: 'Account & Billing',
       },
       {
-        q: 'I signed up with Google but can\'t log in with a password.',
-        a: 'If you created your account via "Continue with Google," you must keep using that button to sign in. Password login won\'t work for Google OAuth accounts. This is intentional for security.',
+        q: 'Is my payment information secure?',
+        a: 'Yes. We use Stripe for all payments — one of the most trusted payment processors in the world. We never store your credit card or bank details on our servers.',
+        section: 'Account & Billing',
       },
       {
-        q: 'What payment methods do you accept?',
-        a: 'All payments go through Stripe — artists can use credit cards, debit cards, Apple Pay, Google Pay, and more. Creators connect their bank account via Stripe Connect.',
+        q: 'Can I use the platform outside the US?',
+        a: 'Yes. Stripe operates in 40+ countries. Creators can earn from anywhere Stripe Connect is available.',
+        section: 'Account & Billing',
       },
       {
-        q: 'Is there a refund policy?',
-        a: 'Since you approve every video before payment, refunds are generally not applicable. If you haven\'t spent your campaign budget, you can pause the campaign and the remaining funds stay in your account. For exceptional cases, email <a href="mailto:support@selah.fm">support@selah.fm</a>.',
-      },
-      {
-        q: 'What happens if I delete my account?',
-        a: 'Your profile, campaigns, and submissions are permanently removed. Any remaining campaign budget is forfeited. Pending payouts are processed before deletion.',
+        q: 'How do I reset my password?',
+        a: 'Currently, email support@selah.fm from your account email and we\'ll help you reset it. We\'re working on self-service password reset.',
+        section: 'Account & Billing',
       },
     ],
   },
   {
-    section: 'Referrals & Bonuses',
+    section: 'Referrals',
     items: [
       {
         q: 'How does the referral program work?',
-        a: 'Share your referral link (found on your <a href="/dashboard">Dashboard</a>). When a referred artist makes their first deposit, you both receive a 5% bonus credited to your campaign budgets. For example: a $100 deposit = $5 bonus for each of you.',
+        a: 'When someone signs up using your referral link and later makes their first deposit, you both get 5% of that deposit credited to your campaign budgets. Share your referral link from the Dashboard.',
+        section: 'Referrals',
       },
       {
-        q: 'When do I get my referral bonus?',
-        a: 'The bonus is automatically credited when the referred artist makes their first deposit via Stripe. You\'ll get a notification in your bell icon.',
-      },
-      {
-        q: 'Where can I find my referral link?',
-        a: 'On your <a href="/dashboard">Dashboard</a>, in the referral banner. It looks like: <code>https://selah.fm/login?ref=your@email.com</code>',
+        q: 'Where is my referral link?',
+        a: 'Your referral link is shown at the top of your Dashboard. It looks like: selah.fm/login?ref=youremail@example.com.',
+        section: 'Referrals',
       },
     ],
   },
   {
-    section: 'Technical & Troubleshooting',
+    section: 'Tech Support',
     items: [
       {
-        q: 'The page won\'t load or shows an error.',
-        a: 'Try a hard refresh (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows). If the issue persists, the site may be deploying an update — wait 2 minutes and try again. If it\'s still broken, report it via the <a href="/report-bug">bug report form</a> or the support chat (bottom-right corner).',
-      },
-      {
-        q: 'I see "0 campaigns" on Browse but I know there are campaigns.',
-        a: 'Your browser may be showing a cached version. Hard refresh the page (Cmd+Shift+R / Ctrl+Shift+R). The campaign data is fetched fresh from our server with every visit.',
-      },
-      {
-        q: 'My campaign isn\'t showing on my Dashboard.',
-        a: 'Make sure you\'re logged into the correct account. Your Dashboard only shows campaigns you created. If you\'re sure this is wrong, email <a href="mailto:support@selah.fm">support@selah.fm</a> with your email and campaign name.',
-      },
-      {
-        q: 'Chat messages aren\'t sending.',
-        a: 'This can happen if the database tables need setup. An admin can run the migration at <code>/api/admin/migrate</code> to create the messages table. If you\'re not an admin, email <a href="mailto:support@selah.fm">support@selah.fm</a>.',
-      },
-      {
         q: 'Does Selah.fm work on mobile?',
-        a: 'Yes! The entire platform is fully responsive and works on phones, tablets, and desktops. You can create campaigns, browse, submit content, and chat — all from your phone.',
-      },
-      {
-        q: 'Is my data private and secure?',
-        a: 'Yes. Passwords are hashed with bcrypt (12 rounds). Sessions use HMAC cookies. Stripe handles all payment data — we never see your credit card. The code is open source so anyone can audit our security. See our <a href="/privacy">Privacy Policy</a>.',
+        a: 'Yes. Selah.fm is fully mobile-responsive. You can browse, submit content, review submissions, and manage campaigns from any phone or tablet — no app download needed.',
+        section: 'Tech Support',
       },
       {
         q: 'What platforms is Selah.fm available on?',
-        a: 'Selah.fm is a web app available at <a href="https://selah.fm">selah.fm</a> — no download required. It works in any modern browser (Chrome, Safari, Firefox, Edge).',
+        a: 'It\'s a website: selah.fm. Works in any modern browser on desktop, phone, or tablet. No mobile app yet — but it works great on mobile browsers.',
+        section: 'Tech Support',
+      },
+      {
+        q: 'I found a bug. What should I do?',
+        a: 'Report it at selah.fm/report-bug or click "Report a bug" in the support chat widget (bottom-right corner). We fix issues fast.',
+        section: 'Tech Support',
+      },
+      {
+        q: 'Can I contribute to the code?',
+        a: 'Absolutely. The entire codebase is on GitHub: github.com/robertjanmastenbroek/selah.fm. Fork it, make changes, and submit a pull request.',
+        section: 'Tech Support',
       },
     ],
   },
   {
-    section: 'Support & Contact',
+    section: 'Contact',
     items: [
       {
         q: 'How do I contact support?',
-        a: 'You have several options: <br>• <strong>Support chat</strong>: click the blue chat bubble in the bottom-right corner of any page — Selah AI answers instantly, and can escalate to a human if needed.<br>• <strong>Email</strong>: <a href="mailto:support@selah.fm">support@selah.fm</a> — we typically respond within a few hours.<br>• <strong>Bug report</strong>: <a href="/report-bug">Report a bug form</a>.',
+        a: 'Use the chat widget in the bottom-right corner of any page, or email support@selah.fm. General inquiries: info@selah.fm.',
+        section: 'Contact',
       },
       {
-        q: 'How fast do you respond?',
-        a: 'The AI support chat responds instantly. Human email responses are typically within a few hours during business hours (CET timezone).',
-      },
-      {
-        q: 'How can I contribute to Selah.fm?',
-        a: 'Selah.fm is open source! Fork the repo at <a href="https://github.com/robertjanmastenbroek/selah.fm" target="_blank" rel="noopener">GitHub</a>, make your changes, and open a pull request. See our <a href="/open-source">Open Source page</a> for more details.',
-      },
-      {
-        q: 'Is there a community or social media?',
-        a: 'We\'re building our community. For now, star us on <a href="https://github.com/robertjanmastenbroek/selah.fm" target="_blank" rel="noopener">GitHub</a> to stay updated with new features and releases.',
+        q: 'Follow Selah.fm',
+        a: 'Instagram: instagram.com/selahfm — TikTok: tiktok.com/@selah.fm — X/Twitter: x.com/selah_fm — GitHub: github.com/robertjanmastenbroek/selah.fm',
+        section: 'Contact',
       },
     ],
   },
 ];
 
 export default function FAQPage() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
   const bg = 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A';
+
+  let globalIndex = 0;
+  const allItems: { item: FAQItem; index: number }[] = [];
+  faqs.forEach(section => {
+    section.items.forEach(item => {
+      allItems.push({ item: { ...item, section: section.section }, index: globalIndex });
+      globalIndex++;
+    });
+  });
 
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       <Header />
-      <main className="page-container max-w-2xl">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">Frequently Asked Questions</h1>
-          <p className="text-muted-foreground text-sm">
-            Everything you need to know about Selah.fm — artists, creators, payments, and more.
-            Can&apos;t find what you&apos;re looking for? Use the support chat in the bottom-right corner.
-          </p>
+      <main className="max-w-3xl mx-auto px-4 py-12 md:py-16">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Frequently asked questions</h1>
+          <p className="text-muted-foreground text-sm mb-10">Everything you need to know about Selah.fm — artists, creators, payments, and more.</p>
         </motion.div>
 
-        <div className="space-y-8">
-          {faqData.map((section, si) => (
+        {faqs.map((section, sectionIdx) => {
+          const startIdx = faqs.slice(0, sectionIdx).reduce((sum, s) => sum + s.items.length, 0);
+          return (
             <motion.div
               key={section.section}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: si * 0.08, duration: 0.4 }}
+              transition={{ delay: sectionIdx * 0.08, duration: 0.4 }}
+              className="mb-10"
             >
-              <h2 className="text-lg font-bold mb-4 text-primary">{section.section}</h2>
-              <div className="space-y-2">
-                {section.items.map((item, ii) => (
-                  <details
-                    key={ii}
-                    className="group rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden"
-                  >
-                    <summary className="p-4 cursor-pointer text-sm font-medium flex items-center justify-between hover:bg-white/[0.02] transition-colors">
-                      {item.q}
-                      <ChevronDown size={16} className="text-muted-foreground group-open:rotate-180 transition-transform shrink-0 ml-3" />
-                    </summary>
-                    <div className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed space-y-2 [&_a]:text-primary [&_a]:underline [&_a]:hover:no-underline [&_code]:bg-white/[0.06] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono">
-                      <p dangerouslySetInnerHTML={{ __html: item.a }} />
+              <h2 className="text-lg font-semibold mb-4 text-primary/80">{section.section}</h2>
+              <div className="space-y-1">
+                {section.items.map((item, i) => {
+                  const idx = startIdx + i;
+                  const isOpen = openIndex === idx;
+                  return (
+                    <div key={idx} className="rounded-xl bg-white/[0.02] border border-white/[0.04] overflow-hidden">
+                      <button
+                        onClick={() => setOpenIndex(isOpen ? null : idx)}
+                        className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 hover:bg-white/[0.03] transition-colors"
+                      >
+                        <span className="text-sm font-medium pr-4">{item.q}</span>
+                        <ChevronDown size={16} className={`text-muted-foreground shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-5 pb-4">
+                              <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                  </details>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
-          ))}
-        </div>
+          );
+        })}
 
+        {/* Contact CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-16 mb-8 rounded-2xl bg-primary/[0.04] backdrop-blur-xl border border-primary/10 p-8 text-center"
+          transition={{ delay: 0.5, duration: 0.4 }}
+          className="text-center py-12 border-t border-white/[0.06] mt-8"
         >
-          <h2 className="text-lg font-bold mb-2">Still have questions?</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Our AI support chat is available 24/7 in the bottom-right corner. For anything it can&apos;t answer, a human will follow up by email.
+          <p className="text-sm text-muted-foreground mb-3">Still have questions?</p>
+          <p className="text-xs text-muted-foreground/70">
+            Email us at <a href="mailto:support@selah.fm" className="text-primary hover:underline">support@selah.fm</a> or use the chat widget in the bottom-right corner.
           </p>
-          <a
-            href="mailto:support@selah.fm"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-          >
-            support@selah.fm <ExternalLink size={14} />
-          </a>
         </motion.div>
       </main>
     </div>
