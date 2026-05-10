@@ -380,6 +380,7 @@ function DashboardContent() {
                         ) : (
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" className="flex-1" onClick={() => window.location.href = '/review'}>Review ({c.submissions})</Button>
+                            <Button variant="outline" size="sm" onClick={() => startEdit(c)} title="Edit campaign"><Edit3 size={14} /></Button>
                             <Button size="sm" className="flex-1" onClick={() => { setFundingId(c.id); setFundingAmount('10'); }}>Add budget</Button>
                             <Button variant="ghost" size="sm" onClick={() => toggleStatus(c.id, c.status)} title={c.status === 'active' ? 'Pause' : 'Resume'}>{c.status === 'active' ? '⏸' : '▶'}</Button>
                           </div>
