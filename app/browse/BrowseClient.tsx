@@ -16,7 +16,7 @@ import { Megaphone, Heart, Send, DollarSign, X, CheckCircle } from 'lucide-react
 import { trackSubmitContent } from '@/lib/analytics';
 import { PlatformBadge } from '@/components/SocialIcons';
 
-interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; approved_submissions: string; recommended_hashtags: string; }
+interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; approved_submissions: string; pending_submissions: string; recommended_hashtags: string; }
 
 function buildQuery(filters: Record<string, any>) {
   const params = new URLSearchParams();
@@ -69,15 +69,22 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
   const handleSubmit = async () => {
     if (!submitModal || !submitUrl) return;
     setSubmitting(true);
+    const campaignId = submitModal.id;
     try {
       const res = await fetch('/api/submissions', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campaignId: submitModal.id, contentUrl: submitUrl, platform: submitPlatform }),
+        body: JSON.stringify({ campaignId, contentUrl: submitUrl, platform: submitPlatform }),
       });
       if (res.ok) {
         trackSubmitContent(submitPlatform);
         addToast('Submitted! Artist will review your video.', 'success');
+        // Optimistically increment pending count on the card
+        setCampaigns(prev => prev.map(c =>
+          c.id === campaignId
+            ? { ...c, pending_submissions: String(parseInt(c.pending_submissions || '0') + 1) }
+            : c
+        ));
         setSubmitModal(null);
       } else {
         const err = await res.json();
@@ -147,7 +154,11 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                       <div className="flex items-center gap-1">{(c.platforms || []).map((p: string) => <PlatformBadge key={p} platform={p} />)}</div>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{c.approved_submissions || '0'} submissions</span>
+                      <span>
+                        {c.approved_submissions !== '0' && <>{c.approved_submissions} approved</>}
+                        {c.pending_submissions !== '0' && <>{c.approved_submissions !== '0' ? ' · ' : ''}{c.pending_submissions} pending</>}
+                        {c.approved_submissions === '0' && c.pending_submissions === '0' && '0 submissions'}
+                      </span>
                       <span>{pct > 0 ? `${Math.round(pct)}% paid` : '0% used'}</span>
                     </div>
                     <Progress value={Math.min(pct, 100)} className="h-1.5" />
