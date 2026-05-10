@@ -10,7 +10,7 @@
 |----------|--------|
 | Pages built | ✅ 16/16 |
 | API routes live | ✅ 26/26 |
-| E2E tests | ✅ 33/34 (97%) |
+| E2E tests | ✅ 34/34 (100%) |
 | Google OAuth | ✅ Live |
 | YouTube view verification | ✅ Auto-verified |
 | Google Analytics | ✅ 6 conversion events |
@@ -338,7 +338,7 @@ selah.fm/
 ## E2E Test Coverage
 
 ```
-🧪 Selah.fm E2E Test Suite v12  —  33/34 passing (97%)
+🧪 Selah.fm E2E Test Suite v12  —  34/34 passing (100%)
 ─────────────────────────────────────────────────
 1. Public Pages      6/6   ✅  Landing, browse, artists, creators, login, TOS/privacy
 2. Navigation        4/4   ✅  Campaigns, artists, creators nav links, logo link
@@ -385,7 +385,7 @@ Click through on https://selah.fm before launch:
 - [ ] Chat — Bell opens ChatWidget, messages send
 - [ ] Notifications — Bell shows badge, mark read
 - [ ] Mobile (375px) — All pages reflow without overflow
-- [ ] `node e2e/test.js` → 33/34 or better
+- [x] `node e2e/test.js` → 34/34 (100%)
 
 ---
 
