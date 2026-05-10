@@ -19,10 +19,23 @@ import SubmissionsFeed from '@/components/SubmissionsFeed';
 // ── Share Modal ───────────────────────────────────────────────
 function ShareModal({ open, onClose, url, title, campaignId }: { open: boolean; onClose: () => void; url: string; title: string; campaignId: string }) {
   const [copied, setCopied] = useState(false);
-  const copyLink = async () => { try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {} };
   const router = useRouter();
-  const shareText = `I just submitted a video for "${title}" on Selah.fm! 🎵 Check it out and submit your own: ${url}`;
-  const nativeShare = async () => { if (navigator.share) { try { await navigator.share({ title, text: shareText, url }); return; } catch {} } copyLink(); };
+  const shareText = `I just submitted a video for "${title}" on Selah.fm! 🎵 Check it out and submit your own:`;
+  const encodedUrl = encodeURIComponent(url);
+  const encodedText = encodeURIComponent(`${shareText} ${url}`);
+
+  const copyLink = async () => { try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {} };
+
+  const shareOptions = [
+    { name: 'WhatsApp', href: `https://wa.me/?text=${encodedText}`, icon: WhatsAppIcon, color: '#25D366' },
+    { name: 'Instagram', action: () => { copyLink(); window.open('https://instagram.com', '_blank'); }, icon: InstagramIcon, color: '#E1306C' },
+    { name: 'X', href: `https://twitter.com/intent/tweet?text=${encodedText}`, icon: XIcon, color: '#000000' },
+    { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`, icon: FacebookIcon, color: '#1877F2' },
+    { name: 'Messages', href: `sms:?body=${encodedText}`, icon: MessagesIcon, color: '#34C759' },
+    { name: 'Email', href: `mailto:?subject=${encodeURIComponent(`Support "${title}" on Selah.fm`)}&body=${encodedText}`, icon: EmailIcon, color: '#5B7FFF' },
+    { name: 'Copy Link', action: copyLink, icon: CopyLinkIcon, color: '#8C8C8C' },
+  ];
+
   return (
     <AnimatePresence>
       {open && (
@@ -30,19 +43,41 @@ function ShareModal({ open, onClose, url, title, campaignId }: { open: boolean; 
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 400, damping: 35 }} className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6 space-y-5">
-              <div className="flex items-center justify-between"><h3 className="font-semibold text-lg">Share this campaign</h3><button onClick={onClose}><X size={20} className="text-muted-foreground" /></button></div>
-              
-              {/* Pre-written share text */}
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3">
-                <p className="text-xs text-muted-foreground leading-relaxed">{shareText}</p>
-              <button onClick={() => { navigator.clipboard.writeText(shareText); }} className="mt-2 text-[10px] text-primary hover:underline">Copy text</button>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg">Share this campaign</h3>
+                <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/[0.04]"><X size={20} className="text-muted-foreground" /></button>
               </div>
 
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]"><Link2 size={16} className="text-muted-foreground shrink-0" /><code className="text-xs text-muted-foreground truncate flex-1 select-all">{url}</code><button onClick={copyLink} className="shrink-0 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold active:scale-[0.97]">{copied ? 'Copied!' : 'Copy'}</button></div>
-              
-              <div className="grid grid-cols-4 gap-3">{['💬 Msg','📱 WA','📷 IG','𝕏 X','📘 FB','✉️ Mail','🔗 Copy','⋯ More'].map((item, i) => (<button key={item} onClick={i === 6 ? copyLink : nativeShare} className="flex flex-col items-center gap-1.5 py-2 rounded-xl hover:bg-white/[0.04] transition-colors active:scale-[0.95]"><span className="text-xl">{item.split(' ')[0]}</span><span className="text-[10px] text-muted-foreground">{item.split(' ')[1]}</span></button>))}</div>
+              {/* URL display + Copy */}
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                <Link2 size={16} className="text-muted-foreground shrink-0" />
+                <code className="text-xs text-muted-foreground truncate flex-1 select-all">{url}</code>
+                <button onClick={copyLink} className="shrink-0 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold active:scale-[0.97]">{copied ? 'Copied!' : 'Copy'}</button>
+              </div>
 
-              {/* Create Video CTA inside share modal */}
+              {/* Share buttons grid */}
+              <div className="grid grid-cols-4 gap-3">
+                {shareOptions.map(opt => {
+                  const IconComponent = opt.icon;
+                  return (
+                    <a
+                      key={opt.name}
+                      href={opt.href || '#'}
+                      target={opt.href ? '_blank' : undefined}
+                      rel={opt.href ? 'noopener noreferrer' : undefined}
+                      onClick={opt.action ? (e: any) => { e.preventDefault(); opt.action!(); } : undefined}
+                      className="flex flex-col items-center gap-1.5 py-2.5 rounded-xl hover:bg-white/[0.04] transition-colors active:scale-[0.95] no-underline"
+                    >
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ backgroundColor: opt.color + '15' }}>
+                        <IconComponent />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{opt.name}</span>
+                    </a>
+                  );
+                })}
+              </div>
+
+              {/* Create Video CTA */}
               <button onClick={() => { onClose(); router.push(`/c/${campaignId}`); }} className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-sm font-semibold active:scale-[0.97] hover:shadow-[0_0_20px_rgba(91,127,255,0.2)]">
                 <Camera size={14} className="inline mr-1.5" /> Create a video for this track
               </button>
@@ -53,6 +88,15 @@ function ShareModal({ open, onClose, url, title, campaignId }: { open: boolean; 
     </AnimatePresence>
   );
 }
+
+// ── Platform SVG Icons ────────────────────────────────────────
+function WhatsAppIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>; }
+function InstagramIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E1306C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>; }
+function XIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>; }
+function FacebookIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>; }
+function MessagesIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>; }
+function EmailIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5B7FFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>; }
+function CopyLinkIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8C8C8C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>; }
 
 // ── Circle Progress ─────────────────────────────────────────
 function CircleProgress({ pct, size = 120 }: { pct: number; size?: number }) {
