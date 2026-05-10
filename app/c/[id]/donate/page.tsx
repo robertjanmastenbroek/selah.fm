@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Heart, ArrowLeft, Shield, Lock, DollarSign, Sparkles } from 'lucide-react';
@@ -31,13 +31,13 @@ export default function DonatePage() {
   const [loading, setLoading] = useState(true);
 
   // Fetch campaign info
-  useState(() => {
+  useEffect(() => {
     fetch(`/api/campaigns/${id}`)
       .then(r => r.json())
       .then(d => { if (!d.error) setCampaign(d); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  });
+  }, [id]);
 
   const effectiveAmount = customAmount ? parseInt(customAmount) : amount;
 
