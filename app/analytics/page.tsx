@@ -288,7 +288,7 @@ export default function AnalyticsPage() {
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                 <Card className="text-center mt-6">
                   <CardContent className="p-8">
-                    <img src="/images/empty-analytics.png" alt="No data yet" className="mx-auto mb-4 w-36 h-36 object-contain opacity-80" loading="lazy" />
+                    <img src="/images/u2829739135_bstract_celebration_floating_golden_particles_and_a562146a-cb99-4582-ba4c-af22f20d7e90_1.png" alt="No data yet" className="mx-auto mb-4 w-36 h-36 object-contain opacity-80" loading="lazy" />
                     <h3 className="font-medium text-sm mb-2">No analytics yet</h3>
                     <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                       Once you start submitting content and earning, your performance data will appear here.
