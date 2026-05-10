@@ -79,26 +79,56 @@ export default function ImageCropper({
 
   const handleCrop = () => {
     const img = imgRef.current;
-    if (!img) return;
+    if (!img) {
+      convertSrcToDataUrl(src).then(onCrop).catch(() => onCrop(src));
+      return;
+    }
 
-    const canvas = document.createElement('canvas');
-    const outH = Math.round(outputWidth / aspectRatio);
-    canvas.width = outputWidth;
-    canvas.height = outH;
-    const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#0D0D0D';
-    ctx.fillRect(0, 0, outputWidth, outH);
+    try {
+      const canvas = document.createElement('canvas');
+      const outH = Math.round(outputWidth / aspectRatio);
+      canvas.width = outputWidth;
+      canvas.height = outH;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { convertSrcToDataUrl(src).then(onCrop).catch(() => onCrop(src)); return; }
 
-    const containerW = containerRef.current?.clientWidth || 600;
-    const containerH = containerW / aspectRatio;
-    const scaleFactor = outputWidth / containerW;
-    const drawW = img.naturalWidth * crop.scale * scaleFactor;
-    const drawH = img.naturalHeight * crop.scale * scaleFactor;
-    const drawX = ((containerW - img.naturalWidth * crop.scale) / 2 + crop.x) * scaleFactor;
-    const drawY = ((containerH - img.naturalHeight * crop.scale) / 2 + crop.y) * scaleFactor;
+      ctx.fillStyle = '#0D0D0D';
+      ctx.fillRect(0, 0, outputWidth, outH);
 
-    ctx.drawImage(img, drawX, drawY, drawW, drawH);
-    onCrop(canvas.toDataURL('image/jpeg', 0.85));
+      const containerW = containerRef.current?.clientWidth || 600;
+      const containerH = containerW / aspectRatio;
+      const scaleFactor = outputWidth / containerW;
+      const drawW = img.naturalWidth * crop.scale * scaleFactor;
+      const drawH = img.naturalHeight * crop.scale * scaleFactor;
+      const drawX = ((containerW - img.naturalWidth * crop.scale) / 2 + crop.x) * scaleFactor;
+      const drawY = ((containerH - img.naturalHeight * crop.scale) / 2 + crop.y) * scaleFactor;
+
+      ctx.drawImage(img, drawX, drawY, drawW, drawH);
+      onCrop(canvas.toDataURL('image/jpeg', 0.85));
+    } catch {
+      convertSrcToDataUrl(src).then(onCrop).catch(() => onCrop(src));
+    }
+  };
+
+  // Helper: convert blob/URL to data URL via canvas
+  const convertSrcToDataUrl = (imageSrc: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          const ctx = c.getContext('2d');
+          if (!ctx) { reject(new Error('No context')); return; }
+          ctx.drawImage(img, 0, 0);
+          resolve(c.toDataURL('image/jpeg', 0.85));
+        } catch { reject(new Error('Canvas error')); }
+      };
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = imageSrc;
+    });
   };
 
   if (!imgLoaded) {
