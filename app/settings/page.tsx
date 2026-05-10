@@ -18,7 +18,7 @@ export default function SettingsPage() {
   const [tiktok, setTikTok] = useState('');
   const [instagram, setInstagram] = useState('');
   const [youtube, setYouTube] = useState('');
-  const [facebook, setFacebook] = useState('');
+  // facebook_handle removed — column not yet on live DB
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
@@ -44,7 +44,7 @@ export default function SettingsPage() {
           tiktok_handle: tiktok || null,
           instagram_handle: instagram || null,
           youtube_handle: youtube || null,
-          facebook_handle: facebook || null,
+          // facebook_handle omitted (not yet on live DB)
         }),
       });
       if (res.ok) {
@@ -60,7 +60,7 @@ export default function SettingsPage() {
     }
   };
 
-  const connectedCount = [tiktok, instagram, youtube, facebook].filter(Boolean).length;
+  const connectedCount = [tiktok, instagram, youtube].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,7 +95,7 @@ export default function SettingsPage() {
               <Input value={tiktok} onChange={e => setTikTok(e.target.value)} placeholder="TikTok @handle" />
               <Input value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="Instagram @handle" />
               <Input value={youtube} onChange={e => setYouTube(e.target.value)} placeholder="YouTube @channel" />
-              <Input value={facebook} onChange={e => setFacebook(e.target.value)} placeholder="Facebook name" />
+
             </CardContent>
           </Card>
 
@@ -108,7 +108,8 @@ export default function SettingsPage() {
                 { name: 'TikTok', status: !!tiktok, color: 'bg-pink-500' },
                 { name: 'Instagram', status: !!instagram, color: 'bg-purple-500' },
                 { name: 'YouTube', status: !!youtube, color: 'bg-red-500' },
-                { name: 'Facebook', status: !!facebook, color: 'bg-blue-600' },
+
+
               ].map(p => (
                 <div key={p.name} className="flex items-center justify-between py-1">
                   <div className="flex items-center gap-2">
