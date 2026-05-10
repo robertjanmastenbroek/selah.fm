@@ -17,10 +17,12 @@ import { Heart, Share2, Send, Users, ChevronRight, ChevronLeft, X, Link2, Play, 
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 
 // ── Share Modal ───────────────────────────────────────────────
-function ShareModal({ open, onClose, url, title }: { open: boolean; onClose: () => void; url: string; title: string }) {
+function ShareModal({ open, onClose, url, title, campaignId }: { open: boolean; onClose: () => void; url: string; title: string; campaignId: string }) {
   const [copied, setCopied] = useState(false);
   const copyLink = async () => { try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {} };
-  const nativeShare = async () => { if (navigator.share) { try { await navigator.share({ title, text: `Support "${title}" on Selah.fm 🎵`, url }); return; } catch {} } copyLink(); };
+  const router = useRouter();
+  const shareText = `I just submitted a video for "${title}" on Selah.fm! 🎵 Check it out and submit your own: ${url}`;
+  const nativeShare = async () => { if (navigator.share) { try { await navigator.share({ title, text: shareText, url }); return; } catch {} } copyLink(); };
   return (
     <AnimatePresence>
       {open && (
@@ -29,8 +31,21 @@ function ShareModal({ open, onClose, url, title }: { open: boolean; onClose: () 
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 400, damping: 35 }} className="relative z-10 w-full max-w-sm rounded-t-3xl sm:rounded-3xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="p-6 space-y-5">
               <div className="flex items-center justify-between"><h3 className="font-semibold text-lg">Share this campaign</h3><button onClick={onClose}><X size={20} className="text-muted-foreground" /></button></div>
+              
+              {/* Pre-written share text */}
+              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3">
+                <p className="text-xs text-muted-foreground leading-relaxed">{shareText}</p>
+                <button onClick={() => { navigator.clipboard.writeText(shareText); addToast('Text copied!', 'success'); }} className="mt-2 text-[10px] text-primary hover:underline">Copy text</button>
+              </div>
+
               <div className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]"><Link2 size={16} className="text-muted-foreground shrink-0" /><code className="text-xs text-muted-foreground truncate flex-1 select-all">{url}</code><button onClick={copyLink} className="shrink-0 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold active:scale-[0.97]">{copied ? 'Copied!' : 'Copy'}</button></div>
+              
               <div className="grid grid-cols-4 gap-3">{['💬 Msg','📱 WA','📷 IG','𝕏 X','📘 FB','✉️ Mail','🔗 Copy','⋯ More'].map((item, i) => (<button key={item} onClick={i === 6 ? copyLink : nativeShare} className="flex flex-col items-center gap-1.5 py-2 rounded-xl hover:bg-white/[0.04] transition-colors active:scale-[0.95]"><span className="text-xl">{item.split(' ')[0]}</span><span className="text-[10px] text-muted-foreground">{item.split(' ')[1]}</span></button>))}</div>
+
+              {/* Create Video CTA inside share modal */}
+              <button onClick={() => { onClose(); router.push(`/c/${campaignId}`); }} className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-sm font-semibold active:scale-[0.97] hover:shadow-[0_0_20px_rgba(91,127,255,0.2)]">
+                <Camera size={14} className="inline mr-1.5" /> Create a video for this track
+              </button>
             </div>
           </motion.div>
         </motion.div>
