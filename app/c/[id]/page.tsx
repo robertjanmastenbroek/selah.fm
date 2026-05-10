@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const imageUrl = campaign.cover_art_url || 'https://selah.fm/images/hero-illustration.png';
   const desc = campaign.requirements
-    ? `Promote "${campaign.track_title}" on TikTok, Reels & Shorts. ${campaign.requirements.slice(0, 120)}…`
+    ? `${campaign.requirements.slice(0, 120)}${campaign.requirements.length > 120 ? '…' : ''}`
     : `Promote "${campaign.track_title}" on TikTok, Instagram Reels, and YouTube Shorts. Creators earn per verified view.`;
 
   return {
