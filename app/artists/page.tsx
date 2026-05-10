@@ -24,7 +24,7 @@ export default function ArtistsPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set('search', search);
-    fetch(`/api/artists?${params}`).then(r=>r.json()).then(d=>{setArtists(d.artists||[])}).finally(()=>setLoading(false));
+    fetch(`/api/artists?${params}`).then(r=>r.json()).then(d=>{setArtists(d.artists||[])}).catch(()=>setArtists([])).finally(()=>setLoading(false));
   };
   useEffect(()=>{fetchArtists();},[]);
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); fetchArtists(searchText); };

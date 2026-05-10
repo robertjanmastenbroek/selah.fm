@@ -22,7 +22,7 @@ export default function CreatorsPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set('search', search);
-    fetch(`/api/creators?${params}`).then(r=>r.json()).then(d=>{setCreators(d.creators||[])}).finally(()=>setLoading(false));
+    fetch(`/api/creators?${params}`).then(r=>r.json()).then(d=>{setCreators(d.creators||[])}).catch(()=>setCreators([])).finally(()=>setLoading(false));
   };
   useEffect(()=>{fetchCreators();},[]);
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); fetchCreators(searchText); };
