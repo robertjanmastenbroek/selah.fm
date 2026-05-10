@@ -126,64 +126,83 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       <Header />
-      <main className="max-w-2xl mx-auto px-4 py-4 md:py-8 pb-24">
+      <main className="max-w-5xl mx-auto px-4 py-4 md:py-8 pb-24">
 
-        {/* Big title */}
-        <div className="mb-6">
-          <Badge variant="outline" className="border-primary/20 text-primary text-xs mb-3">{campaign.status === 'active' ? '🟢 Active campaign' : '⏸ Paused'}</Badge>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">{campaign.track_title}</h1>
-          <p className="text-sm text-muted-foreground">${cpm.toFixed(2)} per 1,000 verified views · Creators earn 80%</p>
-        </div>
+        {/* ── HERO: Two-column on desktop ──────────────────────── */}
+        <div ref={heroRef} className="md:grid md:grid-cols-[1fr_360px] md:gap-8 mb-8">
+          
+          {/* LEFT: Content */}
+          <div className="min-w-0">
+            {/* Big title */}
+            <div className="mb-5">
+              <Badge variant="outline" className="border-primary/20 text-primary text-xs mb-3">{campaign.status === 'active' ? '🟢 Active campaign' : '⏸ Paused'}</Badge>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">{campaign.track_title}</h1>
+              <p className="text-sm text-muted-foreground">${cpm.toFixed(2)} per 1,000 verified views · Creators earn 80%</p>
+            </div>
 
-        {/* Media carousel */}
-        <div ref={heroRef} className="mb-8">
-          <MediaCarousel coverUrl={campaign.cover_art_url} videoUrl={campaign.content_assets_url || campaign.track_url} trackTitle={campaign.track_title} />
-        </div>
+            {/* Media carousel */}
+            <MediaCarousel coverUrl={campaign.cover_art_url} videoUrl={campaign.content_assets_url || campaign.track_url} trackTitle={campaign.track_title} />
 
-        {/* Primary CTA: Submit Video */}
-        <div className="mb-6 space-y-3">
-          {!showSubmit ? (
-            <Button onClick={() => setShowSubmit(true)} className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] active:scale-[0.97]">
-              <Send size={20} className="mr-2" /> Submit Your Video — Earn ${(cpm * 0.8).toFixed(2)}/1K views
-            </Button>
-          ) : (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-2xl bg-white/[0.04] border border-primary/10 p-5 space-y-4">
-              <p className="text-sm font-semibold flex items-center gap-2"><Camera size={16} className="text-primary" />Submit your video</p>
-              <div className="grid grid-cols-3 gap-2">
-                {[{ id: 'tiktok', label: 'TikTok', color: '#ff0050' }, { id: 'instagram', label: 'Reels', color: '#E1306C' }, { id: 'youtube', label: 'Shorts', color: '#FF0000' }].map(p => (
-                  <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: p.color + '15' }}><span style={{ color: p.color, fontSize: 12 }}>{p.label[0]}</span></div>
-                    <span className="text-[10px] font-medium">{p.label}</span>
-                  </button>
-                ))}
-              </div>
+            {/* Primary CTA: Submit Video */}
+            <div className="mt-6 space-y-3">
+              {!showSubmit ? (
+                <Button onClick={() => setShowSubmit(true)} className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] active:scale-[0.97]">
+                  <Send size={20} className="mr-2" /> Submit Your Video — Earn ${(cpm * 0.8).toFixed(2)}/1K views
+                </Button>
+              ) : (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-2xl bg-white/[0.04] border border-primary/10 p-5 space-y-4">
+                  <p className="text-sm font-semibold flex items-center gap-2"><Camera size={16} className="text-primary" />Submit your video</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[{ id: 'tiktok', label: 'TikTok', color: '#ff0050' }, { id: 'instagram', label: 'Reels', color: '#E1306C' }, { id: 'youtube', label: 'Shorts', color: '#FF0000' }].map(p => (
+                      <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ backgroundColor: p.color + '15' }}><span style={{ color: p.color, fontSize: 12 }}>{p.label[0]}</span></div>
+                        <span className="text-[10px] font-medium">{p.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" autoFocus />
+                    <Button onClick={handleSubmit} disabled={!submitUrl || submitting} className="shrink-0">{submitting ? '...' : 'Submit'}</Button>
+                  </div>
+                  <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                </motion.div>
+              )}
               <div className="flex gap-2">
-                <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" autoFocus />
-                <Button onClick={handleSubmit} disabled={!submitUrl || submitting} className="shrink-0">{submitting ? '...' : 'Submit'}</Button>
+                <Button onClick={() => router.push(`/c/${id}/donate`)} variant="outline" className="flex-1 py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Heart size={16} className="mr-1.5" /> Donate</Button>
+                <Button onClick={() => setShareOpen(true)} variant="outline" className="flex-1 py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Share2 size={16} className="mr-1.5" /> Share</Button>
               </div>
-              <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-muted-foreground hover:text-foreground">Cancel</button>
-            </motion.div>
-          )}
-          <div className="flex gap-2">
-            <Button onClick={() => router.push(`/c/${id}/donate`)} variant="outline" className="flex-1 py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Heart size={16} className="mr-1.5" /> Donate</Button>
-            <Button onClick={() => setShareOpen(true)} variant="outline" className="flex-1 py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Share2 size={16} className="mr-1.5" /> Share</Button>
-          </div>
-        </div>
-
-        {/* Circle progress + stats */}
-        <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6 mb-8">
-          <div className="flex flex-col sm:flex-row items-center gap-8">
-            <CircleProgress pct={progress} size={140} />
-            <div className="flex-1 grid grid-cols-2 gap-4 text-center sm:text-left">
-              {[{ value: `$${spent.toFixed(0)}`, label: 'Spent' }, { value: `$${budget.toFixed(0)}`, label: 'Budget' }, { value: donations.count, label: 'Supporters' }, { value: views >= 1000 ? `${(views/1000).toFixed(1)}K` : views, label: 'Views' }].map(s => (
-                <div key={s.label}><div className="text-xl font-bold">{s.value}</div><div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div></div>
-              ))}
             </div>
           </div>
-          <Progress value={Math.min(progress, 100)} className="h-1.5 mt-4" />
-          <div className="flex items-center justify-between mt-2 text-[10px] text-muted-foreground">
-            <span>{submissions} submissions · ${spent.toFixed(0)} paid out</span>
-            <button onClick={() => setShareOpen(true)} className="text-primary hover:underline flex items-center gap-1"><Share2 size={10} /> Share</button>
+
+          {/* RIGHT: Stats sidebar (desktop) */}
+          <div className="mt-6 md:mt-0 md:sticky md:top-8 md:self-start space-y-4">
+            <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6">
+              <CircleProgress pct={progress} size={160} />
+              <div className="grid grid-cols-2 gap-3 mt-5">
+                {[{ value: `$${spent.toFixed(0)}`, label: 'Spent' }, { value: `$${budget.toFixed(0)}`, label: 'Budget' }, { value: donations.count, label: 'Supporters' }, { value: views >= 1000 ? `${(views/1000).toFixed(1)}K` : views, label: 'Views' }].map(s => (
+                  <div key={s.label} className="text-center"><div className="text-xl font-bold">{s.value}</div><div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div></div>
+                ))}
+              </div>
+              <Progress value={Math.min(progress, 100)} className="h-1.5 mt-4" />
+              <div className="flex items-center justify-between mt-2 text-[10px] text-muted-foreground">
+                <span>{submissions} submissions</span>
+                <button onClick={() => setShareOpen(true)} className="text-primary hover:underline flex items-center gap-1"><Share2 size={10} /> Share</button>
+              </div>
+            </div>
+
+            {/* Trust badges */}
+            <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5 space-y-3">
+              {[
+                { icon: <Camera size={14} className="text-primary/60" />, text: 'Every submission reviewed by the artist' },
+                { icon: <Send size={14} className="text-primary/60" />, text: 'Only verified views count toward earnings' },
+                { icon: <Users size={14} className="text-primary/60" />, text: '80% of CPM goes to creators' },
+              ].map((item) => (
+                <div key={item.text} className="flex items-start gap-3">
+                  <div className="shrink-0 mt-0.5">{item.icon}</div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{item.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -248,7 +267,23 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       </main>
 
       {/* Sticky CTA */}
-      <AnimatePresence>{showSticky && (<motion.div initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.08] p-3"><div className="max-w-2xl mx-auto flex gap-2"><Button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 active:scale-[0.97]"><Send size={16} className="mr-1.5" />Submit Video</Button><Button onClick={() => router.push(`/c/${id}/donate`)} variant="outline" className="flex-[0.5] py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Heart size={16} /></Button><Button onClick={() => setShareOpen(true)} variant="outline" className="flex-[0.5] py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Share2 size={16} /></Button></div></motion.div>)}</AnimatePresence>
+      <AnimatePresence>
+        {showSticky && (
+          <motion.div initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.08] p-3">
+            <div className="max-w-5xl mx-auto flex items-center gap-3">
+              {/* Campaign status text */}
+              <p className="text-xs text-muted-foreground hidden sm:block shrink-0">
+                {submissions} videos · ${spent.toFixed(0)} raised{progress > 0 ? ` · ${Math.round(progress)}%` : ''}
+              </p>
+              <div className="flex gap-2 flex-1">
+                <Button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 active:scale-[0.97]"><Send size={16} className="mr-1.5" />Submit Video</Button>
+                <Button onClick={() => router.push(`/c/${id}/donate`)} variant="outline" className="flex-[0.5] py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Heart size={16} /></Button>
+                <Button onClick={() => setShareOpen(true)} variant="outline" className="flex-[0.5] py-4 text-sm font-semibold rounded-xl active:scale-[0.97]"><Share2 size={16} /></Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={campaign.track_title} campaignId={id} />
       <StripePaymentModal open={paymentModal} onClose={() => setPaymentModal(false)} onSuccess={() => { setPaymentModal(false); setSuccessOpen(true); }} clientSecret={clientSecret} title={campaign.track_title} subtitle="Your donation goes directly to the campaign budget" coverArtUrl={campaign.cover_art_url} amount={donationAmount} mode="donation" />
