@@ -17,6 +17,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
 import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
 import { Plus, Edit3 } from 'lucide-react';
+import StripePaymentModal from '@/components/StripePaymentModal';
+import PaymentSuccess from '@/components/PaymentSuccess';
 
 interface Campaign {
   id: string; trackTitle: string; coverArt: string; cpmRate: number;
@@ -53,6 +55,10 @@ function DashboardContent() {
   const { addToast } = useToast();
   const [fundingId, setFundingId] = useState<string | null>(null);
   const [fundingAmount, setFundingAmount] = useState('10');
+  const [depositModal, setDepositModal] = useState(false);
+  const [depositSecret, setDepositSecret] = useState('');
+  const [depositSuccess, setDepositSuccess] = useState(false);
+  const [depositCampaign, setDepositCampaign] = useState<{ id: string; title: string } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
 
@@ -453,8 +459,12 @@ function DashboardContent() {
                                 const amt = parseInt(fundingAmount); if (amt < 5) { addToast('Minimum $5', 'error'); return; }
                                 const r = await fetch('/api/stripe', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: amt, campaignId: c.id }) });
                                 const d = await r.json();
-                                if (d.url) { trackFundCampaign(amt); window.location.href = d.url; } else { addToast('Stripe not configured', 'error'); }
-                                setFundingId(null);
+                                if (d.clientSecret) {
+                                  setDepositSecret(d.clientSecret);
+                                  setDepositCampaign({ id: c.id, title: c.trackTitle });
+                                  setDepositModal(true);
+                                  setFundingId(null);
+                                } else { addToast(d.error || 'Could not start payment', 'error'); }
                               }}>Fund ${fundingAmount}</Button>
                             </div>
                             <Button variant="ghost" size="sm" onClick={() => setFundingId(null)} className="w-full">Cancel</Button>
@@ -475,6 +485,26 @@ function DashboardContent() {
             )}
           </>
         )}
+
+        {/* On-platform deposit modal + celebration */}
+        <StripePaymentModal
+          open={depositModal}
+          onClose={() => setDepositModal(false)}
+          onSuccess={() => { setDepositModal(false); setDepositSuccess(true); }}
+          clientSecret={depositSecret}
+          title={depositCampaign?.title || 'Campaign'}
+          subtitle="Add funds to your campaign budget"
+          amount={parseInt(fundingAmount)}
+          mode="deposit"
+        />
+        <PaymentSuccess
+          open={depositSuccess}
+          mode="deposit"
+          amount={parseInt(fundingAmount)}
+          campaignTitle={depositCampaign?.title}
+          campaignId={depositCampaign?.id}
+          onClose={() => setDepositSuccess(false)}
+        />
       </main>
     </div>
   );
