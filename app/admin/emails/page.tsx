@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdminLayout from '../layout';
 import { Mail, RefreshCw, ExternalLink, Send, X, Inbox, ArrowLeft, ChevronLeft } from 'lucide-react';
 
 export default function EmailsPage() {
-  return <AdminLayout><EmailsContent /></AdminLayout>;
+  return <EmailsContent />;
 }
 
 function EmailsContent() {
@@ -31,7 +30,7 @@ function EmailsContent() {
   const loadInbox = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/inbox?mailbox=${mailbox}`);
+      const res = await fetch(`/api/admin/inbox?mailbox=${mailbox}`, { credentials: 'include' });
       const data = await res.json();
       if (Array.isArray(data)) setEmails(data);
       else setError('Failed to load');
@@ -42,7 +41,7 @@ function EmailsContent() {
   const loadSent = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/emails');
+      const res = await fetch('/api/admin/emails', { credentials: 'include' });
       const data = await res.json();
       if (Array.isArray(data)) setEmails(data);
       else setError('Failed to load');

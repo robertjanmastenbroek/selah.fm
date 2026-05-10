@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import AdminLayout from '../layout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bug, RefreshCw, CheckCircle, Clock, AlertTriangle, Trash2 } from 'lucide-react';
 
 export default function BugsPage() {
-  return <AdminLayout><BugsContent /></AdminLayout>;
+  return <BugsContent />;
 }
 
 function BugsContent() {
@@ -21,7 +20,7 @@ function BugsContent() {
   const loadBugs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/bugs');
+      const res = await fetch('/api/bugs', { credentials: 'include' });
       const data = await res.json();
       if (Array.isArray(data)) setBugs(data);
       else setError('Failed to load');

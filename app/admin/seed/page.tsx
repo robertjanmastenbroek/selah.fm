@@ -9,7 +9,7 @@ export default function AdminSeedPage() {
 
   const runSeed = async () => {
     setLoading(true);
-    const res = await fetch('/api/admin/seed');
+    const res = await fetch('/api/admin/seed', { credentials: 'include' });
     const data = await res.json();
     setResult(data);
     setLoading(false);
