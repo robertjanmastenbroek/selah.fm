@@ -8,6 +8,9 @@ export async function GET(request: Request) {
     await sql`CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id)`;
     // Add facebook_handle column if missing on live DB
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS facebook_handle TEXT`;
+    // Create messages table if missing
+    await sql`CREATE TABLE IF NOT EXISTS messages (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), sender_id UUID NOT NULL, receiver_id UUID NOT NULL, campaign_id UUID, content TEXT NOT NULL, read BOOLEAN NOT NULL DEFAULT false, created_at TIMESTAMPTZ NOT NULL DEFAULT now())`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(sender_id, receiver_id)`;
 
     // ── Always clean up: fix NULL artist_ids first ───────────
     const artists = await sql`SELECT id FROM users WHERE user_type = 'artist' LIMIT 3`;
