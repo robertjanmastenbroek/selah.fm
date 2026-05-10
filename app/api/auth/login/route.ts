@@ -35,7 +35,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const res = NextResponse.json({ ok: true, type: user.user_type });
+    const redirectTo = user.user_type === 'artist' ? '/dashboard' : '/browse';
+    const res = NextResponse.json({ ok: true, type: user.user_type, redirectTo });
     setSessionCookie(res, {
       email: user.email,
       type: user.user_type,
