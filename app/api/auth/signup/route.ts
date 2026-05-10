@@ -82,12 +82,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Send welcome email (non-blocking)
-    try {
-      const { sendEmail, welcomeEmail } = await import('@/lib/email');
-      const { subject, html } = welcomeEmail(displayName);
-      sendEmail({ to: email, subject, html });
-    } catch {}
+    // Signup complete
+    // Welcome emails are handled externally via Resend
 
     const res = NextResponse.json({ ok: true, redirectTo: '/onboarding' });
     setSessionCookie(res, {

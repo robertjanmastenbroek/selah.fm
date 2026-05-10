@@ -79,35 +79,5 @@ export async function GET(request: Request) {
     results.push('bugs table OK');
   } catch (e: any) { results.push(`bugs: ${e.message}`); }
 
-  try {
-    await sql`CREATE TABLE IF NOT EXISTS email_logs (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      recipient TEXT NOT NULL,
-      subject TEXT NOT NULL,
-      sent BOOLEAN NOT NULL DEFAULT false,
-      reason TEXT,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    )`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_email_logs_created ON email_logs(created_at DESC)`;
-    results.push('email_logs table OK');
-  } catch (e: any) { results.push(`email_logs: ${e.message}`); }
-
-  try {
-    await sql`CREATE TABLE IF NOT EXISTS inbound_emails (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      mailbox TEXT NOT NULL CHECK (mailbox IN ('info', 'support')),
-      from_address TEXT NOT NULL,
-      to_address TEXT NOT NULL,
-      subject TEXT NOT NULL,
-      body_html TEXT,
-      body_text TEXT,
-      raw_headers JSONB DEFAULT '{}',
-      read BOOLEAN NOT NULL DEFAULT false,
-      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-    )`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_inbound_emails_mailbox ON inbound_emails(mailbox, created_at DESC)`;
-    results.push('inbound_emails table OK');
-  } catch (e: any) { results.push(`inbound_emails: ${e.message}`); }
-
   return NextResponse.json({ migrated: true, results });
 }
