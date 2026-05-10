@@ -96,7 +96,7 @@ export default function SubmissionsFeed({ campaignId, count }: { campaignId: str
             <div className="flex items-start gap-4">
               {/* Creator avatar */}
               <div className="shrink-0">
-                <CreatorAvatar name={s.creator_name} size={40} className="rounded-xl ring-2 ring-primary/10" />
+                <CreatorAvatar name={s.creator_name} size="md" className="rounded-xl ring-2 ring-primary/10" />
               </div>
 
               {/* Content */}
