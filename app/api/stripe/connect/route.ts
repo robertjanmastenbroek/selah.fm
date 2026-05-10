@@ -66,6 +66,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ url: accountLink.url });
   } catch (e: any) {
     console.error('Stripe Connect error:', e.message);
-    return NextResponse.json({ error: 'Failed to create Connect account' }, { status: 500 });
+    const msg = e.message || 'Unknown error';
+    // Show a helpful message based on the error
+    if (msg.includes('api_key') || msg.includes('auth')) return NextResponse.json({ error: 'Stripe API key not configured. Add STRIPE_SECRET_KEY to Railway.' }, { status: 500 });
+    if (msg.includes('country')) return NextResponse.json({ error: 'Stripe Connect requires a supported country. Contact support.' }, { status: 500 });
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
