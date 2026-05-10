@@ -58,25 +58,19 @@ export async function GET(request: Request) {
     // Persist user to database
     let isNewUser = false;
     try {
-      const existing = await sql`SELECT id, tiktok_handle, instagram_handle, youtube_handle FROM users WHERE email = ${user.email}`;
+      const existing = await sql`SELECT id FROM users WHERE email = ${user.email}`;
       if (existing.length === 0) {
         isNewUser = true;
         await sql`
           INSERT INTO users (email, password_hash, user_type, display_name)
           VALUES (${user.email}, 'google-oauth', 'creator', ${user.name || user.email.split('@')[0]})
         `;
-      } else {
-        // Check if user needs onboarding (no social handles set)
-        const u = existing[0];
-        if (!u.tiktok_handle && !u.instagram_handle && !u.youtube_handle) {
-          isNewUser = true;
-        }
       }
     } catch (dbErr) {
       console.error('DB insert failed:', dbErr);
     }
 
-    // Redirect new users to onboarding, returning users to browse
+    // Only redirect to onboarding for truly new users
     const redirectTo = isNewUser ? '/onboarding' : '/browse';
     const res = NextResponse.redirect(`${process.env.NEXTAUTH_URL}${redirectTo}`);
     setSessionCookie(res, {
