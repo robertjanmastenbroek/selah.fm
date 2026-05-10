@@ -316,6 +316,11 @@ export default function RootPage() {
                 Creator sign up
               </div>
             </Link>
+            <Link href="/faq">
+              <div className="px-6 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] font-semibold text-sm hover:bg-white/[0.08] active:scale-[0.97] transition-all cursor-pointer">
+                FAQ
+              </div>
+            </Link>
             <Link href="/browse">
               <div className="px-6 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] font-semibold text-sm hover:bg-white/[0.08] active:scale-[0.97] transition-all cursor-pointer">
                 Browse campaigns
