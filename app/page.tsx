@@ -51,6 +51,21 @@ export default function RootPage() {
 
       {/* ===== HERO SECTION ===== */}
       <section className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative z-10">
+        {/* Top-right sign in */}
+        <motion.div
+          className="absolute top-6 right-6 z-20"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+        >
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.04] backdrop-blur-xl border border-white/[0.08] text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.08] hover:border-white/[0.12] transition-all active:scale-[0.97]"
+          >
+            Sign in
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          </Link>
+        </motion.div>
         <motion.div
           className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full pointer-events-none z-0"
           animate={{ rotate: 360, scale: [1, 1.05, 1] }}
