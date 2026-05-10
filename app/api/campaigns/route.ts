@@ -14,9 +14,11 @@ export async function GET(request: Request) {
       SELECT c.*, 
         COALESCE(v.approved_submissions, '0') as approved_submissions,
         COALESCE(v.pending_submissions, '0') as pending_submissions,
-        COALESCE(v.total_verified_views, '0') as total_verified_views
+        COALESCE(v.total_verified_views, '0') as total_verified_views,
+        u.display_name as artist_name
       FROM campaigns c
       LEFT JOIN campaign_stats v ON v.id = c.id
+      LEFT JOIN users u ON u.id = c.artist_id
       WHERE c.status IN ('active', 'draft')
       ORDER BY c.created_at DESC
       LIMIT ${limit}
@@ -28,7 +30,8 @@ export async function GET(request: Request) {
       const q = search.toLowerCase();
       filtered = filtered.filter((c: any) => 
         c.track_title?.toLowerCase().includes(q) ||
-        (c.recommended_hashtags || '').toLowerCase().includes(q)
+        (c.recommended_hashtags || '').toLowerCase().includes(q) ||
+        (c.artist_name || '').toLowerCase().includes(q)
       );
     }
     
