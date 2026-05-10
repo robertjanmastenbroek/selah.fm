@@ -65,7 +65,7 @@ export default function EarningsPage() {
           <>
             {/* Balance card */}
             <Card className="text-center mb-6 animate-fade-in overflow-hidden">
-              <img src="/images/earnings-visual.png" alt="Earnings" className="w-full h-32 object-cover opacity-15" />
+              <img src="/images/earnings-visual.png" alt="Earnings" className="w-full h-32 object-cover opacity-15" loading="lazy" />
               <CardContent className="p-8">
                 <p className="text-muted-foreground text-xs uppercase tracking-widest mb-2">Available balance</p>
                 <p className="text-5xl font-bold tracking-tight">
@@ -116,7 +116,7 @@ export default function EarningsPage() {
               {earnings.submissions.length === 0 ? (
                 <Card className="text-center py-16 animate-fade-in">
                   <CardContent>
-                    <img src="/images/empty-earnings.png" alt="No earnings yet" className="mx-auto mb-6 w-40 h-40 object-contain opacity-80" />
+                    <img src="/images/empty-earnings.png" alt="No earnings yet" className="mx-auto mb-6 w-40 h-40 object-contain opacity-80" loading="lazy" />
                     <h2 className="text-lg font-medium mb-2">No earnings yet</h2>
                     <p className="text-muted-foreground text-sm max-w-xs mx-auto">
                       Browse campaigns, submit content, and start earning per verified view.
