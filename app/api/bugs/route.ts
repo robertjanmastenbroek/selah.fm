@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getSession, isAdminRequest } from '@/lib/auth';
 
 /**
  * POST — Submit a bug report (any authenticated user)
- * GET  — Pull new bugs (requires BUG_PULL_SECRET in query param)
+ * GET  — List bugs (admin only)
+ * PATCH — Update bug status (admin only)
+ * DELETE — Delete a bug (admin only)
  */
 export async function POST(request: Request) {
   const session = getSession(request);
@@ -18,19 +20,15 @@ export async function POST(request: Request) {
   const sev = validSeverities.includes(severity) ? severity : 'medium';
 
   try {
-    // Get user ID if logged in
     const userId = session?.id || null;
-
     const result = await sql`
       INSERT INTO bugs (user_id, description, steps_to_reproduce, severity, status)
       VALUES (${userId}, ${description.trim()}, ${stepsToReproduce?.trim() || null}, ${sev}, 'new')
       RETURNING id, description, severity, status, created_at
     `;
-
     return NextResponse.json({ bug: result[0] }, { status: 201 });
   } catch (e: any) {
     console.error('Bug creation error:', e.message);
-    // If table doesn't exist, return a helpful message
     if (e.message?.includes('relation') || e.message?.includes('exist')) {
       return NextResponse.json({ error: 'Bugs table not created yet. Run Admin → Migrate first.' }, { status: 500 });
     }
@@ -39,34 +37,18 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const auth = searchParams.get('auth');
-
-  // Require shared secret for pulling bugs
-  const pullSecret = process.env.BUG_PULL_SECRET;
-  if (pullSecret && auth !== pullSecret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
-    const newBugs = await sql`
-      SELECT b.id, b.description, b.steps_to_reproduce, b.severity, b.created_at,
-             u.email as user_email
+    const bugs = await sql`
+      SELECT b.id, b.description, b.steps_to_reproduce, b.severity, b.status, b.created_at,
+             COALESCE(u.email, 'anonymous') as user_email
       FROM bugs b
       LEFT JOIN users u ON u.id = b.user_id
-      WHERE b.status = 'new'
-      ORDER BY
-        CASE b.severity
-          WHEN 'critical' THEN 1
-          WHEN 'high' THEN 2
-          WHEN 'medium' THEN 3
-          WHEN 'low' THEN 4
-        END,
-        b.created_at ASC
-      LIMIT 50
+      ORDER BY b.created_at DESC
+      LIMIT 100
     `;
-
-    return NextResponse.json({ newBugs });
+    return NextResponse.json(bugs);
   } catch (e: any) {
     console.error('Bug fetch error:', e.message);
     return NextResponse.json({ error: 'Failed to fetch bugs.' }, { status: 500 });
@@ -74,20 +56,30 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  // Allow marking bugs as fixed/in_progress
-  const session = getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   const { id, status } = await request.json();
-  if (!id || !['in_progress', 'fixed', 'closed'].includes(status)) {
+  if (!id || !['new', 'in_progress', 'fixed', 'closed'].includes(status)) {
     return NextResponse.json({ error: 'Invalid id or status' }, { status: 400 });
   }
 
   try {
-    await sql`
-      UPDATE bugs SET status = ${status}, updated_at = now()
-      WHERE id = ${id}
-    `;
+    await sql`UPDATE bugs SET status = ${status}, updated_at = now() WHERE id = ${id}`;
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+
+  try {
+    await sql`DELETE FROM bugs WHERE id = ${id}`;
     return NextResponse.json({ ok: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
