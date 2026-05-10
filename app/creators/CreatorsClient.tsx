@@ -88,9 +88,16 @@ export default function CreatorsClient({ initialCreators }: { initialCreators: C
                   </div>
                   <div className="mt-auto flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{c.total_submissions||0} submissions</span>
-                    <Link href={`/creators/${c.id}`}>
-                      <Button variant="outline" size="sm" className="text-xs group">View profile <ArrowRight size={12} className="ml-1 transition-transform group-hover:translate-x-0.5"/></Button>
-                    </Link>
+                    <div className="flex gap-2">
+                      <a href={`/dashboard?hire=${c.id}&cpm=${(c.preferred_cpm_cents/100).toFixed(0)}&name=${encodeURIComponent(c.display_name)}`} onClick={e => e.stopPropagation()}>
+                        <Button variant="default" size="sm" className="text-xs bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.97]">
+                          Hire
+                        </Button>
+                      </a>
+                      <Link href={`/creators/${c.id}`}>
+                        <Button variant="outline" size="sm" className="text-xs group">View <ArrowRight size={12} className="ml-1 transition-transform group-hover:translate-x-0.5"/></Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </motion.div>

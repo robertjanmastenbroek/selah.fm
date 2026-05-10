@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Megaphone } from 'lucide-react';
+import { Megaphone, Heart } from 'lucide-react';
 import { trackSubmitContent } from '@/lib/analytics';
 import { PlatformBadge } from '@/components/SocialIcons';
 
@@ -156,10 +156,26 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                     <Progress value={Math.min(pct, 100)} className="h-1.5" />
                     {c.recommended_hashtags && <p className="text-xs text-muted-foreground truncate">{c.recommended_hashtags}</p>}
                     <div className="flex-1" />
-                    <div onClick={e => e.stopPropagation()}>
-                      {!isJoined ? (
-                        <Button onClick={() => handleJoin(c.id)} className="w-full transition-all duration-200 hover:shadow-[0_0_20px_rgba(91,127,255,0.2)] active:scale-[0.97]">Join campaign</Button>
-                      ) : submitting === c.id ? (
+                    <div onClick={e => e.stopPropagation()} className="space-y-2">
+                      {/* Quick actions — available directly on card */}
+                      <div className="flex gap-2">
+                        {!isJoined ? (
+                          <Button onClick={() => handleJoin(c.id)} className="flex-1 transition-all duration-200 hover:shadow-[0_0_20px_rgba(91,127,255,0.2)] active:scale-[0.97] text-xs">
+                            Submit Video
+                          </Button>
+                        ) : (
+                          <div className="flex-1"></div>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs"
+                          onClick={() => router.push(`/c/${c.id}?support=1`)}
+                        >
+                          <Heart size={12} className="mr-1" /> Support
+                        </Button>
+                      </div>
+                      {isJoined && submitting === c.id ? (
                         <Button disabled className="w-full">Submitting...</Button>
                       ) : (
                         <div className="space-y-2 animate-[slideUp_0.25s_ease-out]">
