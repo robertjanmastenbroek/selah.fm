@@ -10,10 +10,7 @@ export async function POST(request: Request) {
     const { receiverId, content, campaignId } = await request.json();
     if (!receiverId || !content?.trim()) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-
-    const senderId = users[0].id;
+    const senderId = session.id;
     if (senderId === receiverId) return NextResponse.json({ error: 'Cannot message yourself' }, { status: 400 });
 
     const msg = await sql`
@@ -33,9 +30,7 @@ export async function GET(request: Request) {
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    const userId = users[0].id;
+    const userId = session.id;
 
     const { searchParams } = new URL(request.url, 'https://selah.fm');
     const conversationId = searchParams.get('userId');
@@ -83,9 +78,7 @@ export async function PATCH(request: Request) {
 
   try {
     const { markReadFrom } = await request.json();
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    const userId = users[0].id;
+    const userId = session.id;
 
     await sql`
       UPDATE messages SET read = true

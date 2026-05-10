@@ -7,10 +7,7 @@ export async function GET(request: Request) {
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ submissions: [], totalPaid: 0, totalPending: 0 });
-
-    const userId = users[0].id;
+    const userId = session.id;
 
     const submissions = await sql`
       SELECT 

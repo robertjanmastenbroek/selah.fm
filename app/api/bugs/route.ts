@@ -19,11 +19,7 @@ export async function POST(request: Request) {
 
   try {
     // Get user ID if logged in
-    let userId: string | null = null;
-    if (session) {
-      const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-      if (users.length > 0) userId = users[0].id;
-    }
+    const userId = session?.id || null;
 
     const result = await sql`
       INSERT INTO bugs (user_id, description, steps_to_reproduce, severity, status)

@@ -2,27 +2,56 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
-export async function GET() {
+/**
+ * GET  — Return current user (or null if not authenticated)
+ * PATCH — Update user profile
+ */
+export async function GET(request: Request) {
+  // Use the unified getSession — handles both cookies() and raw header parsing
+  const session = getSession(request);
+  if (!session) return NextResponse.json({ user: null });
+
+  // Session already contains id, email, type, name
+  // Fetch additional fields from DB for the full profile
   try {
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
-    if (!sessionCookie) return NextResponse.json({ user: null });
-    const crypto = await import('crypto');
-    const [payload, sig] = sessionCookie.split('.');
-    const expected = crypto.createHmac('sha256', process.env.NEXTAUTH_SECRET || 'selah-secret').update(payload).digest('hex');
-    if (sig !== expected) return NextResponse.json({ user: null });
-    const session = JSON.parse(Buffer.from(payload, 'base64').toString());
+    const users = await sql`
+      SELECT id, email, display_name, bio, genres, preferred_cpm_cents,
+             tiktok_handle, instagram_handle, youtube_handle, facebook_handle,
+             user_type, stripe_connect_id, profile_image_url
+      FROM users WHERE id = ${session.id}
+    `;
+    if (users.length > 0) {
+      const u = users[0];
+      return NextResponse.json({
+        user: {
+          id: u.id,
+          email: u.email,
+          name: u.display_name || session.name,
+          type: u.user_type || session.type,
+          bio: u.bio,
+          genres: u.genres,
+          preferred_cpm_cents: u.preferred_cpm_cents,
+          tiktok_handle: u.tiktok_handle,
+          instagram_handle: u.instagram_handle,
+          youtube_handle: u.youtube_handle,
+          facebook_handle: u.facebook_handle,
+          stripe_connect_id: u.stripe_connect_id,
+          profile_image_url: u.profile_image_url,
+        },
+      });
+    }
+  } catch {
+    // DB down — return session data only
+  }
 
-    // Fetch the actual DB user ID for the chat system
-    let dbUser = null;
-    try {
-      const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-      if (users.length > 0) dbUser = { ...session, id: users[0].id };
-    } catch {}
-
-    return NextResponse.json({ user: dbUser || session });
-  } catch { return NextResponse.json({ user: null }); }
+  return NextResponse.json({
+    user: {
+      id: session.id,
+      email: session.email,
+      name: session.name,
+      type: session.type,
+    },
+  });
 }
 
 export async function PATCH(request: Request) {
@@ -31,9 +60,6 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    const userId = users[0].id;
 
     await sql`
       UPDATE users SET
@@ -47,12 +73,13 @@ export async function PATCH(request: Request) {
         youtube_handle = COALESCE(${body.youtube_handle ?? null}, youtube_handle),
         facebook_handle = COALESCE(${body.facebook_handle ?? null}, facebook_handle),
         updated_at = NOW()
-      WHERE id = ${userId}
+      WHERE id = ${session.id}
     `;
 
     const result = await sql`
-      SELECT id, email, display_name, bio, genres, preferred_cpm_cents, tiktok_handle, instagram_handle, youtube_handle, facebook_handle
-      FROM users WHERE id = ${userId}
+      SELECT id, email, display_name, bio, genres, preferred_cpm_cents,
+             tiktok_handle, instagram_handle, youtube_handle, facebook_handle
+      FROM users WHERE id = ${session.id}
     `;
 
     return NextResponse.json({ ok: true, user: result[0] });

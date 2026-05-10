@@ -40,13 +40,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-
     // Verify ownership
     const campaign = await sql`SELECT artist_id FROM campaigns WHERE id = ${params.id}`;
     if (campaign.length === 0) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
-    if (campaign[0].artist_id !== users[0].id) {
+    if (campaign[0].artist_id !== session.id) {
       return NextResponse.json({ error: 'Not your campaign' }, { status: 403 });
     }
 

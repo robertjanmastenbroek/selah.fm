@@ -49,34 +49,55 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
     }
 
-    // Get user info
+    // Get user info from Google
     const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
-    const user = await userRes.json();
+    const googleUser = await userRes.json();
+    if (!googleUser.email) {
+      console.error('Google returned no email');
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
+    }
 
-    // Persist user to database
+    // Find or create user in our database
     let isNewUser = false;
+    let dbUser: { id: string; user_type: string; display_name: string } | null = null;
+
     try {
-      const existing = await sql`SELECT id FROM users WHERE email = ${user.email}`;
+      const existing = await sql`
+        SELECT id, user_type, display_name FROM users WHERE email = ${googleUser.email}
+      `;
+
       if (existing.length === 0) {
         isNewUser = true;
-        await sql`
+        const displayName = googleUser.name || googleUser.email.split('@')[0];
+        const result = await sql`
           INSERT INTO users (email, password_hash, user_type, display_name)
-          VALUES (${user.email}, 'google-oauth', 'creator', ${user.name || user.email.split('@')[0]})
+          VALUES (${googleUser.email}, 'google-oauth', 'creator', ${displayName})
+          RETURNING id
         `;
+        dbUser = { id: result[0].id, user_type: 'creator', display_name: displayName };
+      } else {
+        // Preserve existing user type and name
+        dbUser = existing[0];
       }
     } catch (dbErr) {
       console.error('DB insert failed:', dbErr);
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
     }
 
-    // Only redirect to onboarding for truly new users
+    if (!dbUser) {
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
+    }
+
+    // Only send truly new users to onboarding
     const redirectTo = isNewUser ? '/onboarding' : '/browse';
     const res = NextResponse.redirect(`${process.env.NEXTAUTH_URL}${redirectTo}`);
     setSessionCookie(res, {
-      email: user.email,
-      type: 'creator',
-      name: user.name || user.email.split('@')[0],
+      id: dbUser.id,
+      email: googleUser.email,
+      type: dbUser.user_type as 'artist' | 'creator',
+      name: dbUser.display_name,
     });
     return res;
   } catch (e) {

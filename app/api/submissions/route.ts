@@ -11,11 +11,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-    const creatorId = users[0].id;
+    const creatorId = session.id;
 
     // Try to get initial view count
     let initialViews = 0;
