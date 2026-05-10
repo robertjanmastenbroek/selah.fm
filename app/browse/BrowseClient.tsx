@@ -176,7 +176,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                         variant="outline"
                         size="sm"
                         className="flex-1 text-xs"
-                        onClick={() => router.push(`/c/${c.id}?support=1#support`)}
+                        onClick={() => router.push(`/c/${c.id}/donate`)}
                       >
                         <Heart size={14} className="mr-1.5" /> Support
                       </Button>
