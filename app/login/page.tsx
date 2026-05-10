@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 function LoginForm() {
   const searchParams = useSearchParams();
   const refCode = searchParams.get('ref') || '';
+  const redirect = searchParams.get('redirect') || '';
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,7 +25,7 @@ function LoginForm() {
     if (refCode && mode === 'signup') body.refCode = refCode;
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
-    if (data.ok) window.location.href = data.redirectTo || '/browse';
+    if (data.ok) window.location.href = redirect || data.redirectTo || '/browse';
     else { setError(data.error); setLoading(false); }
   };
 

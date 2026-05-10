@@ -18,6 +18,8 @@ function SectionWrap({ children, className = '' }: { children: React.ReactNode; 
 export default function WelcomeArtistsPage() {
   return (
     <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.35) 0%, #0A0A0A 60%), #0A0A0A' }}>
+      {/* Top-right sign in */}
+      <div className="absolute top-4 right-6 z-20"><Link href="/login" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Sign In</Link></div>
       {/* HERO */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-15 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(91,127,255,0.25) 0%, transparent 70%)' }} />
