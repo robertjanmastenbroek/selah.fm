@@ -47,7 +47,7 @@ export default function ArtistsPage() {
         </form>
 
         {loading ? (
-          <div className="grid md:grid-cols-2 gap-5">{[1,2].map(i=><div key={i} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden"><div className="h-24 bg-white/[0.02]"/><div className="p-5 space-y-3"><Skeleton className="h-6 w-1/3"/><Skeleton className="h-4 w-2/3"/><Skeleton className="h-12 w-full"/></div></div>)}</div>
+          <div className="campaign-grid">{[1,2,3].map(i=><div key={i} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden"><div className="h-24 bg-white/[0.02]"/><div className="p-5 space-y-3"><Skeleton className="h-6 w-1/3"/><Skeleton className="h-4 w-2/3"/><Skeleton className="h-12 w-full"/></div></div>)}</div>
         ) : artists.length===0?(
           <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="text-center py-20">
             <Users size={48} className="mx-auto mb-6 text-muted-foreground/20" strokeWidth={1}/>
@@ -55,7 +55,7 @@ export default function ArtistsPage() {
             <p className="text-muted-foreground text-sm">Artists appear when they create their first campaign.</p>
           </motion.div>
         ):(
-          <div className="grid md:grid-cols-2 gap-5">
+          <div className="campaign-grid">
             {artists.map((a,i)=>{const spent=(a.total_spent_cents||0)/100;const views=a.total_views||0;return(
               <motion.div key={a.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.06,duration:0.4}} whileHover={{y:-2}} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex flex-col">
                 {/* Gradient header */}
