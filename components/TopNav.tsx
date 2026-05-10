@@ -45,10 +45,7 @@ export default function Header() {
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-4 sm:gap-6">
           <Link href={profile ? '/browse' : '/'} className="flex items-center gap-2 group shrink-0">
-            <Music size={18} strokeWidth={1.5} className="text-primary" />
-            <span className="font-bold text-lg tracking-tight group-hover:text-primary transition-colors">
-              Selah<span className="text-primary">.fm</span>
-            </span>
+            <img src="/logo-horizontal.svg" alt="Selah.fm" className="h-7 w-auto" />
           </Link>
           <nav className="hidden md:flex items-center gap-0.5">
             {mainLinks.map(link => {

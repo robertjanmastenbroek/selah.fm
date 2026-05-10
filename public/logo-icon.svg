@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Selah.fm standalone icon mark — no text -->
+  <rect width="120" height="120" rx="24" fill="#0D0D0D"/>
+  <path d="M60 16L34 48L42 54L52 38V108H68V38L78 54L86 48L60 16Z" fill="url(#g)" opacity="0.92"/>
+  <path d="M54 88V78C58 80 62 82 70 82C78 82 82 78 82 72V52C76 54 72 56 62 56" stroke="url(#g)" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.55"/>
+  <defs>
+    <linearGradient id="g" x1="34" y1="16" x2="86" y2="108" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B6CF6"/>
+      <stop offset="0.5" stop-color="#6B4CE6"/>
+      <stop offset="1" stop-color="#4F32E0"/>
+    </linearGradient>
+  </defs>
+</svg>
