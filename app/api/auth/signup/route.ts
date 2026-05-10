@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 import { emailWrapper } from '@/lib/email-templates';
+import { syncToResendAudience } from '@/lib/resend-audience';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -93,6 +94,9 @@ export async function POST(request: Request) {
         }),
       }).catch(() => {});
     }
+
+    // Sync to Resend Audience for broadcast emails
+    syncToResendAudience(email, displayName, userType);
 
     // Track referral as pending — bonus is only awarded on actual deposit
     if (refCode) {
