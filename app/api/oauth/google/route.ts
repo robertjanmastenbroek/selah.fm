@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { setSessionCookie } from '@/lib/auth';
+import { syncToResendAudience } from '@/lib/resend-audience';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -77,6 +78,9 @@ export async function GET(request: Request) {
           RETURNING id
         `;
         dbUser = { id: result[0].id, user_type: 'creator', display_name: displayName };
+
+        // Sync new Google user to Resend Audience
+        syncToResendAudience(googleUser.email, displayName, 'creator');
       } else {
         // Preserve existing user type and name
         dbUser = existing[0];
