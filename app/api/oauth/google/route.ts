@@ -85,7 +85,7 @@ export async function GET(request: Request) {
       email: user[0].email,
       name: user[0].display_name,
       type: user[0].type,
-    }, sessionToken);
+    });
     return response;
   } catch (e: any) {
     console.error('Google OAuth error:', e.message);

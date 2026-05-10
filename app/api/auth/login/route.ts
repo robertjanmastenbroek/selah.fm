@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     };
 
     const response = NextResponse.json({ ok: true, redirectTo: '/browse' });
-    setSessionCookie(response, sessionData, sessionToken);
+    setSessionCookie(response, sessionData);
     return response;
   } catch (e: any) {
     console.error('Login error:', e.message);
