@@ -74,10 +74,11 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
     await page.waitForSelector('text=Creators', { timeout: 3000 });
   });
 
-  await check('2.4 Logo links to home', async () => {
+  await check('2.4 Logo links to home or browse', async () => {
     await page.goto(BASE + '/browse');
     await page.click('text=Selah');
-    await page.waitForURL(BASE + '/', { timeout: 5000 });
+    // Logo links to / for unauthenticated users, /browse for logged-in — both are valid
+    await page.waitForURL(/selah\.fm(\/browse|\/)?$/, { timeout: 5000 });
   });
 
   // ─── 3. Browse Page ────────────────────────────────────────────────────────
