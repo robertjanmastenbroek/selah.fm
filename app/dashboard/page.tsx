@@ -196,8 +196,10 @@ function DashboardContent() {
 
             <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
               <CardContent className="p-4 text-center space-y-2">
-                <p className="text-sm font-medium">🔗 Invite artists & earn</p>
-                <p className="text-xs text-muted-foreground">Share your referral link. When someone signs up, you both get $5 towards your next campaign.</p>
+                <p className="text-sm font-medium">🔗 Invite artists & earn 5%</p>
+                <p className="text-xs text-muted-foreground">
+                  When a referred artist makes their first deposit, you both get 5% of it credited to your campaigns.
+                </p>
                 <div className="flex items-center gap-2 justify-center">
                   <code className="text-xs bg-muted px-3 py-1.5 rounded-lg font-mono">https://selah.fm/login?ref={profile?.email || 'you@email.com'}</code>
                 </div>
