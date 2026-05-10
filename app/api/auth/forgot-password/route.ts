@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import crypto from 'crypto';
+import { emailWrapper } from '@/lib/email-templates';
 
 /**
  * POST /api/auth/forgot-password — Send password reset email
@@ -39,7 +40,11 @@ export async function POST(request: Request) {
           from: 'Selah.fm <info@selah.fm>',
           to: [email],
           subject: 'Reset your Selah.fm password',
-          html: `<div style="font-family:system-ui,sans-serif;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;max-width:480px"><h2 style="color:#5B7FFF">Reset your password</h2><p style="color:#A0A0A0">Click the button below to reset your password. This link expires in 1 hour.</p><a href="${resetUrl}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#5B7FFF;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Reset password</a><p style="margin-top:24px;font-size:11px;color:#555">If you didn't request this, ignore this email.</p></div>`,
+          html: emailWrapper({
+            title: 'Reset your password',
+            body: 'Click the button below to reset your password. This link expires in 1 hour.',
+            cta: { text: 'Reset password', url: resetUrl },
+          }),
         }),
       }).catch(() => {});
     }
