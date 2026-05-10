@@ -36,19 +36,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div className="min-h-screen bg-background flex items-center justify-center px-4">
           <Card className="max-w-md w-full text-center">
             <CardContent className="p-8 space-y-4">
-              <div className="text-4xl">⚠️</div>
+              <img src="/images/error-state.png" alt="" className="mx-auto w-28 h-28 object-contain opacity-80" loading="lazy" />
               <h2 className="text-lg font-semibold">Something went wrong</h2>
               <p className="text-sm text-muted-foreground">
-                {this.state.error?.message || 'An unexpected error occurred'}
+                A hiccup on our end. Nothing you did — we'll have it sorted in a moment.
               </p>
               <Button
                 onClick={() => {
                   this.setState({ hasError: false, error: null });
                   window.location.reload();
                 }}
-                className="w-full"
               >
-                Reload page
+                Try again
+              </Button>
+              <Button variant="outline" onClick={() => window.location.href = '/'} className="ml-2">
+                Go home
               </Button>
             </CardContent>
           </Card>
