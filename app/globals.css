@@ -101,7 +101,7 @@
    COMPONENT LAYER
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
-  .page-container { @apply max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12; }
+  .page-container { @apply max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12 overflow-x-hidden; }
   .section-title { @apply text-2xl md:text-3xl font-bold tracking-tight; }
 
   /* Campaign grid */

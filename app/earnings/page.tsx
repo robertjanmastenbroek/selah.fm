@@ -7,6 +7,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
+function formatMoney(cents: number): string {
+  return '$' + (cents / 100).toFixed(2);
+}
+
 interface Submission {
   id: string; track_title: string; platform: string; views_verified: number;
   payout_amount_cents: number; payout_status: string; review_status: string;
@@ -69,11 +73,11 @@ export default function EarningsPage() {
               <CardContent className="p-8">
                 <p className="text-muted-foreground text-xs uppercase tracking-widest mb-2">Available balance</p>
                 <p className="text-5xl font-bold tracking-tight">
-                  ${(earnings.totalPaid || 0).toFixed(2)}
+                  {formatMoney(earnings.totalPaid || 0)}
                 </p>
                 {(earnings.totalPending || 0) > 0 && (
                   <p className="text-muted-foreground text-sm mt-1">
-                    +${(earnings.totalPending || 0).toFixed(2)} pending
+                    +{formatMoney(earnings.totalPending || 0)} pending
                   </p>
                 )}
               </CardContent>
@@ -135,7 +139,7 @@ export default function EarningsPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">
-                          ${((s.payout_amount_cents || 0) / 100).toFixed(2)}
+                          {formatMoney(s.payout_amount_cents || 0)}
                         </p>
                         {statusBadge(s)}
                       </div>
