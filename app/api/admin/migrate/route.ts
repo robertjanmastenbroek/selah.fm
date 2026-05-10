@@ -66,6 +66,19 @@ export async function GET(request: Request) {
   } catch (e: any) { results.push(`campaign_donations: ${e.message}`); }
 
   try {
+    await sql`CREATE TABLE IF NOT EXISTS email_logs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      recipient TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      sent BOOLEAN NOT NULL DEFAULT false,
+      reason TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_email_logs_created ON email_logs(created_at DESC)`;
+    results.push('email_logs table OK');
+  } catch (e: any) { results.push(`email_logs: ${e.message}`); }
+
+  try {
     await sql`CREATE TABLE IF NOT EXISTS ratings (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
