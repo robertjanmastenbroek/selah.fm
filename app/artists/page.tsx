@@ -18,6 +18,7 @@ export default function ArtistsPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
+  const router = useRouter();
 
   const fetchArtists = (search = '') => {
     setLoading(true);
