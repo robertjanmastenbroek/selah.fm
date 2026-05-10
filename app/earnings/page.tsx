@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import RatingPrompt from '@/components/RatingPrompt';
 
 function formatMoney(cents: number): string {
   return '$' + (cents / 100).toFixed(2);
@@ -130,22 +131,35 @@ export default function EarningsPage() {
                 </Card>
               ) : (
                 earnings.submissions.map((s: Submission, i: number) => (
-                  <Card key={s.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
-                    <CardContent className="p-4 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm">{s.track_title}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {s.platform} · {(s.views_verified || 0).toLocaleString()} views · {new Date(s.submitted_at).toLocaleDateString()}
-                        </p>
+                  <div key={s.id}>
+                    <Card className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm">{s.track_title}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {s.platform} · {(s.views_verified || 0).toLocaleString()} views · {new Date(s.submitted_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">
+                            {formatMoney(s.payout_amount_cents || 0)}
+                          </p>
+                          {statusBadge(s)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Rating prompt: show if paid */}
+                    {s.payout_status === 'paid' && (
+                      <div className="mt-1 mb-3">
+                        <RatingPrompt
+                          submissionId={s.id}
+                          role="creator"
+                          targetName={s.track_title}
+                          onRated={() => {}}
+                        />
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold">
-                          {formatMoney(s.payout_amount_cents || 0)}
-                        </p>
-                        {statusBadge(s)}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    )}
+                  </div>
                 ))
               )}
             </div>

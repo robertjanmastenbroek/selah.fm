@@ -14,6 +14,7 @@ import CampaignCover from '@/components/CampaignCover';
 import { PlatformBadge, TikTok, Instagram, YouTube } from '@/components/SocialIcons';
 import { Megaphone, Eye, FileText, DollarSign, ArrowRight, Music4 } from 'lucide-react';
 import { MessageButton } from '@/components/MessageButton';
+import { RatingDisplay } from '@/components/RatingPrompt';
 
 const BG = 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A';
 
@@ -21,12 +22,19 @@ export default function ArtistProfilePage() {
   const { id } = useParams();
   const [artist, setArtist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState({ average: 0, count: 0 });
 
   useEffect(() => {
     fetch(`/api/artists/${id}`)
       .then(r => r.json())
       .then(d => { if (d.error) setArtist(null); else setArtist(d); setLoading(false); })
       .catch(() => setLoading(false));
+
+    // Fetch rating
+    fetch(`/api/ratings?userId=${id}`)
+      .then(r => r.json())
+      .then(d => setRating({ average: d.average || 0, count: d.count || 0 }))
+      .catch(() => {});
   }, [id]);
 
   if (loading) {
@@ -73,6 +81,7 @@ export default function ArtistProfilePage() {
               <div className="mt-4">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-bold">{artist.display_name}</h1>
+                  {rating.count > 0 && <RatingDisplay value={rating.average} count={rating.count} />}
                   <span className="flex items-center gap-1">
                     {artist.tiktok_handle && <span className="text-[#ff0050]/70"><TikTok size={14} /></span>}
                     {artist.instagram_handle && <span className="text-[#E1306C]/70"><Instagram size={14} /></span>}

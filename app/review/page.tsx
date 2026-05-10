@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import RatingPrompt from '@/components/RatingPrompt';
 
 interface Submission {
   id: string; creator_name: string; track_title: string; platform: string;
@@ -147,6 +148,15 @@ export default function ReviewPage() {
                       <Button variant="outline" onClick={() => handleAction(s.id, 'rejected')} className="flex-1">Reject</Button>
                       <Button onClick={() => handleAction(s.id, 'approved')} className="flex-1">Approve</Button>
                     </div>
+                    {/* Rating prompt for paid submissions */}
+                    {statusFilter === 'approved' && (
+                      <RatingPrompt
+                        submissionId={s.id}
+                        role="artist"
+                        targetName={s.creator_name || 'Creator'}
+                        onRated={() => {}}
+                      />
+                    )}
                   </CardContent>
                 </Card>
               );
