@@ -53,11 +53,20 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
 
   const send = async () => {
     if (!input.trim() || !activeConv) return;
-    await fetch('/api/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ receiverId: activeConv.other_id, content: input }),
-    });
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiverId: activeConv.other_id, content: input }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        if (err.error?.includes('relation') || err.error?.includes('exist')) {
+          alert('Chat requires setup. Run Admin → Migrate first.');
+          return;
+        }
+      }
+    } catch { return; }
     setInput('');
     fetchMessages(activeConv.other_id);
     fetchConversations();
