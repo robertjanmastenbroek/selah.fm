@@ -58,6 +58,7 @@ export default function SupportWidget() {
       setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: "Sorry, I couldn't reach our servers. Please try again or email support@selah.fm.", timestamp: new Date() }]);
     }
     setSending(false);
+    inputRef.current?.focus();
   };
 
   const reportBug = () => {
