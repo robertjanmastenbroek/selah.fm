@@ -1,12 +1,6 @@
 import { NextRequest } from 'next/server';
-import { adminMiddleware } from '@/lib/admin';
 
-export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    return adminMiddleware(request);
-  }
-}
+// Admin is managed client-side in the layout. Middleware just passes through.
+export function middleware(request: NextRequest) {}
 
-export const config = {
-  matcher: ['/admin/:path*'],
-};
+export const config = { matcher: ['/admin/:path*'] };
