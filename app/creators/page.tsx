@@ -8,6 +8,7 @@ import CreatorAvatar from '@/components/CreatorAvatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users } from 'lucide-react';
+import { TikTok, Instagram, YouTube } from '@/components/SocialIcons';
 
 interface Creator { id: string; display_name: string; bio: string; genres: string; preferred_cpm_cents: number; tiktok_handle: string; instagram_handle: string; youtube_handle: string; profile_image_url: string; acceptance_rate: number; total_earned_cents: number; total_verified_views: number; total_submissions: number; }
 
@@ -54,7 +55,14 @@ export default function CreatorsPage() {
                   <div className="flex items-center gap-3">
                     <Link href={`/creators/${c.id}`}><CreatorAvatar src={c.profile_image_url} name={c.display_name||'Creator'} size="md"/></Link>
                     <div className="min-w-0">
-                      <Link href={`/creators/${c.id}`} className="font-semibold hover:text-primary transition-colors block truncate">{c.display_name}</Link>
+                      <div className="flex items-center gap-1.5">
+                        <Link href={`/creators/${c.id}`} className="font-semibold hover:text-primary transition-colors block truncate">{c.display_name}</Link>
+                        <span className="flex items-center gap-0.5">
+                          {c.tiktok_handle && <span className="text-[#ff0050]/60"><TikTok size={12}/></span>}
+                          {c.instagram_handle && <span className="text-[#E1306C]/60"><Instagram size={12}/></span>}
+                          {c.youtube_handle && <span className="text-[#FF0000]/60"><YouTube size={12}/></span>}
+                        </span>
+                      </div>
                       <p className="text-xs text-muted-foreground">{c.genres||'Various'}</p>
                     </div>
                   </div>
