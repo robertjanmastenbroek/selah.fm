@@ -2,6 +2,7 @@
 const nextConfig = {
   serverExternalPackages: ['pg'],
   images: {
+    formats: ['image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
@@ -10,6 +11,12 @@ const nextConfig = {
   },
   // Compress responses
   compress: true,
+  // Allow larger body for image uploads (base64 data URLs)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
   async headers() {
     return [
       {
