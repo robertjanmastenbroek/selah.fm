@@ -21,7 +21,6 @@ export async function GET(request: Request) {
 
     // ── Clean demo submissions ───────────────────────────────
     await sql`DELETE FROM submissions WHERE content_url LIKE '%tiktok.com%' OR content_url LIKE '%youtube.com%' OR content_url LIKE '%instagram.com%'`;
-    await sql`DELETE FROM users WHERE email LIKE '%@selah-demo.fm'`;
 
     // ── Seed Artists ──────────────────────────────────────────
     await sql`
