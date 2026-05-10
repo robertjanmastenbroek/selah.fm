@@ -11,6 +11,8 @@ export async function GET(request: Request) {
     const artists = await sql`
       SELECT 
         u.id, u.display_name, u.bio,
+        u.tiktok_handle, u.instagram_handle, u.youtube_handle,
+        (SELECT c2.track_url FROM campaigns c2 WHERE c2.artist_id = u.id AND c2.track_url LIKE '%spotify%' ORDER BY c2.created_at DESC LIMIT 1) as spotify_url,
         COUNT(c.id) as total_campaigns,
         COUNT(c.id) FILTER (WHERE c.status = 'active') as active_campaigns,
         COALESCE(SUM(c.total_budget_cents), 0) as total_budget_cents,
@@ -21,7 +23,7 @@ export async function GET(request: Request) {
       LEFT JOIN campaigns c ON c.artist_id = u.id
       LEFT JOIN campaign_stats cs ON cs.id = c.id
       WHERE u.user_type = 'artist'
-      GROUP BY u.id, u.display_name, u.bio
+      GROUP BY u.id, u.display_name, u.bio, u.tiktok_handle, u.instagram_handle, u.youtube_handle
       HAVING COUNT(c.id) > 0
       ORDER BY total_spent_cents DESC
     `;

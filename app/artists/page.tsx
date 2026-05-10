@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { TikTok, Instagram, YouTube } from '@/components/SocialIcons';
 import { Megaphone, Eye, FileText, ArrowRight, Users, Search } from 'lucide-react';
 
-interface Artist { id: string; display_name: string; bio: string; total_campaigns: number; active_campaigns: number; total_budget_cents: number; total_spent_cents: number; total_submissions: number; total_views: number; }
+interface Artist { id: string; display_name: string; bio: string; total_campaigns: number; active_campaigns: number; total_budget_cents: number; total_spent_cents: number; total_submissions: number; total_views: number; tiktok_handle: string; instagram_handle: string; youtube_handle: string; spotify_url: string; monthly_listeners: number | null; }
 
 export default function ArtistsPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -67,6 +67,13 @@ export default function ArtistsPage() {
                   <div>
                     <h3 className="text-lg font-bold">{a.display_name}</h3>
                     <p className="text-xs text-muted-foreground">{a.total_campaigns} total campaigns</p>
+                    {/* Social verification badges */}
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      {a.tiktok_handle && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ff0050]/10 text-[#ff0050] flex items-center gap-1"><TikTok size={10}/>{a.tiktok_handle.replace('@','')}</span>}
+                      {a.instagram_handle && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#E1306C]/10 text-[#E1306C] flex items-center gap-1"><Instagram size={10}/>{a.instagram_handle.replace('@','')}</span>}
+                      {a.youtube_handle && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FF0000]/10 text-[#FF0000] flex items-center gap-1"><YouTube size={10}/>{a.youtube_handle.replace('@','')}</span>}
+                      {a.monthly_listeners && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#1DB954]/10 text-[#1DB954] flex items-center gap-1">{(a.monthly_listeners/1000).toFixed(0)}K monthly</span>}
+                    </div>
                   </div>
                   
                   {/* Stats row */}
