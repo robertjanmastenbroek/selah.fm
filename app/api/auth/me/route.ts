@@ -28,6 +28,7 @@ export async function PATCH(request: Request) {
 
     await sql`
       UPDATE users SET
+        user_type = COALESCE(${body.user_type || null}, user_type),
         display_name = COALESCE(${body.name || null}, display_name),
         bio = COALESCE(${body.bio ?? null}, bio),
         genres = COALESCE(${body.genres ?? null}, genres),
