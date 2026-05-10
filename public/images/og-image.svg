@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="0%">
+      <stop offset="0%" stop-color="#1a2450"/>
+      <stop offset="100%" stop-color="#0A0A0A"/>
+    </radialGradient>
+    <linearGradient id="wave" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5B7FFF" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#5B7FFF" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#5B7FFF" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="600" y="240" text-anchor="middle" font-family="system-ui,sans-serif" font-size="72" font-weight="800" fill="#F0F0F0" letter-spacing="-1">Selah<span fill="#5B7FFF">.fm</span></text>
+  <text x="600" y="310" text-anchor="middle" font-family="system-ui,sans-serif" font-size="22" fill="#8C8C8C">Open Source Music Promotion Marketplace</text>
+  <text x="600" y="350" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" fill="#666">Set your CPM · Approve every video · Pay for verified views</text>
+  <rect x="440" y="400" width="100" height="6" rx="3" fill="#5B7FFF" opacity="0.5"/>
+  <rect x="550" y="400" width="120" height="6" rx="3" fill="#5B7FFF" opacity="0.7"/>
+  <rect x="680" y="400" width="80" height="6" rx="3" fill="#5B7FFF" opacity="0.4"/>
+  <rect x="480" y="420" width="90" height="6" rx="3" fill="#5B7FFF" opacity="0.3"/>
+  <rect x="580" y="420" width="140" height="6" rx="3" fill="#5B7FFF" opacity="0.5"/>
+  <text x="600" y="520" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#444">github.com/robertjanmastenbroek/selah.fm</text>
+</svg>

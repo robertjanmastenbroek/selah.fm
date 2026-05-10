@@ -17,11 +17,13 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Selah.fm',
     url: 'https://selah.fm',
+    images: [{ url: 'https://selah.fm/images/og-image.svg', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Selah.fm — Open Source Music Promotion Marketplace',
     description: 'Set your CPM, approve every video, pay only for verified views. Fully open source.',
+    images: ['https://selah.fm/images/og-image.svg'],
   },
   robots: { index: true, follow: true },
 };
