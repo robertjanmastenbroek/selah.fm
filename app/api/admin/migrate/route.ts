@@ -27,6 +27,7 @@ export async function GET(request: Request) {
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS require_ftc BOOLEAN DEFAULT false`;
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS min_video_length_seconds INTEGER`;
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS caption_requirements TEXT`;
+    await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS paused_at TIMESTAMPTZ`;
     results.push('campaign metadata columns OK');
   } catch (e: any) { results.push(`campaign columns: ${e.message}`); }
 

@@ -363,6 +363,9 @@ function DashboardContent() {
                           <div><div className="font-bold text-lg">${c.spent}</div><div className="text-muted-foreground text-xs">of ${c.budget}</div></div>
                         </div>
                         <Progress value={pct} className="h-1.5" />
+                        {c.status === 'paused' && (
+                          <p className="text-[10px] text-yellow-400/70">⏸ Paused — existing creators still have 7 days to earn views</p>
+                        )}
                         {fundingId === c.id ? (
                           <div className="space-y-2 animate-slide-up">
                             <div className="flex gap-2">

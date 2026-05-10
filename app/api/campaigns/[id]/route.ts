@@ -68,7 +68,10 @@ export async function PATCH(
         return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
       }
       const result = await sql`
-        UPDATE campaigns SET status = ${body.status}, updated_at = NOW()
+        UPDATE campaigns SET 
+          status = ${body.status}, 
+          paused_at = CASE WHEN ${body.status} = 'paused' THEN NOW() ELSE paused_at END,
+          updated_at = NOW()
         WHERE id = ${params.id} RETURNING *
       `;
       return NextResponse.json(result[0]);
