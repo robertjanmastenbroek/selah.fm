@@ -1,37 +1,18 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import crypto from 'crypto';
 import { setSessionCookie } from '@/lib/auth';
-import { syncToResendAudience } from '@/lib/resend-audience';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
-  const error = searchParams.get('error');
 
-  if (error) {
-    console.error('Google error:', error);
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
-  }
-
-  // Step 1: No code → redirect to Google
   if (!code) {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      return NextResponse.json({ error: 'GOOGLE_CLIENT_ID not set' }, { status: 500 });
-    }
-    const redirectUri = `${process.env.NEXTAUTH_URL}/api/oauth/google`;
-    const url = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'code',
-      scope: 'openid email profile',
-      prompt: 'select_account',
-    }).toString();
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(new URL('/login?error=google', request.url));
   }
 
-  // Step 2: Got code → exchange for tokens
   try {
+    // Exchange code for tokens
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -39,73 +20,75 @@ export async function GET(request: Request) {
         code,
         client_id: process.env.GOOGLE_CLIENT_ID || '',
         client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/oauth/google`,
+        redirect_uri: `${process.env.NEXT_PUBLIC_URL || 'https://selah.fm'}/api/oauth/google`,
         grant_type: 'authorization_code',
-      }).toString(),
+      }),
     });
 
-    const tokens = await tokenRes.json();
-    if (tokens.error) {
-      console.error('Token exchange failed:', tokens.error_description || tokens.error);
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
+    if (!tokenRes.ok) {
+      return NextResponse.redirect(new URL('/login?error=google', request.url));
     }
 
-    // Get user info from Google
+    const tokens = await tokenRes.json();
+
+    // Fetch user info
     const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
-    const googleUser = await userRes.json();
-    if (!googleUser.email) {
-      console.error('Google returned no email');
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
+
+    if (!userRes.ok) {
+      return NextResponse.redirect(new URL('/login?error=google', request.url));
     }
 
-    // Find or create user in our database
-    let isNewUser = false;
-    let dbUser: { id: string; user_type: string; display_name: string } | null = null;
+    const profile = await userRes.json();
+    const email = profile.email?.toLowerCase();
+    const name = profile.name || email?.split('@')[0] || 'User';
+    const picture = profile.picture || '';
 
-    try {
-      const existing = await sql`
-        SELECT id, user_type, display_name FROM users WHERE email = ${googleUser.email}
+    if (!email) {
+      return NextResponse.redirect(new URL('/login?error=google', request.url));
+    }
+
+    // Find or create user
+    let user = await sql`SELECT id, email, display_name, type FROM users WHERE email = ${email}`;
+
+    if (user.length === 0) {
+      // Create new user
+      const result = await sql`
+        INSERT INTO users (email, password_hash, display_name, type, email_verified, photo_url)
+        VALUES (${email}, 'google-oauth', ${name}, 'creator', true, ${picture})
+        RETURNING id, email, display_name, type
       `;
+      user = result;
 
-      if (existing.length === 0) {
-        isNewUser = true;
-        const displayName = googleUser.name || googleUser.email.split('@')[0];
-        const result = await sql`
-          INSERT INTO users (email, password_hash, user_type, display_name)
-          VALUES (${googleUser.email}, 'google-oauth', 'creator', ${displayName})
-          RETURNING id
-        `;
-        dbUser = { id: result[0].id, user_type: 'creator', display_name: displayName };
-
-        // Sync new Google user to Resend Audience
-        syncToResendAudience(googleUser.email, displayName, 'creator');
-      } else {
-        // Preserve existing user type and name
-        dbUser = existing[0];
-      }
-    } catch (dbErr) {
-      console.error('DB insert failed:', dbErr);
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
+      // Sync to Resend audience
+      try {
+        const audienceId = process.env.RESEND_AUDIENCE_ID;
+        if (audienceId && process.env.RESEND_API_KEY) {
+          fetch(`https://api.resend.com/audiences/${audienceId}/contacts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+            body: JSON.stringify({ email, firstName: name, unsubscribed: false }),
+          }).catch(() => {});
+        }
+      } catch {}
+    } else {
+      user = user;
     }
 
-    if (!dbUser) {
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
-    }
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    await sql`UPDATE users SET session_token = ${sessionToken} WHERE id = ${user[0].id}`;
 
-    // Only send truly new users to onboarding
-    const redirectTo = isNewUser ? '/onboarding' : '/browse';
-    const res = NextResponse.redirect(`${process.env.NEXTAUTH_URL}${redirectTo}`);
-    setSessionCookie(res, {
-      id: dbUser.id,
-      email: googleUser.email,
-      type: dbUser.user_type as 'artist' | 'creator',
-      name: dbUser.display_name,
-    });
-    return res;
-  } catch (e) {
-    console.error('OAuth error:', e);
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login?error=OAuthCallback`);
+    const response = NextResponse.redirect(new URL('/browse', request.url));
+    setSessionCookie(response, {
+      id: user[0].id,
+      email: user[0].email,
+      name: user[0].display_name,
+      type: user[0].type,
+    }, sessionToken);
+    return response;
+  } catch (e: any) {
+    console.error('Google OAuth error:', e.message);
+    return NextResponse.redirect(new URL('/login?error=google', request.url));
   }
 }
