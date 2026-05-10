@@ -29,12 +29,13 @@ Creator: Get paid per verified view (80% of CPM)
 | Database | PostgreSQL (Neon Serverless) |
 | Auth | Google OAuth + email/password |
 | Payments | Stripe (Checkout + Connect) |
-| Email | Nodemailer (SMTP — Resend, Brevo, or any provider) |
+| Email | Resend HTTP API (info@selah.fm, support@selah.fm) |
+| AI Support | DeepSeek Chat API + keyword fallback |
 | Analytics | Google Analytics (6 conversion events) |
 | View Verification | YouTube Data API v3 + TikTok oEmbed |
 | Artist Data | Spotify Web API (client credentials) |
-| Deployment | Railway |
-| Testing | Playwright E2E (43 tests) |
+| Deployment | Railway (auto-deploy on push) |
+| Testing | Playwright E2E (44 tests) |
 
 ---
 
@@ -70,12 +71,13 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=... # Stripe publishable key
 # ── Recommended (enhances features) ────────────────────────────
 NEXT_PUBLIC_GA_ID=G-XXXXXXXX           # Google Analytics measurement ID
 YOUTUBE_API_KEY=...                    # YouTube Data API v3 (auto view verification)
-SMTP_HOST=smtp.resend.com              # Email provider (Resend free: 100/day)
+SMTP_HOST=smtp.resend.com              # Email via Resend API (free: 100/day)
 SMTP_PORT=587
 SMTP_USER=resend
-SMTP_PASS=re_...                       # Resend API key (or any SMTP password)
+SMTP_PASS=re_...                       # Resend API key
 SMTP_FROM=noreply@selah.fm
 CRON_SECRET=...                        # Protects /api/cron endpoint
+DEEPSEEK_API_KEY=sk-...               # DeepSeek API key (for AI support chat)
 
 # ── Optional (social proof + OAuth) ────────────────────────────
 SPOTIFY_CLIENT_ID=...                  # Spotify Web API (artist follower counts)
@@ -190,12 +192,22 @@ TEST_URL=http://localhost:3000 node e2e/test.js
 ### Other
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/earnings` | Creator earnings |
-| GET | `/api/health` | Health check |
+| GET | `/api/earnings` | Creator earnings + payout history |
+| GET | `/api/analytics` | Creator analytics (platform breakdown, trends) |
+| GET | `/api/stats` | Public platform stats (artists, creators, views, paid) |
+| GET | `/api/health` | Health check (DB connectivity) |
 | GET | `/api/cron` | YouTube view auto-update (requires CRON_SECRET) |
-| GET/POST | `/api/admin/seed` | Seed demo data (admin only) |
+| POST | `/api/campaigns/[id]/support` | Fan donation via Stripe checkout |
+| GET | `/api/campaigns/[id]/spotify` | Spotify monthly listeners + artist name |
+| POST | `/api/support` | AI support chat (DeepSeek + keyword fallback) |
+| GET/POST/PATCH/DELETE | `/api/bugs` | Bug report CRUD |
+| GET/PATCH | `/api/referral` | Referral system |
 | GET | `/api/admin/overview` | Platform metrics (admin only) |
 | GET | `/api/admin/users` | User list (admin only) |
+| GET | `/api/admin/emails` | Email logs (admin only) |
+| POST | `/api/admin/emails/send` | Compose + send email (admin only) |
+| GET | `/api/admin/seed` | Seed demo data (admin only) |
+| GET | `/api/admin/migrate` | Run database migrations (admin only) |
 
 ---
 
@@ -210,4 +222,4 @@ TEST_URL=http://localhost:3000 node e2e/test.js
 
 ## License
 
-Private — all rights reserved.
+MIT — fully open source. [github.com/robertjanmastenbroek/selah.fm](https://github.com/robertjanmastenbroek/selah.fm)
