@@ -14,7 +14,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Too many attempts. Try again shortly.' }, { status: 429 });
   }
 
-  const { email, password, name, refCode } = await request.json();
+  const { email, password, name, refCode, type } = await request.json();
+  const userType = (type === 'artist') ? 'artist' : 'creator';
   if (!email || !password) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
 
     await sql`
       INSERT INTO users (email, password_hash, user_type, display_name)
-      VALUES (${email}, ${hashPassword(password)}, 'creator', ${name || email.split('@')[0]})
+      VALUES (${email}, ${hashPassword(password)}, ${userType}, ${name || email.split('@')[0]})
     `;
 
     // Process referral if code present
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
     const res = NextResponse.json({ ok: true, redirectTo: '/onboarding' });
     setSessionCookie(res, {
       email,
-      type: 'creator',
+      type: userType,
       name: name || email.split('@')[0],
     });
     return res;

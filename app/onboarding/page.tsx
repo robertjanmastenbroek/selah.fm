@@ -36,6 +36,7 @@ export default function OnboardingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
+          user_type: role,
           genres: genres.join(', '),
           tiktok_handle: platforms.includes('TikTok') ? '@pending' : null,
           instagram_handle: platforms.includes('Instagram Reels') ? '@pending' : null,

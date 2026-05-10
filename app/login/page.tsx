@@ -12,6 +12,7 @@ function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [role, setRole] = useState<'artist'|'creator'>('creator');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,7 +20,7 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
-    const body: any = { email, password, name: name || email.split('@')[0] };
+    const body: any = { email, password, name: name || email.split('@')[0], type: role };
     if (refCode && mode === 'signup') body.refCode = refCode;
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
@@ -43,6 +44,16 @@ function LoginForm() {
         <div className="flex items-center gap-3"><div className="flex-1 h-px bg-border" /><span className="text-xs text-muted-foreground">or</span><div className="flex-1 h-px bg-border" /></div>
         {error && <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-4 py-3 text-sm text-destructive">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-3">
+          {mode === 'signup' && (
+            <div className="grid grid-cols-2 gap-2">
+              {[{r:'artist',label:'🎵 Artist',desc:'I want to promote'},{r:'creator',label:'📱 Creator',desc:'I want to earn'}].map(({r,label,desc})=>(
+                <button type="button" key={r} onClick={()=>setRole(r as any)}
+                  className={`p-3 rounded-xl border-2 text-left transition-all text-xs ${role===r?'border-primary bg-primary/[0.04]':'border-white/[0.06] bg-white/[0.02]'}`}>
+                  <div className="font-medium">{label}</div><div className="text-[10px] text-muted-foreground">{desc}</div>
+                </button>
+              ))}
+            </div>
+          )}
           {mode === 'signup' && <Input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Display name" />}
           <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
           <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
