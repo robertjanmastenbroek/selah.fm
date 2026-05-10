@@ -145,11 +145,11 @@ function keywordMatch(msg: string): string | null {
 // ── Email forwarding ─────────────────────────────────────────
 async function forwardToEmail(message: string, history: any[]) {
   try {
-    const { sendEmail } = await import('@/lib/email');
+    const { sendSupportEmail } = await import('@/lib/email');
     const historyText = Array.isArray(history)
       ? history.map((h: string) => `  ${h}`).join('\n')
       : 'No history';
-    await sendEmail({
+    await sendSupportEmail({
       to: 'support@selah.fm',
       subject: `Support: ${message.slice(0, 80)}`,
       html: `<div style="font-family:system-ui;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px"><h2 style="color:#5B7FFF">Support Request</h2><p>${message}</p><pre style="color:#8C8C8C;font-size:11px">${historyText}</pre></div>`,
