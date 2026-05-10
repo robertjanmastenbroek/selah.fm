@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { isAdminRequest } from '@/lib/admin';
+import { isAdminRequest } from '@/lib/auth';
 
 /**
  * Safe migration endpoint — runs DDL without touching data.

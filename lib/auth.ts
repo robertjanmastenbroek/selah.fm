@@ -1,90 +1,123 @@
 import crypto from 'crypto';
+import { NextResponse } from 'next/server';
 
-const SESSION_SECRET = process.env.NEXTAUTH_SECRET || 'selah-secret';
+// ── Session secret ───────────────────────────────────────────────
+// In development: auto-generates a random secret so the app starts without config.
+// In production: MUST be set via NEXTAUTH_SECRET env var, or sessions will break on restart.
+let _cachedSecret: string | null = null;
 
+function getSecret(): string {
+  // Production: require the env var
+  if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production') {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      throw new Error(
+        'NEXTAUTH_SECRET environment variable is required in production. ' +
+        'Generate one: openssl rand -base64 32'
+      );
+    }
+    return secret;
+  }
+
+  // Development: use env var if set, otherwise generate a random one (won't persist across restarts)
+  if (process.env.NEXTAUTH_SECRET) return process.env.NEXTAUTH_SECRET;
+
+  if (!_cachedSecret) {
+    _cachedSecret = crypto.randomBytes(32).toString('hex');
+    console.warn(
+      '⚠ NEXTAUTH_SECRET not set — using a randomly generated secret for this session. ' +
+      'Sessions will not persist across server restarts. Set NEXTAUTH_SECRET in your .env.local.'
+    );
+  }
+  return _cachedSecret!;
+}
+
+// ── Session user type ────────────────────────────────────────────
 export interface SessionUser {
+  id: string;       // Database user UUID — eliminates DB lookups on every auth check
   email: string;
   type: 'artist' | 'creator';
   name: string;
 }
 
-/**
- * Extract and verify session from request cookies.
- * Uses Next.js cookies() API (reliable on Railway/reverse-proxy setups),
- * falling back to raw cookie header parsing.
- * Returns the user payload if valid, null otherwise.
- */
-export function getSession(request: Request): SessionUser | null {
-  let sessionCookie: string | undefined;
-
-  // Primary: Next.js cookies() API — handles forwarded headers correctly on Railway
+// ── Core: parse + verify session cookie value ────────────────────
+function parseSessionCookie(cookieValue: string): SessionUser | null {
   try {
-    const { cookies } = require('next/headers') as typeof import('next/headers');
-    sessionCookie = cookies().get('session')?.value;
-  } catch {
-    // cookies() throws outside of Next.js request context — fall through
-  }
+    const [payload, sig] = cookieValue.split('.');
+    if (!payload || !sig) return null;
 
-  // Fallback: raw cookie header (works everywhere but may miss cookies on some proxies)
-  if (!sessionCookie) {
-    const cookieHeader = request.headers.get('cookie') || '';
-    const match = cookieHeader.match(/session=([^;]+)/);
-    sessionCookie = match ? match[1] : undefined;
-  }
-
-  if (!sessionCookie) return null;
-
-  try {
-    const [payload, sig] = sessionCookie.split('.');
     const expected = crypto
-      .createHmac('sha256', SESSION_SECRET)
+      .createHmac('sha256', getSecret())
       .update(payload)
       .digest('hex');
 
     if (sig !== expected) return null;
 
-    return JSON.parse(Buffer.from(payload, 'base64').toString());
+    const user = JSON.parse(Buffer.from(payload, 'base64').toString());
+
+    // Validate shape
+    if (!user.id || !user.email || !user.type || !user.name) return null;
+    if (!['artist', 'creator'].includes(user.type)) return null;
+
+    return user as SessionUser;
   } catch {
     return null;
   }
 }
 
-/**
- * Create a signed session cookie value.
- */
-export function createSessionCookie(user: SessionUser): string {
-  const payload = Buffer.from(JSON.stringify(user)).toString('base64');
-  const sig = crypto
-    .createHmac('sha256', SESSION_SECRET)
-    .update(payload)
-    .digest('hex');
-  return `${payload}.${sig}`;
+// ── Public: get session from request ─────────────────────────────
+export function getSession(request: Request): SessionUser | null {
+  let cookieValue: string | undefined;
+
+  // Primary: Next.js cookies() — handles Railway/reverse-proxy correctly
+  try {
+    // Dynamic import to avoid issues in Edge/non-Node runtimes
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const nextHeaders = require('next/headers');
+    cookieValue = nextHeaders.cookies().get('session')?.value;
+  } catch {
+    // Fall through to raw header
+  }
+
+  // Fallback: raw cookie header
+  if (!cookieValue) {
+    const header = request.headers.get('cookie') || '';
+    const match = header.match(/session=([^;]+)/);
+    cookieValue = match ? match[1] : undefined;
+  }
+
+  return cookieValue ? parseSessionCookie(cookieValue) : null;
 }
 
-/**
- * Set session cookie on a NextResponse.
- */
+// ── Public: check if request is from an admin ────────────────────
+const ADMIN_EMAILS = ['mastenbroekrobertjan@gmail.com'];
+
+export function isAdminRequest(request: Request): boolean {
+  const session = getSession(request);
+  if (!session) return false;
+  return ADMIN_EMAILS.includes(session.email);
+}
+
+// Re-export for convenience (used by admin routes)
+export { ADMIN_EMAILS };
+
+// ── Cookie helpers ───────────────────────────────────────────────
+function cookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production',
+    sameSite: 'lax' as const,
+    maxAge,
+    path: '/',
+  };
+}
+
 export function setSessionCookie(res: NextResponse, user: SessionUser): void {
-  res.cookies.set('session', createSessionCookie(user), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: '/',
-  });
+  const payload = Buffer.from(JSON.stringify(user)).toString('base64');
+  const sig = crypto.createHmac('sha256', getSecret()).update(payload).digest('hex');
+  res.cookies.set('session', `${payload}.${sig}`, cookieOptions(60 * 60 * 24 * 7));
 }
 
-/**
- * Clear session cookie.
- */
 export function clearSessionCookie(res: NextResponse): void {
-  res.cookies.set('session', '', {
-    httpOnly: true,
-    maxAge: 0,
-    path: '/',
-  });
+  res.cookies.set('session', '', cookieOptions(0));
 }
-
-// Re-export NextResponse for convenience
-import { NextResponse } from 'next/server';
-export { NextResponse };

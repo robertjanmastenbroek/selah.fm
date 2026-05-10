@@ -17,12 +17,10 @@ export async function GET(request: Request) {
   if (!session) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
-  const userEmail = session.email;
-
   try {
     // Check if user already has a Connect account
     const { default: sql } = await import('@/lib/db');
-    const users = await sql`SELECT stripe_connect_id FROM users WHERE email = ${userEmail}`;
+    const users = await sql`SELECT stripe_connect_id FROM users WHERE id = ${session.id}`;
     
     let connectId = users.length > 0 ? users[0].stripe_connect_id : null;
 
@@ -31,7 +29,7 @@ export async function GET(request: Request) {
       const account = await stripe.accounts.create({
         type: 'express',
         country: 'US',
-        email: userEmail,
+        email: session.email,
         capabilities: {
           transfers: { requested: true },
         },
@@ -42,7 +40,7 @@ export async function GET(request: Request) {
       // Save to DB
       await sql`
         UPDATE users SET stripe_connect_id = ${connectId}, updated_at = NOW()
-        WHERE email = ${userEmail}
+        WHERE id = ${session.id}
       `;
     }
 

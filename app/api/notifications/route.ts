@@ -7,10 +7,8 @@ export async function GET(request: Request) {
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ notifications: [], unreadCount: 0 });
+    const userId = session.id;
 
-    const userId = users[0].id;
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unread') === 'true';
 
@@ -56,9 +54,7 @@ export async function PATCH(request: Request) {
   try {
     const { id, markAllRead } = await request.json();
 
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    const userId = users[0].id;
+    const userId = session.id;
 
     if (markAllRead) {
       await sql`

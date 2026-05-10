@@ -159,18 +159,15 @@ export async function GET(request: Request) {
   // Save the handle to the user's profile
   if (handle) {
     try {
-      const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-      if (users.length > 0) {
-        const formattedHandle = handle.startsWith('@') ? handle : '@' + handle;
-        if (state === 'tiktok') {
-          await sql`UPDATE users SET tiktok_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${users[0].id}`;
-        } else if (state === 'instagram') {
-          await sql`UPDATE users SET instagram_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${users[0].id}`;
-        } else if (state === 'youtube') {
-          await sql`UPDATE users SET youtube_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${users[0].id}`;
-        } else if (state === 'facebook') {
-          await sql`UPDATE users SET facebook_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${users[0].id}`;
-        }
+      const formattedHandle = handle.startsWith('@') ? handle : '@' + handle;
+      if (state === 'tiktok') {
+        await sql`UPDATE users SET tiktok_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${session.id}`;
+      } else if (state === 'instagram') {
+        await sql`UPDATE users SET instagram_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${session.id}`;
+      } else if (state === 'youtube') {
+        await sql`UPDATE users SET youtube_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${session.id}`;
+      } else if (state === 'facebook') {
+        await sql`UPDATE users SET facebook_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${session.id}`;
       }
     } catch (dbErr) {
       console.error('Failed to save handle:', dbErr);

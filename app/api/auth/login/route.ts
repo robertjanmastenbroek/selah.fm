@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
   try {
     const rows = await sql`
-      SELECT email, password_hash, user_type, display_name
+      SELECT id, email, password_hash, user_type, display_name
       FROM users
       WHERE email = ${email}
     `;
@@ -31,6 +31,14 @@ export async function POST(request: Request) {
     }
 
     const user = rows[0];
+
+    // Check if this user signed up via Google OAuth
+    if (user.password_hash === 'google-oauth') {
+      return NextResponse.json({
+        error: 'This account uses Google sign-in. Please continue with Google.'
+      }, { status: 401 });
+    }
+
     if (user.password_hash !== hashPassword(password)) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
@@ -38,6 +46,7 @@ export async function POST(request: Request) {
     const redirectTo = user.user_type === 'artist' ? '/dashboard' : '/browse';
     const res = NextResponse.json({ ok: true, type: user.user_type, redirectTo });
     setSessionCookie(res, {
+      id: user.id,
       email: user.email,
       type: user.user_type,
       name: user.display_name,

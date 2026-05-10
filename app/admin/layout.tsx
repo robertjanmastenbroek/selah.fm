@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, Users, Megaphone, FileCheck, Banknote, Database, LogOut, ArrowLeft, Shield } from 'lucide-react';
-import { ADMIN_EMAILS } from '@/lib/admin';
+import { ADMIN_EMAILS } from '@/lib/auth';
 
 const nav = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },

@@ -80,14 +80,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const users = await sql`SELECT id, display_name, genres FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    const artistId = users[0].id;
-    const artistName = users[0].display_name;
-    const artistGenres = users[0].genres;
+    // Fetch display_name and genres for auto-generated defaults
+    const profile = await sql`SELECT display_name, genres FROM users WHERE id = ${session.id}`;
+    const artistName = profile.length > 0 ? profile[0].display_name : session.name;
+    const artistGenres = profile.length > 0 ? profile[0].genres : null;
 
     // Auto-generate defaults for empty fields
     const defaults = generateCampaignDefaults(trackTitle, artistGenres, artistName);
@@ -105,7 +101,7 @@ export async function POST(request: Request) {
         required_hashtags, require_ftc, min_video_length_seconds, caption_requirements
       )
       VALUES (
-        ${artistId}, ${trackTitle}, ${trackUrl}, 
+        ${session.id}, ${trackTitle}, ${trackUrl}, 
         ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100},
         'active', ${driveUrl || ''}, ${finalHashtags}, ${finalRequirements}, ${coverArtUrl || null},
         ${requiredHashtags || null}, ${requireFtc || false}, ${finalMinLength}, ${finalCaption}

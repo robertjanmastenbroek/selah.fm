@@ -25,9 +25,7 @@ export async function POST(request: Request) {
     const sub = subs[0];
 
     // Ownership check: only the campaign artist can review
-    const users = await sql`SELECT id FROM users WHERE email = ${session.email}`;
-    if (users.length === 0) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    if (sub.artist_id !== users[0].id) {
+    if (sub.artist_id !== session.id) {
       return NextResponse.json({ error: 'You can only review submissions on your own campaigns' }, { status: 403 });
     }
 
@@ -54,7 +52,7 @@ export async function POST(request: Request) {
 
       const result = await sql`
         UPDATE submissions
-        SET review_status = 'approved', reviewed_at = NOW(), reviewed_by = ${users[0].id},
+        SET review_status = 'approved', reviewed_at = NOW(), reviewed_by = ${session.id},
             payout_amount_cents = ${netCents}, payout_status = 'processing'
         WHERE id = ${submissionId}
         RETURNING *
@@ -100,7 +98,7 @@ export async function POST(request: Request) {
     // Rejection
     const result = await sql`
       UPDATE submissions
-      SET review_status = ${status}, reviewed_at = NOW(), reviewed_by = ${users[0].id},
+      SET review_status = ${status}, reviewed_at = NOW(), reviewed_by = ${session.id},
           rejection_feedback = ${feedback || null}
       WHERE id = ${submissionId}
       RETURNING *
