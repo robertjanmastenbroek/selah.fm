@@ -3,6 +3,7 @@
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import Header from '@/components/TopNav';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,7 +43,7 @@ export default function EarningsPage() {
             <CardContent>
               <h2 className="text-lg font-medium mb-2">Couldn't load earnings</h2>
               <p className="text-muted-foreground text-sm mb-4">Check your connection.</p>
-              <button onClick={() => mutate()} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold">Retry</button>
+              <Button variant="outline" onClick={() => mutate()}>Retry</Button>
             </CardContent>
           </Card>
         ) : isLoading ? (
