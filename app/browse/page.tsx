@@ -48,7 +48,7 @@ export default function BrowsePage() {
     const url = submitUrl[campaignId]; if (!url) return;
     setSubmitting(campaignId);
     try {
-      const res = await fetch('/api/submissions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaignId,contentUrl:url,platform:submitPlatform[campaignId]||'tiktok'})});
+      const res = await fetch('/api/submissions',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({campaignId,contentUrl:url,platform:submitPlatform[campaignId]||'tiktok'})});
       if(res.ok){addToast('Submitted! Artist will review your video.','success');}else{const err=await res.json();addToast(err.error||'Failed to submit','error');}
     } catch { addToast('Network error — try again','error'); }
     setSubmitting(null); setSubmitUrl(prev=>({...prev,[campaignId]:''})); setJoined(prev=>{const next=new Set(prev);next.delete(campaignId);return next;});

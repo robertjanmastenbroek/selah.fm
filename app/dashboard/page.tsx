@@ -60,7 +60,7 @@ function DashboardContent() {
   const [captionReq, setCaptionReq] = useState('');
 
   const fetchCampaigns = () => {
-    fetch('/api/campaigns').then(r => r.json()).then(data => {
+    fetch('/api/campaigns', { credentials: 'include' }).then(r => r.json()).then(data => {
       const list = data.campaigns || [];
       setCampaigns(list.map((c: any) => ({
         id: c.id, trackTitle: c.track_title,
@@ -87,7 +87,7 @@ function DashboardContent() {
     setLoading(true);
     try {
       const res = await fetch('/api/campaigns', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq }),
       });
       if (!res.ok) {
@@ -109,7 +109,7 @@ function DashboardContent() {
     const newStatus = currentStatus === 'active' ? 'paused' : 'active';
     try {
       const res = await fetch(`/api/campaigns/${id}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to update', 'error'); return; }
