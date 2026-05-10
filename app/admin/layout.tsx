@@ -66,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="hidden md:flex flex-col w-56 border-r border-white/[0.06] bg-white/[0.02] backdrop-blur-xl p-4 gap-1">
         <div className="mb-6 px-3 py-2">
           <Link href="/" className="flex items-center gap-1.5 mb-6">
-            <img src="/images/Selah Logo no text.png" alt="Selah.fm" className="h-6 w-auto" />
+            <img src="/images/Selah Logo transparant no text.png" alt="Selah.fm" className="h-6 w-auto" />
           </Link>
           <p className="text-[10px] text-muted-foreground mt-1">Admin · {email}</p>
         </div>
