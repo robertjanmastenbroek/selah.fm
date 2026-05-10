@@ -32,6 +32,14 @@ export async function GET(request: Request) {
   } catch (e: any) { results.push(`campaign columns: ${e.message}`); }
 
   try {
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token TEXT`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ`;
+    results.push('user verification columns OK');
+  } catch (e: any) { results.push(`campaign columns: ${e.message}`); }
+
+  try {
     await sql`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS rejection_feedback TEXT`;
     results.push('rejection_feedback column OK');
   } catch (e: any) { results.push(`rejection_feedback: ${e.message}`); }

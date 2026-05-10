@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 
@@ -58,13 +59,35 @@ export async function POST(request: Request) {
 
     const hashedPassword = await hashPassword(password);
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
     const result = await sql`
-      INSERT INTO users (email, password_hash, user_type, display_name)
-      VALUES (${email}, ${hashedPassword}, ${userType}, ${displayName})
+      INSERT INTO users (email, password_hash, user_type, display_name, verification_token)
+      VALUES (${email}, ${hashedPassword}, ${userType}, ${displayName}, ${verificationToken})
       RETURNING id
     `;
 
     const userId = result[0].id;
+
+    // Send verification email via Resend
+    const apiKey = process.env.RESEND_API_KEY;
+    if (apiKey) {
+      const verifyUrl = `https://selah.fm/login?verify=${verificationToken}`;
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          from: 'Selah.fm <info@selah.fm>',
+          to: [email],
+          subject: 'Verify your Selah.fm account',
+          html: `<div style="font-family:system-ui,sans-serif;color:#F0F0F0;background:#0D0D0D;padding:24px;border-radius:12px;max-width:480px"><h2 style="color:#5B7FFF">Welcome to Selah.fm, ${displayName}!</h2><p style="color:#A0A0A0">Click the button below to verify your email and get started.</p><a href="${verifyUrl}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#5B7FFF;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">Verify email</a><p style="margin-top:24px;font-size:11px;color:#555">— The Selah.fm team</p></div>`,
+        }),
+      }).catch(() => {});
+    }
 
     // Track referral as pending — bonus is only awarded on actual deposit
     if (refCode) {
