@@ -551,26 +551,66 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               )}
             </AnimatePresence>
 
-            {/* Recent supporters */}
-            {donations.supporters.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-white/[0.06]">
-                <p className="text-[10px] text-muted-foreground mb-3">Recent supporters</p>
-                <div className="space-y-2">
-                  {donations.supporters.slice(0, 5).map((s: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
-                          {(s.donor_name || 'A')[0].toUpperCase()}
+            {/* Recent supporters — always visible, crowdfunding style */}
+            {donations.supporters.length > 0 ? (
+              <div className="mt-6 pt-5 border-t border-white/[0.06]">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users size={14} className="text-primary/60" />
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Supporters ({donations.count})
+                  </h4>
+                </div>
+                <div className="space-y-3">
+                  {donations.supporters.map((s: any, i: number) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.06, duration: 0.3 }}
+                      className="group flex items-start gap-3 p-3 rounded-xl hover:bg-white/[0.03] transition-colors"
+                    >
+                      {/* Avatar */}
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0 ring-2 ring-primary/10">
+                        {(s.donor_name || 'A')[0].toUpperCase()}
+                      </div>
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-sm font-semibold truncate">{s.anonymous ? 'Anonymous' : s.donor_name}</span>
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                              {(() => {
+                                const date = new Date(s.created_at);
+                                const now = new Date();
+                                const diff = now.getTime() - date.getTime();
+                                const mins = Math.floor(diff / 60000);
+                                if (mins < 1) return 'just now';
+                                if (mins < 60) return `${mins}m ago`;
+                                const hours = Math.floor(mins / 60);
+                                if (hours < 24) return `${hours}h ago`;
+                                return date.toLocaleDateString();
+                              })()}
+                            </span>
+                          </div>
+                          <span className="text-sm font-bold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span>
                         </div>
-                        <span className="truncate">{s.anonymous ? 'Anonymous' : s.donor_name}</span>
                         {s.message && (
-                          <span className="text-xs text-muted-foreground truncate hidden sm:inline">— &quot;{s.message.slice(0, 60)}{s.message.length > 60 ? '...' : ''}&quot;</span>
+                          <div className="mt-1.5 inline-block rounded-2xl rounded-tl-sm bg-primary/[0.06] border border-primary/[0.08] px-3 py-1.5">
+                            <p className="text-xs text-muted-foreground leading-relaxed italic">&ldquo;{s.message}&rdquo;</p>
+                          </div>
                         )}
                       </div>
-                      <span className="font-semibold text-primary shrink-0 ml-2">${(s.amount_cents / 100).toFixed(0)}</span>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
+              </div>
+            ) : (
+              <div className="mt-6 pt-5 border-t border-white/[0.06] text-center py-6">
+                <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-3">
+                  <Heart size={20} className="text-primary/30" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">No supporters yet</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Be the first to back this campaign!</p>
               </div>
             )}
           </div>
