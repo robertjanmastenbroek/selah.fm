@@ -2,7 +2,10 @@
 
 import { useState, useCallback } from 'react';
 import useSWR from 'swr';
-import { fetcher, swrConfig } from '@/lib/swr-config';
+import { swrConfig } from '@/lib/swr-config';
+
+// Public fetcher — no credentials, so the API returns all campaigns
+const publicFetcher = (url: string) => fetch(url).then(r => r.json());
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -39,7 +42,7 @@ export default function BrowsePage() {
   const { addToast } = useToast();
 
   const query = buildQuery(filters);
-  const { data, error, isLoading } = useSWR(`/api/campaigns?${query}`, fetcher, swrConfig);
+  const { data, error, isLoading } = useSWR(`/api/campaigns?${query}`, publicFetcher, swrConfig);
 
   const campaigns: Campaign[] = data?.campaigns || [];
   const total = data?.total || 0;
