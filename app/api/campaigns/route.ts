@@ -11,19 +11,42 @@ export async function GET(request: Request) {
     const offset = parseInt(searchParams.get('offset') || '0');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
 
-    const campaigns = await sql`
-      SELECT c.*, 
-        COALESCE(v.approved_submissions, '0') as approved_submissions,
-        COALESCE(v.pending_submissions, '0') as pending_submissions,
-        COALESCE(v.total_verified_views, '0') as total_verified_views,
-        u.display_name as artist_name
-      FROM campaigns c
-      LEFT JOIN campaign_stats v ON v.id = c.id
-      LEFT JOIN users u ON u.id = c.artist_id
-      WHERE c.status IN ('active', 'draft')
-      ORDER BY c.created_at DESC
-      LIMIT ${limit}
-    `;
+    // If user is authenticated, show only their campaigns (dashboard).
+    // If not, show all active/draft campaigns (public browse).
+    const { getSession } = await import('@/lib/auth');
+    const session = getSession(request);
+    const isOwnerView = !!session;
+
+    let campaigns;
+    if (isOwnerView) {
+      campaigns = await sql`
+        SELECT c.*, 
+          COALESCE(v.approved_submissions, '0') as approved_submissions,
+          COALESCE(v.pending_submissions, '0') as pending_submissions,
+          COALESCE(v.total_verified_views, '0') as total_verified_views,
+          u.display_name as artist_name
+        FROM campaigns c
+        LEFT JOIN campaign_stats v ON v.id = c.id
+        LEFT JOIN users u ON u.id = c.artist_id
+        WHERE c.artist_id = ${session.id}
+        ORDER BY c.created_at DESC
+        LIMIT ${limit}
+      `;
+    } else {
+      campaigns = await sql`
+        SELECT c.*, 
+          COALESCE(v.approved_submissions, '0') as approved_submissions,
+          COALESCE(v.pending_submissions, '0') as pending_submissions,
+          COALESCE(v.total_verified_views, '0') as total_verified_views,
+          u.display_name as artist_name
+        FROM campaigns c
+        LEFT JOIN campaign_stats v ON v.id = c.id
+        LEFT JOIN users u ON u.id = c.artist_id
+        WHERE c.status IN ('active', 'draft')
+        ORDER BY c.created_at DESC
+        LIMIT ${limit}
+      `;
+    }
 
     let filtered = campaigns;
     
