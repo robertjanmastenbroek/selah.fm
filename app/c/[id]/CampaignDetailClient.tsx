@@ -112,7 +112,16 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   useEffect(() => { if (initialCampaign) return; fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => { if (d.error) setCampaign(null); else setCampaign(d); setLoading(false); }).catch(() => setLoading(false)); }, [id, initialCampaign]);
   useEffect(() => { const f = () => { if (heroRef.current) setShowSticky(heroRef.current.getBoundingClientRect().bottom < 0); }; window.addEventListener('scroll', f, { passive: true }); return () => window.removeEventListener('scroll', f); }, []);
 
-  const handleSubmit = async () => { if (!submitUrl) return; setSubmitting(true); try { const r = await fetch('/api/submissions', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ campaignId: id, contentUrl: submitUrl, platform: submitPlatform }) }); if (r.ok) { addToast('Submitted!', 'success'); setShowSubmit(false); setSubmitUrl(''); } else { const e = await r.json(); addToast(e.error || 'Failed', 'error'); } } catch { addToast('Network error', 'error'); } setSubmitting(false); };
+  const handleSubmit = async () => {
+    if (!submitUrl) return;
+    
+    // Client-side pre-validation
+    if (!submitUrl.startsWith('https://')) {
+      addToast('Please paste a valid HTTPS link from TikTok, Instagram, YouTube, or Facebook', 'error');
+      return;
+    }
+
+    setSubmitting(true); try { const r = await fetch('/api/submissions', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ campaignId: id, contentUrl: submitUrl, platform: submitPlatform }) }); if (r.ok) { addToast('Submitted!', 'success'); setShowSubmit(false); setSubmitUrl(''); } else { const e = await r.json(); addToast(e.error || 'Failed', 'error'); } } catch { addToast('Network error', 'error'); } setSubmitting(false); };
 
   const bg = 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A';
   if (loading) return (<div className="min-h-screen" style={{ background: bg }}><Header /><main className="max-w-2xl mx-auto px-4 py-16"><Skeleton className="aspect-video rounded-2xl mb-4"/><Skeleton className="h-8 w-1/2"/></main></div>);
