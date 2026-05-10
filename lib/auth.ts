@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
+import { ADMIN_EMAILS } from './constants';
 
 // ── Session secret ───────────────────────────────────────────────
 // In development: auto-generates a random secret so the app starts without config.
@@ -90,15 +91,13 @@ export function getSession(request: Request): SessionUser | null {
 }
 
 // ── Public: check if request is from an admin ────────────────────
-const ADMIN_EMAILS = ['mastenbroekrobertjan@gmail.com'];
-
 export function isAdminRequest(request: Request): boolean {
   const session = getSession(request);
   if (!session) return false;
   return ADMIN_EMAILS.includes(session.email);
 }
 
-// Re-export for convenience (used by admin routes)
+// Re-export for convenience (used by server-side admin routes)
 export { ADMIN_EMAILS };
 
 // ── Helper: resolve user ID from session (handles old sessions without id) ──
