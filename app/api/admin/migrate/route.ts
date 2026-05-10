@@ -66,6 +66,22 @@ export async function GET(request: Request) {
   } catch (e: any) { results.push(`campaign_donations: ${e.message}`); }
 
   try {
+    await sql`CREATE TABLE IF NOT EXISTS ratings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+      reviewer_id UUID NOT NULL REFERENCES users(id),
+      reviewee_id UUID NOT NULL REFERENCES users(id),
+      reviewer_role TEXT NOT NULL CHECK (reviewer_role IN ('artist', 'creator')),
+      score INTEGER NOT NULL CHECK (score >= 1 AND score <= 5),
+      comment TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(submission_id, reviewer_id)
+    )`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_ratings_reviewee ON ratings(reviewee_id)`;
+    results.push('ratings table OK');
+  } catch (e: any) { results.push(`ratings: ${e.message}`); }
+
+  try {
     await sql`CREATE TABLE IF NOT EXISTS bugs (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id UUID REFERENCES users(id) ON DELETE SET NULL,
