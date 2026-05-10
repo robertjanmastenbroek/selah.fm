@@ -2,7 +2,16 @@
 
 import Header from '@/components/TopNav';
 import { motion } from 'framer-motion';
-import { Github, Heart, Code, Globe, Zap, Users, ArrowRight, BookOpen } from 'lucide-react';
+import { Heart, Code, Globe, Zap, Users, ArrowRight, BookOpen } from 'lucide-react';
+
+// Inline GitHub SVG (lucide-react doesn't export a Github icon)
+function GithubIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+    </svg>
+  );
+}
 
 export default function OpenSourcePage() {
   const bg = 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A';
@@ -19,7 +28,7 @@ export default function OpenSourcePage() {
           className="text-center mb-16 pt-8"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/[0.06] mb-6">
-            <Github size={16} className="text-primary" />
+            <GithubIcon size={16} />
             <span className="text-sm font-medium">Now open source</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
@@ -37,7 +46,7 @@ export default function OpenSourcePage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
             >
-              <Github size={18} />
+              <GithubIcon size={18} />
               View on GitHub
             </a>
             <a
@@ -172,7 +181,7 @@ export default function OpenSourcePage() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-opacity hover:shadow-[0_0_30px_rgba(91,127,255,0.3)]"
           >
-            <Github size={22} />
+            <GithubIcon size={22} />
             Star us on GitHub
             <ArrowRight size={18} />
           </a>

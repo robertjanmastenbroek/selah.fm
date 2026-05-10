@@ -11,14 +11,17 @@ export async function GET(request: Request) {
   const session = getSession(request);
   if (!session) return NextResponse.json({ user: null });
 
-  // Session already contains id, email, type, name
+  // Resolve user ID (handles old sessions that lack id)
+  const userId = session.id || (await sql`SELECT id FROM users WHERE email = ${session.email}`.then((r: any) => r[0]?.id));
+  if (!userId) return NextResponse.json({ user: { ...session, id: undefined } });
+
   // Fetch additional fields from DB for the full profile
   try {
     const users = await sql`
       SELECT id, email, display_name, bio, genres, preferred_cpm_cents,
              tiktok_handle, instagram_handle, youtube_handle, facebook_handle,
              user_type, stripe_connect_id, profile_image_url
-      FROM users WHERE id = ${session.id}
+      FROM users WHERE id = ${userId}
     `;
     if (users.length > 0) {
       const u = users[0];
