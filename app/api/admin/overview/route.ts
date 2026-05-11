@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       pendingSubmissions: parseInt(pendingSubmissions[0].count),
       paidPayouts: paidCount,
       totalPaidCents: parseInt(totalRevenue[0].total || '0'),
-      platformRevenueCents: Math.round(parseInt(totalRevenue[0].total || '0') * 0.25),
+      platformRevenueCents: Math.round(parseInt(totalRevenue[0].total || '0') * 0.20),
     });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
