@@ -28,6 +28,7 @@ export async function GET(request: Request) {
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS min_video_length_seconds INTEGER`;
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS caption_requirements TEXT`;
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS paused_at TIMESTAMPTZ`;
+    await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS gallery_images JSONB DEFAULT '[]'`;
     results.push('campaign metadata columns OK');
   } catch (e: any) { results.push(`campaign columns: ${e.message}`); }
 

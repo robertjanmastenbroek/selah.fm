@@ -33,6 +33,7 @@ export default function CampaignCover({
   className?: string;
 }) {
   const firstChar = title.trim()[0]?.toUpperCase() || '♪';
+  const bg = campaignGradient(title);
 
   if (src) {
     return (
@@ -42,6 +43,18 @@ export default function CampaignCover({
           alt={title} 
           className="w-full h-full object-cover"
           loading="lazy"
+          onError={(e) => {
+            // If image fails to load, hide it and show gradient fallback
+            (e.target as HTMLImageElement).style.display = 'none';
+            // Show the gradient fallback on the parent
+            const parent = (e.target as HTMLImageElement).parentElement;
+            if (parent) {
+              parent.style.background = bg;
+              // Add decorative elements
+              const firstChar = title.trim()[0]?.toUpperCase() || '♪';
+              parent.innerHTML += `<div class="flex items-center justify-center h-full"><span class="text-5xl font-extrabold text-white/10 select-none">${firstChar}</span></div>`;
+            }
+          }}
         />
         {/* Subtle gradient overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -50,7 +63,6 @@ export default function CampaignCover({
   }
 
   // Beautiful gradient fallback
-  const bg = campaignGradient(title);
   return (
     <div 
       className={`flex items-center justify-center relative overflow-hidden ${className}`}

@@ -99,7 +99,7 @@ function DashboardContent() {
     try {
       const res = await fetch('/api/campaigns', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq, platforms }),
+        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, galleryImages: [], cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq, platforms }),
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to create campaign', 'error'); setLoading(false); return; }
       const created = await res.json();
@@ -199,8 +199,17 @@ function DashboardContent() {
             {wizardStep === 1 && (
               <div className="max-w-lg mx-auto space-y-6 animate-slide-up">
                 <h1 className="section-title">Campaign cover</h1>
-                <p className="text-muted-foreground text-sm">A beautiful cover makes your campaign stand out.</p>
+                <p className="text-muted-foreground text-sm">
+                  Upload a high-quality cover image. Campaigns with great visuals get 3× more submissions.
+                </p>
+                <div className="rounded-2xl bg-amber-500/5 border border-amber-500/10 p-3 text-xs text-amber-400/80 flex items-start gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  <span>A cover image is <strong>required</strong>. We recommend uploading 3-5 images for the best results.</span>
+                </div>
                 <ImageUpload onImage={setCoverArt} currentImage={coverArt} />
+                {!coverArt && (
+                  <p className="text-xs text-muted-foreground/60 text-center">Upload a cover image to continue</p>
+                )}
                 {coverArt && <Button onClick={() => setWizardStep(2)} className="w-full">Continue</Button>}
                 <Button variant="ghost" onClick={() => setStep('list')} className="w-full">Cancel</Button>
               </div>
