@@ -205,7 +205,16 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const artistName = campaign.artist_name || 'Unknown Artist';
   const displayTitle = campaign.title || campaign.track_title;
 
-  const stickyBarVisible = scrollY > heroBottom - 80;
+  // Sticky bar: appears when scrolled past hero, permanently dismissed once scrolled past donations
+  const [stickyBarDismissed, setStickyBarDismissed] = useState(false);
+  useEffect(() => {
+    // Dismiss sticky bar permanently once user scrolls past the Donations/More Campaigns area
+    const moreTop = moreRef.current?.offsetTop || Infinity;
+    if (scrollY > moreTop - 300 && !stickyBarDismissed) {
+      setStickyBarDismissed(true);
+    }
+  }, [scrollY, stickyBarDismissed]);
+  const stickyBarVisible = scrollY > heroBottom - 80 && !stickyBarDismissed;
 
   return (
     <div className="min-h-screen" style={{ background: bg }}>
@@ -238,7 +247,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           </div>
 
           {/* Bottom overlay: divider → progress → CTAs */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent px-5 pt-14 pb-5">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent px-5 pt-16 pb-5">
 
             {/* Divider */}
             <div className="border-t border-white/10 mb-4" />

@@ -1,25 +1,17 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession, ADMIN_EMAILS } from '@/lib/auth';
 
-export async function GET(request: Request) {
-  const session = getSession(request);
-  if (!session || !ADMIN_EMAILS.includes(session.email)) {
-    return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-  }
-
+// Admin-only: verified by middleware
+export async function GET() {
   try {
-    // Try to query email_logs table, fall back gracefully
-    let emails: any[] = [];
-    try {
-      emails = await sql`
-        SELECT * FROM email_logs ORDER BY created_at DESC LIMIT 50
-      `;
-    } catch {
-      // Table might not exist yet — return empty
-    }
+    const emails = await sql`
+      SELECT id, to_email, subject, sent, sent_by, created_at
+      FROM email_logs
+      ORDER BY created_at DESC
+      LIMIT 100
+    `;
     return NextResponse.json({ emails });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ emails: [] });
   }
 }

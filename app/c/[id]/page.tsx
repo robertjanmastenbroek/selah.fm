@@ -46,5 +46,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CampaignPage({ params }: Props) {
   const campaign = await getCampaign(params.id);
-  return <CampaignDetailClient id={params.id} initialCampaign={campaign} />;
+
+  const jsonLd = campaign ? {
+    '@context': 'https://schema.org',
+    '@type': 'MusicPlaylist',
+    name: campaign.title || campaign.track_title,
+    description: campaign.requirements || `${campaign.track_title} on Selah.fm`,
+    image: campaign.cover_art_url || 'https://selah.fm/images/hero-illustration.png',
+    url: `https://selah.fm/c/${params.id}`,
+    provider: {
+      '@type': 'Organization',
+      name: 'Selah.fm',
+      url: 'https://selah.fm',
+    },
+    offers: campaign.cpm_rate_cents ? {
+      '@type': 'Offer',
+      price: (campaign.cpm_rate_cents / 100).toFixed(2),
+      priceCurrency: 'USD',
+      description: `${(campaign.cpm_rate_cents / 100).toFixed(2)} per 1,000 verified views`,
+    } : undefined,
+  } : null;
+
+  return (
+    <>
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
+      <CampaignDetailClient id={params.id} initialCampaign={campaign} />
+    </>
+  );
 }
