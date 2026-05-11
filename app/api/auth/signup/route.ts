@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
+import { trackSignUp } from '@/lib/analytics-server';
 
 export async function POST(request: Request) {
   const rl = rateLimit(getRateLimitKey(request), { maxRequests: 5, windowMs: 60_000 });
@@ -46,6 +47,9 @@ export async function POST(request: Request) {
     `;
 
     const user = result[0];
+
+    // Server-side GA tracking (fire and forget)
+    trackSignUp('email', user.id).catch(() => {});
 
     // Process referral
     if (refCode) {

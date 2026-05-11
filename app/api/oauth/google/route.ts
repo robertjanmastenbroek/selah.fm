@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { setSessionCookie } from '@/lib/auth';
+import { trackSignUp, trackLogin } from '@/lib/analytics-server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -69,6 +70,9 @@ export async function GET(request: Request) {
       `;
       user = result;
 
+      // Server-side GA tracking for new signup
+      trackSignUp('google', user[0].id).catch(() => {});
+
       // Sync to Resend audience
       try {
         const audienceId = process.env.RESEND_AUDIENCE_ID;
@@ -85,6 +89,8 @@ export async function GET(request: Request) {
       if (picture && !user[0].profile_image_url) {
         await sql`UPDATE users SET profile_image_url = ${picture}, updated_at = NOW() WHERE id = ${user[0].id}`;
       }
+      // Server-side GA tracking for returning user login
+      trackLogin('google', user[0].id).catch(() => {});
     }
 
     // Session is stateless (HMAC cookie) — no DB token needed

@@ -3,6 +3,7 @@ import sql from '@/lib/db';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 import bcrypt from 'bcryptjs';
+import { trackLogin } from '@/lib/analytics-server';
 
 export async function POST(request: Request) {
   const rl = rateLimit(getRateLimitKey(request), { maxRequests: 10, windowMs: 60_000 });
@@ -34,6 +35,9 @@ export async function POST(request: Request) {
       is_artist: user.is_artist,
       is_creator: user.is_creator,
     };
+
+    // Server-side GA tracking (fire and forget)
+    trackLogin('email', user.id).catch(() => {});
 
     const response = NextResponse.json({ ok: true, redirectTo: '/browse' });
     setSessionCookie(response, sessionData);
