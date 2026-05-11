@@ -116,11 +116,16 @@ export default function AdminEmailsPage() {
               <div className="p-8 text-center space-y-3">
                 <Inbox size={32} className="mx-auto text-muted-foreground/20" />
                 <p className="text-sm text-muted-foreground">No emails received yet</p>
-                <p className="text-[11px] text-muted-foreground/60 max-w-md mx-auto leading-relaxed">
-                  To receive emails at support@selah.fm, configure Resend inbound forwarding:
-                  Domains → selah.fm → Inbound → Forward to{' '}
-                  <code className="text-[10px] bg-white/[0.04] px-1.5 py-0.5 rounded">/api/admin/emails/inbound</code>
-                </p>
+                <div className="text-[11px] text-muted-foreground/60 max-w-md mx-auto leading-relaxed space-y-2">
+                  <p>To receive emails at support@selah.fm, set up Resend inbound:</p>
+                  <ol className="list-decimal pl-4 space-y-1 text-left">
+                    <li>Resend → <strong>Domains</strong> → verify a subdomain (e.g. <code>mail.selah.fm</code>) with inbound enabled</li>
+                    <li>Resend → <strong>Webhooks</strong> → Add Webhook → URL: <code className="text-[10px] bg-white/[0.04] px-1 py-0.5 rounded">https://selah.fm/api/admin/emails/inbound</code></li>
+                    <li>Select event <strong>email.received</strong></li>
+                    <li>Copy the webhook secret → add <code>RESEND_WEBHOOK_SECRET</code> in Railway</li>
+                  </ol>
+                  <p className="text-[10px]">Emails will arrive at <code>support@mail.selah.fm</code>. Use a subdomain to avoid MX conflicts with your root domain.</p>
+                </div>
               </div>
             ) : (
               <div className="divide-y divide-white/[0.04]">

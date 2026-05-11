@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 
 /**
- * Inbound email webhook — receives forwarded emails from Resend.
- * Configure in Resend: Domains → selah.fm → Inbound → Forward to this URL.
+ * Inbound email webhook — receives emails via Resend Inbound.
+ * Setup: Resend → Domains → verify subdomain (mail.selah.fm) with inbound.
+ *        Resend → Webhooks → Add → https://selah.fm/api/admin/emails/inbound → email.received.
+ *        Copy webhook secret → RESEND_WEBHOOK_SECRET in Railway.
  */
 export async function POST(request: Request) {
   try {
