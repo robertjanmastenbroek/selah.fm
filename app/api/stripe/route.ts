@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: depositAmount * 100,
       currency: 'usd',
+      automatic_payment_methods: { enabled: true },
       metadata: {
         type: 'campaign_deposit',
         campaignId,
