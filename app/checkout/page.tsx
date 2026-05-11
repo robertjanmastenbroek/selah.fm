@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import LiveTicker from '@/components/LiveTicker';
 import { Heart, ArrowLeft, Shield, Lock, AlertCircle, Check, Zap, Wallet, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -268,6 +269,9 @@ export default function CheckoutPage() {
               />
             </div>
           </div>
+
+          {/* ── Live ticker ── */}
+          {campaignId && <LiveTicker campaignId={campaignId} />}
 
           {/* ── Your details ── */}
           <div className="space-y-3">
