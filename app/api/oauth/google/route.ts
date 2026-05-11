@@ -51,14 +51,14 @@ export async function GET(request: Request) {
     }
 
     // Find or create user
-    let user = await sql`SELECT id, email, display_name, type, profile_image_url FROM users WHERE email = ${email}`;
+    let user = await sql`SELECT id, email, display_name, user_type, profile_image_url FROM users WHERE email = ${email}`;
 
     if (user.length === 0) {
       // Create new user
       const result = await sql`
-        INSERT INTO users (email, password_hash, display_name, type, email_verified, profile_image_url)
+        INSERT INTO users (email, password_hash, display_name, user_type, email_verified, profile_image_url)
         VALUES (${email}, 'google-oauth', ${name}, 'creator', true, ${picture})
-        RETURNING id, email, display_name, type
+        RETURNING id, email, display_name, user_type
       `;
       user = result;
 
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
       id: user[0].id,
       email: user[0].email,
       name: user[0].display_name,
-      type: user[0].type,
+      type: user[0].user_type,
     });
     return response;
   } catch (e: any) {

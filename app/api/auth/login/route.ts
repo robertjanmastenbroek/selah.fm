@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const users = await sql`SELECT id, email, display_name, type, password_hash FROM users WHERE email = ${email.trim().toLowerCase()}`;
+    const users = await sql`SELECT id, email, display_name, user_type, password_hash FROM users WHERE email = ${email.trim().toLowerCase()}`;
     if (users.length === 0) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       id: user.id,
       email: user.email,
       name: user.display_name,
-      type: user.type,
+      type: user.user_type,
     };
 
     const response = NextResponse.json({ ok: true, redirectTo: '/browse' });

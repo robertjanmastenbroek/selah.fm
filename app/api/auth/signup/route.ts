@@ -37,9 +37,9 @@ export async function POST(request: Request) {
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
     const result = await sql`
-      INSERT INTO users (email, password_hash, display_name, type, email_verified, verification_token)
+      INSERT INTO users (email, password_hash, display_name, user_type, email_verified, verification_token)
       VALUES (${trimmedEmail}, ${hashedPassword}, ${name.trim().slice(0, 100)}, ${userType}, false, ${verificationToken})
-      RETURNING id, email, display_name, type
+      RETURNING id, email, display_name, user_type
     `;
 
     const user = result[0];
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
     const redirectTo = userType === 'artist' ? '/onboarding' : '/browse';
     const response = NextResponse.json({ ok: true, type: userType, redirectTo });
-    setSessionCookie(response, { id: user.id, email: user.email, name: user.display_name, type: user.type });
+    setSessionCookie(response, { id: user.id, email: user.email, name: user.display_name, type: user.user_type });
     return response;
   } catch (e: any) {
     console.error('Signup error:', e.message);
