@@ -356,14 +356,36 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
         </div>
       </main>
 
-      {/* ══════ STICKY BOTTOM BAR ══════ */}
+      {/* ══════ STICKY BOTTOM BAR (progress + CTAs) ══════ */}
       <AnimatePresence>
         {stickyBarVisible && (
           <motion.div initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }} transition={{ type: 'spring', stiffness: 400, damping: 30 }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.08] px-4 py-3">
-            <div className="max-w-2xl mx-auto flex gap-2">
-              <button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">SUBMIT</button>
-              <button onClick={handleDonate} className="flex-1 py-4 text-sm font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${GOLD}, ${GOLD}CC)`, color: '#0A0A0A' }}>DONATE</button>
-              <button onClick={() => setShareOpen(true)} className="px-4 py-4 text-xs font-medium text-muted-foreground hover:text-foreground rounded-xl hover:bg-white/[0.04] active:scale-[0.97] transition-all">Share</button>
+            <div className="max-w-2xl mx-auto space-y-3">
+              {/* Compact progress section */}
+              <div className="flex items-center gap-3">
+                <CircleProgress pct={progress} size={40} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="text-xs">
+                      <span className="font-bold text-sm">${spent.toFixed(0)}</span>
+                      <span className="text-muted-foreground ml-1">of ${budget.toFixed(0)}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-primary">{Math.round(progress)}%</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[9px] text-muted-foreground mt-0.5">
+                    <span className="flex items-center gap-0.5"><Users size={9} /> {donations.count}</span>
+                    <span className="flex items-center gap-0.5"><Camera size={9} /> {submissions}</span>
+                    <span className="flex items-center gap-0.5"><Play size={9} /> {views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</span>
+                    <span className="text-muted-foreground/50">${cpm.toFixed(2)}/1K</span>
+                  </div>
+                </div>
+              </div>
+              {/* Buttons */}
+              <div className="flex gap-2">
+                <button onClick={() => setShowSubmit(true)} className="flex-1 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">SUBMIT</button>
+                <button onClick={handleDonate} className="flex-1 py-3 text-sm font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${GOLD}, ${GOLD}CC)`, color: '#0A0A0A' }}>DONATE</button>
+                <button onClick={() => setShareOpen(true)} className="px-3 py-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-xl hover:bg-white/[0.04] active:scale-[0.97] transition-all">Share</button>
+              </div>
             </div>
           </motion.div>
         )}
