@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 async function getArtists() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
-    const res = await fetch(`${baseUrl}/api/artists`, { next: { revalidate: 60 } });
+    const res = await fetch(`${baseUrl}/api/artists`);
     if (!res.ok) return { artists: [] };
     return res.json();
   } catch {
