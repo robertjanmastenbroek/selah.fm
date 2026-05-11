@@ -181,7 +181,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           <CampaignCover
             src={campaign.cover_art_url}
             title={campaign.track_title}
-            className="w-full h-[65vh] sm:h-[55vh] max-h-[700px] rounded-none"
+            className="w-full h-screen sm:h-[55vh] sm:max-h-[700px] rounded-none"
           />
           {/* Gradient overlay for readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 pointer-events-none" />
