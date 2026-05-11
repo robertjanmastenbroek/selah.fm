@@ -35,6 +35,7 @@ export async function POST(
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'usd',
+      automatic_payment_methods: { enabled: true },
       metadata: {
         type: 'campaign_donation',
         campaignId: params.id,
