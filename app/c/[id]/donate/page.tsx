@@ -67,9 +67,6 @@ function DonateForm({ clientSecret, amount, onSuccess, onError }: { clientSecret
     else setProcessing(false);
   };
 
-  const feeCents = Math.round(amount * 100 * 0.029 + 30);
-  const netCents = Math.round(amount * 100) - feeCents;
-
   return (
     <form onSubmit={handlePay} className="space-y-4">
       {/* Payment Element */}
@@ -87,19 +84,11 @@ function DonateForm({ clientSecret, amount, onSuccess, onError }: { clientSecret
         )}
       </div>
 
-      {/* Fee breakdown */}
-      <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-xs space-y-1">
-        <div className="flex justify-between text-muted-foreground">
-          <span>Your donation</span>
-          <span>${amount.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-muted-foreground/60">
-          <span>Processing fee (2.9% + $0.30)</span>
-          <span>-${(feeCents / 100).toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between font-semibold pt-1.5 border-t border-white/[0.04]">
-          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Added to campaign</span>
-          <span className="text-emerald-400">${(netCents / 100).toFixed(2)}</span>
+      {/* Amount summary — 100% goes to campaign */}
+      <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-xs">
+        <div className="flex justify-between font-semibold">
+          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> 100% added to campaign</span>
+          <span className="text-emerald-400">${amount.toFixed(2)}</span>
         </div>
       </div>
 
