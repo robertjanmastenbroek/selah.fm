@@ -32,6 +32,7 @@ export async function GET(request: Request) {
         email: session.email,
         capabilities: {
           transfers: { requested: true },
+          card_payments: { requested: true },
         },
         business_type: 'individual',
       });
@@ -42,6 +43,18 @@ export async function GET(request: Request) {
         UPDATE users SET stripe_connect_id = ${connectId}, updated_at = NOW()
         WHERE id = ${session.id}
       `;
+    } else {
+      // Ensure existing accounts have both required capabilities
+      try {
+        await stripe.accounts.update(connectId, {
+          capabilities: {
+            transfers: { requested: true },
+            card_payments: { requested: true },
+          },
+        });
+      } catch {
+        // Account may already have these or be in a state that blocks updates
+      }
     }
 
     // Create an account link for onboarding
