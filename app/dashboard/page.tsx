@@ -75,7 +75,6 @@ function DashboardContent() {
   const [minVideoLength, setMinVideoLength] = useState('');
   const [captionReq, setCaptionReq] = useState('');
   const [platforms, setPlatforms] = useState<string[]>(['tiktok', 'instagram', 'youtube', 'facebook']);
-  const [shareCampaign, setShareCampaign] = useState<{ id: string; title: string } | null>(null);
 
   const togglePlatform = (p: string) => {
     setPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
@@ -98,17 +97,18 @@ function DashboardContent() {
     try {
       const res = await fetch('/api/campaigns', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackTitle, title: campaignTitle || null, trackUrl, coverArtUrl: coverArt, galleryImages: [], cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags: hashtags || undefined, requirements: requirements || undefined, requiredHashtags: requiredHashtags || undefined, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq || undefined, platforms }),
+        body: JSON.stringify({ trackTitle, title: campaignTitle || null, trackUrl, coverArtUrl: coverArt, galleryImages: [], cpmRate: parseFloat(cpm), budget: 0, maxPayout: parseInt(maxPayout), driveUrl, hashtags: hashtags || undefined, requirements: requirements || undefined, requiredHashtags: requiredHashtags || undefined, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq || undefined, platforms }),
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to create campaign', 'error'); setLoading(false); return; }
       const created = await res.json();
-      trackCreateCampaign(trackTitle, parseInt(budget));
-      mutate(); // Revalidate campaign list
-      addToast('Campaign live! Share it with your fans.', 'success');
-      setShareCampaign({ id: created.id, title: trackTitle });
-    } catch { addToast('Network error — try again', 'error'); }
-    setCoverArt(''); setTrackTitle(''); setCpm('1'); setBudget('25');
-    setWizardStep(1); setStep('list'); setLoading(false);
+      trackCreateCampaign(trackTitle, 0);
+      mutate();
+      addToast('Campaign created! Now fund it to start.', 'success');
+      // Redirect to checkout for first deposit
+      setCoverArt(''); setTrackTitle(''); setCpm('1');
+      setWizardStep(1); setStep('list'); setLoading(false);
+      router.push(`/checkout?type=deposit&campaignId=${created.id}`);
+    } catch { addToast('Network error — try again', 'error'); setLoading(false); }
   };
 
   const startEdit = (c: Campaign) => {
@@ -237,8 +237,6 @@ function DashboardContent() {
     } catch { addToast('Network error', 'error'); setEditSaving(false); }
   };
 
-  const estimatedViews = Math.floor((parseInt(budget || '0') / parseFloat(cpm || '1')) * 1000);
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -253,7 +251,7 @@ function DashboardContent() {
               </Card>
             )}
             <div className="flex gap-2 mb-10">
-              {[1, 2, 3].map(s => (
+              {[1, 2].map(s => (
                 <div key={s} className={`flex-1 h-1 rounded-full transition-colors ${s <= wizardStep ? 'bg-foreground' : 'bg-muted'}`} />
               ))}
             </div>
@@ -379,50 +377,31 @@ function DashboardContent() {
                   />
                 </div>
 
+                {/* CPM & max payout */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-1.5 block">CPM ($/1K views)</label>
+                    <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground mb-1.5 block">Max payout per submission ($)</label>
+                    <Input type="number" min="1" value={maxPayout} onChange={e => setMaxPayout(e.target.value)} />
+                  </div>
+                </div>
+                <Card className="bg-muted/50"><CardContent className="p-4 text-sm text-muted-foreground space-y-2">
+                  <p>Creators earn 80% of your CPM rate after the 20% platform fee.</p>
+                  <p className="text-xs">After launching, you'll be prompted to make your first deposit to fund the campaign.</p>
+                </CardContent></Card>
+
                 <div className="flex gap-3 pt-2">
                   <Button variant="outline" onClick={() => setWizardStep(1)} className="flex-1">Back</Button>
-                  <Button onClick={() => setWizardStep(3)} disabled={!trackTitle} className="flex-1">Continue</Button>
-                </div>
-              </div>
-            )}
-            {wizardStep === 3 && (
-              <div className="max-w-lg mx-auto space-y-4 animate-slide-up">
-                <h1 className="section-title">Budget</h1>
-                <p className="text-muted-foreground text-sm mb-6">Pay only for verified views.</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><label className="text-sm text-muted-foreground mb-1.5 block">CPM ($/1K views)</label><Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} /></div>
-                  <div><label className="text-sm text-muted-foreground mb-1.5 block">Budget ($)</label><Input type="number" min="5" step="5" value={budget} onChange={e => setBudget(e.target.value)} /></div>
-                </div>
-                <div><label className="text-sm text-muted-foreground mb-1.5 block">Max payout per submission ($)</label><Input type="number" min="1" value={maxPayout} onChange={e => setMaxPayout(e.target.value)} /></div>
-                <Card className="bg-muted/50"><CardContent className="p-4 text-sm text-muted-foreground space-y-2">
-                  <p>${budget} ÷ ${cpm} CPM ≈ <span className="text-foreground font-semibold">{estimatedViews.toLocaleString()}</span> estimated views</p>
-                  <p className="text-xs">Creators earn 80% of payout after 20% platform fee. You pay exactly ${budget || '0'} — no hidden costs.</p>
-                </CardContent></Card>
-                <div className="flex gap-3 pt-2">
-                  <Button variant="outline" onClick={() => setWizardStep(2)} className="flex-1">Back</Button>
-                  <Button onClick={createCampaign} disabled={loading} className="flex-1">{loading ? 'Creating...' : 'Launch campaign'}</Button>
+                  <Button onClick={createCampaign} disabled={loading || !trackTitle} className="flex-1">{loading ? 'Creating...' : 'Launch campaign'}</Button>
                 </div>
               </div>
             )}
           </>
         ) : (
           <>
-            {shareCampaign && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mb-6 rounded-2xl bg-primary/[0.06] backdrop-blur-xl border border-primary/20 p-6">
-                <div className="flex items-start justify-between flex-wrap gap-4">
-                  <div className="space-y-2">
-                    <h3 className="font-bold text-lg">🎉 "{shareCampaign.title}" is live!</h3>
-                    <p className="text-sm text-muted-foreground max-w-md">Share your campaign link with your fans and on social media.</p>
-                    <div className="flex items-center gap-2 pt-1">
-                      <code className="text-xs bg-white/[0.06] border border-white/[0.08] px-3 py-2 rounded-lg font-mono select-all">https://selah.fm/c/{shareCampaign.id}</code>
-                      <button onClick={() => { navigator.clipboard.writeText(`https://selah.fm/c/${shareCampaign.id}`); addToast('Link copied!', 'success'); }} className="shrink-0 px-4 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-medium hover:bg-white/[0.1] transition-colors active:scale-[0.97]">Copy link</button>
-                    </div>
-                  </div>
-                  <button onClick={() => setShareCampaign(null)} className="text-muted-foreground hover:text-foreground text-sm shrink-0">Dismiss</button>
-                </div>
-              </motion.div>
-            )}
-
             <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
               <CardContent className="p-4 text-center space-y-2">
                 <p className="text-sm font-medium">🔗 Invite artists & earn 5%</p>
