@@ -22,7 +22,7 @@ import { Plus, Edit3, ExternalLink } from 'lucide-react';
 
 
 interface Campaign {
-  id: string; trackTitle: string; coverArt: string; cpmRate: number;
+  id: string; slug: string; trackTitle: string; coverArt: string; cpmRate: number;
   budget: number; spent: number; views: number; submissions: number; status: string;
 }
 
@@ -41,7 +41,7 @@ function DashboardContent() {
 
   const rawCampaigns = campaignsData?.campaigns || [];
   const campaigns: Campaign[] = rawCampaigns.map((c: any) => ({
-    id: c.id, trackTitle: c.track_title,
+    id: c.id, slug: c.slug || c.id, trackTitle: c.track_title,
     coverArt: c.cover_art_url || '',
     cpmRate: (c.cpm_rate_cents || 0) / 100,
     budget: (c.total_budget_cents || 0) / 100,
@@ -597,7 +597,7 @@ function DashboardContent() {
                 {campaigns.map((c, i) => {
                   const pct = c.budget > 0 ? Math.min((c.spent / c.budget) * 100, 100) : 0;
                   return (
-                    <Card key={c.id} className="animate-slide-up overflow-hidden cursor-pointer hover:border-primary/20 transition-colors" style={{ animationDelay: `${i * 60}ms` }} onClick={() => router.push(`/c/${c.id}`)}>
+                    <Card key={c.id} className="animate-slide-up overflow-hidden cursor-pointer hover:border-primary/20 transition-colors" style={{ animationDelay: `${i * 60}ms` }} onClick={() => router.push(`/c/${c.slug || c.id}`)}>
                       <CampaignCover src={c.coverArt} title={c.trackTitle} className="h-40" />
                       <CardContent className="p-5 space-y-4">
                         <div className="flex items-center justify-between">

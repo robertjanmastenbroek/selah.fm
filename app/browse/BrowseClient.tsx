@@ -15,7 +15,7 @@ import { EmptyState } from '@/components/States';
 import { Megaphone } from 'lucide-react';
 import { PlatformBadge } from '@/components/SocialIcons';
 
-interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; artist_name?: string; artist_avatar?: string; }
+interface Campaign { id: string; slug?: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; artist_name?: string; artist_avatar?: string; }
 
 function buildQuery(filters: Record<string, any>) {
   const params = new URLSearchParams();
@@ -129,7 +129,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
               const remaining = c.budget_remaining_cents / 100;
               const pct = budget > 0 ? ((budget - remaining) / budget) * 100 : 0;
               return (
-                <Link key={c.id} href={`/c/${c.id}`}>
+                <Link key={c.id} href={`/c/${c.slug || c.id}`}>
                   <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
