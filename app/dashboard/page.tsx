@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
 import ImageUpload from '@/components/ImageUpload';
 import GalleryUpload, { type GalleryItem } from '@/components/GalleryUpload';
@@ -196,6 +196,8 @@ function DashboardContent() {
 • Post during peak hours (7-9 PM your time)
 • Tag @selahfm for a repost chance`;
 
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   const handleEditSave = async () => {
     if (!editingId) return;
     setEditSaving(true);
@@ -220,7 +222,7 @@ function DashboardContent() {
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to save', 'error'); setEditSaving(false); return; }
       const updated = await res.json();
-      // Optimistic cache update: immediately update the SWR cache with the returned data
+      // Optimistic cache update
       mutate(
         (current: any) => ({
           ...current,
@@ -230,10 +232,15 @@ function DashboardContent() {
         }),
         { revalidate: false }
       );
-      addToast('Campaign updated!', 'success');
-      setEditingId(null);
-    } catch { addToast('Network error', 'error'); }
-    setEditSaving(false);
+      // Show success animation then close
+      setEditSaving(false);
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setEditingId(null);
+      }, 1200);
+      addToast('Campaign updated', 'success');
+    } catch { addToast('Network error', 'error'); setEditSaving(false); }
   };
 
   const estimatedViews = Math.floor((parseInt(budget || '0') / parseFloat(cpm || '1')) * 1000);
@@ -567,8 +574,35 @@ function DashboardContent() {
                 </div>
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={() => setEditingId(null)} className="flex-1">Cancel</Button>
-                  <Button onClick={handleEditSave} disabled={editSaving || !trackTitle} className="flex-1">{editSaving ? 'Saving...' : 'Save changes'}</Button>
+                  <Button onClick={handleEditSave} disabled={editSaving || !trackTitle || saveSuccess} className="flex-1 relative overflow-hidden">
+                    {editSaving ? (
+                      <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Saving...</span>
+                    ) : saveSuccess ? (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-2">
+                        <motion.span initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+                        </motion.span>
+                        Saved
+                      </motion.span>
+                    ) : 'Save changes'}
+                  </Button>
                 </div>
+                {/* Floating save confirmation */}
+                <AnimatePresence>
+                  {saveSuccess && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                      className="absolute bottom-4 right-4 bg-emerald-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg flex items-center gap-2"
+                    >
+                      <motion.span initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 0.1, type: 'spring', stiffness: 400 }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+                      </motion.span>
+                      Campaign updated
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             )}
 

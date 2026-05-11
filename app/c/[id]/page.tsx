@@ -8,7 +8,7 @@ interface Props { params: { id: string } }
 async function getCampaign(id: string) {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
-    const res = await fetch(`${baseUrl}/api/campaigns/${id}`, { next: { revalidate: 30 } });
+    const res = await fetch(`${baseUrl}/api/campaigns/${id}`, { next: { revalidate: 5 } });
     if (!res.ok) return null;
     return res.json();
   } catch {
