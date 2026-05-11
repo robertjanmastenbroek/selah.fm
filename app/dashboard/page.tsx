@@ -352,6 +352,10 @@ function DashboardContent() {
                   <button onClick={() => setEditingId(null)} className="text-xs text-muted-foreground hover:text-foreground">Cancel</button>
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-2 block">Cover image</label>
+                    <ImageUpload onImage={setCoverArt} currentImage={coverArt} />
+                  </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Track title</label>
                     <Input value={trackTitle} onChange={e => setTrackTitle(e.target.value)} className="text-sm" />
