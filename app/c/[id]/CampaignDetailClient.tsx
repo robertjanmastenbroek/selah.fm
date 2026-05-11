@@ -380,7 +380,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><Camera size={14} className="text-primary/60" />How to participate</h3>
               <div className="grid md:grid-cols-3 gap-3 text-[11px] text-muted-foreground">
                 {[
-                  { step: '1', title: 'Find the audio', desc: `Search "${campaign.track_title}" on TikTok, Instagram, or YouTube. You must use the official audio for your submission to count.` },
+                  { step: '1', title: 'Find the audio', desc: `Search "${campaign.track_title}" on TikTok, Instagram, YouTube, or Facebook. You must use the official audio for your submission to count.` },
                   { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Show your face, dance, react, or be creative — whatever fits the track.' },
                   { step: '3', title: 'Submit & earn', desc: `Post your video publicly, copy the link, and paste it here. Earn $${(cpm * 0.8).toFixed(2)} for every 1,000 verified views.` },
                 ].map(s => (
