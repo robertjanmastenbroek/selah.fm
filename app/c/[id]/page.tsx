@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import CampaignDetailClient from './CampaignDetailClient';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 60; // ISR: regenerate page every 60 seconds
 
 interface Props { params: { id: string } }
 
@@ -77,13 +78,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+function stripBase64Images(data: any): any {
+  if (!data) return data;
+  // If cover_art_url is a base64 data URL (>1KB), strip it from the initial payload
+  if (typeof data.cover_art_url === 'string' && data.cover_art_url.startsWith('data:') && data.cover_art_url.length > 1000) {
+    data = { ...data, cover_art_url: '' };
+  }
+  // Also strip from donations supporters
+  return data;
+}
+
 export default async function CampaignPage({ params }: Props) {
   const campaign = await getCampaign(params.id);
+  const lightweightCampaign = stripBase64Images(campaign);
 
   const displayTitle = campaign?.title || campaign?.track_title || 'Untitled';
   const artistName = campaign?.artist_name || 'an artist';
   const trackTitle = campaign?.track_title || '';
-  const imageUrl = campaign?.cover_art_url || 'https://selah.fm/images/hero-illustration.png';
+  const coverUrl = campaign?.cover_art_url || '';
+  const imageUrl = (coverUrl && !coverUrl.startsWith('data:')) ? coverUrl : 'https://selah.fm/images/hero-illustration.png';
   const canonicalUrl = `https://selah.fm/c/${params.id}`;
   const createdAt = campaign?.created_at || new Date().toISOString();
   const cpmDollars = campaign?.cpm_rate_cents ? (campaign.cpm_rate_cents / 100).toFixed(2) : null;
@@ -142,7 +155,7 @@ export default async function CampaignPage({ params }: Props) {
   return (
     <>
       {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
-      <CampaignDetailClient id={params.id} initialCampaign={campaign} />
+      <CampaignDetailClient id={params.id} initialCampaign={lightweightCampaign} />
     </>
   );
 }

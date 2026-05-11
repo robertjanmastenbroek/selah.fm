@@ -4,6 +4,7 @@ import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PageTransition from '@/components/PageTransition';
 import { Inter } from "next/font/google";
+import Analytics from '@/components/Analytics';
 import { cn } from "@/lib/utils";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans',display:'swap',preload:true});
@@ -37,11 +38,11 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
   return (
     <html lang="en" className={cn("font-sans", inter.variable)}>
       <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         {/* Preconnect external domains to resolve DNS + TLS early */}
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
@@ -50,12 +51,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://js.stripe.com" />
         {/* Preload critical above-fold assets */}
         <link rel="preload" as="image" href="/images/selah-nav-logo.png" fetchPriority="high" />
-        {gaId && (
-          <>
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
-            <script dangerouslySetInnerHTML={{__html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${gaId}');`}} />
-          </>
-        )}
       </head>
       <body className="min-h-screen bg-background overflow-x-hidden">
         {/* Skip to content */}
@@ -102,6 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </a>
           </div>
         </footer>
+        <Analytics />
       </body>
     </html>
   );

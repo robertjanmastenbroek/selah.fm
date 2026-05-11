@@ -2,15 +2,25 @@
 const nextConfig = {
   serverExternalPackages: ['pg'],
   images: {
-    formats: ['image/webp'],
+    formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'cdn.midapi.ai' },
+      { protocol: 'https', hostname: 'img.youtube.com' },
+      { protocol: 'https', hostname: 'i.ytimg.com' },
     ],
   },
   // Compress responses
   compress: true,
+  // Reduce JS chunks for faster initial load
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.optimization.splitChunks.minSize = 50000;
+      config.optimization.splitChunks.maxSize = 200000;
+    }
+    return config;
+  },
   // Allow larger body for image uploads (base64 data URLs)
   experimental: {
     serverActions: {
