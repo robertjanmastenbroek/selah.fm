@@ -30,54 +30,42 @@ function track(event: string, params: Record<string, any> = {}) {
 // ── Conversions ────────────────────────────────────────────────
 
 export function trackSignUp(method: 'google' | 'email') {
-  track('sign_up', { method, event_category: 'engagement' });
+  track('sign_up', { signup_method: method });
 }
 
 export function trackLogin(method: 'google' | 'email') {
-  track('login', { method, event_category: 'engagement' });
+  track('login', { signup_method: method });
 }
 
 export function trackCreateCampaign(trackTitle: string, budget: number) {
-  track('create_campaign', {
-    track_title: trackTitle,
-    budget,
-    event_category: 'conversion',
-  });
+  track('create_campaign', { track_title: trackTitle, budget });
 }
 
 export function trackFundCampaign(amount: number) {
-  track('begin_checkout', {
-    value: amount,
-    currency: 'USD',
-    event_category: 'conversion',
-  });
-  track('fund_campaign', {
-    value: amount,
-    currency: 'USD',
-    event_category: 'conversion',
-  });
+  track('begin_checkout', { value: amount, currency: 'USD' });
+  track('fund_campaign', { value: amount, currency: 'USD' });
 }
 
 export function trackSubmitContent(platform: string) {
-  track('submit_content', { platform, event_category: 'conversion' });
+  track('submit_content', { platform });
 }
 
 export function trackApproveSubmission() {
-  track('approve_submission', { event_category: 'conversion' });
+  track('approve_submission', {});
 }
 
 export function trackConnectStripe() {
-  track('connect_stripe', { event_category: 'conversion' });
+  track('connect_stripe', {});
 }
 
 export function trackConnectCompleted() {
-  track('connect_completed', { event_category: 'conversion' });
+  track('connect_completed', {});
 }
 
 export function trackConnectSocial(platform: string) {
-  track('connect_social', { platform, event_category: 'engagement' });
+  track('connect_social', { platform });
 }
 
 export function trackSaveSettings() {
-  track('save_settings', { event_category: 'engagement' });
+  track('save_settings', {});
 }

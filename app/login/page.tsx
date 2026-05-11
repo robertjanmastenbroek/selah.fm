@@ -57,7 +57,7 @@ function LoginForm() {
       // GA tracking: push to dataLayer directly (most reliable path)
       const eventName = mode === 'signup' ? 'sign_up' : 'login';
       if (typeof window !== 'undefined' && (window as any).dataLayer) {
-        (window as any).dataLayer.push({ event: eventName, method: 'email' });
+        (window as any).dataLayer.push({ event: eventName, signup_method: 'email' });
       }
       mode === 'signup' ? trackSignUp('email') : trackLogin('email');
       // Brief delay to let GA flush the event before navigation
