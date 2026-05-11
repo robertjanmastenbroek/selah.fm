@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
+import SupportWidget from '@/components/SupportWidget';
 import { ChevronDown } from 'lucide-react';
 
 interface FAQItem { q: string; a: string; section: string; }
@@ -287,6 +288,7 @@ export default function FAQPage() {
           </p>
         </motion.div>
       </main>
+      <SupportWidget />
     </div>
   );
 }
