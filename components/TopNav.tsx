@@ -67,7 +67,7 @@ export default function Header() {
 
         {/* Center: logo */}
         <Link href="/browse" className="absolute left-1/2 -translate-x-1/2">
-          <img src="/images/Selah Logo transparant no text.png" alt="Selah.fm" className="h-7 w-auto" />
+          <img src="/images/Selah Logo Transparant.png" alt="Selah.fm" className="h-7 w-auto" />
         </Link>
 
         {/* Right: hamburger + notifications */}
