@@ -271,25 +271,41 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </div>
 
             <div className="hidden md:block mt-6 space-y-4">
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Heart size={12} className="text-primary/60" />Donations</h4>
-                  <span className="text-sm font-bold text-primary">${totalRaised.toFixed(0)}</span>
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Heart size={13} className="text-primary/50" />Donations</h4>
+                  <span className="text-lg font-bold text-primary">${totalRaised.toFixed(0)}</span>
                 </div>
-                <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className="text-center"><div className="text-sm font-bold">{donations.count}</div><div className="text-[9px] text-muted-foreground">Donors</div></div>
-                  <div className="text-center"><div className="text-sm font-bold">{submissions}</div><div className="text-[9px] text-muted-foreground">Videos</div></div>
-                  <div className="text-center"><div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div><div className="text-[9px] text-muted-foreground">Views</div></div>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
+                    <div className="text-sm font-bold">{donations.count}</div>
+                    <div className="text-[9px] text-muted-foreground">Donors</div>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
+                    <div className="text-sm font-bold">{submissions}</div>
+                    <div className="text-[9px] text-muted-foreground">Videos</div>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
+                    <div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div>
+                    <div className="text-[9px] text-muted-foreground">Views</div>
+                  </div>
                 </div>
                 {donations.supporters.length > 0 && (
                   <div className="space-y-1.5">
                     {donations.supporters.slice(0, 3).map((s: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 text-xs">
-                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-[8px] font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
-                        <span className="text-muted-foreground truncate flex-1">{s.donor_name || 'Anonymous'}</span>
-                        <span className="font-semibold text-primary">${(s.amount_cents / 100).toFixed(0)}</span>
+                      <div key={i} className="flex items-center gap-3 py-2 px-1 text-xs">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
+                        <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                          <span className="text-muted-foreground truncate">{s.donor_name || 'Anonymous'}</span>
+                          <span className="font-semibold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span>
+                        </div>
                       </div>
                     ))}
+                  </div>
+                )}
+                {donations.supporters.length === 0 && (
+                  <div className="text-center py-3">
+                    <p className="text-[11px] text-muted-foreground">No donations yet</p>
                   </div>
                 )}
               </div>
@@ -359,31 +375,45 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           )}
 
           <div className="md:hidden">
-            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5 mb-3">
-                <div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-sm flex items-center gap-2"><Heart size={14} className="text-primary/60" />Donations</h3><span className="text-xl font-bold text-primary">${totalRaised.toFixed(0)}</span></div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{donations.count}</div><div className="text-[10px] text-muted-foreground">Donors</div></div>
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{submissions}</div><div className="text-[10px] text-muted-foreground">Submissions</div></div>
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div><div className="text-[10px] text-muted-foreground">Views</div></div>
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="space-y-3">
+              <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Heart size={13} className="text-primary/50" />Donations</h3>
+                  <span className="text-xl font-bold text-primary">${totalRaised.toFixed(0)}</span>
                 </div>
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
+                    <div className="text-sm font-bold">{donations.count}</div>
+                    <div className="text-[9px] text-muted-foreground">Donors</div>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
+                    <div className="text-sm font-bold">{submissions}</div>
+                    <div className="text-[9px] text-muted-foreground">Videos</div>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
+                    <div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div>
+                    <div className="text-[9px] text-muted-foreground">Views</div>
+                  </div>
+                </div>
+                {donations.supporters.length > 0 ? (
+                  <div className="space-y-1">
+                    {donations.supporters.map((s: any, i: number) => (
+                      <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 py-2.5 px-1">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2"><span className="text-sm font-medium truncate">{s.donor_name || 'Anonymous'}</span><span className="text-sm font-bold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span></div>
+                          {s.message && <p className="text-[11px] text-muted-foreground italic mt-0.5 leading-relaxed break-words">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-[11px] text-muted-foreground">No donations yet</p>
+                    <Link href={`/checkout?type=donation&campaignId=${id}`} className="mt-2 inline-block text-xs font-semibold text-primary hover:underline">Be the first to donate</Link>
+                  </div>
+                )}
               </div>
-              {donations.supporters.length > 0 ? (
-                <div className="space-y-0.5">
-                  {donations.supporters.map((s: any, i: number) => (
-                    <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 py-3 px-1 border-b border-white/[0.04] last:border-0">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold truncate">{s.donor_name || 'Anonymous'}</span><span className="text-sm font-bold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span></div>
-                        {s.message && <p className="text-[10px] text-muted-foreground italic mt-0.5 leading-relaxed break-words">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}
-                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">{(() => { const d = new Date(s.created_at); const m = Math.floor((Date.now() - d.getTime()) / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m}m ago`; const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`; return d.toLocaleDateString(); })()}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-8 text-center"><Heart size={28} className="mx-auto mb-3 text-primary/10" /><p className="text-sm text-muted-foreground">No donations yet.</p><Link href={`/checkout?type=donation&campaignId=${id}`} className="mt-3 text-sm font-semibold text-primary hover:underline">Donate now</Link></div>
-              )}
             </motion.div>
           </div>
 
