@@ -14,12 +14,12 @@ const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
 
 const PRESETS = [
-  { amount: 10, popular: false },
-  { amount: 25, popular: false },
   { amount: 50, popular: false },
-  { amount: 100, popular: true },
-  { amount: 250, popular: false },
+  { amount: 100, popular: false },
+  { amount: 200, popular: true },
+  { amount: 300, popular: false },
   { amount: 500, popular: false },
+  { amount: 1000, popular: false },
 ];
 
 // ── Recent Supporters Ticker ──────────────────────────────────
@@ -122,7 +122,7 @@ export default function DonatePage() {
   const router = useRouter();
   const [campaign, setCampaign] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [amount, setAmount] = useState(100);
+  const [amount, setAmount] = useState(200);
   const [customAmount, setCustomAmount] = useState('');
   const [donorName, setDonorName] = useState('');
   const [donorMessage, setDonorMessage] = useState('');

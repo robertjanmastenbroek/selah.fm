@@ -13,12 +13,12 @@ const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
 
 const PRESETS = [
-  { amount: 10, popular: false },
-  { amount: 25, popular: false },
   { amount: 50, popular: false },
-  { amount: 100, popular: true },
-  { amount: 250, popular: false },
+  { amount: 100, popular: false },
+  { amount: 200, popular: true },
+  { amount: 300, popular: false },
   { amount: 500, popular: false },
+  { amount: 1000, popular: false },
 ];
 
 // ── Checkout Form (embedded Stripe Elements) ────────────────
@@ -87,7 +87,7 @@ export default function CheckoutPage() {
 
   const type = (searchParams.get('type') || 'donation') as 'donation' | 'deposit';
   const campaignId = searchParams.get('campaignId') || '';
-  const defaultAmount = parseInt(searchParams.get('amount') || '25');
+  const defaultAmount = parseInt(searchParams.get('amount') || '200');
 
   const [campaign, setCampaign] = useState<any>(null);
   const [loading, setLoading] = useState(true);
