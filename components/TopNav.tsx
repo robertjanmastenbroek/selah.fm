@@ -78,7 +78,7 @@ export default function Header() {
 
         {/* Center: logo */}
         <Link href="/browse" className="absolute left-1/2 -translate-x-1/2">
-          <img src="/images/selah-nav-logo.png" alt="Selah.fm" className="h-8 w-auto" />
+          <img src="/images/selah-nav-logo.png" alt="Selah.fm" className="h-8 w-auto" fetchPriority="high" width="200" height="40" />
         </Link>
 
         {/* Right: hamburger menu with combined badge */}
