@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState, ErrorState } from '@/components/States';
 import RatingPrompt from '@/components/RatingPrompt';
 
 function formatMoney(cents: number): string {
@@ -40,13 +41,7 @@ export default function EarningsPage() {
         <h1 className="section-title mb-8">Earnings</h1>
 
         {error ? (
-          <Card className="text-center py-16">
-            <CardContent>
-              <h2 className="text-lg font-medium mb-2">Couldn't load earnings</h2>
-              <p className="text-muted-foreground text-sm mb-4">Check your connection.</p>
-              <Button variant="outline" onClick={() => mutate()}>Retry</Button>
-            </CardContent>
-          </Card>
+          <ErrorState message="We couldn't load your earnings right now." onRetry={() => mutate()} />
         ) : isLoading ? (
           <>
             <Card className="text-center mb-6">
@@ -120,15 +115,12 @@ export default function EarningsPage() {
             {/* Submissions list */}
             <div className="space-y-2">
               {earnings.submissions.length === 0 ? (
-                <Card className="text-center py-16 animate-fade-in">
-                  <CardContent>
-                    <img src="/images/empty-earnings.png" alt="No earnings yet" className="mx-auto mb-6 w-40 h-40 object-contain opacity-80" loading="lazy" />
-                    <h2 className="text-lg font-medium mb-2">No earnings yet</h2>
-                    <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                      Browse campaigns, submit content, and start earning per verified view.
-                    </p>
-                  </CardContent>
-                </Card>
+                <EmptyState
+                  icon={<span className="text-4xl">💰</span>}
+                  title="No earnings yet"
+                  description="Browse campaigns, submit content, and start earning per verified view."
+                  action={{ label: 'Browse campaigns', href: '/browse' }}
+                />
               ) : (
                 earnings.submissions.map((s: Submission, i: number) => (
                   <div key={s.id}>

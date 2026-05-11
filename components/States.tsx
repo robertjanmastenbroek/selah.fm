@@ -1,65 +1,115 @@
-import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+'use client';
 
-export function EmptyState({
-  icon = '♪',
-  title,
-  description,
-  action,
-  actionHref,
-}: {
-  icon?: string;
+import { motion } from 'framer-motion';
+import { Inbox, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
+// ── Empty State ─────────────────────────────────────────────
+interface EmptyStateProps {
+  icon?: React.ReactNode;
   title: string;
-  description?: string;
-  action?: string;
-  actionHref?: string;
-}) {
+  description: string;
+  action?: { label: string; href?: string; onClick?: () => void };
+}
+
+export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <Card className="text-center py-16 animate-fade-in border-border/30">
-      <CardContent>
-        <div className="text-5xl mb-4 opacity-[0.06] animate-float">{icon}</div>
-        <h2 className="text-lg font-medium text-foreground mb-2">{title}</h2>
-        {description && (
-          <p className="text-muted-foreground text-sm mb-8 max-w-sm mx-auto leading-relaxed">
-            {description}
-          </p>
-        )}
-        {action && actionHref && (
-          <a href={actionHref}>
-            <Button>{action}</Button>
-          </a>
-        )}
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl bg-white/[0.02] border border-white/[0.05] p-12 text-center max-w-md mx-auto"
+    >
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.1, type: 'spring', stiffness: 300 }}
+        className="mx-auto mb-5 text-muted-foreground/20"
+      >
+        {icon || <Inbox size={48} strokeWidth={1} />}
+      </motion.div>
+      <motion.h3
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="text-base font-semibold mb-2"
+      >
+        {title}
+      </motion.h3>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="text-sm text-muted-foreground mb-6 leading-relaxed"
+      >
+        {description}
+      </motion.p>
+      {action && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          {action.href ? (
+            <Link href={action.href}>
+              <Button size="sm" className="rounded-xl">{action.label}</Button>
+            </Link>
+          ) : (
+            <Button size="sm" onClick={action.onClick} className="rounded-xl">{action.label}</Button>
+          )}
+        </motion.div>
+      )}
+    </motion.div>
   );
 }
 
-export function ErrorState({
-  message = "Hmm, that didn't go as planned.",
-  action = 'Try again',
-  onAction,
-}: {
+// ── Error State ─────────────────────────────────────────────
+interface ErrorStateProps {
+  title?: string;
   message?: string;
-  action?: string;
-  onAction?: () => void;
-}) {
+  onRetry?: () => void;
+}
+
+export function ErrorState({ title = "Something went wrong", message = "We couldn't load this right now. Please try again.", onRetry }: ErrorStateProps) {
   return (
-    <div className="rounded-xl border border-destructive/20 bg-destructive/[0.04] px-5 py-4 animate-shake">
-      <div className="flex items-start gap-3">
-        <span className="text-lg shrink-0 mt-0.5">⚠️</span>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-foreground leading-relaxed">{message}</p>
-          {onAction && (
-            <button
-              onClick={onAction}
-              className="mt-2 text-sm font-medium text-primary hover:underline transition-colors"
-            >
-              {action} →
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl bg-red-500/[0.03] border border-red-500/10 p-12 text-center max-w-md mx-auto"
+    >
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.1, type: 'spring', stiffness: 300 }}
+        className="mx-auto mb-5 text-red-400/20"
+      >
+        <AlertTriangle size={48} strokeWidth={1} />
+      </motion.div>
+      <motion.h3
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="text-base font-semibold mb-2 text-red-400"
+      >
+        {title}
+      </motion.h3>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="text-sm text-muted-foreground mb-6 leading-relaxed"
+      >
+        {message}
+      </motion.p>
+      {onRetry && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Button size="sm" variant="outline" onClick={onRetry} className="rounded-xl">Try again</Button>
+        </motion.div>
+      )}
+    </motion.div>
   );
 }
