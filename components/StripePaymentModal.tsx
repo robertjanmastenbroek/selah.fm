@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
-import { Shield, Lock, DollarSign, Heart, AlertCircle } from 'lucide-react';
+import { Shield, Lock, DollarSign, Heart, AlertCircle, X, Check } from 'lucide-react';
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
@@ -70,17 +70,6 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Trust signals */}
-      <div className="flex items-center gap-3 text-[10px] text-muted-foreground/60 justify-center flex-wrap">
-        <span className="flex items-center gap-1"><Lock size={10} /> SSL encrypted</span>
-        <span className="text-muted-foreground/30">·</span>
-        <span className="flex items-center gap-1"><Shield size={10} /> Secure payment</span>
-        <span className="text-muted-foreground/30">·</span>
-        <span className="flex items-center gap-1">Powered by Stripe</span>
-        <span className="text-muted-foreground/30">·</span>
-        <span className="flex items-center gap-1">100% protected</span>
-      </div>
-
       {/* Payment Element */}
       <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 min-h-[80px] flex items-center justify-center">
         {!stripe ? (
@@ -108,10 +97,19 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
           <span>Processing fee (2.9% + $0.30)</span>
           <span>-${(feeCents / 100).toFixed(2)}</span>
         </div>
-        <div className="flex justify-between font-semibold pt-1 border-t border-white/[0.04]">
-          <span className="text-emerald-400">Added to campaign</span>
+        <div className="flex justify-between font-semibold pt-1.5 border-t border-white/[0.04]">
+          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Added to campaign</span>
           <span className="text-emerald-400">${netDollars}</span>
         </div>
+      </div>
+
+      {/* Trust signals */}
+      <div className="flex items-center gap-3 text-[10px] text-muted-foreground/60 justify-center flex-wrap">
+        <span className="flex items-center gap-1"><Lock size={10} /> SSL encrypted</span>
+        <span className="text-muted-foreground/30">·</span>
+        <span className="flex items-center gap-1"><Shield size={10} /> Secure payment</span>
+        <span className="text-muted-foreground/30">·</span>
+        <span>Powered by Stripe</span>
       </div>
 
       {error && (
@@ -135,7 +133,11 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
         )}
       </Button>
 
-      <button type="button" onClick={onClose} className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1">
+      <button
+        type="button"
+        onClick={onClose}
+        className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+      >
         Cancel
       </button>
     </form>
@@ -148,7 +150,9 @@ export default function StripePaymentModal({
 }: PaymentModalProps) {
   if (!open || !clientSecret) return null;
 
-  // Stripe not configured — show clear message
+  const bg = '#0A0A0A';
+
+  // Stripe not configured
   if (!PUBLISHABLE_KEY || !stripePromise) {
     return (
       <AnimatePresence>
@@ -186,7 +190,7 @@ export default function StripePaymentModal({
       theme: 'night',
       variables: {
         colorPrimary: '#5B7FFF',
-        colorBackground: '#0D0D0D',
+        colorBackground: '#0A0A0A',
         colorText: '#F0F0F0',
         colorTextSecondary: '#8C8C8C',
         colorDanger: '#EF4444',
@@ -213,11 +217,19 @@ export default function StripePaymentModal({
           onClick={e => e.stopPropagation()}
           className="relative z-10 w-full max-w-md rounded-2xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-hidden"
         >
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-20 p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
+          >
+            <X size={18} className="text-muted-foreground" />
+          </button>
+
           {/* Header */}
           <div className="p-5 border-b border-white/[0.06]">
             <div className="flex items-center gap-3 mb-3">
               {coverArtUrl && (
-                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
+                <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 bg-white/[0.02]">
                   <img src={coverArtUrl} alt="" className="w-full h-full object-cover" />
                 </div>
               )}
@@ -226,7 +238,7 @@ export default function StripePaymentModal({
                 <p className="text-xs text-muted-foreground">{subtitle}</p>
               </div>
             </div>
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline gap-1.5">
               <span className="text-2xl font-bold">${amount}</span>
               <span className="text-xs text-muted-foreground">{mode === 'donation' ? 'donation' : 'deposit'}</span>
             </div>

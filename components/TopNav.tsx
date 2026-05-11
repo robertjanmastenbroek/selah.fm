@@ -7,7 +7,7 @@ import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import NotificationBell from '@/components/NotificationBell';
 import ChatWidget from '@/components/ChatWidget';
-import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug, Search, Menu } from 'lucide-react';
 
 const mainLinks = [
   { href: '/browse', label: 'Campaigns' },
@@ -15,7 +15,7 @@ const mainLinks = [
   { href: '/creators', label: 'Creators' },
 ];
 
-export default function Header() {
+export default function Header({ minimal }: { minimal?: boolean }) {
   const { data } = useSWR('/api/auth/me', fetcher, swrConfig);
   const profile = data?.user || null;
   const [open, setOpen] = useState(false);
@@ -39,6 +39,64 @@ export default function Header() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
+
+  // ── Minimal variant (campaign page) ────────────────────────
+  if (minimal) {
+    return (
+      <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#0A0A0A]/90 backdrop-blur-xl">
+        <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4">
+          {/* Left: search icon → /browse */}
+          <Link href="/browse" className="p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Browse campaigns">
+            <Search size={20} strokeWidth={1.5} />
+          </Link>
+
+          {/* Center: logo */}
+          <Link href="/browse" className="absolute left-1/2 -translate-x-1/2">
+            <img src="/images/Selah Logo transparant no text.png" alt="Selah.fm" className="h-7 w-auto" />
+          </Link>
+
+          {/* Right: hamburger menu */}
+          <div className="flex items-center gap-2" ref={dropdownRef}>
+            {profile && <NotificationBell />}
+            <button
+              onClick={() => setOpen(!open)}
+              className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Menu"
+            >
+              <Menu size={20} strokeWidth={1.5} />
+            </button>
+            {open && (
+              <div className="absolute right-3 top-12 z-50 w-52 bg-[#0D0D0D] border border-white/[0.08] rounded-xl shadow-xl py-1 animate-slide-up overflow-hidden">
+                {profile ? (
+                  <>
+                    <div className="px-4 py-3 border-b border-white/[0.06] bg-white/[0.02]">
+                      <p className="text-sm font-medium truncate">{profile.name || 'User'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
+                    </div>
+                    <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><LayoutDashboard size={16} strokeWidth={1.5} /> Dashboard</Link>
+                    <Link href="/review" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><ClipboardCheck size={16} strokeWidth={1.5} /> Review</Link>
+                    <Link href="/earnings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Banknote size={16} strokeWidth={1.5} /> Earnings</Link>
+                    <Link href="/settings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Settings size={16} strokeWidth={1.5} /> Settings</Link>
+                    <Link href="/browse" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Search size={16} strokeWidth={1.5} /> Browse campaigns</Link>
+                    <Link href="/artists" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Music size={16} strokeWidth={1.5} /> Artists</Link>
+                    <Link href="/creators" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Music size={16} strokeWidth={1.5} /> Creators</Link>
+                    <Link href="/report-bug" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Bug size={16} strokeWidth={1.5} /> Report a bug</Link>
+                    <div className="border-t border-white/[0.06] my-1" />
+                    <button onClick={handleLogout} className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-white/[0.04] transition-colors"><LogOut size={16} strokeWidth={1.5} /> Log out</button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors">Sign in</Link>
+                    <Link href="/browse" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Search size={16} /> Browse campaigns</Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-white/[0.02] backdrop-blur-xl">
