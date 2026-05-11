@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { Heart, ArrowLeft, Shield, Lock, AlertCircle, Check, Zap, Wallet, Share2, CreditCard, ChevronDown } from 'lucide-react';
+import { Heart, ArrowLeft, Shield, Lock, AlertCircle, Check, Zap, Wallet, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -13,13 +13,6 @@ const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
 
 const PRESETS = [
   { amount: 50 }, { amount: 100 }, { amount: 200, recommended: true }, { amount: 300 }, { amount: 500 }, { amount: 1000 },
-];
-
-const PAYMENT_METHODS = [
-  { id: 'apple_pay' as const, label: 'Apple Pay', icon: '', desc: 'Pay instantly with Apple Pay' },
-  { id: 'google_pay' as const, label: 'Google Pay', icon: 'G', desc: 'Pay instantly with Google Pay' },
-  { id: 'ideal' as const, label: 'iDEAL', icon: 'iD', desc: 'Pay with your Dutch bank' },
-  { id: 'card' as const, label: 'Credit or debit card', icon: '💳', desc: 'Visa, Mastercard, Amex' },
 ];
 
 // ── Circle Progress ─────────────────────────────────────────
@@ -67,8 +60,8 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
 
   return (
     <form onSubmit={handlePay} className="space-y-4">
-      <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] p-5 min-h-[80px]">
-        <PaymentElement options={{ layout: { type: 'tabs', defaultCollapsed: false }, wallets: { applePay: 'auto', googlePay: 'auto' } }} />
+      <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] p-5">
+        <PaymentElement />
       </div>
 
       <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] p-4 text-xs space-y-1">
@@ -107,9 +100,7 @@ export default function CheckoutPage() {
   const [campaign, setCampaign] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [customValue, setCustomValue] = useState('0');
-  const [isCustom, setIsCustom] = useState(false);
   const [activePreset, setActivePreset] = useState<number | null>(null);
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -131,7 +122,7 @@ export default function CheckoutPage() {
   }, [campaignId]);
 
   useEffect(() => {
-    if (effectiveAmount < 1 || !campaignId || loading || !selectedMethod) return;
+    if (effectiveAmount < 1 || !campaignId || loading) return;
     setClientSecret('');
     setPaymentError('');
     setGettingSecret(true);
@@ -152,17 +143,15 @@ export default function CheckoutPage() {
         .finally(() => setGettingSecret(false));
     }, 500);
     return () => clearTimeout(timer);
-  }, [effectiveAmount, campaignId, loading, selectedMethod]);
+  }, [effectiveAmount, campaignId, loading]);
 
   const handlePreset = (val: number) => {
     setCustomValue(String(val));
-    setIsCustom(false);
     setActivePreset(val);
   };
 
   const handleCustom = (val: string) => {
     setCustomValue(val);
-    setIsCustom(true);
     setActivePreset(null);
   };
 
@@ -276,119 +265,57 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* ── Donor info ── */}
+          {/* ── Your details ── */}
           <div className="space-y-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your details</p>
             <div className="grid grid-cols-2 gap-2">
-              <input
-                value={firstName}
-                onChange={e => setFirstName(e.target.value)}
-                placeholder="First name"
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
-              />
-              <input
-                value={lastName}
-                onChange={e => setLastName(e.target.value)}
-                placeholder="Last name"
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
-              />
+              <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name"
+                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" />
+              <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name"
+                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" />
             </div>
-            <input
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              type="email"
-              placeholder="Email address"
-              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
-            />
+            <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Email address"
+              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" />
             {type === 'donation' && (
               <>
-              {!showMessage ? (
-                <button onClick={() => setShowMessage(true)} className="text-xs text-primary hover:underline font-medium">+ Add a message of support</button>
-              ) : (
-                <textarea
-                  value={donorMessage}
-                  onChange={e => setDonorMessage(e.target.value)}
-                  placeholder="Write a message..."
-                  rows={3}
-                  className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 resize-none"
-                />
-              )}
+                {!showMessage ? (
+                  <button onClick={() => setShowMessage(true)} className="text-xs text-primary hover:underline font-medium">+ Add a message of support</button>
+                ) : (
+                  <textarea value={donorMessage} onChange={e => setDonorMessage(e.target.value)} placeholder="Write a message..." rows={3}
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 resize-none" />
+                )}
               </>
             )}
           </div>
 
-          {/* ── Payment method selection ── */}
+          {/* ── Payment section (appears after amount selected) ── */}
           <AnimatePresence>
             {effectiveAmount > 0 && PUBLISHABLE_KEY && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-              >
-                <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Payment method</p>
-                <div className="space-y-2">
-                  {PAYMENT_METHODS.map(method => {
-                    const isOpen = selectedMethod === method.id;
-                    return (
-                      <div key={method.id}>
-                        <button
-                          onClick={() => setSelectedMethod(isOpen ? null : method.id)}
-                          className={`w-full rounded-xl border p-4 flex items-center gap-4 text-left transition-all ${
-                            isOpen
-                              ? 'border-primary/30 bg-primary/[0.04] rounded-b-none'
-                              : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.15]'
-                          }`}
-                        >
-                          <span className="w-9 h-9 rounded-lg bg-white/[0.06] flex items-center justify-center text-sm font-bold shrink-0">
-                            {method.icon}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold">{method.label}</p>
-                            <p className="text-[10px] text-muted-foreground">{method.desc}</p>
-                          </div>
-                          <ChevronDown size={16} className={`text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                        </button>
-                        <AnimatePresence>
-                          {isOpen && method.id === 'card' && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden border-x border-b border-primary/30 rounded-b-xl bg-white/[0.02]"
-                            >
-                              <div className="p-4">
-                                {gettingSecret ? (
-                                  <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground py-4">
-                                    <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                                    Preparing secure payment...
-                                  </div>
-                                ) : paymentError ? (
-                                  <div className="text-xs text-red-400 flex items-start gap-2">
-                                    <AlertCircle size={14} className="shrink-0 mt-0.5" />{paymentError}
-                                  </div>
-                                ) : clientSecret ? (
-                                  <Elements stripe={stripePromise}
-                                    options={{ clientSecret,
-                                      appearance: { theme: 'night', variables: { colorPrimary: '#5B7FFF', colorBackground: '#0A0A0A', colorText: '#F0F0F0', colorTextSecondary: '#8C8C8C', borderRadius: '12px', spacingUnit: '4px' } }
-                                    }}>
-                                    <CheckoutForm clientSecret={clientSecret} amount={effectiveAmount} type={type}
-                                      onSuccess={() => setSuccessOpen(true)} onError={setPaymentError} />
-                                  </Elements>
-                                ) : null}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    );
-                  })}
-                </div>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.3, ease: 'easeOut' }}>
+                <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Payment</p>
+                {gettingSecret ? (
+                  <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-8 flex items-center justify-center">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      Preparing secure payment...
+                    </div>
+                  </div>
+                ) : paymentError ? (
+                  <div className="rounded-2xl bg-red-500/5 border border-red-500/10 p-4 text-xs text-red-400 flex items-start gap-2">
+                    <AlertCircle size={14} className="shrink-0 mt-0.5" />{paymentError}
+                  </div>
+                ) : clientSecret ? (
+                  <Elements stripe={stripePromise} options={{ clientSecret,
+                    appearance: { theme: 'night', variables: { colorPrimary: '#5B7FFF', colorBackground: '#0A0A0A', colorText: '#F0F0F0', colorTextSecondary: '#8C8C8C', borderRadius: '12px', spacingUnit: '4px' } }
+                  }}>
+                    <CheckoutForm clientSecret={clientSecret} amount={effectiveAmount} type={type}
+                      onSuccess={() => setSuccessOpen(true)} onError={setPaymentError} />
+                  </Elements>
+                ) : null}
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Empty state when no amount */}
           {effectiveAmount < 1 && PUBLISHABLE_KEY && (
             <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center">
               <p className="text-sm text-muted-foreground">Enter an amount above to continue</p>
@@ -403,7 +330,6 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Trust signals */}
           <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/40 pb-8">
             <span className="flex items-center gap-1"><Lock size={10} /> SSL encrypted</span>
             <span className="flex items-center gap-1"><Shield size={10} /> Secure</span>
