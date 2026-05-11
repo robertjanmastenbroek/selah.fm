@@ -99,6 +99,12 @@ export async function PATCH(
     let platforms: string | null = null;
     if (body.platforms !== undefined) platforms = JSON.stringify(body.platforms);
 
+    const youtubeVideoUrl = body.youtubeVideoUrl !== undefined ? (body.youtubeVideoUrl || null) : null;
+    const hasYoutubeUrl = body.youtubeVideoUrl !== undefined;
+
+    const galleryImages = body.galleryImages !== undefined ? JSON.stringify(body.galleryImages) : null;
+    const hasGalleryImages = body.galleryImages !== undefined;
+
     // For nullable fields where "keep" vs "set to null" matters, use separate flags
     const hasCoverArt = body.coverArtUrl !== undefined;
     const hasReqHashtags = body.requiredHashtags !== undefined;
@@ -121,6 +127,8 @@ export async function PATCH(
         caption_requirements = CASE WHEN ${hasCaptionReq} THEN ${captionRequirements} ELSE caption_requirements END,
         content_assets_url = COALESCE(${contentAssetsUrl}, content_assets_url),
         platforms = COALESCE(ARRAY(SELECT * FROM jsonb_array_elements_text(${platforms}::jsonb)), platforms),
+        youtube_video_url = CASE WHEN ${hasYoutubeUrl} THEN ${youtubeVideoUrl} ELSE youtube_video_url END,
+        gallery_images = CASE WHEN ${hasGalleryImages} THEN ${galleryImages}::jsonb ELSE gallery_images END,
         updated_at = NOW()
       WHERE id = ${params.id}
       RETURNING *
