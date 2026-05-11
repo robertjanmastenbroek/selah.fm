@@ -254,9 +254,21 @@ function DashboardContent() {
                   </div>
                 </div>
                 <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} placeholder="Spotify or SoundCloud link" />
-                <div className="space-y-1">
-                  <Input value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="Google Drive link with creator assets (optional)" />
-                  <p className="text-[10px] text-muted-foreground">Share a folder with your track (.mp3 + .wav), cover art, reference videos, and any other creative assets. Creators need the official audio to make valid submissions.</p>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">📦 Creator resource pack (Google Drive)</label>
+                  <Input value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="https://drive.google.com/drive/folders/..." />
+                  <div className="rounded-xl bg-amber-500/[0.04] border border-amber-500/10 p-3 text-xs text-muted-foreground space-y-2 leading-relaxed">
+                    <p className="font-semibold text-amber-400/80">⚠️ This is essential — don&apos;t skip it.</p>
+                    <p>Creators can&apos;t use screen recordings or re-uploaded audio. They need <strong>your actual master audio files</strong> to create valid submissions that count toward views.</p>
+                    <p>Include the following in your Google Drive folder:</p>
+                    <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
+                      <li><strong>Master track</strong> — .wav and .mp3 versions</li>
+                      <li><strong>Cover art</strong> — high-resolution album/single artwork</li>
+                      <li><strong>Reference videos</strong> — any existing clips creators can use (B-roll, lyrics videos, behind-the-scenes)</li>
+                      <li><strong>Brand assets</strong> — logos, press photos, anything that helps creators make quality content</li>
+                    </ul>
+                    <p className="text-amber-400/60">💡 Campaigns with a resource pack get <strong>3× more submissions</strong> because creators have everything they need to start immediately.</p>
+                  </div>
                 </div>
                 <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags (optional)" />
                 <Input value={requiredHashtags} onChange={e => setRequiredHashtags(e.target.value)} placeholder="Required hashtags — creators MUST include these" />
