@@ -63,13 +63,23 @@ export async function POST(request: Request) {
     // ── Fan donation: record + notify ───────────────────────
     if (type === 'campaign_donation') {
       try {
-        const { donorId, donorName, message } = metadata;
+        const { donorId, donorName, donorEmail, message } = metadata;
         const displayName = donorName || 'A fan';
 
         await sql`
           INSERT INTO campaign_donations (campaign_id, donor_id, amount_cents, donor_name, message, anonymous)
           VALUES (${campaignId}, ${donorId || null}, ${grossCents}, ${displayName}, ${message || null}, false)
         `;
+
+        // Store donor email if not already captured via user account
+        if (donorEmail && !donorId) {
+          await sql`
+            UPDATE campaign_donations SET donor_email = ${donorEmail}
+            WHERE campaign_id = ${campaignId} AND donor_name = ${displayName}
+            AND created_at > NOW() - INTERVAL '10 seconds'
+            ORDER BY created_at DESC LIMIT 1
+          `.catch(() => {});
+        }
 
         // Live ticker event
         const donorFirst = (displayName || 'Someone').split(' ')[0];

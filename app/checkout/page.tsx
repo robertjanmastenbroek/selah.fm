@@ -110,7 +110,9 @@ export default function CheckoutPage() {
   const [isCustom, setIsCustom] = useState(false);
   const [activePreset, setActivePreset] = useState<number | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [donorName, setDonorName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
   const [donorMessage, setDonorMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -138,7 +140,7 @@ export default function CheckoutPage() {
         ? `/api/campaigns/${campaignId}/support`
         : '/api/stripe';
       const body: any = type === 'donation'
-        ? { amount: effectiveAmount, donorName: donorName || undefined, message: donorMessage || undefined }
+        ? { amount: effectiveAmount, donorName: `${firstName} ${lastName}`.trim() || undefined, message: donorMessage || undefined }
         : { amount: effectiveAmount, campaignId };
       fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .then(r => r.json())
@@ -274,15 +276,32 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* ── Donor info (donation only) ── */}
-          {type === 'donation' && (
-            <div className="space-y-3">
+          {/* ── Donor info ── */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your details</p>
+            <div className="grid grid-cols-2 gap-2">
               <input
-                value={donorName}
-                onChange={e => setDonorName(e.target.value)}
-                placeholder="Your name (optional)"
+                value={firstName}
+                onChange={e => setFirstName(e.target.value)}
+                placeholder="First name"
                 className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
               />
+              <input
+                value={lastName}
+                onChange={e => setLastName(e.target.value)}
+                placeholder="Last name"
+                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
+              />
+            </div>
+            <input
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              type="email"
+              placeholder="Email address"
+              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
+            />
+            {type === 'donation' && (
+              <>
               {!showMessage ? (
                 <button onClick={() => setShowMessage(true)} className="text-xs text-primary hover:underline font-medium">+ Add a message of support</button>
               ) : (
@@ -294,8 +313,9 @@ export default function CheckoutPage() {
                   className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 resize-none"
                 />
               )}
-            </div>
-          )}
+              </>
+            )}
+          </div>
 
           {/* ── Payment method selection ── */}
           <AnimatePresence>
