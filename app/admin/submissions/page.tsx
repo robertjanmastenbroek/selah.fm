@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, X, Check, Pencil } from 'lucide-react';
+import { Search, X, Check, Pencil, Trash2 } from 'lucide-react';
 
 const REVIEW_STATUSES = ['pending', 'approved', 'rejected'];
 const PAYOUT_STATUSES = ['pending', 'processing', 'paid', 'failed'];
@@ -21,6 +21,13 @@ export default function AdminSubmissionsPage() {
   };
 
   useEffect(() => { fetchSubs(); }, []);
+
+  const deleteItem = async (id: string) => {
+    if (!confirm('Delete this submission permanently? This cannot be undone.')) return;
+    const res = await fetch(`/api/admin/manage?type=submissions&id=${id}`, { method: 'DELETE', credentials: 'include' });
+    if (res.ok) { fetchSubs(search); showToast('Deleted'); }
+    else showToast('Failed to delete', 'error');
+  };
 
   const saveEdit = async () => {
     if (!editing) return;
@@ -53,7 +60,7 @@ export default function AdminSubmissionsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-white/[0.06] text-muted-foreground text-xs">
-              <th className="text-left py-3 px-4 font-medium">Track</th><th className="text-left py-3 px-4 font-medium">Creator</th><th className="text-left py-3 px-4 font-medium">Platform</th><th className="text-left py-3 px-4 font-medium">Views</th><th className="text-left py-3 px-4 font-medium">Review</th><th className="text-left py-3 px-4 font-medium">Payout</th><th className="text-left py-3 px-4 font-medium">Amount</th><th className="text-right py-3 px-4 font-medium w-20">Edit</th>
+              <th className="text-left py-3 px-4 font-medium">Track</th><th className="text-left py-3 px-4 font-medium">Creator</th><th className="text-left py-3 px-4 font-medium">Platform</th><th className="text-left py-3 px-4 font-medium">Views</th><th className="text-left py-3 px-4 font-medium">Review</th><th className="text-left py-3 px-4 font-medium">Payout</th><th className="text-left py-3 px-4 font-medium">Amount</th><th className="text-right py-3 px-4 font-medium w-32">Actions</th>
             </tr></thead>
             <tbody>
               {subs.length === 0 ? <tr><td colSpan={8} className="py-16 text-center text-muted-foreground">No submissions found</td></tr> : subs.map(s => {
@@ -75,7 +82,10 @@ export default function AdminSubmissionsPage() {
                           <button onClick={() => setEditing(null)} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground active:scale-[0.95]"><X size={14} /></button>
                         </div>
                       ) : (
-                        <button onClick={() => setEditing({ id: s.id, values: {} })} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground active:scale-[0.95]"><Pencil size={14} /></button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => setEditing({ id: s.id, values: {} })} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground active:scale-[0.95]"><Pencil size={14} /></button>
+                          <button onClick={() => deleteItem(s.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400 active:scale-[0.95]"><Trash2 size={14} /></button>
+                        </div>
                       )}
                     </td>
                   </tr>

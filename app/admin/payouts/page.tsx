@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, X, Check, Pencil } from 'lucide-react';
+import { Search, X, Check, Pencil, Trash2 } from 'lucide-react';
 
 export default function AdminPayoutsPage() {
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -13,6 +13,16 @@ export default function AdminPayoutsPage() {
   useEffect(() => {
     fetch('/api/admin/manage?type=payouts', { credentials: 'include' }).then(r => r.json()).then(d => { if (Array.isArray(d)) setPayouts(d); });
   }, []);
+
+  const deleteItem = async (id: string) => {
+    if (!confirm('Delete this payout record permanently?')) return;
+    const res = await fetch(`/api/admin/manage?type=submissions&id=${id}`, { method: 'DELETE', credentials: 'include' });
+    if (res.ok) { 
+      fetch('/api/admin/manage?type=payouts', { credentials: 'include' }).then(r => r.json()).then(d => { if (Array.isArray(d)) setPayouts(d); });
+      showToast('Deleted');
+    }
+    else showToast('Failed to delete', 'error');
+  };
 
   const saveEdit = async () => {
     if (!editing) return;
@@ -45,7 +55,7 @@ export default function AdminPayoutsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-white/[0.06] text-muted-foreground text-xs">
-              <th className="text-left py-3 px-4 font-medium">Track</th><th className="text-left py-3 px-4 font-medium">Creator</th><th className="text-left py-3 px-4 font-medium">Amount</th><th className="text-left py-3 px-4 font-medium">Status</th><th className="text-left py-3 px-4 font-medium">Stripe</th><th className="text-left py-3 px-4 font-medium">Date</th><th className="text-right py-3 px-4 font-medium w-20">Edit</th>
+              <th className="text-left py-3 px-4 font-medium">Track</th><th className="text-left py-3 px-4 font-medium">Creator</th><th className="text-left py-3 px-4 font-medium">Amount</th><th className="text-left py-3 px-4 font-medium">Status</th><th className="text-left py-3 px-4 font-medium">Stripe</th><th className="text-left py-3 px-4 font-medium">Date</th><th className="text-right py-3 px-4 font-medium w-32">Actions</th>
             </tr></thead>
             <tbody>
               {payouts.length === 0 ? <tr><td colSpan={7} className="py-16 text-center text-muted-foreground">No payouts found</td></tr> : payouts.map(p => {
@@ -72,7 +82,10 @@ export default function AdminPayoutsPage() {
                           <button onClick={() => setEditing(null)} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground active:scale-[0.95]"><X size={14} /></button>
                         </div>
                       ) : (
-                        <button onClick={() => setEditing({ id: p.id, values: {} })} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground active:scale-[0.95]"><Pencil size={14} /></button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => setEditing({ id: p.id, values: {} })} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground active:scale-[0.95]"><Pencil size={14} /></button>
+                          <button onClick={() => deleteItem(p.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-red-400 active:scale-[0.95]"><Trash2 size={14} /></button>
+                        </div>
                       )}
                     </td>
                   </tr>
