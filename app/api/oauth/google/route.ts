@@ -6,9 +6,10 @@ import { setSessionCookie } from '@/lib/auth';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
+  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
 
   if (!code) {
-    return NextResponse.redirect(new URL('/login?error=google', request.url));
+    return NextResponse.redirect(new URL('/login?error=google', baseUrl));
   }
 
   try {
@@ -26,7 +27,7 @@ export async function GET(request: Request) {
     });
 
     if (!tokenRes.ok) {
-      return NextResponse.redirect(new URL('/login?error=google', request.url));
+      return NextResponse.redirect(new URL('/login?error=google', baseUrl));
     }
 
     const tokens = await tokenRes.json();
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     });
 
     if (!userRes.ok) {
-      return NextResponse.redirect(new URL('/login?error=google', request.url));
+      return NextResponse.redirect(new URL('/login?error=google', baseUrl));
     }
 
     const profile = await userRes.json();
@@ -46,7 +47,7 @@ export async function GET(request: Request) {
     const picture = profile.picture || '';
 
     if (!email) {
-      return NextResponse.redirect(new URL('/login?error=google', request.url));
+      return NextResponse.redirect(new URL('/login?error=google', baseUrl));
     }
 
     // Find or create user
@@ -82,7 +83,7 @@ export async function GET(request: Request) {
     const sessionToken = crypto.randomBytes(32).toString('hex');
     await sql`UPDATE users SET session_token = ${sessionToken} WHERE id = ${user[0].id}`;
 
-    const response = NextResponse.redirect(new URL('/browse', request.url));
+    const response = NextResponse.redirect(new URL('/browse', baseUrl));
     setSessionCookie(response, {
       id: user[0].id,
       email: user[0].email,
@@ -92,6 +93,6 @@ export async function GET(request: Request) {
     return response;
   } catch (e: any) {
     console.error('Google OAuth error:', e.message);
-    return NextResponse.redirect(new URL('/login?error=google', request.url));
+    return NextResponse.redirect(new URL('/login?error=google', baseUrl));
   }
 }
