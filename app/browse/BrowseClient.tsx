@@ -11,9 +11,7 @@ import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Megaphone, Send, DollarSign, X } from 'lucide-react';
-import { trackSubmitContent } from '@/lib/analytics';
-import EarnModal from '@/components/EarnModal';
+import { Megaphone } from 'lucide-react';
 import { PlatformBadge } from '@/components/SocialIcons';
 
 interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; artist_name?: string; artist_avatar?: string; }
@@ -60,9 +58,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<Record<string, any>>({});
-  const [earnModal, setEarnModal] = useState<Campaign | null>(null);
   const router = useRouter();
-  const { addToast } = useToast();
 
   const loadCampaigns = async (f: Record<string, any> = filters) => {
     setLoading(true);
@@ -77,12 +73,6 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
   };
 
   const handleFilter = (f: any) => { setFilters(f); loadCampaigns(f); };
-
-  const openSubmitModal = (e: React.MouseEvent, c: Campaign) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setEarnModal(c);
-  };
 
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A' }}>
@@ -152,33 +142,26 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                         </div>
                       </div>
 
-                      {/* Circle progress + CPM + artist */}
+                      {/* Budget progress + artist */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <CircleProgress pct={pct} size={36} />
-                          <span className="text-xs font-semibold text-muted-foreground">${cpm.toFixed(2)} CPM</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <CircleProgress pct={pct} size={32} />
+                          <div className="text-[10px] text-muted-foreground leading-tight">
+                            <span className="font-semibold text-foreground/70">${(budget - remaining).toFixed(0)}</span> of ${budget.toFixed(0)} budget used
+                          </div>
                         </div>
                         {c.artist_name && (
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-5 h-5 rounded-full bg-white/[0.04] flex items-center justify-center text-[8px] font-bold text-muted-foreground overflow-hidden shrink-0">
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            <div className="w-5 h-5 rounded-full bg-white/[0.04] flex items-center justify-center text-[8px] font-bold text-muted-foreground overflow-hidden">
                               {c.artist_avatar ? (
                                 <img src={c.artist_avatar} alt="" className="w-full h-full object-cover" />
                               ) : (
                                 c.artist_name[0]?.toUpperCase()
                               )}
                             </div>
-                            <span className="text-[9px] text-muted-foreground/60 truncate max-w-[60px]">{c.artist_name}</span>
                           </div>
                         )}
                       </div>
-
-                      {/* Submit quick-action */}
-                      <button
-                        onClick={(e) => openSubmitModal(e, c)}
-                        className="w-full py-2 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/15 transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <Send size={12} /> Submit Video
-                      </button>
                     </div>
                   </motion.div>
                 </Link>
@@ -187,17 +170,6 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
           </div>
         )}
 
-        {/* ── Earn Modal ── */}
-        {earnModal && (
-          <EarnModal
-            open={!!earnModal}
-            onClose={() => setEarnModal(null)}
-            campaignId={earnModal.id}
-            trackTitle={earnModal.track_title}
-            cpmCents={earnModal.cpm_rate_cents}
-            coverArtUrl={earnModal.cover_art_url}
-          />
-        )}
       </main>
     </div>
   );
