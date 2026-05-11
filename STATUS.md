@@ -3,17 +3,30 @@
 
 ---
 
-## v1.0 Launch — Production Ready
+## Current State — Production Ready
 
-Selah.fm is live. Stripe live keys connected. Real payments flowing. 
+Selah.fm is live with real Stripe payments, one active campaign, and all core flows operational.
 
-### What We Shipped
+### Recent Changes (2026-05-11)
+
+| Change | Impact |
+|--------|--------|
+| SEO slug support for campaigns | `/c/artist-song-1234` instead of `/c/uuid` |
+| Dual-role system (artist + creator) | Everyone can create campaigns AND submit to them |
+| Base64 stripping from OG images | WhatsApp/iMessage link previews work |
+| Welcome page → login → onboarding flow | New users go through onboarding before dashboard |
+| Stripe Connect capability fix | `card_payments` + `transfers` for US accounts |
+| Search-as-you-type on Browse | Filters update as you type (300ms debounce) |
+| Homepage server-rendered | Proper SEO metadata on landing page |
+| Zero TypeScript errors | Clean build |
+
+### What's Solid
 
 | Area | Status |
 |------|--------|
-| Campaign creation (2-step wizard → checkout) | ✅ |
+| Campaign creation → checkout → funding | ✅ |
 | CPM-based creator marketplace | ✅ |
-| Stripe Elements checkout (deposits + donations) | ✅ |
+| Stripe Elements (deposits + donations) | ✅ |
 | Webhook processing (payment_intent.succeeded) | ✅ |
 | Creator submissions with platform verification | ✅ |
 | Artist review + approve/reject with undo | ✅ |
@@ -25,12 +38,13 @@ Selah.fm is live. Stripe live keys connected. Real payments flowing.
 | AI support chat | ✅ |
 | Admin panel (users, campaigns, submissions, payouts, emails, support chats) | ✅ |
 | SEO metadata + JSON-LD schemas | ✅ |
-| Performance optimization (HTML payload, ISR, webpack, cache) | ✅ |
 | Empty states, error handling, toast system with undo | ✅ |
-| Global micro-interactions (Apple-grade feel) | ✅ |
 | Mobile responsive | ✅ |
 | 45 API endpoints | ✅ |
-| E2E test suite (44 tests) | ✅ |
+| E2E test suite (44 tests, 100% passing) | ✅ |
+| Zero TypeScript errors | ✅ |
+| Dual-role (everyone is both artist + creator) | ✅ |
+| Referral bonus auto-credit on deposit | ✅ |
 
 ### Database
 - 1 real campaign (Merhav Yah)
@@ -38,9 +52,10 @@ Selah.fm is live. Stripe live keys connected. Real payments flowing.
 - Clean production database
 
 ### Stripe
-- Live publishable key, secret key, webhook secret configured
-- Webhook endpoint: `https://selah.fm/api/stripe/webhook`
-- Events: `payment_intent.succeeded`, `checkout.session.completed`
+- Live keys configured
+- Webhook: `https://selah.fm/api/stripe/webhook`
+- Connect onboarding for creator payouts
+- Capabilities: `transfers` + `card_payments`
 
 ---
 
@@ -78,6 +93,6 @@ Selah.fm is live. Stripe live keys connected. Real payments flowing.
 ## Testing
 
 ```bash
-node e2e/test.js   # 44 tests
-npx tsc --noEmit   # zero errors
+npx tsc --noEmit     # zero errors
+node e2e/test.js     # 44 tests, 100% passing
 ```
