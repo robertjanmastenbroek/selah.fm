@@ -1,35 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 export default function Analytics() {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
-  const [load, setLoad] = useState(false);
 
   useEffect(() => {
     if (!gaId) return;
-    // Defer GA until 3s after load or first user interaction
-    const timer = setTimeout(() => setLoad(true), 3000);
-    const handler = () => { setLoad(true); clearTimeout(timer); };
-    window.addEventListener('scroll', handler, { once: true });
-    window.addEventListener('click', handler, { once: true });
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', handler);
-      window.removeEventListener('click', handler);
-    };
+    // Load GA immediately — deferred loading causes events to be lost
+    // when users sign up/login faster than the 3s delay.
+    const script1 = document.createElement('script');
+    script1.async = true;
+    script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    document.head.appendChild(script1);
+
+    const script2 = document.createElement('script');
+    script2.innerHTML = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${gaId}');setTimeout(function(){if(window.__selahFlushGA)window.__selahFlushGA()},500);`;
+    document.head.appendChild(script2);
   }, [gaId]);
 
-  if (!load || !gaId) return null;
-
-  return (
-    <>
-      <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${gaId}');setTimeout(function(){if(window.__selahFlushGA)window.__selahFlushGA()},500);`,
-        }}
-      />
-    </>
-  );
+  if (!gaId) return null;
+  return null; // scripts injected via useEffect
 }

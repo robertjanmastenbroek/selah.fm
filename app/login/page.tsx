@@ -55,7 +55,10 @@ function LoginForm() {
     const data = await res.json();
     if (data.ok) {
       mode === 'signup' ? trackSignUp('email') : trackLogin('email');
-      window.location.href = redirect || data.redirectTo || '/browse';
+      // Brief delay to let GA flush the event before navigation
+      setTimeout(() => {
+        window.location.href = redirect || data.redirectTo || '/browse';
+      }, 300);
     } else { setError(data.error); setLoading(false); }
   };
 
