@@ -35,7 +35,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const artistName = campaign.artist_name || 'the artist';
   const trackTitle = campaign.track_title;
   const cpm = campaign.cpm_rate_cents ? (campaign.cpm_rate_cents / 100).toFixed(2) : null;
-  const imageUrl = campaign.cover_art_url || 'https://selah.fm/images/hero-illustration.png';
+  // Never embed base64 data URLs in OG/Twitter meta tags — they bloat the HTML
+  // response and break link previews on WhatsApp, Telegram, iMessage, etc.
+  const imageUrl = (campaign.cover_art_url && !campaign.cover_art_url.startsWith('data:'))
+    ? campaign.cover_art_url
+    : 'https://selah.fm/images/hero-illustration.png';
   const canonicalUrl = `https://selah.fm/c/${params.id}`;
 
   // Tiered title templates — balanced default
