@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
 import CampaignCover from '@/components/CampaignCover';
+import LiveTicker from '@/components/LiveTicker';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,14 +14,12 @@ import StripePaymentModal from '@/components/StripePaymentModal';
 import PaymentSuccess from '@/components/PaymentSuccess';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 import EarnModal from '@/components/EarnModal';
-import LiveTicker from '@/components/LiveTicker';
 import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
 
 // ── Brand accent (deep indigo-purple) ──────────────────────
 const ACCENT = '#1E3A8A';
 
 // ── Circle Progress (light-blue → dark-blue gradient) ──────
-// Interpolates from #5B7FFF (0%) to #1E3A8A (100%)
 function lerpColor(a: number, b: number, t: number) {
   return Math.round(a + (b - a) * t);
 }
@@ -53,8 +52,6 @@ function CircleProgress({ pct, size = 100 }: { pct: number; size?: number }) {
 function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollars, trackTitle }: { open: boolean; onClose: () => void; url: string; title: string; imageUrl?: string; artistName?: string; cpmDollars?: number; trackTitle?: string }) {
   const [copied, setCopied] = useState(false);
   const encodedUrl = encodeURIComponent(url);
-
-  // Campaign-specific share text: artist + track + CPM first, then platform
   const artistLine = artistName ? `${artistName} — ` : '';
   const shareTitle = `${artistLine}"${trackTitle || title}" on Selah.fm 🎵`;
   const shareBody = cpmDollars
@@ -63,68 +60,29 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
   const fullShareText = `${shareTitle}\n\n${shareBody}\n\n${url}`;
   const encodedShare = encodeURIComponent(fullShareText);
 
-  const copyLink = async () => {
-    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {}
-  };
-
-  // Native share sheet — surfaces Instagram Story, TikTok, WhatsApp Status on mobile
-  const nativeShare = async () => {
-    try {
-      await navigator.share({ title: shareTitle, text: `${shareBody}\n\n${url}`, url });
-    } catch {}
-  };
+  const copyLink = async () => { try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch {} };
 
   const options = [
-    // Instagram Story — native share on mobile, copy link + open on desktop
     { name: 'Instagram Story', action: async () => {
-      try {
-        // Try native share first (surfaces Instagram Stories on iOS/Android)
-        await navigator.share({ title: shareTitle, text: `${shareBody}\n\n${url}`, url });
-      } catch {
-        // Fallback: copy link and open Instagram
-        await navigator.clipboard.writeText(fullShareText);
-        window.open('instagram://story-camera', '_blank');
+      try { await navigator.share({ title: shareTitle, text: `${shareBody}\n\n${url}`, url }); } catch {
+        await navigator.clipboard.writeText(fullShareText); window.open('instagram://story-camera', '_blank');
         setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 500);
       }
-    }, color: '#E1306C', bg: 'bg-[#E1306C]/10',
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/></svg>,
-      note: '(story & post)'
-    },
-    // TikTok — native share on mobile
+    }, color: '#E1306C', bg: 'bg-[#E1306C]/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/></svg>, note: '(story & post)' },
     { name: 'TikTok', action: async () => {
-      try {
-        await navigator.share({ title: shareTitle, text: `${shareBody}\n\n${url}`, url });
-      } catch {
-        await navigator.clipboard.writeText(fullShareText);
-        window.open('https://www.tiktok.com/', '_blank');
+      try { await navigator.share({ title: shareTitle, text: `${shareBody}\n\n${url}`, url }); } catch {
+        await navigator.clipboard.writeText(fullShareText); window.open('https://www.tiktok.com/', '_blank');
       }
-    }, color: '#ff0050', bg: 'bg-[#ff0050]/10',
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>,
-      note: '(story & post)'
-    },
-    // WhatsApp Status + Chat — native share on mobile, wa.me on desktop
+    }, color: '#ff0050', bg: 'bg-[#ff0050]/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>, note: '(story & post)' },
     { name: 'WhatsApp', action: async () => {
-      try {
-        await navigator.share({ title: shareTitle, text: `${shareBody}\n\n${url}`, url });
-      } catch {
+      try { await navigator.share({ title: shareTitle, text: `${shareBody}\n\n${url}`, url }); } catch {
         window.open(`https://wa.me/?text=${encodedShare}`, '_blank');
       }
-    }, color: '#25D366', bg: 'bg-[#25D366]/10',
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>,
-      note: '(status & chat)'
-    },
-    { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(fullShareText)}`, color: '#1877F2', bg: 'bg-[#1877F2]/10',
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-    },
-    { name: 'X', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareTitle}\n\n${url}`)}`, color: '#fff', bg: 'bg-white/10',
-      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-    },
-    { name: 'Copy Link', action: copyLink, color: '#5B7FFF', bg: 'bg-primary/10',
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-    },
-    { name: 'Email', href: `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(fullShareText)}`, color: '#5B7FFF', bg: 'bg-primary/10',
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-    },
+    }, color: '#25D366', bg: 'bg-[#25D366]/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>, note: '(status & chat)' },
+    { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(fullShareText)}`, color: '#1877F2', bg: 'bg-[#1877F2]/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> },
+    { name: 'X', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareTitle}\n\n${url}`)}`, color: '#fff', bg: 'bg-white/10', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
+    { name: 'Copy Link', action: copyLink, color: '#5B7FFF', bg: 'bg-primary/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> },
+    { name: 'Email', href: `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(fullShareText)}`, color: '#5B7FFF', bg: 'bg-primary/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> },
   ];
 
   return (
@@ -140,16 +98,9 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
                 <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06]"><X size={20} className="text-muted-foreground" /></button>
               </div>
 
-              {/* Campaign preview */}
               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
                 <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-white/[0.04]">
-                  {imageUrl ? (
-                    <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Music2 size={20} className="text-muted-foreground/30" />
-                    </div>
-                  )}
+                  {imageUrl ? <img src={imageUrl} alt={title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Music2 size={20} className="text-muted-foreground/30" /></div>}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">{title}</p>
@@ -158,23 +109,19 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
                 </div>
               </div>
 
-              {/* URL copy bar */}
               <div className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
                 <Link2 size={16} className="text-muted-foreground shrink-0" />
                 <code className="text-xs text-muted-foreground truncate flex-1 select-all">{url}</code>
                 <button onClick={copyLink} className="shrink-0 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold active:scale-[0.97]">{copied ? 'Copied!' : 'Copy'}</button>
               </div>
 
-              {/* Share options grid — 3 columns */}
               <div className="grid grid-cols-3 gap-3">
                 {options.map(opt => {
                   const isAction = !!opt.action;
                   const Comp = isAction ? 'button' : 'a';
                   return (
                     <Comp key={opt.name} href={isAction ? undefined : opt.href} target={isAction ? undefined : '_blank'} rel={isAction ? undefined : 'noopener noreferrer'} onClick={isAction ? (e: any) => { e.preventDefault(); opt.action!(); } : undefined} className="flex flex-col items-center gap-2 py-3 rounded-xl hover:bg-white/[0.04] transition-colors active:scale-[0.95]">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${opt.bg}`} style={{ color: opt.color }}>
-                        {opt.icon}
-                      </div>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${opt.bg}`} style={{ color: opt.color }}>{opt.icon}</div>
                       <span className="text-[10px] text-muted-foreground text-center leading-tight">{opt.name}</span>
                       {opt.note && <span className="text-[8px] text-muted-foreground/40 -mt-1">{opt.note}</span>}
                     </Comp>
@@ -206,7 +153,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const [donationAmount, setDonationAmount] = useState(25);
   const [successOpen, setSuccessOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-
   const [earnOpen, setEarnOpen] = useState(false);
 
   useEffect(() => {
@@ -253,52 +199,36 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const artistName = campaign.artist_name || 'Unknown Artist';
   const displayTitle = campaign.title || campaign.track_title;
 
-  // Sticky bar: appears when scrolled past hero, stays visible for the rest of the page
   const stickyBarVisible = scrollY > heroBottom - 80;
 
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       <Header />
 
-      {/* ══════ ABOVE-FOLD: Image + CTA section (mobile: stacked, desktop: 60/40 split) ══════ */}
       <div ref={heroRef}>
-        {/* Mobile: stacked column | Desktop: flex row */}
         <div className="md:flex md:flex-row md:min-h-[65vh]">
-
-          {/* ── LEFT: Campaign image + title (60% on desktop) ── */}
+          {/* ── LEFT: Campaign image + title ── */}
           <div className="relative md:w-[60%]">
             <CampaignCover
               src={campaign.cover_art_url}
               title={campaign.track_title}
               className="w-full h-[50vh] md:h-full rounded-none"
             />
-            {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20 pointer-events-none" />
-            {/* Artist name + avatar — top left */}
             <div className="absolute top-3 left-4 flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border border-white/20 shrink-0 overflow-hidden">
-                {campaign.artist_avatar ? (
-                  <img src={campaign.artist_avatar} alt={artistName} className="w-full h-full object-cover" />
-                ) : (
-                  artistName[0]?.toUpperCase() || '?'
-                )}
+                {campaign.artist_avatar ? <img src={campaign.artist_avatar} alt={artistName} className="w-full h-full object-cover" /> : artistName[0]?.toUpperCase() || '?'}
               </div>
               <span className="text-white text-sm font-semibold drop-shadow-sm">{artistName}</span>
             </div>
-            {/* Title — bottom of image, above CTA */}
             <div className="absolute bottom-10 left-0 right-0 flex justify-center px-6 pointer-events-none">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center drop-shadow-lg leading-tight">
-                {displayTitle}
-              </h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center drop-shadow-lg leading-tight">{displayTitle}</h1>
             </div>
           </div>
 
-          {/* ── RIGHT: CTA section (40% on desktop, fully above-fold on mobile) ── */}
+          {/* ── RIGHT: CTA section ── */}
           <div className="md:w-[40%] bg-[#0A0A0A] px-5 py-5 md:py-8 md:flex md:flex-col md:justify-center md:border-l md:border-white/[0.06]">
-            {/* Divider (mobile only) */}
             <div className="border-t border-white/10 mb-5 md:hidden" />
-
-            {/* Progress + stats */}
             <div className="relative flex items-center gap-4 mb-5 pr-12">
               <CircleProgress pct={progress} size={64} />
               <div className="flex-1 min-w-0 space-y-1.5">
@@ -309,38 +239,18 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 </div>
                 <LiveTicker campaignId={id} />
               </div>
-              {/* Share icon — TikTok-style ↗ */}
-              <button
-                onClick={() => setShareOpen(true)}
-                className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.05] transition-colors active:scale-[0.95]"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                  <path d="M7 17l9.2-9.2M17 17V7H7" />
-                </svg>
+              <button onClick={() => setShareOpen(true)} className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.05] transition-colors active:scale-[0.95]">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
                 <span className="text-[9px] font-medium text-muted-foreground">Share</span>
               </button>
             </div>
 
-            {/* ── CTAs ── */}
             <div className="flex gap-2">
-              <button
-                onClick={() => setEarnOpen(true)}
-                className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]"
-              >
-                EARN
-              </button>
-              <button
-                onClick={handleDonate}
-                className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all"
-                style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}
-              >
-                DONATE
-              </button>
+              <button onClick={() => setEarnOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]">EARN</button>
+              <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</button>
             </div>
 
-            {/* ── Donations + Submissions (desktop: below CTAs in right column) ── */}
             <div className="hidden md:block mt-6 space-y-4">
-              {/* Compact donations summary */}
               <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Heart size={12} className="text-primary/60" />Donations</h4>
@@ -363,38 +273,29 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   </div>
                 )}
               </div>
-              {/* Compact submissions on desktop */}
-              {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && (
-                <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />
-              )}
+              {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ══════ SCROLL CONTENT (mobile: donations + submissions below CTA) ══════ */}
       <main className="pb-20">
         <div className="px-4 space-y-6">
-          {/* How to participate — quick guide for creators */}
           <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><Camera size={14} className="text-primary/60" />How to participate</h3>
               <div className="grid md:grid-cols-3 gap-3 text-[11px] text-muted-foreground">
                 {[
-                  { step: '1', title: 'Find the audio', desc: `Search "${campaign.track_title}" on TikTok, Instagram, YouTube, or Facebook. You must use the official audio for your submission to count.` },
-                  { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Show your face, dance, react, or be creative — whatever fits the track.' },
-                  { step: '3', title: 'Submit & earn', desc: `Post your video publicly, copy the link, and paste it here. Earn $${(cpm * 0.8).toFixed(2)} for every 1,000 verified views.` },
+                  { step: '1', title: 'Find the audio', desc: `Search "${campaign.track_title}" on TikTok, Instagram, YouTube, or Facebook. Use the official audio.` },
+                  { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Be creative — dance, react, duet.' },
+                  { step: '3', title: 'Submit & earn', desc: `Post publicly, copy the link, paste it here. Earn $${(cpm * 0.8).toFixed(2)} per 1K verified views.` },
                 ].map(s => (
-                  <div key={s.step} className="space-y-1">
-                    <span className="font-semibold text-foreground/70">{s.title}</span>
-                    <p className="leading-relaxed">{s.desc}</p>
-                  </div>
+                  <div key={s.step} className="space-y-1"><span className="font-semibold text-foreground/70">{s.title}</span><p className="leading-relaxed">{s.desc}</p></div>
                 ))}
               </div>
             </div>
           </motion.div>
 
-          {/* Creator resources — Google Drive with assets */}
           {campaign.content_assets_url && (
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer" className="block rounded-2xl bg-gradient-to-r from-primary/[0.04] to-primary/[0.01] border border-primary/10 p-5 hover:border-primary/20 transition-colors group">
@@ -404,17 +305,14 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-sm text-primary group-hover:underline">Creator resource pack</h4>
-                    <p className="text-xs text-muted-foreground mt-1">The artist has shared audio files (.mp3, .wav), videos, and images to help you create your content. Download everything you need from Google Drive.</p>
-                    <span className="inline-flex items-center gap-1 text-[11px] text-primary font-medium mt-2">
-                      Open Google Drive <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </span>
+                    <p className="text-xs text-muted-foreground mt-1">Audio files (.mp3, .wav), videos, and images from the artist.</p>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-primary font-medium mt-2">Open Google Drive <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
                   </div>
                 </div>
               </a>
             </motion.div>
           )}
 
-          {/* Campaign story */}
           {campaign.requirements && (
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
@@ -425,21 +323,16 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </motion.div>
           )}
 
-          {/* Donations (mobile only — desktop shows in right column) */}
           <div className="md:hidden">
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5 mb-3">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-sm flex items-center gap-2"><Heart size={14} className="text-primary/60" />Donations</h3>
-                  <span className="text-xl font-bold text-primary">${totalRaised.toFixed(0)}</span>
-                </div>
+                <div className="flex items-center justify-between mb-4"><h3 className="font-semibold text-sm flex items-center gap-2"><Heart size={14} className="text-primary/60" />Donations</h3><span className="text-xl font-bold text-primary">${totalRaised.toFixed(0)}</span></div>
                 <div className="grid grid-cols-3 gap-2">
                   <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{donations.count}</div><div className="text-[10px] text-muted-foreground">Donors</div></div>
                   <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{submissions}</div><div className="text-[10px] text-muted-foreground">Submissions</div></div>
                   <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div><div className="text-[10px] text-muted-foreground">Views</div></div>
                 </div>
               </div>
-
               {donations.supporters.length > 0 ? (
                 <div className="space-y-0.5">
                   {donations.supporters.map((s: any, i: number) => (
@@ -454,74 +347,38 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-8 text-center">
-                  <Heart size={28} className="mx-auto mb-3 text-primary/10" />
-                  <p className="text-sm text-muted-foreground">No donations yet. Be the first to support!</p>
-                  <button onClick={handleDonate} className="mt-3 text-sm font-semibold text-primary hover:underline">Donate now</button>
-                </div>
+                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-8 text-center"><Heart size={28} className="mx-auto mb-3 text-primary/10" /><p className="text-sm text-muted-foreground">No donations yet.</p><button onClick={handleDonate} className="mt-3 text-sm font-semibold text-primary hover:underline">Donate now</button></div>
               )}
             </motion.div>
           </div>
 
-          {/* Submissions (mobile only — desktop shows in right column) */}
-          <div className="md:hidden">
-            {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && (
-              <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />
-            )}
-          </div>
+          <div className="md:hidden">{(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />}</div>
 
-          {/* ══════ MORE CAMPAIGNS — Infinite Scroll ══════ */}
-          <div ref={moreRef}>
-            <h3 className="font-semibold text-sm mb-3">More campaigns</h3>
-            <InfiniteCampaigns currentId={id} />
-          </div>
+          <div ref={moreRef}><h3 className="font-semibold text-sm mb-3">More campaigns</h3><InfiniteCampaigns currentId={id} /></div>
 
-          {/* ══════ FOOTER ══════ */}
           <footer className="text-center pb-8 pt-2 space-y-3">
             <div className="flex items-center justify-center gap-4">
-              <a href="https://instagram.com/selahfm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-              </a>
-              <a href="https://x.com/selah_fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              </a>
-              <a href="https://www.tiktok.com/@selah.fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
-              </a>
+              <a href="https://instagram.com/selahfm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+              <a href="https://x.com/selah_fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+              <a href="https://www.tiktok.com/@selah.fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
             </div>
             <p className="text-xs text-muted-foreground/40">Selah.fm — The marketplace for music promotion</p>
           </footer>
         </div>
       </main>
 
-      {/* ══════ STICKY BOTTOM BAR (progress + CTAs) ══════ */}
       <AnimatePresence>
         {stickyBarVisible && (
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ duration: 0.25, ease: 'easeOut' }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.08] px-4 py-3">
             <div className="space-y-3">
-              {/* Compact progress + share icon */}
               <div className="relative flex items-center gap-3 pr-12">
                 <CircleProgress pct={progress} size={40} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs">
-                    <span className="font-bold text-sm">${spent.toFixed(0)}</span>
-                    <span className="text-muted-foreground ml-1">of ${budget.toFixed(0)}</span>
-                  </div>
-                  <div className="mt-0.5">
-                    <LiveTicker campaignId={id} />
-                  </div>
+                  <div className="text-xs"><span className="font-bold text-sm">${spent.toFixed(0)}</span><span className="text-muted-foreground ml-1">of ${budget.toFixed(0)}</span></div>
+                  <div className="mt-0.5"><LiveTicker campaignId={id} /></div>
                 </div>
-                <button
-                  onClick={() => setShareOpen(true)}
-                  className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.04] transition-colors active:scale-[0.95]"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
-                    <path d="M7 17l9.2-9.2M17 17V7H7" />
-                  </svg>
-                  <span className="text-[8px] font-medium text-muted-foreground">Share</span>
-                </button>
+                <button onClick={() => setShareOpen(true)} className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.04] transition-colors active:scale-[0.95]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg><span className="text-[8px] font-medium text-muted-foreground">Share</span></button>
               </div>
-              {/* Buttons */}
               <div className="flex gap-2">
                 <button onClick={() => setEarnOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">EARN</button>
                 <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</button>
@@ -539,7 +396,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   );
 }
 
-// ── Infinite Scroll Campaigns ───────────────────────────────
 function InfiniteCampaigns({ currentId }: { currentId: string }) {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [page, setPage] = useState(0);
@@ -562,10 +418,8 @@ function InfiniteCampaigns({ currentId }: { currentId: string }) {
     setLoading(false);
   }, [page, loading, hasMore, currentId]);
 
-  // Initial fetch
   useEffect(() => { fetchMore(); }, []);
 
-  // Intersection observer for infinite scroll
   useEffect(() => {
     const el = loaderRef.current;
     if (!el) return;
@@ -602,9 +456,7 @@ function InfiniteCampaigns({ currentId }: { currentId: string }) {
           </button>
         ))}
       </div>
-      <div ref={loaderRef} className="py-4 flex justify-center">
-        {loading && hasMore && <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}
-      </div>
+      <div ref={loaderRef} className="py-4 flex justify-center">{loading && hasMore && <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}</div>
     </>
   );
 }
