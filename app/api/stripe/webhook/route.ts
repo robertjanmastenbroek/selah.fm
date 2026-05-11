@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import sql from '@/lib/db';
 import { emailWrapper } from '@/lib/email-templates';
+import { trackDonation, trackFundCampaign } from '@/lib/analytics-server';
 
 export async function POST(request: Request) {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -62,6 +63,8 @@ export async function POST(request: Request) {
 
     // ── Fan donation: record + notify ───────────────────────
     if (type === 'campaign_donation') {
+      // Server-side GA tracking
+      trackDonation(Math.round(grossCents / 100), metadata.donorId).catch(() => {});
       try {
         const { donorId, donorName, donorEmail, message } = metadata;
         const displayName = donorName || 'A fan';
@@ -136,6 +139,8 @@ export async function POST(request: Request) {
 
     // ── Deposit: add ticker event ────────────────────────────
     if (!type || type === 'campaign_deposit') {
+      // Server-side GA tracking
+      trackFundCampaign(Math.round(grossCents / 100), metadata.userId).catch(() => {});
       try {
         const campaignRows = await sql`
           SELECT c.artist_id, c.track_title, u.display_name

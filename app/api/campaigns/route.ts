@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import crypto from 'crypto';
 import { generateCampaignDefaults } from '@/lib/defaults';
+import { trackCreateCampaign } from '@/lib/analytics-server';
 
 // Allow larger request bodies for campaign creation (cover art can be 5MB+ as data URL)
 export const maxDuration = 30; // 30 seconds timeout
@@ -153,6 +154,8 @@ export async function POST(request: Request) {
       )
       RETURNING *
     `;
+    // Server-side GA tracking
+    trackCreateCampaign(trackTitle, budget || 0, userId).catch(() => {});
     return NextResponse.json(result[0]);
   } catch (e: any) {
     console.error('Campaign POST error:', e.message);

@@ -43,3 +43,23 @@ export function trackCreateCampaign(trackTitle: string, budget: number, clientId
 export function trackFundCampaign(amount: number, clientId?: string) {
   return trackEvent('fund_campaign', { value: amount, currency: 'USD' }, clientId);
 }
+
+export function trackCreateCampaign(trackTitle: string, budget: number, clientId?: string) {
+  return trackEvent('create_campaign', { track_title: trackTitle, budget }, clientId);
+}
+
+export function trackSubmitContent(platform: string, clientId?: string) {
+  return trackEvent('submit_content', { platform }, clientId);
+}
+
+export function trackApproveSubmission(clientId?: string) {
+  return trackEvent('approve_submission', {}, clientId);
+}
+
+export function trackConnectCompleted(clientId?: string) {
+  return trackEvent('connect_completed', {}, clientId);
+}
+
+export function trackDonation(amount: number, clientId?: string) {
+  return trackEvent('donation', { value: amount, currency: 'USD' }, clientId);
+}

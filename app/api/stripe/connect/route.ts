@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getSession } from '@/lib/auth';
+import { trackConnectCompleted } from '@/lib/analytics-server';
 
 /**
  * Create a Stripe Connect Standard account link for creators.

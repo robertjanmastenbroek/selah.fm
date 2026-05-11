@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { trackSubmitContent } from '@/lib/analytics-server';
 
 export async function POST(request: Request) {
   const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
@@ -46,6 +47,9 @@ export async function POST(request: Request) {
       VALUES (${campaignId}, ${creatorId}, ${contentUrl}, ${platform}, ${initialViews}, ${initialViews})
       RETURNING *
     `;
+
+    // Server-side GA tracking
+    trackSubmitContent(platform, creatorId).catch(() => {});
 
     // Live ticker event
     const creatorName = session.name || 'Someone';

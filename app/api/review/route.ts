@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { trackApproveSubmission } from '@/lib/analytics-server';
 
 export async function POST(request: Request) {
   const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
@@ -113,6 +114,9 @@ export async function POST(request: Request) {
       } catch (payoutErr) {
         console.log('Auto-payout attempt failed (non-critical):', payoutErr);
       }
+
+      // Server-side GA tracking
+      trackApproveSubmission(session.id).catch(() => {});
 
       return NextResponse.json(result[0]);
     }

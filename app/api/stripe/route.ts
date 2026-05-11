@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { trackFundCampaign } from '@/lib/analytics-server';
 
 /**
  * POST /api/stripe
@@ -43,6 +44,9 @@ export async function POST(request: Request) {
       description: `Deposit to "${campaign.track_title}" campaign`,
       statement_descriptor_suffix: 'SELAHFM DEPOSIT',
     });
+
+    // Server-side GA tracking
+    trackFundCampaign(depositAmount, session.id).catch(() => {});
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret || '',
