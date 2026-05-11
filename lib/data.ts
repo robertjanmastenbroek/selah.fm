@@ -9,22 +9,33 @@ export const getCampaign = cache(async (id: string) => {
   // Support both UUID and slug lookup
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-  const baseSelect = sql`
-    SELECT c.*,
-      COALESCE(c.title, c.track_title) as title,
-      COALESCE(v.approved_submissions, '0') as approved_submissions,
-      COALESCE(v.pending_submissions, '0') as pending_submissions,
-      COALESCE(v.total_verified_views, '0') as total_verified_views,
-      u.display_name as artist_name,
-      u.profile_image_url as artist_avatar
-    FROM campaigns c
-    LEFT JOIN campaign_stats v ON v.id = c.id
-    LEFT JOIN users u ON u.id = c.artist_id
-  `;
-
   const campaigns = isUuid
-    ? await sql`${baseSelect} WHERE c.id = ${id}::uuid`
-    : await sql`${baseSelect} WHERE c.slug = ${id}`;
+    ? await sql`
+        SELECT c.*,
+          COALESCE(c.title, c.track_title) as title,
+          COALESCE(v.approved_submissions, '0') as approved_submissions,
+          COALESCE(v.pending_submissions, '0') as pending_submissions,
+          COALESCE(v.total_verified_views, '0') as total_verified_views,
+          u.display_name as artist_name,
+          u.profile_image_url as artist_avatar
+        FROM campaigns c
+        LEFT JOIN campaign_stats v ON v.id = c.id
+        LEFT JOIN users u ON u.id = c.artist_id
+        WHERE c.id = ${id}::uuid
+      `
+    : await sql`
+        SELECT c.*,
+          COALESCE(c.title, c.track_title) as title,
+          COALESCE(v.approved_submissions, '0') as approved_submissions,
+          COALESCE(v.pending_submissions, '0') as pending_submissions,
+          COALESCE(v.total_verified_views, '0') as total_verified_views,
+          u.display_name as artist_name,
+          u.profile_image_url as artist_avatar
+        FROM campaigns c
+        LEFT JOIN campaign_stats v ON v.id = c.id
+        LEFT JOIN users u ON u.id = c.artist_id
+        WHERE c.slug = ${id}
+      `;
 
   if (campaigns.length === 0) return null;
 
