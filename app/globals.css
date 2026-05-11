@@ -248,3 +248,31 @@ select {
   background: rgba(239, 154, 154, 0.04) !important;
   border-color: rgba(239, 154, 154, 0.12) !important;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   MICRO-INTERACTIONS — Universal smooth physical feel
+   Every interactive element gets a gentle press response.
+   ══════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Gentle press on all interactive elements */
+  button:active:not([disabled]),
+  a:active:not([disabled]),
+  [role="button"]:active:not([disabled]) {
+    transform: scale(0.97);
+    transition: transform 100ms ease-out;
+  }
+
+  /* Smooth transitions on hover/active for all interactive */
+  /* (buttons already use transition-all in most places — this fills gaps) */
+  button, a, input, select, textarea, [role="button"] {
+    transition: all 150ms ease-out;
+  }
+
+  /* Cards should feel clickable and responsive */
+  a[href] .card-hover {
+    transition: transform 200ms ease-out, border-color 150ms, background-color 150ms;
+  }
+  a[href]:hover .card-hover {
+    transform: translateY(-2px);
+  }
+}
