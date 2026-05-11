@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { Heart, ArrowLeft, Shield, Lock, Sparkles, AlertCircle, Check, Zap, Wallet } from 'lucide-react';
+import { Heart, ArrowLeft, Shield, Lock, Sparkles, AlertCircle, Check, Zap, Wallet, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -111,6 +111,7 @@ export default function CheckoutPage() {
   const [donorName, setDonorName] = useState('');
   const [donorMessage, setDonorMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
   const [paymentError, setPaymentError] = useState('');
   const [gettingSecret, setGettingSecret] = useState(false);
@@ -342,6 +343,22 @@ export default function CheckoutPage() {
                     : `$${effectiveAmount} added to your campaign budget.`}
                 </p>
               </div>
+              {type === 'donation' && (
+                <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground">Share this campaign — every share brings more support</p>
+                  <div className="flex gap-2">
+                    <code className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-[10px] text-muted-foreground truncate select-all font-mono">
+                      selah.fm/c/{campaignId}
+                    </code>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(`https://selah.fm/c/${campaignId}`); setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); }}
+                      className="shrink-0 px-4 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-semibold hover:bg-white/[0.1] transition-colors flex items-center gap-1.5"
+                    >
+                      {shareCopied ? <><Check size={12} className="text-emerald-400" /> Copied</> : <><Share2 size={12} /> Copy link</>}
+                    </button>
+                  </div>
+                </div>
+              )}
               <Button onClick={() => router.push(`/c/${campaignId}`)} className="w-full rounded-xl">
                 {type === 'donation' ? 'Back to campaign' : 'View campaign'}
               </Button>
