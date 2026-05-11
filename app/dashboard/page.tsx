@@ -166,6 +166,36 @@ function DashboardContent() {
     } catch { setPlatforms(['tiktok', 'instagram', 'youtube', 'facebook']); }
   };
 
+  const getRequirementsTemplate = () => `🎵 Use the official audio — no screen recordings or re-uploads
+
+📱 Video format
+• 15–60 seconds recommended
+• Vertical (9:16) for TikTok/Reels/Shorts
+• Public account — private videos can't be verified
+
+🎬 Content ideas
+• Dance or lip-sync to the track
+• Behind-the-scenes of you listening
+• Reaction video to the best part
+• Duet with the original
+• Show your creative process
+
+✅ Must include
+• The official audio as background
+• ${requiredHashtags || '#ad if you\'re being paid'}
+
+❌ Do NOT
+• Use screen recordings of the track
+• Re-upload without the official audio
+• Use copyrighted material you don't own
+• Submit private or deleted videos
+
+💡 Tips
+• The hook (first 15s) gets the most engagement
+• Natural, authentic content outperforms polished ads
+• Post during peak hours (7-9 PM your time)
+• Tag @selahfm for a repost chance`;
+
   const handleEditSave = async () => {
     if (!editingId) return;
     setEditSaving(true);
@@ -329,11 +359,20 @@ function DashboardContent() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-1.5 block">Content requirements & guidelines</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-medium">Content requirements & guidelines</label>
+                    <button
+                      type="button"
+                      onClick={() => setRequirements(getRequirementsTemplate())}
+                      className="text-[10px] text-primary hover:underline font-medium"
+                    >
+                      Use template
+                    </button>
+                  </div>
                   <textarea
                     value={requirements}
                     onChange={e => setRequirements(e.target.value)}
-                    placeholder={`Tell creators what kind of content you want:\n\n• Dance challenge using the chorus hook\n• Behind-the-scenes studio footage\n• Reaction video to the drop\n• Duet with your vocals\n• 15-30 seconds minimum\n• Show your face or keep it anonymous\n\nBe specific — the clearer your requirements, the better the submissions.`}
+                    placeholder={`Tell creators what kind of content you want. Be specific — clear requirements get better submissions.\n\nExamples:\n• "Dance challenge using the chorus hook"\n• "Behind-the-scenes studio footage"\n• "Reaction video to the drop"\n• "Duet with your vocals"\n• "15-30 seconds minimum"\n\nOr click "Use template" above for a ready-made guide.`}
                     rows={6}
                     className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/30 resize-y"
                   />
@@ -479,7 +518,16 @@ function DashboardContent() {
                     <Input value={captionReq} onChange={e => setCaptionReq(e.target.value)} className="text-sm" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs text-muted-foreground mb-1 block">Requirements & guidelines</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs text-muted-foreground">Requirements & guidelines</label>
+                      <button
+                        type="button"
+                        onClick={() => setRequirements(getRequirementsTemplate())}
+                        className="text-[10px] text-primary hover:underline font-medium"
+                      >
+                        Use template
+                      </button>
+                    </div>
                     <textarea value={requirements} onChange={e => setRequirements(e.target.value)} rows={4} className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/30 resize-y" />
                   </div>
                   <div>
