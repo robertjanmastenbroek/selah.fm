@@ -9,36 +9,35 @@ export async function GET(
   try {
     // Support both UUID and slug lookup
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
-    let campaigns;
-    if (isUuid) {
-      campaigns = await sql`
-        SELECT c.*, 
-          COALESCE(c.title, c.track_title) as title,
-          COALESCE(v.approved_submissions, '0') as approved_submissions,
-          COALESCE(v.pending_submissions, '0') as pending_submissions,
-          COALESCE(v.total_verified_views, '0') as total_verified_views,
-          u.display_name as artist_name,
-          u.profile_image_url as artist_avatar
-        FROM campaigns c
-        LEFT JOIN campaign_stats v ON v.id = c.id
-        LEFT JOIN users u ON u.id = c.artist_id
-        WHERE c.id = ${params.id}::uuid
-      `;
-    } else {
-      campaigns = await sql`
-        SELECT c.*, 
-          COALESCE(c.title, c.track_title) as title,
-          COALESCE(v.approved_submissions, '0') as approved_submissions,
-          COALESCE(v.pending_submissions, '0') as pending_submissions,
-          COALESCE(v.total_verified_views, '0') as total_verified_views,
-          u.display_name as artist_name,
-          u.profile_image_url as artist_avatar
-        FROM campaigns c
-        LEFT JOIN campaign_stats v ON v.id = c.id
-        LEFT JOIN users u ON u.id = c.artist_id
-        WHERE c.slug = ${params.id}
-      `;
-    }
+    
+    const baseQuery = (whereClause: string, whereValue: any) => sql`
+      SELECT c.*, 
+        COALESCE(c.title, c.track_title) as title,
+        COALESCE(v.approved_submissions, '0') as approved_submissions,
+        COALESCE(v.pending_submissions, '0') as pending_submissions,
+        COALESCE(v.total_verified_views, '0') as total_verified_views,
+        u.display_name as artist_name,
+        u.profile_image_url as artist_avatar
+      FROM campaigns c
+      LEFT JOIN campaign_stats v ON v.id = c.id
+      LEFT JOIN users u ON u.id = c.artist_id
+      WHERE ${sql([whereClause], [whereValue])}
+    `;
+
+    // Simple approach: query with both conditions
+    const campaigns = await sql`
+      SELECT c.*, 
+        COALESCE(c.title, c.track_title) as title,
+        COALESCE(v.approved_submissions, '0') as approved_submissions,
+        COALESCE(v.pending_submissions, '0') as pending_submissions,
+        COALESCE(v.total_verified_views, '0') as total_verified_views,
+        u.display_name as artist_name,
+        u.profile_image_url as artist_avatar
+      FROM campaigns c
+      LEFT JOIN campaign_stats v ON v.id = c.id
+      LEFT JOIN users u ON u.id = c.artist_id
+      WHERE (${isUuid} = true AND c.id = ${params.id}::uuid) OR (${isUuid} = false AND c.slug = ${params.id})
+    `;
     if (campaigns.length === 0) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
