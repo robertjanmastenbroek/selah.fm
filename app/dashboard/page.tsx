@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
@@ -18,8 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
 import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
 import { Plus, Edit3, ExternalLink } from 'lucide-react';
-import StripePaymentModal from '@/components/StripePaymentModal';
-import PaymentSuccess from '@/components/PaymentSuccess';
+
 
 interface Campaign {
   id: string; trackTitle: string; coverArt: string; cpmRate: number;
@@ -55,12 +55,6 @@ function DashboardContent() {
   const [wizardStep, setWizardStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const { addToast } = useToast();
-  const [fundingId, setFundingId] = useState<string | null>(null);
-  const [fundingAmount, setFundingAmount] = useState('10');
-  const [depositModal, setDepositModal] = useState(false);
-  const [depositSecret, setDepositSecret] = useState('');
-  const [depositSuccess, setDepositSuccess] = useState(false);
-  const [depositCampaign, setDepositCampaign] = useState<{ id: string; title: string } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
 
@@ -637,32 +631,11 @@ function DashboardContent() {
                           <div><div className="font-bold text-lg">${c.spent}</div><div className="text-muted-foreground text-xs">of ${c.budget}</div></div>
                         </div>
                         <Progress value={pct} className="h-1.5" />
-                        {fundingId === c.id ? (
-                          <div className="space-y-2 animate-slide-up" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex gap-2">
-                              <Input type="number" min="5" value={fundingAmount} onChange={e => setFundingAmount(e.target.value)} className="flex-1" autoFocus />
-                              <Button onClick={async (e) => {
-                                e.stopPropagation();
-                                const amt = parseInt(fundingAmount); if (amt < 5) { addToast('Minimum $5', 'error'); return; }
-                                const r = await fetch('/api/stripe', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: amt, campaignId: c.id }) });
-                                const d = await r.json();
-                                if (d.clientSecret) {
-                                  setDepositSecret(d.clientSecret);
-                                  setDepositCampaign({ id: c.id, title: c.trackTitle });
-                                  setDepositModal(true);
-                                  setFundingId(null);
-                                } else { addToast(d.error || 'Could not start payment', 'error'); }
-                              }}>Fund ${fundingAmount}</Button>
-                            </div>
-                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setFundingId(null); }} className="w-full">Cancel</Button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); window.location.href = '/review'; }}>Review ({c.submissions})</Button>
-                            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); startEdit(c); }} title="Edit campaign"><Edit3 size={14} /></Button>
-                            <Button size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); setFundingId(c.id); setFundingAmount('10'); }}>Add budget</Button>
-                          </div>
-                        )}
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); window.location.href = '/review'; }}>Review ({c.submissions})</Button>
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); startEdit(c); }} title="Edit campaign"><Edit3 size={14} /></Button>
+                          <Link href={`/checkout?type=deposit&campaignId=${c.id}&amount=10`} onClick={(e) => e.stopPropagation()}><Button size="sm" className="flex-1 w-full">Add budget</Button></Link>
+                        </div>
                       </CardContent>
                     </Card>
                   );
@@ -672,25 +645,6 @@ function DashboardContent() {
           </>
         )}
 
-        {/* On-platform deposit modal + celebration */}
-        <StripePaymentModal
-          open={depositModal}
-          onClose={() => setDepositModal(false)}
-          onSuccess={() => { setDepositModal(false); setDepositSuccess(true); }}
-          clientSecret={depositSecret}
-          title={depositCampaign?.title || 'Campaign'}
-          subtitle="Add funds to your campaign budget"
-          amount={parseInt(fundingAmount)}
-          mode="deposit"
-        />
-        <PaymentSuccess
-          open={depositSuccess}
-          mode="deposit"
-          amount={parseInt(fundingAmount)}
-          campaignTitle={depositCampaign?.title}
-          campaignId={depositCampaign?.id}
-          onClose={() => setDepositSuccess(false)}
-        />
       </main>
     </div>
   );

@@ -124,6 +124,28 @@ export async function POST(request: Request) {
       }
     }
 
+    // ── Deposit: add ticker event ────────────────────────────
+    if (!type || type === 'campaign_deposit') {
+      try {
+        const campaignRows = await sql`
+          SELECT c.artist_id, c.track_title, u.display_name
+          FROM campaigns c JOIN users u ON u.id = c.artist_id
+          WHERE c.id = ${campaignId}
+        `;
+        if (campaignRows.length > 0) {
+          const artist = campaignRows[0];
+          const artistFirst = (artist.display_name || 'Artist').split(' ')[0];
+          await sql`
+            INSERT INTO live_ticker_events (campaign_id, event_type, payload)
+            VALUES (${campaignId}, 'deposit_received', ${JSON.stringify({
+              first_name: artistFirst,
+              amount: Math.round(grossCents / 100),
+            })})
+          `.catch(() => {});
+        }
+      } catch {}
+    }
+
     // ── Referral bonus: only on artist self-funding ──────────
     if (!type || type === 'campaign_deposit') {
       try {

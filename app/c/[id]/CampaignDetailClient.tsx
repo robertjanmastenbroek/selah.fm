@@ -10,8 +10,6 @@ import LiveTicker from '@/components/LiveTicker';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import StripePaymentModal from '@/components/StripePaymentModal';
-import PaymentSuccess from '@/components/PaymentSuccess';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 import EarnModal from '@/components/EarnModal';
 import MediaCarousel from '@/components/MediaCarousel';
@@ -149,10 +147,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const moreRef = useRef<HTMLDivElement>(null);
   const [heroBottom, setHeroBottom] = useState(0);
 
-  const [paymentModal, setPaymentModal] = useState(false);
-  const [clientSecret, setClientSecret] = useState('');
-  const [donationAmount, setDonationAmount] = useState(25);
-  const [successOpen, setSuccessOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [earnOpen, setEarnOpen] = useState(false);
 
@@ -177,15 +171,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
     window.addEventListener('resize', calc);
     return () => window.removeEventListener('resize', calc);
   }, [campaign, loading]);
-
-  const handleDonate = async () => {
-    try {
-      const r = await fetch(`/api/campaigns/${id}/support`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: donationAmount }) });
-      const d = await r.json();
-      if (d.clientSecret) { setClientSecret(d.clientSecret); setPaymentModal(true); }
-      else addToast(d.error || 'Could not start payment', 'error');
-    } catch { addToast('Network error', 'error'); }
-  };
 
   const bg = '#0A0A0A';
 
@@ -282,7 +267,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
             <div className="flex gap-2">
               <button onClick={() => setEarnOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]">EARN</button>
-              <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</button>
+              <Link href={`/checkout?type=donation&campaignId=${id}`} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</Link>
             </div>
 
             <div className="hidden md:block mt-6 space-y-4">
@@ -397,7 +382,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-8 text-center"><Heart size={28} className="mx-auto mb-3 text-primary/10" /><p className="text-sm text-muted-foreground">No donations yet.</p><button onClick={handleDonate} className="mt-3 text-sm font-semibold text-primary hover:underline">Donate now</button></div>
+                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-8 text-center"><Heart size={28} className="mx-auto mb-3 text-primary/10" /><p className="text-sm text-muted-foreground">No donations yet.</p><Link href={`/checkout?type=donation&campaignId=${id}`} className="mt-3 text-sm font-semibold text-primary hover:underline">Donate now</Link></div>
               )}
             </motion.div>
           </div>
@@ -431,7 +416,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               </div>
               <div className="flex gap-2">
                 <button onClick={() => setEarnOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">EARN</button>
-                <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</button>
+                <Link href={`/checkout?type=donation&campaignId=${id}`} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</Link>
               </div>
             </div>
           </motion.div>
@@ -440,8 +425,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
       <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={displayTitle} imageUrl={campaign.cover_art_url} artistName={artistName} cpmDollars={cpm} trackTitle={campaign.track_title} />
       <EarnModal open={earnOpen} onClose={() => setEarnOpen(false)} campaignId={id} trackTitle={displayTitle} cpmCents={campaign.cpm_rate_cents} coverArtUrl={campaign.cover_art_url} contentAssetsUrl={campaign.content_assets_url} />
-      <StripePaymentModal open={paymentModal} onClose={() => setPaymentModal(false)} onSuccess={() => { setPaymentModal(false); setSuccessOpen(true); }} clientSecret={clientSecret} title={displayTitle} subtitle="Your donation goes directly to the campaign budget" coverArtUrl={campaign.cover_art_url} amount={donationAmount} mode="donation" />
-      <PaymentSuccess open={successOpen} mode="donation" amount={donationAmount} campaignTitle={displayTitle} campaignId={id} onClose={() => setSuccessOpen(false)} />
     </div>
   );
 }
