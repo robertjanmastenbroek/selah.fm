@@ -75,6 +75,33 @@ export default function SupportWidget() {
     window.open('/report-bug', '_blank');
   };
 
+  // Parse bot content to render clickable links from [text](/path) or plain URLs
+  const renderBotContent = (text: string) => {
+    const parts: React.ReactNode[] = [];
+    // Match [text](/path), [text](url), or bare selah.fm/path
+    const regex = /\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s]+)|((?:selah\.fm|www\.selah\.fm)\/[^\s]+)/gi;
+    let last = 0;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > last) parts.push(text.slice(last, match.index));
+      if (match[1] && match[2]) {
+        // Markdown link [text](url)
+        const href = match[2].startsWith('/') ? match[2] : match[2].startsWith('http') ? match[2] : `/${match[2]}`;
+        parts.push(<a key={match.index} href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="text-primary underline hover:no-underline">{match[1]}</a>);
+      } else if (match[3]) {
+        // Full URL
+        parts.push(<a key={match.index} href={match[3]} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline break-all">{match[3]}</a>);
+      } else if (match[4]) {
+        // selah.fm/path
+        const path = match[4].startsWith('www.') ? `https://${match[4]}` : `https://${match[4]}`;
+        parts.push(<a key={match.index} href={match[4].startsWith('www.') ? path : `/${match[4].split('/').slice(1).join('/')}`} className="text-primary underline hover:no-underline">{match[4]}</a>);
+      }
+      last = match.index + match[0].length;
+    }
+    if (last < text.length) parts.push(text.slice(last));
+    return parts.length > 0 ? parts : text;
+  };
+
   const requestHuman = () => {
     setMessages(prev => [
       ...prev,
@@ -136,7 +163,7 @@ export default function SupportWidget() {
                         ? 'bg-white/[0.04] text-foreground rounded-bl-md'
                         : 'bg-primary text-primary-foreground rounded-br-md'
                     }`}>
-                      {m.content}
+                      {isBot ? renderBotContent(m.content) : m.content}
                     </div>
                   </div>
                 );
