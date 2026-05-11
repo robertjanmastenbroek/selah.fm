@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     // Idempotency: prevent duplicate processing
     const intentId = paymentIntent?.id || session?.id || '';
     if (intentId) {
-      const existing = await sql`SELECT id FROM campaign_donations WHERE payment_intent_id = ${intentId} LIMIT 1`;
+      const existing = await sql`SELECT id FROM campaign_donations WHERE stripe_payment_intent_id = ${intentId} LIMIT 1`;
       if (existing.length > 0) return NextResponse.json({ received: true, duplicate: true });
     }
 
@@ -67,8 +67,8 @@ export async function POST(request: Request) {
         const displayName = donorName || 'A fan';
 
         await sql`
-          INSERT INTO campaign_donations (campaign_id, donor_id, amount_cents, donor_name, message, anonymous)
-          VALUES (${campaignId}, ${donorId || null}, ${grossCents}, ${displayName}, ${message || null}, false)
+          INSERT INTO campaign_donations (campaign_id, donor_id, amount_cents, donor_name, message, anonymous, stripe_payment_intent_id)
+          VALUES (${campaignId}, ${donorId || null}, ${grossCents}, ${displayName}, ${message || null}, false, ${intentId})
         `;
 
         // Store donor email if not already captured via user account
