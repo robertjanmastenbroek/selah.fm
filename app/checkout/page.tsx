@@ -279,19 +279,17 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* ── Payment section ── */}
-          <div>
-            {!PUBLISHABLE_KEY ? (
-              <div className="rounded-2xl bg-yellow-500/5 border border-yellow-500/10 p-6 text-center space-y-3">
-                <AlertCircle size={32} className="mx-auto text-yellow-400/60" />
-                <h3 className="font-semibold">Payment not configured</h3>
-                <p className="text-xs text-muted-foreground">Stripe is not connected yet.</p>
-              </div>
-            ) : effectiveAmount < 1 ? (
-              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center">
-                <p className="text-sm text-muted-foreground">Enter an amount to continue</p>
-              </div>
-            ) : gettingSecret ? (
+          {/* ── Payment section (appears after amount selected) ── */}
+          <AnimatePresence>
+            {effectiveAmount > 0 && PUBLISHABLE_KEY && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
+                <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Payment method</p>
+                {gettingSecret ? (
               <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-8 flex items-center justify-center">
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -311,7 +309,24 @@ export default function CheckoutPage() {
                   onSuccess={() => setSuccessOpen(true)} onError={setPaymentError} />
               </Elements>
             ) : null}
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Empty state when no amount */}
+          {effectiveAmount < 1 && PUBLISHABLE_KEY && (
+            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center">
+              <p className="text-sm text-muted-foreground">Enter an amount above to continue</p>
+            </div>
+          )}
+
+          {!PUBLISHABLE_KEY && (
+            <div className="rounded-2xl bg-yellow-500/5 border border-yellow-500/10 p-6 text-center space-y-3">
+              <AlertCircle size={32} className="mx-auto text-yellow-400/60" />
+              <h3 className="font-semibold">Payment not configured</h3>
+              <p className="text-xs text-muted-foreground">Stripe is not connected yet.</p>
+            </div>
+          )}
 
           {/* Trust signals */}
           <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/40 pb-8">
