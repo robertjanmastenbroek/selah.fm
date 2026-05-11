@@ -50,14 +50,11 @@ export async function POST(request: Request) {
       if (existing.length > 0) return NextResponse.json({ received: true, duplicate: true });
     }
 
-    const stripeFeeCents = Math.round(grossCents * 0.029 + 30);
-    const netCents = grossCents - stripeFeeCents;
-
-    // ── Always add funds to campaign budget ─────────────────
+    // ── Always add full amount to campaign budget (fees handled at payout) ──
     await sql`
       UPDATE campaigns 
-      SET total_budget_cents = total_budget_cents + ${netCents},
-          budget_remaining_cents = budget_remaining_cents + ${netCents},
+      SET total_budget_cents = total_budget_cents + ${grossCents},
+          budget_remaining_cents = budget_remaining_cents + ${grossCents},
           status = CASE WHEN status = 'draft' THEN 'active' ELSE status END,
           updated_at = NOW()
       WHERE id = ${campaignId}
@@ -71,7 +68,7 @@ export async function POST(request: Request) {
 
         await sql`
           INSERT INTO campaign_donations (campaign_id, donor_id, amount_cents, donor_name, message, anonymous)
-          VALUES (${campaignId}, ${donorId || null}, ${netCents}, ${displayName}, ${message || null}, false)
+          VALUES (${campaignId}, ${donorId || null}, ${grossCents}, ${displayName}, ${message || null}, false)
         `;
 
         // Notify artist + send email
@@ -82,7 +79,7 @@ export async function POST(request: Request) {
         `;
         if (campaignRows.length > 0) {
           const artist = campaignRows[0];
-          const donationDollars = (netCents / 100).toFixed(2);
+          const donationDollars = (grossCents / 100).toFixed(2);
 
           await sql`
             INSERT INTO notifications (user_id, type, message, link)
@@ -131,7 +128,7 @@ export async function POST(request: Request) {
           `;
           if (referralRows.length > 0) {
             const referrerId = referralRows[0].referrer_id;
-            const bonusTotal = Math.floor(netCents * 0.10);
+            const bonusTotal = Math.floor(grossCents * 0.10);
             const bonusEach = Math.floor(bonusTotal / 2);
 
             if (bonusEach > 0) {

@@ -64,10 +64,6 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
     }
   };
 
-  const feeCents = Math.round(amount * 100 * 0.029 + 30);
-  const netCents = Math.round(amount * 100) - feeCents;
-  const netDollars = (netCents / 100).toFixed(2);
-
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Payment Element */}
@@ -87,19 +83,11 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
         )}
       </div>
 
-      {/* Fee breakdown */}
-      <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 space-y-1 text-xs">
-        <div className="flex justify-between text-muted-foreground">
-          <span>{mode === 'donation' ? 'Your donation' : 'Your deposit'}</span>
-          <span>${amount.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-muted-foreground/60">
-          <span>Processing fee (2.9% + $0.30)</span>
-          <span>-${(feeCents / 100).toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between font-semibold pt-1.5 border-t border-white/[0.04]">
-          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Added to campaign</span>
-          <span className="text-emerald-400">${netDollars}</span>
+      {/* Amount summary — 100% goes to campaign */}
+      <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-xs">
+        <div className="flex justify-between font-semibold">
+          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> 100% added to campaign</span>
+          <span className="text-emerald-400">${amount.toFixed(2)}</span>
         </div>
       </div>
 
