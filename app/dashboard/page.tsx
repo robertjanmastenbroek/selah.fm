@@ -64,6 +64,7 @@ function DashboardContent() {
 
   const [coverArt, setCoverArt] = useState('');
   const [trackTitle, setTrackTitle] = useState('');
+  const [campaignTitle, setCampaignTitle] = useState('');  // Display title (can differ from track title)
   const [trackUrl, setTrackUrl] = useState('');
   const [cpm, setCpm] = useState(hireCreatorCpm || '1');
   const [budget, setBudget] = useState('25');
@@ -99,7 +100,7 @@ function DashboardContent() {
     try {
       const res = await fetch('/api/campaigns', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackTitle, trackUrl, coverArtUrl: coverArt, galleryImages: [], cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq, platforms }),
+        body: JSON.stringify({ trackTitle, title: campaignTitle || null, trackUrl, coverArtUrl: coverArt, galleryImages: [], cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq, platforms }),
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to create campaign', 'error'); setLoading(false); return; }
       const created = await res.json();
@@ -112,25 +113,13 @@ function DashboardContent() {
     setWizardStep(1); setStep('list'); setLoading(false);
   };
 
-  const toggleStatus = async (id: string, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-    try {
-      const res = await fetch(`/api/campaigns/${id}`, {
-        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to update', 'error'); return; }
-      mutate();
-      addToast(newStatus === 'active' ? 'Campaign resumed' : 'Campaign paused', 'info');
-    } catch { addToast('Network error', 'error'); }
-  };
-
   const startEdit = (c: Campaign) => {
     // Pre-fill edit fields from campaign data
     const raw = rawCampaigns.find((r: any) => r.id === c.id);
     if (!raw) return;
     setEditingId(c.id);
     setTrackTitle(raw.track_title || '');
+    setCampaignTitle(raw.title || '');
     setTrackUrl(raw.track_url || '');
     setCpm(String(c.cpmRate));
     setBudget(String(c.budget));
@@ -156,9 +145,10 @@ function DashboardContent() {
       const res = await fetch(`/api/campaigns/${editingId}`, {
         method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          trackTitle, trackUrl,
+          trackTitle,
+          title: campaignTitle || null,
+          trackUrl,
           cpmRate: parseFloat(cpm),
-          budget: parseInt(budget),
           maxPayout: parseInt(maxPayout),
           requirements, hashtags,
           requiredHashtags, requireFtc,
@@ -218,7 +208,31 @@ function DashboardContent() {
               <div className="max-w-lg mx-auto space-y-4 animate-slide-up">
                 <h1 className="section-title">Track details</h1>
                 <p className="text-muted-foreground text-sm mb-6">Tell creators what they'll be promoting.</p>
-                <Input value={trackTitle} onChange={e => setTrackTitle(e.target.value)} placeholder="Track name" />
+                <Input value={trackTitle} onChange={e => { setTrackTitle(e.target.value); if (!campaignTitle) setCampaignTitle(`Earn by creating content for "${e.target.value}"`); }} placeholder="Track name" />
+                <div className="space-y-1">
+                  <Input value={campaignTitle} onChange={e => setCampaignTitle(e.target.value)} placeholder="Campaign headline (shown to creators)" />
+                  <p className="text-[10px] text-muted-foreground">This is the headline creators see. Make it compelling!</p>
+                  {/* Title suggestions */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {trackTitle && [
+                      `Earn by creating content for "${trackTitle}"`,
+                      `Get paid to promote "${trackTitle}"`,
+                      `Make TikToks for "${trackTitle}" — earn per view`,
+                      `"${trackTitle}" needs your content — submit & earn`,
+                      `Create videos for "${trackTitle}" and get paid`,
+                    ].map((suggestion, i) => (
+                      <button key={i} type="button" onClick={() => setCampaignTitle(suggestion)}
+                        className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                          campaignTitle === suggestion
+                            ? 'border-primary bg-primary/[0.08] text-primary'
+                            : 'border-white/[0.06] text-muted-foreground hover:border-white/[0.12]'
+                        }`}
+                      >
+                        {suggestion.slice(0, 60)}{suggestion.length > 60 ? '…' : ''}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} placeholder="Spotify or SoundCloud link" />
                 <Input value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="Google Drive link (optional)" />
                 <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags (optional)" />
@@ -360,6 +374,23 @@ function DashboardContent() {
                     <label className="text-xs text-muted-foreground mb-1 block">Track title</label>
                     <Input value={trackTitle} onChange={e => setTrackTitle(e.target.value)} className="text-sm" />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground mb-1 block">Campaign headline (shown to creators)</label>
+                    <Input value={campaignTitle} onChange={e => setCampaignTitle(e.target.value)} className="text-sm" placeholder="E.g. Earn by creating content for this track" />
+                    <div className="flex flex-wrap gap-1">
+                      {trackTitle && [
+                        `Earn by creating content for "${trackTitle}"`,
+                        `Get paid to promote "${trackTitle}"`,
+                        `Make TikToks for "${trackTitle}" — earn per view`,
+                      ].map((s, i) => (
+                        <button key={i} type="button" onClick={() => setCampaignTitle(s)}
+                          className={`text-[9px] px-2 py-0.5 rounded-full border transition-colors ${
+                            campaignTitle === s ? 'border-primary bg-primary/[0.08] text-primary' : 'border-white/[0.06] text-muted-foreground hover:border-white/[0.12]'
+                          }`}
+                        >{s.slice(0, 50)}{s.length > 50 ? '…' : ''}</button>
+                      ))}
+                    </div>
+                  </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Spotify/SoundCloud URL</label>
                     <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} className="text-sm" />
@@ -367,10 +398,6 @@ function DashboardContent() {
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">CPM rate ($/1K views)</label>
                     <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} className="text-sm" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Budget ($)</label>
-                    <Input type="number" min="5" step="5" value={budget} onChange={e => setBudget(e.target.value)} className="text-sm" />
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Max payout per submission ($)</label>
@@ -461,9 +488,6 @@ function DashboardContent() {
                           <div><div className="font-bold text-lg">${c.spent}</div><div className="text-muted-foreground text-xs">of ${c.budget}</div></div>
                         </div>
                         <Progress value={pct} className="h-1.5" />
-                        {c.status === 'paused' && (
-                          <p className="text-[10px] text-yellow-400/70">⏸ Paused — existing creators still have 7 days to earn views</p>
-                        )}
                         {fundingId === c.id ? (
                           <div className="space-y-2 animate-slide-up">
                             <div className="flex gap-2">
@@ -487,7 +511,6 @@ function DashboardContent() {
                             <Button variant="outline" size="sm" className="flex-1" onClick={() => window.location.href = '/review'}>Review ({c.submissions})</Button>
                             <Button variant="outline" size="sm" onClick={() => startEdit(c)} title="Edit campaign"><Edit3 size={14} /></Button>
                             <Button size="sm" className="flex-1" onClick={() => { setFundingId(c.id); setFundingAmount('10'); }}>Add budget</Button>
-                            <Button variant="ghost" size="sm" onClick={() => toggleStatus(c.id, c.status)} title={c.status === 'active' ? 'Pause' : 'Resume'}>{c.status === 'active' ? '⏸' : '▶'}</Button>
                           </div>
                         )}
                       </CardContent>
