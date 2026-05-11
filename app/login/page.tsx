@@ -54,6 +54,11 @@ function LoginForm() {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
     if (data.ok) {
+      // GA tracking: push to dataLayer directly (most reliable path)
+      const eventName = mode === 'signup' ? 'sign_up' : 'login';
+      if (typeof window !== 'undefined' && (window as any).dataLayer) {
+        (window as any).dataLayer.push({ event: eventName, method: 'email' });
+      }
       mode === 'signup' ? trackSignUp('email') : trackLogin('email');
       // Brief delay to let GA flush the event before navigation
       setTimeout(() => {

@@ -1,103 +1,111 @@
-# Selah.fm — v1.0 🚀
+# Selah.fm — README
 
-**CPM marketplace for music promotion.** Artists set CPM rates and fund campaigns via Stripe. Creators make TikToks, Reels, and Shorts. Artists review and approve every submission. Creators get paid for verified views. Fans donate to campaigns.
+https://selah.fm — CPM marketplace for music promotion.
 
-🌐 [selah.fm](https://selah.fm) · 📊 [Status](./STATUS.md) · ⚡ [Performance](./PERFORMANCE.md)
+## Quick Start
 
----
-
-## How It Works
-
-```
-Artist:  Create campaign → Set CPM + budget → Deposit via Stripe
-Creator: Browse campaigns → Pick track → Make content → Submit link
-Artist:  Review video → Approve or reject
-Creator: Get paid per verified view (80% of CPM)
-Fan:     Browse campaign → Donate any amount → Support the track
+```bash
+cp .env.example .env.local    # fill in DATABASE_URL, STRIPE_SECRET_KEY, etc.
+npm install
+npx next dev                  # http://localhost:3000
 ```
 
----
+### Required Env Vars
 
-## Tech Stack
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `STRIPE_SECRET_KEY` | Stripe secret key (test/live) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe client-side key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
+| `NEXTAUTH_SECRET` | Session signing key |
+| `NEXT_PUBLIC_URL` | Public URL (https://selah.fm) |
+| `RESEND_API_KEY` | Email sending |
 
-Next.js 14 (App Router) · TypeScript · Tailwind CSS · Framer Motion · PostgreSQL (Neon) · Stripe (Elements + Connect + Webhooks) · Google OAuth · Resend · Railway
+## Architecture
 
----
+- **Framework:** Next.js 14 (App Router), TypeScript
+- **Database:** PostgreSQL (Neon, Railway)
+- **Payments:** Stripe Elements + Connect (80/20 split)
+- **Styling:** Tailwind CSS, Framer Motion, shadcn/ui
+- **Email:** Resend
 
 ## Project Structure
 
 ```
-selah.fm/
-├── app/                    # 28 pages + 45 API routes
-│   ├── browse/             # Campaign discovery
-│   ├── c/[id]/             # Campaign detail + donate
-│   ├── artists/[id]/       # Artist profile
-│   ├── creators/[id]/      # Creator profile
-│   ├── dashboard/          # Artist dashboard (create/manage campaigns)
-│   ├── review/             # Review submissions
-│   ├── earnings/           # Creator earnings + payouts
-│   ├── settings/           # Profile settings
-│   ├── analytics/          # Creator analytics
-│   ├── onboarding/         # Artist onboarding
-│   ├── login/              # Auth (Google + email)
-│   └── api/                # 45 endpoints (auth, campaigns, submissions, stripe, admin, etc.)
-├── components/             # 40+ React components
-│   ├── EarnModal.tsx       # Enterprise-grade submission modal
-│   ├── MediaCarousel.tsx   # Gallery image/video carousel
-│   ├── GalleryUpload.tsx   # Multi-image upload with ImageUpload
-│   ├── ImageUpload.tsx     # Drag-drop with crop
-│   ├── LiveTicker.tsx      # Real-time event scroller
-│   ├── StripePaymentModal  # Embedded Stripe Elements
-│   └── ...
-├── lib/                    # DB, auth, validation, rate-limit, analytics
-├── e2e/                    # 44 Playwright tests
-└── public/                 # Static assets
+app/
+├── page.tsx              # Landing
+├── layout.tsx            # Root layout + SEO
+├── c/[id]/               # Campaign detail
+├── browse/               # Campaign browser
+├── dashboard/            # Artist dashboard
+├── checkout/             # Unified Stripe checkout
+├── review/               # Submission review
+├── earnings/             # Creator earnings
+├── artists/[id]/         # Artist profile
+├── creators/[id]/        # Creator profile
+├── login/                # Auth
+├── faq/                  # FAQ + support chat
+├── settings/             # User settings
+└── admin/                # Admin panel
+    ├── page.tsx          # Overview
+    ├── users/            # User management
+    ├── campaigns/        # Campaign management
+    ├── submissions/      # Submission management
+    ├── payouts/          # Payout management
+    ├── emails/           # Email inbox + compose
+    └── support-chats/    # Chat history
+
+lib/
+├── db.ts                 # Database pool
+├── auth.ts               # Session management
+├── data.ts               # Data fetching layer
+├── db/schema.sql         # Database schema
+└── db/migrations/        # Migration files
+
+components/
+├── TopNav.tsx            # Header navigation
+├── Toast.tsx             # Toast notification system
+├── States.tsx            # EmptyState + ErrorState
+├── LiveTicker.tsx        # Real-time donation ticker
+├── EarnModal.tsx         # Creator submission modal
+├── MediaCarousel.tsx     # Image/video carousel
+├── CampaignCover.tsx     # Campaign cover image
+├── GalleryUpload.tsx     # Multi-image upload
+├── SocialIcons.tsx       # Platform badges
+├── SupportWidget.tsx     # AI chat widget
+├── CircleProgress.tsx    # Circular progress bar
+├── CreatorAvatar.tsx     # Creator avatar
+├── SubmissionsFeed.tsx   # Approved submissions feed
+└── CheckoutForm.tsx      # Stripe Elements wrapper
 ```
 
----
+## API — 45 Endpoints
 
-## Key Features
+| Area | Endpoints |
+|------|-----------|
+| Auth | signup, login, logout, me, magic-link, google oauth, signup/finalize, auth/google |
+| Campaigns | GET list, POST, GET/PATCH by id |
+| Submissions | GET list, POST |
+| Review | POST approve/reject |
+| Stripe | create-payment-intent, webhook, connect-login, connect-refresh, support, payout |
+| Support | chat POST, chat GET |
+| Artists | list, detail |
+| Creators | list, detail |
+| Notifications | list, mark-read |
+| Messages | list, send |
+| Earnings | summary |
+| Analytics | stats |
+| Admin | overview, manage, users, campaigns, submissions, payouts, emails, support-chats, seed(disabled) |
+| Other | live-ticker, stats/totals, oauth/google, admin/emails/inbound |
 
-- **Campaign pages** — 60/40 desktop split, LiveTicker, EarnModal, MediaCarousel, Share modal with native APIs
-- **Dashboard** — Create/edit campaigns with ImageUpload, GalleryUpload, requirements template, Google Drive field
-- **EarnModal** — Auth gating, earnings preview, official platform logos, creator resource pack
-- **Payments** — Stripe Elements embedded, full gross amount to budget, donations at `/c/[id]/donate`
-- **Reviews** — Approve/reject with 4s undo window, auto-payout on approval
-- **SEO** — JSON-LD schemas, OG/Twitter metadata, dynamic sitemap, keyword table
-
----
-
-## Getting Started
+## Testing
 
 ```bash
-npm install
-# Set DATABASE_URL, NEXTAUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
-# STRIPE_SECRET_KEY, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY in .env.local
-npm run dev
+npx tsc --noEmit     # type check
+node e2e/test.js     # 44 E2E tests
 ```
 
-### Test
+## Deployment
 
-```bash
-node e2e/test.js                          # 44 tests
-TEST_URL=http://localhost:3000 node e2e/test.js
-```
-
-### Deploy
-
-Push to `main` → Railway auto-deploys.
-
----
-
-## Environment Variables
-
-```bash
-DATABASE_URL=postgresql://...
-NEXTAUTH_SECRET=...                    # openssl rand -base64 32
-NEXT_PUBLIC_URL=https://selah.fm
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-STRIPE_SECRET_KEY=sk_live_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
-# Optional: RESEND_API_KEY, DEEPSEEK_API_KEY, CRON_SECRET, YOUTUBE_API_KEY, SPOTIFY_CLIENT_ID/SECRET
-```
+Auto-deployed on `git push origin main` via Railway.
