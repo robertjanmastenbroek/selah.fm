@@ -232,63 +232,65 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       <Header />
-      <main className="max-w-2xl mx-auto pb-20">
 
-        {/* ══════ HERO (GoFundMe-style: artist top-left, title + CTAs as bottom overlay) ══════ */}
-        <div ref={heroRef} className="relative">
-          <CampaignCover
-            src={campaign.cover_art_url}
-            title={campaign.track_title}
-            className="w-full h-screen sm:h-[55vh] sm:max-h-[700px] rounded-none"
-          />
-          {/* Gradient overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 pointer-events-none" />
+      {/* ══════ ABOVE-FOLD: Image + CTA section (mobile: stacked, desktop: 60/40 split) ══════ */}
+      <div ref={heroRef}>
+        {/* Mobile: stacked column | Desktop: flex row */}
+        <div className="md:flex md:flex-row md:min-h-[65vh]">
 
-          {/* Artist name + avatar — top left */}
-          <div className="absolute top-3 left-4 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border border-white/20 shrink-0">
-              {artistName[0]?.toUpperCase() || '?'}
+          {/* ── LEFT: Campaign image + title (60% on desktop) ── */}
+          <div className="relative md:w-[60%]">
+            <CampaignCover
+              src={campaign.cover_art_url}
+              title={campaign.track_title}
+              className="w-full h-[45vh] md:h-full rounded-none"
+            />
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20 pointer-events-none" />
+            {/* Artist name — top left */}
+            <div className="absolute top-3 left-4 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border border-white/20 shrink-0">
+                {artistName[0]?.toUpperCase() || '?'}
+              </div>
+              <span className="text-white text-sm font-semibold drop-shadow-sm">{artistName}</span>
             </div>
-            <span className="text-white text-sm font-semibold drop-shadow-sm">{artistName}</span>
+            {/* Title — centered on image */}
+            <div className="absolute inset-0 flex items-center justify-center px-6 pointer-events-none">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center drop-shadow-lg leading-tight">
+                {displayTitle}
+              </h1>
+            </div>
           </div>
 
-          {/* Campaign title — dead center of the image */}
-          <div className="absolute inset-0 flex items-center justify-center px-6 pointer-events-none">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center drop-shadow-lg leading-tight">
-              {displayTitle}
-            </h1>
-          </div>
+          {/* ── RIGHT: CTA section (40% on desktop, fully above-fold on mobile) ── */}
+          <div className="md:w-[40%] bg-[#0A0A0A] px-5 py-5 md:py-8 md:flex md:flex-col md:justify-center md:border-l md:border-white/[0.06]">
+            {/* Divider (mobile only) */}
+            <div className="border-t border-white/10 mb-5 md:hidden" />
 
-          {/* Bottom overlay: divider → progress → CTAs — pinned to absolute bottom */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/90 to-transparent px-5 pt-4 pb-5">
-
-            {/* Divider */}
-            <div className="border-t border-white/10 mb-4" />
-
-            {/* Progress + stats (share icon top-right) */}
-            <div className="relative flex items-center gap-4 mb-4 pr-12">
+            {/* Progress + stats */}
+            <div className="relative flex items-center gap-4 mb-5 pr-12">
               <CircleProgress pct={progress} size={64} />
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div>
-                  <span className="text-lg font-bold text-white">${spent.toFixed(0)}</span>
-                  <span className="text-xs text-white/60 ml-1.5">spent of</span>
-                  <span className="text-sm font-semibold text-white/80 ml-1">${budget.toFixed(0)} budget</span>
+                  <span className="text-lg font-bold">${spent.toFixed(0)}</span>
+                  <span className="text-xs text-muted-foreground ml-1.5">spent of</span>
+                  <span className="text-sm font-semibold ml-1">${budget.toFixed(0)} budget</span>
                 </div>
-                <div className="flex items-center gap-4 text-[10px] text-white/50 mt-1">
+                <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
                   <span className="flex items-center gap-1"><Camera size={10} /> {submissions} submissions</span>
                   <span className="flex items-center gap-1"><Play size={10} /> {views >= 1000 ? `${(views/1000).toFixed(1)}K` : views} views</span>
                   <span>${cpm.toFixed(2)} CPM</span>
                 </div>
               </div>
-              {/* Share icon — top right of progress section */}
+              {/* Share icon — TikTok-style ↗ */}
               <button
                 onClick={() => setShareOpen(true)}
                 className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.05] transition-colors active:scale-[0.95]"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
                   <path d="M7 17l9.2-9.2M17 17V7H7" />
                 </svg>
-                <span className="text-[9px] font-medium text-white/50">Share</span>
+                <span className="text-[9px] font-medium text-muted-foreground">Share</span>
               </button>
             </div>
 
@@ -310,32 +312,66 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 </button>
               </div>
             ) : (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-white/[0.08] backdrop-blur-sm border border-white/10 p-4 space-y-3">
-                <p className="text-sm font-semibold flex items-center gap-2 text-white"><Camera size={16} className="text-primary" />Submit your video</p>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-white/[0.04] border border-primary/10 p-4 space-y-3">
+                <p className="text-sm font-semibold flex items-center gap-2"><Camera size={16} className="text-primary" />Submit your video</p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { id: 'tiktok' as const, label: 'TikTok', bg: 'bg-[#ff005015]', text: 'text-[#ff0050]', letter: 'T' },
                     { id: 'instagram' as const, label: 'Reels', bg: 'bg-[#E1306C15]', text: 'text-[#E1306C]', letter: 'R' },
                     { id: 'youtube' as const, label: 'Shorts', bg: 'bg-[#FF000015]', text: 'text-[#FF0000]', letter: 'S' },
                   ].map(p => (
-                    <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/10 bg-white/[0.03]'}`}>
+                    <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${p.bg}`}><span className={`text-[10px] font-bold ${p.text}`}>{p.letter}</span></div>
-                      <span className="text-[10px] font-medium text-white/70">{p.label}</span>
+                      <span className="text-[10px] font-medium">{p.label}</span>
                     </button>
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-lg bg-white/[0.08] border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50" autoFocus />
+                  <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" autoFocus />
                   <Button onClick={handleSubmitVideo} disabled={!submitUrl || submitting} className="shrink-0 text-sm">{submitting ? '...' : 'Submit'}</Button>
                 </div>
-                <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-white/50 hover:text-white/80">Cancel</button>
+                <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-muted-foreground hover:text-foreground">Cancel</button>
               </motion.div>
             )}
-        </div>
-        </div>
 
+            {/* ── Donations + Submissions (desktop: below CTAs in right column) ── */}
+            <div className="hidden md:block mt-6 space-y-4">
+              {/* Compact donations summary */}
+              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Heart size={12} className="text-primary/60" />Donations</h4>
+                  <span className="text-sm font-bold text-primary">${totalRaised.toFixed(0)}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="text-center"><div className="text-sm font-bold">{donations.count}</div><div className="text-[9px] text-muted-foreground">Donors</div></div>
+                  <div className="text-center"><div className="text-sm font-bold">{submissions}</div><div className="text-[9px] text-muted-foreground">Videos</div></div>
+                  <div className="text-center"><div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div><div className="text-[9px] text-muted-foreground">Views</div></div>
+                </div>
+                {donations.supporters.length > 0 && (
+                  <div className="space-y-1.5">
+                    {donations.supporters.slice(0, 3).map((s: any, i: number) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <div className="w-5 h-5 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-[8px] font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
+                        <span className="text-muted-foreground truncate flex-1">{s.donor_name || 'Anonymous'}</span>
+                        <span className="font-semibold text-primary">${(s.amount_cents / 100).toFixed(0)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* Compact submissions on desktop */}
+              {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && (
+                <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════ SCROLL CONTENT (mobile: donations + submissions below CTA) ══════ */}
+      <main className="max-w-2xl mx-auto pb-20">
         <div className="px-4 space-y-6">
-          {/* ══════ CAMPAIGN STORY ══════ */}
+          {/* Campaign story */}
           {campaign.requirements && (
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
@@ -346,46 +382,50 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </motion.div>
           )}
 
-          {/* ══════ DONATIONS ══════ */}
-          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5 mb-3">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-sm flex items-center gap-2"><Heart size={14} className="text-primary/60" />Donations</h3>
-                <span className="text-xl font-bold text-primary">${totalRaised.toFixed(0)}</span>
+          {/* Donations (mobile only — desktop shows in right column) */}
+          <div className="md:hidden">
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5 mb-3">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-sm flex items-center gap-2"><Heart size={14} className="text-primary/60" />Donations</h3>
+                  <span className="text-xl font-bold text-primary">${totalRaised.toFixed(0)}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{donations.count}</div><div className="text-[10px] text-muted-foreground">Donors</div></div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{submissions}</div><div className="text-[10px] text-muted-foreground">Submissions</div></div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div><div className="text-[10px] text-muted-foreground">Views</div></div>
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{donations.count}</div><div className="text-[10px] text-muted-foreground">Donors</div></div>
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{submissions}</div><div className="text-[10px] text-muted-foreground">Submissions</div></div>
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center"><div className="text-lg font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div><div className="text-[10px] text-muted-foreground">Views</div></div>
-              </div>
-            </div>
 
-            {donations.supporters.length > 0 ? (
-              <div className="space-y-0.5">
-                {donations.supporters.map((s: any, i: number) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 py-3 px-1 border-b border-white/[0.04] last:border-0">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold truncate">{s.donor_name || 'Anonymous'}</span><span className="text-sm font-bold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span></div>
-                      {s.message && <p className="text-[10px] text-muted-foreground italic mt-0.5 leading-relaxed">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}
-                      <p className="text-[10px] text-muted-foreground/60 mt-0.5">{(() => { const d = new Date(s.created_at); const m = Math.floor((Date.now() - d.getTime()) / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m}m ago`; const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`; return d.toLocaleDateString(); })()}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-8 text-center">
-                <Heart size={28} className="mx-auto mb-3 text-primary/10" />
-                <p className="text-sm text-muted-foreground">No donations yet. Be the first to support!</p>
-                <button onClick={handleDonate} className="mt-3 text-sm font-semibold text-primary hover:underline">Donate now</button>
-              </div>
+              {donations.supporters.length > 0 ? (
+                <div className="space-y-0.5">
+                  {donations.supporters.map((s: any, i: number) => (
+                    <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="flex items-center gap-3 py-3 px-1 border-b border-white/[0.04] last:border-0">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold truncate">{s.donor_name || 'Anonymous'}</span><span className="text-sm font-bold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span></div>
+                        {s.message && <p className="text-[10px] text-muted-foreground italic mt-0.5 leading-relaxed">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}
+                        <p className="text-[10px] text-muted-foreground/60 mt-0.5">{(() => { const d = new Date(s.created_at); const m = Math.floor((Date.now() - d.getTime()) / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m}m ago`; const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`; return d.toLocaleDateString(); })()}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-8 text-center">
+                  <Heart size={28} className="mx-auto mb-3 text-primary/10" />
+                  <p className="text-sm text-muted-foreground">No donations yet. Be the first to support!</p>
+                  <button onClick={handleDonate} className="mt-3 text-sm font-semibold text-primary hover:underline">Donate now</button>
+                </div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Submissions (mobile only — desktop shows in right column) */}
+          <div className="md:hidden">
+            {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && (
+              <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />
             )}
-          </motion.div>
-
-          {/* ══════ SUBMISSIONS ══════ */}
-          {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && (
-            <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />
-          )}
+          </div>
 
           {/* ══════ MORE CAMPAIGNS — Infinite Scroll ══════ */}
           <div ref={moreRef}>
