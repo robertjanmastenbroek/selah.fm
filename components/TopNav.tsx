@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
-import { MessageCircle, LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug, Search, Menu, Bell } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug, Search, Menu, Bell, MessageCircle } from 'lucide-react';
 
 export default function Header() {
   const { data } = useSWR('/api/auth/me', fetcher, swrConfig);
@@ -13,30 +13,44 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Notifications
-  const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
+  // Messages
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const initials = profile?.name?.[0]?.toUpperCase() || '?';
   const profileImage = profile?.profile_image_url || null;
 
-  // Fetch notifications
+  // Fetch notifications + messages
   useEffect(() => {
     if (!profile) return;
+    // Notifications
     fetch('/api/notifications', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         if (d.notifications) {
           setNotifications(d.notifications.slice(0, 5));
-          setUnreadCount(d.unread || 0);
+          setUnreadNotifs(d.unread || 0);
+        }
+      })
+      .catch(() => {});
+    // Messages
+    fetch('/api/messages', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d)) {
+          const total = d.reduce((sum: number, c: any) => sum + (c.unread || 0), 0);
+          setUnreadMessages(total);
         }
       })
       .catch(() => {});
   }, [profile]);
 
-  const markAllRead = async () => {
+  const totalUnread = unreadNotifs + unreadMessages;
+
+  const markNotifsRead = async () => {
     await fetch('/api/notifications', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
-    setUnreadCount(0);
+    setUnreadNotifs(0);
   };
 
   const handleLogout = async () => {
@@ -46,16 +60,13 @@ export default function Header() {
   };
 
   useEffect(() => {
-    if (!open && !notifOpen) return;
+    if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as HTMLElement)) {
-        setOpen(false);
-        setNotifOpen(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as HTMLElement)) setOpen(false);
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [open, notifOpen]);
+  }, [open]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#0A0A0A]/90 backdrop-blur-xl">
@@ -70,90 +81,99 @@ export default function Header() {
           <img src="/images/Selah Logo Transparant.png" alt="Selah.fm" className="h-7 w-auto" />
         </Link>
 
-        {/* Right: hamburger + notifications */}
-        <div className="flex items-center gap-1" ref={dropdownRef}>
-          {/* Notifications */}
-          {profile && (
-            <div className="relative">
-              <button
-                onClick={() => { setNotifOpen(!notifOpen); setOpen(false); }}
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors relative"
-                aria-label="Notifications"
-              >
-                <Bell size={18} strokeWidth={1.5} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-primary-foreground px-1">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </button>
-              {notifOpen && (
-                <div className="absolute right-0 top-11 z-50 w-64 bg-[#0D0D0D] border border-white/[0.08] rounded-xl shadow-xl animate-slide-up overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-                    <p className="text-sm font-semibold">Notifications</p>
-                    {unreadCount > 0 && (
-                      <button onClick={markAllRead} className="text-[10px] text-primary hover:underline">Mark all read</button>
-                    )}
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-6">No notifications yet</p>
-                    ) : (
-                      notifications.map((n: any) => (
-                        <Link
-                          key={n.id}
-                          href={n.link || '#'}
-                          onClick={() => setNotifOpen(false)}
-                          className={`block px-4 py-3 border-b border-white/[0.03] hover:bg-white/[0.03] transition-colors ${!n.read ? 'bg-white/[0.02]' : ''}`}
-                        >
-                          <p className="text-xs leading-relaxed">{n.message}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {(() => {
-                              const d = new Date(n.created_at);
-                              const m = Math.floor((Date.now() - d.getTime()) / 60000);
-                              if (m < 1) return 'just now';
-                              if (m < 60) return `${m}m ago`;
-                              const h = Math.floor(m / 60);
-                              if (h < 24) return `${h}h ago`;
-                              return d.toLocaleDateString();
-                            })()}
-                          </p>
-                        </Link>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Hamburger menu */}
+        {/* Right: hamburger menu with combined badge */}
+        <div className="flex items-center" ref={dropdownRef}>
           <button
-            onClick={() => { setOpen(!open); setNotifOpen(false); }}
-            className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setOpen(!open)}
+            className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors relative"
             aria-label="Menu"
           >
             <Menu size={20} strokeWidth={1.5} />
+            {totalUnread > 0 && (
+              <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full bg-primary flex items-center justify-center text-[9px] font-bold text-primary-foreground px-1">
+                {totalUnread > 9 ? '9+' : totalUnread}
+              </span>
+            )}
           </button>
 
           {open && (
-            <div className="absolute right-3 top-12 z-50 w-56 bg-[#0D0D0D] border border-white/[0.08] rounded-xl shadow-xl py-1 animate-slide-up overflow-hidden">
+            <div className="absolute right-3 top-12 z-50 w-72 bg-[#0D0D0D] border border-white/[0.08] rounded-xl shadow-xl animate-slide-up overflow-hidden">
               {profile ? (
                 <>
+                  {/* Profile header */}
                   <div className="px-4 py-3 border-b border-white/[0.06] bg-white/[0.02] flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary overflow-hidden shrink-0">
                       {profileImage ? <img src={profileImage} alt="" className="w-full h-full object-cover" /> : initials}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium truncate">{profile.name || 'User'}</p>
                       <p className="text-[10px] text-muted-foreground truncate">{profile.email}</p>
                     </div>
+                    <Link href="/settings" onClick={() => setOpen(false)} className="shrink-0">
+                      <Settings size={16} className="text-muted-foreground hover:text-foreground" />
+                    </Link>
                   </div>
+
+                  {/* Notifications preview */}
+                  {unreadNotifs > 0 && (
+                    <div className="border-b border-white/[0.05]">
+                      <div className="flex items-center justify-between px-4 py-2.5">
+                        <span className="text-xs font-semibold flex items-center gap-1.5">
+                          <Bell size={12} className="text-primary" />
+                          Notifications
+                          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{unreadNotifs}</span>
+                        </span>
+                        <button onClick={markNotifsRead} className="text-[10px] text-primary hover:underline">Clear</button>
+                      </div>
+                      <div className="max-h-32 overflow-y-auto">
+                        {notifications.filter((n: any) => !n.read).slice(0, 3).map((n: any) => (
+                          <Link key={n.id} href={n.link || '#'} onClick={() => setOpen(false)}
+                            className="block px-4 py-2 hover:bg-white/[0.03] transition-colors">
+                            <p className="text-[11px] leading-relaxed line-clamp-2">{n.message}</p>
+                            <p className="text-[9px] text-muted-foreground mt-0.5">
+                              {(() => {
+                                const d = new Date(n.created_at);
+                                const m = Math.floor((Date.now() - d.getTime()) / 60000);
+                                if (m < 1) return 'just now';
+                                if (m < 60) return `${m}m ago`;
+                                const h = Math.floor(m / 60);
+                                if (h < 24) return `${h}h ago`;
+                                return d.toLocaleDateString();
+                              })()}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Messages preview */}
+                  {unreadMessages > 0 && (
+                    <div className="border-b border-white/[0.05]">
+                      <Link href="/dashboard" onClick={() => setOpen(false)}
+                        className="flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.03] transition-colors">
+                        <span className="text-xs font-semibold flex items-center gap-1.5">
+                          <MessageCircle size={12} className="text-primary" />
+                          Messages
+                          <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{unreadMessages}</span>
+                        </span>
+                        <span className="text-[10px] text-primary">View</span>
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Show "no alerts" when nothing is unread */}
+                  {totalUnread === 0 && (
+                    <div className="px-4 py-3 border-b border-white/[0.05] text-center">
+                      <p className="text-[11px] text-muted-foreground">No new alerts</p>
+                    </div>
+                  )}
+
+                  {/* Navigation links */}
                   <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><LayoutDashboard size={16} strokeWidth={1.5} /> Dashboard</Link>
                   <Link href="/review" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><ClipboardCheck size={16} strokeWidth={1.5} /> Review</Link>
                   <Link href="/earnings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Banknote size={16} strokeWidth={1.5} /> Earnings</Link>
                   <Link href="/analytics" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><LayoutDashboard size={16} strokeWidth={1.5} /> Analytics</Link>
-                  <Link href="/settings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Settings size={16} strokeWidth={1.5} /> Settings</Link>
                   <div className="border-t border-white/[0.05] my-1" />
                   <Link href="/browse" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Search size={16} strokeWidth={1.5} /> Browse campaigns</Link>
                   <Link href="/artists" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Music size={16} strokeWidth={1.5} /> Artists</Link>
