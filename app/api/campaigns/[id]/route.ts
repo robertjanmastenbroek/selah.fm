@@ -7,6 +7,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Support both UUID and slug lookup
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
     const campaigns = await sql`
       SELECT c.*, 
         COALESCE(c.title, c.track_title) as title,
@@ -18,7 +20,7 @@ export async function GET(
       FROM campaigns c
       LEFT JOIN campaign_stats v ON v.id = c.id
       LEFT JOIN users u ON u.id = c.artist_id
-      WHERE c.id = ${params.id}
+      WHERE ${isUuid ? sql`c.id = ${params.id}::uuid` : sql`c.slug = ${params.id}`}
     `;
     if (campaigns.length === 0) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });

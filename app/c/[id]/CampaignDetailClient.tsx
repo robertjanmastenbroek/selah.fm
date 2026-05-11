@@ -510,7 +510,7 @@ function InfiniteCampaigns({ currentId }: { currentId: string }) {
     <>
       <div className="grid grid-cols-3 gap-3">
         {campaigns.map((c: any) => (
-          <button key={c.id} onClick={() => router.push(`/c/${c.id}`)} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/20 transition-all text-left">
+          <button key={c.id} onClick={() => router.push(`/c/${c.slug || c.id}`)} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/20 transition-all text-left">
             <div className="aspect-square bg-white/[0.02]">{c.cover_art_url && <img src={c.cover_art_url} alt="" className="w-full h-full object-cover" loading="lazy" />}</div>
             <div className="p-3">
               <p className="text-xs font-semibold truncate">{c.title || c.track_title}</p>
