@@ -8,10 +8,18 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Resolve id to UUID (supports both slug and UUID in URL)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
+    let campaignId = params.id;
+    if (!isUuid) {
+      const resolved = await sql`SELECT id FROM campaigns WHERE slug = ${params.id}`;
+      if (resolved.length > 0) campaignId = resolved[0].id;
+    }
+
     const events = await sql`
       SELECT event_type, payload, created_at
       FROM live_ticker_events
-      WHERE campaign_id = ${params.id}
+      WHERE campaign_id = ${campaignId}
       ORDER BY created_at DESC
       LIMIT 15
     `;

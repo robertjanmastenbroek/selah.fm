@@ -7,13 +7,12 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Support both UUID and slug lookup
+    // Support both UUID and slug lookup — split queries avoid Postgres
+    // short-circuit-evaluation pitfalls with `::uuid` casts on non-UUID strings.
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
-    
 
-    // Query with both conditions — UUID or slug lookup
-    const campaigns = await sql`
-      SELECT c.*, 
+    const baseSelect = sql`
+      SELECT c.*,
         COALESCE(c.title, c.track_title) as title,
         COALESCE(v.approved_submissions, '0') as approved_submissions,
         COALESCE(v.pending_submissions, '0') as pending_submissions,
@@ -23,24 +22,29 @@ export async function GET(
       FROM campaigns c
       LEFT JOIN campaign_stats v ON v.id = c.id
       LEFT JOIN users u ON u.id = c.artist_id
-      WHERE (${isUuid} = true AND c.id = ${params.id}::uuid) OR (${isUuid} = false AND c.slug = ${params.id})
     `;
+
+    const campaigns = isUuid
+      ? await sql`${baseSelect} WHERE c.id = ${params.id}::uuid`
+      : await sql`${baseSelect} WHERE c.slug = ${params.id}`;
     if (campaigns.length === 0) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
     const campaign = campaigns[0];
+    const campaignId = campaign.id; // resolved UUID for donations lookup
+
     let donations = { totalCents: 0, count: 0, supporters: [] as any[] };
     try {
       const [totalRow] = await sql`
         SELECT COALESCE(SUM(amount_cents)::int, 0) as total, COUNT(*)::int as count
-        FROM campaign_donations WHERE campaign_id = ${params.id}
+        FROM campaign_donations WHERE campaign_id = ${campaignId}
       `;
       donations.totalCents = totalRow?.total || 0;
       donations.count = totalRow?.count || 0;
       const supporters = await sql`
         SELECT donor_name, amount_cents, message, anonymous, created_at
-        FROM campaign_donations WHERE campaign_id = ${params.id}
+        FROM campaign_donations WHERE campaign_id = ${campaignId}
         ORDER BY created_at DESC LIMIT 20
       `;
       donations.supporters = supporters;
@@ -62,8 +66,17 @@ export async function PATCH(
   try {
     const body = await request.json();
 
+    // Resolve id to UUID (supports both slug and UUID in URL)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
+    let campaignId = params.id;
+    if (!isUuid) {
+      const resolved = await sql`SELECT id FROM campaigns WHERE slug = ${params.id}`;
+      if (resolved.length === 0) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+      campaignId = resolved[0].id;
+    }
+
     // Ownership check
-    const campaign = await sql`SELECT * FROM campaigns WHERE id = ${params.id}`;
+    const campaign = await sql`SELECT * FROM campaigns WHERE id = ${campaignId}`;
     if (campaign.length === 0) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     if (campaign[0].artist_id !== session.id) {
       return NextResponse.json({ error: 'Not your campaign' }, { status: 403 });
@@ -71,7 +84,7 @@ export async function PATCH(
 
     // ── CPM lock: reject cpmRate changes if submissions exist ──
     if (body.cpmRate !== undefined) {
-      const subCount = await sql`SELECT COUNT(*)::int as c FROM submissions WHERE campaign_id = ${params.id}`;
+      const subCount = await sql`SELECT COUNT(*)::int as c FROM submissions WHERE campaign_id = ${campaignId}`;
       if (subCount[0].c > 0) {
         return NextResponse.json({ error: 'CPM rate is locked once submissions exist. Create a new campaign to change your rate.' }, { status: 400 });
       }
@@ -144,7 +157,7 @@ export async function PATCH(
         youtube_video_url = CASE WHEN ${hasYoutubeUrl} THEN ${youtubeVideoUrl} ELSE youtube_video_url END,
         gallery_images = CASE WHEN ${hasGalleryImages} THEN ${galleryImages}::jsonb ELSE gallery_images END,
         updated_at = NOW()
-      WHERE id = ${params.id}
+      WHERE id = ${campaignId}
       RETURNING *
     `;
 

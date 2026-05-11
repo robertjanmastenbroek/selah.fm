@@ -6,8 +6,11 @@ import sql from '@/lib/db';
 // will share a single DB query via React's request memoization.
 
 export const getCampaign = cache(async (id: string) => {
-  const campaigns = await sql`
-    SELECT c.*, 
+  // Support both UUID and slug lookup
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+  const baseSelect = sql`
+    SELECT c.*,
       COALESCE(c.title, c.track_title) as title,
       COALESCE(v.approved_submissions, '0') as approved_submissions,
       COALESCE(v.pending_submissions, '0') as pending_submissions,
@@ -17,22 +20,28 @@ export const getCampaign = cache(async (id: string) => {
     FROM campaigns c
     LEFT JOIN campaign_stats v ON v.id = c.id
     LEFT JOIN users u ON u.id = c.artist_id
-    WHERE c.id = ${id}
   `;
+
+  const campaigns = isUuid
+    ? await sql`${baseSelect} WHERE c.id = ${id}::uuid`
+    : await sql`${baseSelect} WHERE c.slug = ${id}`;
+
   if (campaigns.length === 0) return null;
 
   const campaign = campaigns[0];
+  const campaignId = campaign.id;
+
   let donations = { totalCents: 0, count: 0, supporters: [] as any[] };
   try {
     const [totalRow] = await sql`
       SELECT COALESCE(SUM(amount_cents)::int, 0) as total, COUNT(*)::int as count
-      FROM campaign_donations WHERE campaign_id = ${id}
+      FROM campaign_donations WHERE campaign_id = ${campaignId}
     `;
     donations.totalCents = totalRow?.total || 0;
     donations.count = totalRow?.count || 0;
     const supporters = await sql`
       SELECT donor_name, amount_cents, message, anonymous, created_at
-      FROM campaign_donations WHERE campaign_id = ${id}
+      FROM campaign_donations WHERE campaign_id = ${campaignId}
       ORDER BY created_at DESC LIMIT 20
     `;
     donations.supporters = supporters;
