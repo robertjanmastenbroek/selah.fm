@@ -296,20 +296,30 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </div>
           </motion.div>
 
-          {campaign.content_assets_url && (
+          {campaign.content_assets_url ? (
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer" className="block rounded-2xl bg-gradient-to-r from-primary/[0.04] to-primary/[0.01] border border-primary/10 p-5 hover:border-primary/20 transition-colors group">
+              <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer" className="block rounded-2xl bg-gradient-to-r from-primary/[0.08] to-primary/[0.02] border-2 border-primary/20 p-5 hover:border-primary/30 transition-all group active:scale-[0.99]">
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-sm text-primary group-hover:underline">Creator resource pack</h4>
-                    <p className="text-xs text-muted-foreground mt-1">Audio files (.mp3, .wav), videos, and images from the artist.</p>
-                    <span className="inline-flex items-center gap-1 text-[11px] text-primary font-medium mt-2">Open Google Drive <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+                    <h4 className="font-bold text-sm text-primary group-hover:underline">📦 Download official audio & assets</h4>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Master track (.wav + .mp3), cover art, reference videos — everything you need to create winning content for this campaign.</p>
+                    <span className="inline-flex items-center gap-1.5 text-sm text-primary font-semibold mt-3 group-hover:gap-2 transition-all">Open Google Drive <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
                   </div>
                 </div>
               </a>
+            </motion.div>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="rounded-2xl bg-amber-500/[0.04] border border-amber-500/10 p-5 flex items-start gap-3">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-400/60 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div>
+                <p className="text-xs font-semibold text-amber-400/80">No resource pack provided</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">The artist hasn&apos;t shared a Google Drive with audio files yet. Creators can still find the official audio by searching &quot;{campaign.track_title}&quot; on their platform.</p>
+              </div>
             </motion.div>
           )}
 
