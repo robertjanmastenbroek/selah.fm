@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 
+// 🚫 SEED DISABLED — production is clean. Remove this block to re-enable.
+export async function GET(request: Request) {
+  return NextResponse.json({ error: 'Seed disabled. The database is clean for launch.' }, { status: 403 });
+/*
 export async function GET(request: Request) {
   try {
     // ── Ensure schema exists (create tables and columns if missing) ──
@@ -128,3 +132,4 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+*/
