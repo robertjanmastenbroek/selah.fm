@@ -71,10 +71,14 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Trust signals */}
-      <div className="flex items-center gap-3 text-[10px] text-muted-foreground/60 justify-center">
+      <div className="flex items-center gap-3 text-[10px] text-muted-foreground/60 justify-center flex-wrap">
         <span className="flex items-center gap-1"><Lock size={10} /> SSL encrypted</span>
+        <span className="text-muted-foreground/30">·</span>
         <span className="flex items-center gap-1"><Shield size={10} /> Secure payment</span>
+        <span className="text-muted-foreground/30">·</span>
         <span className="flex items-center gap-1">Powered by Stripe</span>
+        <span className="text-muted-foreground/30">·</span>
+        <span className="flex items-center gap-1">100% protected</span>
       </div>
 
       {/* Payment Element */}
