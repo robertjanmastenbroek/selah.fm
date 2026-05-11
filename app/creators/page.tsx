@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 async function getCreators() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
-    const res = await fetch(`${baseUrl}/api/creators`, { next: { revalidate: 60 } });
+    const res = await fetch(`${baseUrl}/api/creators`);
     if (!res.ok) return { creators: [] };
     return res.json();
   } catch {
