@@ -19,7 +19,7 @@ interface EarnModalProps {
   contentAssetsUrl?: string;
 }
 
-// ── Platform config with official SVG logos ────────────────
+// ── Platform config with official brand colors + SVG logos ──
 const PLATFORMS = [
   {
     id: 'tiktok' as const,
@@ -57,7 +57,24 @@ const PLATFORMS = [
       </svg>
     ),
   },
+  {
+    id: 'facebook' as const,
+    label: 'Facebook',
+    color: '#1877F2',
+    bgClass: 'bg-[#1877F2]/10',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+      </svg>
+    ),
+  },
 ];
+
+// Resolve platform label for display
+function platformLabel(id: string) {
+  const p = PLATFORMS.find(p => p.id === id);
+  return p ? p.label : id;
+}
 
 export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCents, coverArtUrl, contentAssetsUrl }: EarnModalProps) {
   const [platform, setPlatform] = useState('tiktok');
@@ -235,24 +252,42 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     <p className="text-[10px] text-emerald-400/40 mt-1">80% of ${cpmDollars.toFixed(2)} CPM rate set by the artist</p>
                   </motion.div>
 
-                  {/* ── How it works ── */}
-                  <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-3">
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">How it works</p>
-                    <div className="space-y-2.5">
-                      {[
-                        { step: '1', emoji: '🔍', title: 'Find the official audio', desc: `Open ${platform === 'tiktok' ? 'TikTok' : platform === 'instagram' ? 'Instagram' : 'YouTube'} and search for "${trackTitle}". You must use the official audio — not a screen recording.` },
-                        { step: '2', emoji: '🎬', title: 'Create your video', desc: 'Record a video using the official audio. Dance, react, duet — be creative! Make it public so views count.' },
-                        { step: '3', emoji: '📋', title: 'Submit your link', desc: 'Copy the link to your published video and paste it below. The artist reviews and you get paid for verified views.' },
-                      ].map(s => (
-                        <div key={s.step} className="flex gap-3">
-                          <span className="text-sm shrink-0 mt-0.5">{s.emoji}</span>
-                          <div>
-                            <p className="text-xs font-semibold text-foreground/70">{s.title}</p>
-                            <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{s.desc}</p>
-                          </div>
-                        </div>
-                      ))}
+                  {/* ── Platform selector ── */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Choose platform</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {PLATFORMS.map(p => {
+                        const active = platform === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            onClick={() => setPlatform(p.id)}
+                            className={`flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border-2 transition-all active:scale-[0.96] ${
+                              active
+                                ? 'border-primary bg-primary/[0.06] shadow-[0_0_20px_rgba(91,127,255,0.08)]'
+                                : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]'
+                            }`}
+                          >
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${p.bgClass}`} style={{ color: p.color }}>
+                              {p.icon}
+                            </div>
+                            <span className="text-[10px] font-medium">{p.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
+                  </div>
+
+                  {/* ── URL input ── */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Paste your video link</label>
+                    <Input
+                      value={url}
+                      onChange={e => setUrl(e.target.value)}
+                      placeholder={`https://www.${platform === 'facebook' ? 'facebook' : platform}.com/...`}
+                      className="text-sm py-5 rounded-xl"
+                      autoFocus
+                    />
                   </div>
 
                   {/* ── Creator resource pack ── */}
@@ -276,44 +311,6 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     </a>
                   )}
 
-                  {/* ── Platform selector ── */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Choose platform</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {PLATFORMS.map(p => {
-                        const active = platform === p.id;
-                        return (
-                          <button
-                            key={p.id}
-                            onClick={() => setPlatform(p.id)}
-                            className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 transition-all active:scale-[0.96] ${
-                              active
-                                ? 'border-primary bg-primary/[0.06] shadow-[0_0_20px_rgba(91,127,255,0.08)]'
-                                : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]'
-                            }`}
-                          >
-                            <div className={`w-9 h-9 rounded-full flex items-center justify-center ${p.bgClass}`} style={{ color: p.color }}>
-                              {p.icon}
-                            </div>
-                            <span className="text-[10px] font-medium">{p.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* ── URL input ── */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Paste your video link</label>
-                    <Input
-                      value={url}
-                      onChange={e => setUrl(e.target.value)}
-                      placeholder={`https://www.${platform}.com/...`}
-                      className="text-sm py-5 rounded-xl"
-                      autoFocus
-                    />
-                  </div>
-
                   {/* ── Submit ── */}
                   <Button
                     onClick={handleSubmit}
@@ -332,6 +329,26 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     <span className="flex items-center gap-1"><Shield size={10} /> Artist reviews before paying</span>
                     <span>·</span>
                     <span>Paid via Stripe</span>
+                  </div>
+
+                  {/* ── How it works (reference at bottom) ── */}
+                  <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">How it works</p>
+                    <div className="space-y-2.5">
+                      {[
+                        { step: '1', emoji: '🔍', title: 'Find the official audio', desc: `Open ${platformLabel(platform)} and search for "${trackTitle}". You must use the official audio — not a screen recording.` },
+                        { step: '2', emoji: '🎬', title: 'Create your video', desc: 'Record a video using the official audio. Dance, react, duet — be creative! Make it public so views count.' },
+                        { step: '3', emoji: '📋', title: 'Submit your link', desc: 'Copy the link to your published video and paste it above. The artist reviews and you get paid for verified views.' },
+                      ].map(s => (
+                        <div key={s.step} className="flex gap-3">
+                          <span className="text-sm shrink-0 mt-0.5">{s.emoji}</span>
+                          <div>
+                            <p className="text-xs font-semibold text-foreground/70">{s.title}</p>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{s.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </>
               )}
