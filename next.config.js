@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['pg'],
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -23,6 +22,7 @@ const nextConfig = {
   },
   // Allow larger body for image uploads (base64 data URLs)
   experimental: {
+    serverComponentsExternalPackages: ['pg'],
     serverActions: {
       bodySizeLimit: '10mb',
     },
