@@ -63,25 +63,9 @@ export async function PATCH(
       return NextResponse.json({ error: 'Not your campaign' }, { status: 403 });
     }
 
-    const current = campaign[0];
-
-    // ── Status-only toggle (existing behavior) ──
-    if (body.status && Object.keys(body).length === 1) {
-      if (!['active', 'paused', 'completed', 'cancelled'].includes(body.status)) {
-        return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-      }
-      const result = await sql`
-        UPDATE campaigns SET 
-          status = ${body.status}, 
-          paused_at = CASE WHEN ${body.status} = 'paused' THEN NOW() ELSE paused_at END,
-          updated_at = NOW()
-        WHERE id = ${params.id} RETURNING *
-      `;
-      return NextResponse.json(result[0]);
-    }
-
     // ── Prepare update values ──────────────────────────────────
     const trackTitle = body.trackTitle !== undefined ? String(body.trackTitle).slice(0, 200) : null;
+    const title = body.title !== undefined ? (body.title ? String(body.title).slice(0, 300) : null) : null;
     const trackUrl = body.trackUrl !== undefined ? String(body.trackUrl).slice(0, 2048) : null;
     const requirements = body.requirements !== undefined ? String(body.requirements).slice(0, 2000) : null;
     const hashtags = body.hashtags !== undefined ? String(body.hashtags).slice(0, 500) : null;
@@ -115,18 +99,6 @@ export async function PATCH(
     let platforms: string | null = null;
     if (body.platforms !== undefined) platforms = JSON.stringify(body.platforms);
 
-    let newBudgetCents: number | null = null;
-    let newRemainingCents: number | null = null;
-    if (body.budget !== undefined) {
-      const budgetCents = Math.round(parseInt(body.budget) * 100);
-      if (budgetCents > 0 && budgetCents <= 10000000) {
-        const oldBudget = parseInt(current.total_budget_cents);
-        const oldRemaining = parseInt(current.budget_remaining_cents);
-        newBudgetCents = budgetCents;
-        newRemainingCents = Math.max(0, oldRemaining + (budgetCents - oldBudget));
-      }
-    }
-
     // For nullable fields where "keep" vs "set to null" matters, use separate flags
     const hasCoverArt = body.coverArtUrl !== undefined;
     const hasReqHashtags = body.requiredHashtags !== undefined;
@@ -136,6 +108,7 @@ export async function PATCH(
     const result = await sql`
       UPDATE campaigns SET
         track_title = COALESCE(${trackTitle}, track_title),
+        title = CASE WHEN ${body.title !== undefined} THEN ${title} ELSE title END,
         track_url = COALESCE(${trackUrl}, track_url),
         cover_art_url = CASE WHEN ${hasCoverArt} THEN ${coverArtUrl} ELSE cover_art_url END,
         cpm_rate_cents = COALESCE(${cpmRateCents}, cpm_rate_cents),
@@ -147,9 +120,7 @@ export async function PATCH(
         min_video_length_seconds = CASE WHEN ${hasMinVideoLength} THEN ${minVideoLength} ELSE min_video_length_seconds END,
         caption_requirements = CASE WHEN ${hasCaptionReq} THEN ${captionRequirements} ELSE caption_requirements END,
         content_assets_url = COALESCE(${contentAssetsUrl}, content_assets_url),
-        platforms = COALESCE(${platforms}::jsonb, platforms),
-        total_budget_cents = COALESCE(${newBudgetCents}, total_budget_cents),
-        budget_remaining_cents = COALESCE(${newRemainingCents}, budget_remaining_cents),
+        platforms = COALESCE(ARRAY(SELECT * FROM jsonb_array_elements_text(${platforms}::jsonb)), platforms),
         updated_at = NOW()
       WHERE id = ${params.id}
       RETURNING *
