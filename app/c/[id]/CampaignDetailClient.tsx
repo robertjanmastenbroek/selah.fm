@@ -315,7 +315,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Be creative — dance, react, duet.' },
                   { step: '3', title: 'Submit & earn', desc: `Post publicly, copy the link, paste it here. Earn $${(cpm * 0.8).toFixed(2)} per 1K verified views.` },
                 ].map(s => (
-                  <div key={s.step} className="space-y-1"><span className="font-semibold text-foreground/70">{s.title}</span><p className="leading-relaxed">{s.desc}</p></div>
+                  <div key={s.step} className="space-y-1"><span className="font-semibold text-foreground/70">{s.title}</span><p className="leading-relaxed break-words">{s.desc}</p></div>
                 ))}
               </div>
             </div>
@@ -352,7 +352,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
                 <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><Music2 size={14} className="text-primary/60" />Campaign requirements</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{campaign.requirements}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words overflow-hidden">{campaign.requirements}</p>
                 {campaign.recommended_hashtags && <p className="text-xs font-mono text-primary mt-3">{campaign.recommended_hashtags}</p>}
               </div>
             </motion.div>
@@ -375,7 +375,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2"><span className="text-sm font-semibold truncate">{s.donor_name || 'Anonymous'}</span><span className="text-sm font-bold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span></div>
-                        {s.message && <p className="text-[10px] text-muted-foreground italic mt-0.5 leading-relaxed">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}
+                        {s.message && <p className="text-[10px] text-muted-foreground italic mt-0.5 leading-relaxed break-words">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}
                         <p className="text-[10px] text-muted-foreground/60 mt-0.5">{(() => { const d = new Date(s.created_at); const m = Math.floor((Date.now() - d.getTime()) / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m}m ago`; const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`; return d.toLocaleDateString(); })()}</p>
                       </div>
                     </motion.div>
