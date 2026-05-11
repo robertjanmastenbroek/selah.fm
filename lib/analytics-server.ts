@@ -44,10 +44,6 @@ export function trackFundCampaign(amount: number, clientId?: string) {
   return trackEvent('fund_campaign', { value: amount, currency: 'USD' }, clientId);
 }
 
-export function trackCreateCampaign(trackTitle: string, budget: number, clientId?: string) {
-  return trackEvent('create_campaign', { track_title: trackTitle, budget }, clientId);
-}
-
 export function trackSubmitContent(platform: string, clientId?: string) {
   return trackEvent('submit_content', { platform }, clientId);
 }
