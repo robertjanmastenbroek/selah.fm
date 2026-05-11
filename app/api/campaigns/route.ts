@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import crypto from 'crypto';
 import { generateCampaignDefaults } from '@/lib/defaults';
 
 // Allow larger request bodies for campaign creation (cover art can be 5MB+ as data URL)
@@ -133,15 +134,19 @@ export async function POST(request: Request) {
     const finalCaption = captionRequirements || defaults.captionRequirements;
     const finalMinLength = minVideoLength || defaults.minVideoLengthSeconds;
 
+    // Auto-generate SEO slug: artist_name-track_title
+    const slugSource = `${artistName}-${trackTitle}`.toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 100);
+    const uniqueSlug = slugSource + '-' + crypto.randomUUID().slice(0, 4);
+
     const result = await sql`
       INSERT INTO campaigns (
-        artist_id, track_title, title, track_url, 
+        artist_id, track_title, title, slug, track_url, 
         cpm_rate_cents, total_budget_cents, max_payout_per_submission_cents, budget_remaining_cents,
         status, content_assets_url, recommended_hashtags, requirements, cover_art_url,
         required_hashtags, require_ftc, min_video_length_seconds, caption_requirements
       )
       VALUES (
-        ${userId}, ${trackTitle}, ${body.title || null}, ${trackUrl}, 
+        ${userId}, ${trackTitle}, ${body.title || null}, ${uniqueSlug}, ${trackUrl}, 
         ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100},
         'active', ${driveUrl || ''}, ${finalHashtags}, ${finalRequirements}, ${coverArtUrl || null},
         ${requiredHashtags || null}, ${requireFtc || false}, ${finalMinLength}, ${finalCaption}
