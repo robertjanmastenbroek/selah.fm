@@ -129,7 +129,7 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
         {processing ? (
           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         ) : mode === 'donation' ? (
-          <><Heart size={16} className="mr-2" /> Support with ${amount}</>
+          <><Heart size={16} className="mr-2" /> Donate ${amount}</>
         ) : (
           <><DollarSign size={16} className="mr-2" /> Deposit ${amount}</>
         )}

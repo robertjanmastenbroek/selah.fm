@@ -238,7 +238,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6">
               <CircleProgress pct={progress} size={160} />
               <div className="grid grid-cols-2 gap-3 mt-5">
-                {[{ value: `$${spent.toFixed(0)}`, label: 'Spent' }, { value: `$${budget.toFixed(0)}`, label: 'Budget' }, { value: donations.count, label: 'Supporters' }, { value: views >= 1000 ? `${(views/1000).toFixed(1)}K` : views, label: 'Views' }].map(s => (
+                {[{ value: `$${spent.toFixed(0)}`, label: 'Spent' }, { value: `$${budget.toFixed(0)}`, label: 'Budget' }, { value: donations.count, label: 'Donors' }, { value: views >= 1000 ? `${(views/1000).toFixed(1)}K` : views, label: 'Views' }].map(s => (
                   <div key={s.label} className="text-center"><div className="text-xl font-bold">{s.value}</div><div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div></div>
                 ))}
               </div>
@@ -280,7 +280,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
         {donations.supporters.length > 0 && (
           <motion.div className="mb-10" initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h3 className="font-semibold text-sm flex items-center gap-2 mb-3">
-              <Users size={14} className="text-primary/60" />Recent support ({donations.count})
+              <Users size={14} className="text-primary/60" />Recent donations ({donations.count})
             </h3>
             <div className="space-y-2">
               {donations.supporters.slice(0, 5).map((s: any, i: number) => (
