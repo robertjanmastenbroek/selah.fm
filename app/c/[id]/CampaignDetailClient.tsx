@@ -100,7 +100,7 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
 
               <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
                 <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-white/[0.04]">
-                  {imageUrl ? <img src={imageUrl} alt={title} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><Music2 size={20} className="text-muted-foreground/30" /></div>}
+                  {imageUrl ? <img src={imageUrl} alt={title} className="w-full h-full object-cover" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center"><Music2 size={20} className="text-muted-foreground/30" /></div>}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold truncate">{title}</p>
