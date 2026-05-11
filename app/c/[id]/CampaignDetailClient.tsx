@@ -172,7 +172,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
   return (
     <div className="min-h-screen" style={{ background: bg }}>
-      <Header minimal />
+      <Header />
       <main className="max-w-2xl mx-auto pb-24">
 
         {/* ══════ HERO (GoFundMe-style: artist top-left, title bottom overlay) ══════ */}
