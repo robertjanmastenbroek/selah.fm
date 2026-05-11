@@ -239,15 +239,15 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             <span className="text-white text-sm font-semibold drop-shadow-sm">{artistName}</span>
           </div>
 
-          {/* Campaign title — centered on image */}
-          <div className="absolute bottom-[40%] left-0 right-0 flex justify-center px-6 pointer-events-none">
+          {/* Campaign title — dead center of the image */}
+          <div className="absolute inset-0 flex items-center justify-center px-6 pointer-events-none">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center drop-shadow-lg leading-tight">
               {displayTitle}
             </h1>
           </div>
 
-          {/* Bottom overlay: divider → progress → CTAs */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent px-5 pt-16 pb-5">
+          {/* Bottom overlay: divider → progress → CTAs — pinned to absolute bottom */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/90 to-transparent px-5 pt-4 pb-5">
 
             {/* Divider */}
             <div className="border-t border-white/10 mb-4" />
