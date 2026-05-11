@@ -27,7 +27,7 @@ export default function Analytics() {
       <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
       <script
         dangerouslySetInnerHTML={{
-          __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${gaId}');`,
+          __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${gaId}');setTimeout(function(){if(window.__selahFlushGA)window.__selahFlushGA()},500);`,
         }}
       />
     </>
