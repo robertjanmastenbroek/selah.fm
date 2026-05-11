@@ -232,7 +232,7 @@ export default function DonatePage() {
             <div className="p-5 space-y-4">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">You&apos;re supporting</p>
-                <h1 className="text-xl font-bold">{campaign.track_title}</h1>
+                <h1 className="text-xl font-bold">{campaign.title || campaign.track_title}</h1>
                 <p className="text-xs text-muted-foreground mt-1">${cpm.toFixed(2)} per 1,000 verified views</p>
               </div>
               <div className="grid grid-cols-2 gap-3 py-3 border-y border-white/[0.06]">
@@ -378,7 +378,7 @@ export default function DonatePage() {
         open={successOpen}
         mode="donation"
         amount={effectiveAmount}
-        campaignTitle={campaign.track_title}
+        campaignTitle={campaign.title || campaign.track_title}
         campaignId={id as string}
         donorName={donorName}
         donorMessage={donorMessage}

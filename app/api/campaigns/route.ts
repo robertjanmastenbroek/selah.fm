@@ -27,6 +27,7 @@ export async function GET(request: Request) {
       const orderClause = sort === 'popular' ? sql`COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC` : sql`c.created_at DESC`;
       campaigns = await sql`
         SELECT c.*, 
+          COALESCE(c.title, c.track_title) as title,
           COALESCE(v.approved_submissions, '0') as approved_submissions,
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
@@ -42,6 +43,7 @@ export async function GET(request: Request) {
       const orderClause2 = sort === 'popular' ? sql`COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC` : sql`c.created_at DESC`;
       campaigns = await sql`
         SELECT c.*, 
+          COALESCE(c.title, c.track_title) as title,
           COALESCE(v.approved_submissions, '0') as approved_submissions,
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
@@ -60,7 +62,7 @@ export async function GET(request: Request) {
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter((c: any) => 
-        c.track_title?.toLowerCase().includes(q) ||
+        (c.title || c.track_title)?.toLowerCase().includes(q) ||
         (c.recommended_hashtags || '').toLowerCase().includes(q) ||
         (c.artist_name || '').toLowerCase().includes(q)
       );

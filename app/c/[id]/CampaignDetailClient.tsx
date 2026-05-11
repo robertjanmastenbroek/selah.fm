@@ -167,6 +167,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const submissions = parseInt(campaign.approved_submissions || '0');
   const totalRaised = donations.totalCents / 100;
   const artistName = campaign.artist_name || 'Unknown Artist';
+  const displayTitle = campaign.title || campaign.track_title;
 
   const stickyBarVisible = scrollY > heroBottom - 80;
 
@@ -193,12 +194,15 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             <span className="text-white text-sm font-semibold drop-shadow-sm">{artistName}</span>
           </div>
 
-          {/* Bottom overlay: title → divider → progress → CTAs */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent px-5 pt-8 pb-5">
-            {/* Track title */}
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight text-white mb-4">
-              {campaign.track_title}
+          {/* Campaign title — centered on image */}
+          <div className="absolute bottom-[30%] left-0 right-0 flex justify-center px-6 pointer-events-none">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center drop-shadow-lg leading-tight">
+              {displayTitle}
             </h1>
+          </div>
+
+          {/* Bottom overlay: divider → progress → CTAs */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent px-5 pt-8 pb-5">
 
             {/* Divider */}
             <div className="border-t border-white/10 mb-4" />
@@ -379,9 +383,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
         )}
       </AnimatePresence>
 
-      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={campaign.track_title} />
-      <StripePaymentModal open={paymentModal} onClose={() => setPaymentModal(false)} onSuccess={() => { setPaymentModal(false); setSuccessOpen(true); }} clientSecret={clientSecret} title={campaign.track_title} subtitle="Your donation goes directly to the campaign budget" coverArtUrl={campaign.cover_art_url} amount={donationAmount} mode="donation" />
-      <PaymentSuccess open={successOpen} mode="donation" amount={donationAmount} campaignTitle={campaign.track_title} campaignId={id} onClose={() => setSuccessOpen(false)} />
+      <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={displayTitle} />
+      <StripePaymentModal open={paymentModal} onClose={() => setPaymentModal(false)} onSuccess={() => { setPaymentModal(false); setSuccessOpen(true); }} clientSecret={clientSecret} title={displayTitle} subtitle="Your donation goes directly to the campaign budget" coverArtUrl={campaign.cover_art_url} amount={donationAmount} mode="donation" />
+      <PaymentSuccess open={successOpen} mode="donation" amount={donationAmount} campaignTitle={displayTitle} campaignId={id} onClose={() => setSuccessOpen(false)} />
     </div>
   );
 }
@@ -443,7 +447,7 @@ function InfiniteCampaigns({ currentId }: { currentId: string }) {
           <button key={c.id} onClick={() => router.push(`/c/${c.id}`)} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/20 transition-all text-left">
             <div className="aspect-square bg-white/[0.02]">{c.cover_art_url && <img src={c.cover_art_url} alt="" className="w-full h-full object-cover" loading="lazy" />}</div>
             <div className="p-3">
-              <p className="text-xs font-semibold truncate">{c.track_title}</p>
+              <p className="text-xs font-semibold truncate">{c.title || c.track_title}</p>
               <p className="text-[10px] text-muted-foreground truncate">{c.artist_name || 'Artist'}</p>
             </div>
           </button>
