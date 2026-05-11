@@ -273,10 +273,14 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             />
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20 pointer-events-none" />
-            {/* Artist name — top left */}
+            {/* Artist name + avatar — top left */}
             <div className="absolute top-3 left-4 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border border-white/20 shrink-0">
-                {artistName[0]?.toUpperCase() || '?'}
+              <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border border-white/20 shrink-0 overflow-hidden">
+                {campaign.artist_avatar ? (
+                  <img src={campaign.artist_avatar} alt={artistName} className="w-full h-full object-cover" />
+                ) : (
+                  artistName[0]?.toUpperCase() || '?'
+                )}
               </div>
               <span className="text-white text-sm font-semibold drop-shadow-sm">{artistName}</span>
             </div>

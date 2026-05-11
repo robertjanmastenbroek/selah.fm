@@ -16,7 +16,7 @@ import { trackSubmitContent } from '@/lib/analytics';
 import EarnModal from '@/components/EarnModal';
 import { PlatformBadge } from '@/components/SocialIcons';
 
-interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; }
+interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; artist_name?: string; artist_avatar?: string; }
 
 function buildQuery(filters: Record<string, any>) {
   const params = new URLSearchParams();
@@ -152,12 +152,24 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                         </div>
                       </div>
 
-                      {/* Circle progress + CPM (no horizontal bar) */}
-                      <div className="flex items-center gap-3">
-                        <CircleProgress pct={pct} size={40} />
-                        <div>
+                      {/* Circle progress + CPM + artist */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CircleProgress pct={pct} size={36} />
                           <span className="text-xs font-semibold text-muted-foreground">${cpm.toFixed(2)} CPM</span>
                         </div>
+                        {c.artist_name && (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 rounded-full bg-white/[0.04] flex items-center justify-center text-[8px] font-bold text-muted-foreground overflow-hidden shrink-0">
+                              {c.artist_avatar ? (
+                                <img src={c.artist_avatar} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                c.artist_name[0]?.toUpperCase()
+                              )}
+                            </div>
+                            <span className="text-[9px] text-muted-foreground/60 truncate max-w-[60px]">{c.artist_name}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Submit quick-action */}
