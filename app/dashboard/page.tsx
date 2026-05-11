@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import { motion } from 'framer-motion';
@@ -16,7 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
 import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
-import { Plus, Edit3 } from 'lucide-react';
+import { Plus, Edit3, ExternalLink } from 'lucide-react';
 import StripePaymentModal from '@/components/StripePaymentModal';
 import PaymentSuccess from '@/components/PaymentSuccess';
 
@@ -27,6 +27,7 @@ interface Campaign {
 
 function DashboardContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const hireCreatorId = searchParams.get('hire') || '';
   const hireCreatorCpm = searchParams.get('cpm') || '';
   const hireCreatorName = searchParams.get('name') || '';
@@ -518,7 +519,7 @@ function DashboardContent() {
                 {campaigns.map((c, i) => {
                   const pct = c.budget > 0 ? Math.min((c.spent / c.budget) * 100, 100) : 0;
                   return (
-                    <Card key={c.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
+                    <Card key={c.id} className="animate-slide-up overflow-hidden cursor-pointer hover:border-primary/20 transition-colors" style={{ animationDelay: `${i * 60}ms` }} onClick={() => router.push(`/c/${c.id}`)}>
                       <CampaignCover src={c.coverArt} title={c.trackTitle} className="h-40" />
                       <CardContent className="p-5 space-y-4">
                         <div className="flex items-center justify-between">
@@ -532,10 +533,11 @@ function DashboardContent() {
                         </div>
                         <Progress value={pct} className="h-1.5" />
                         {fundingId === c.id ? (
-                          <div className="space-y-2 animate-slide-up">
+                          <div className="space-y-2 animate-slide-up" onClick={(e) => e.stopPropagation()}>
                             <div className="flex gap-2">
                               <Input type="number" min="5" value={fundingAmount} onChange={e => setFundingAmount(e.target.value)} className="flex-1" autoFocus />
-                              <Button onClick={async () => {
+                              <Button onClick={async (e) => {
+                                e.stopPropagation();
                                 const amt = parseInt(fundingAmount); if (amt < 5) { addToast('Minimum $5', 'error'); return; }
                                 const r = await fetch('/api/stripe', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ amount: amt, campaignId: c.id }) });
                                 const d = await r.json();
@@ -547,13 +549,13 @@ function DashboardContent() {
                                 } else { addToast(d.error || 'Could not start payment', 'error'); }
                               }}>Fund ${fundingAmount}</Button>
                             </div>
-                            <Button variant="ghost" size="sm" onClick={() => setFundingId(null)} className="w-full">Cancel</Button>
+                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setFundingId(null); }} className="w-full">Cancel</Button>
                           </div>
                         ) : (
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="flex-1" onClick={() => window.location.href = '/review'}>Review ({c.submissions})</Button>
-                            <Button variant="outline" size="sm" onClick={() => startEdit(c)} title="Edit campaign"><Edit3 size={14} /></Button>
-                            <Button size="sm" className="flex-1" onClick={() => { setFundingId(c.id); setFundingAmount('10'); }}>Add budget</Button>
+                            <Button variant="outline" size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); window.location.href = '/review'; }}>Review ({c.submissions})</Button>
+                            <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); startEdit(c); }} title="Edit campaign"><Edit3 size={14} /></Button>
+                            <Button size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); setFundingId(c.id); setFundingAmount('10'); }}>Add budget</Button>
                           </div>
                         )}
                       </CardContent>
