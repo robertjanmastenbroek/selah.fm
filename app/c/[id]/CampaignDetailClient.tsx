@@ -181,7 +181,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           <CampaignCover
             src={campaign.cover_art_url}
             title={campaign.track_title}
-            className="w-full h-[55vh] sm:h-[50vh] max-h-[600px] rounded-none"
+            className="w-full h-[65vh] sm:h-[55vh] max-h-[700px] rounded-none"
           />
           {/* Gradient overlay for readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 pointer-events-none" />
@@ -195,7 +195,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           </div>
 
           {/* Campaign title — centered on image */}
-          <div className="absolute bottom-[30%] left-0 right-0 flex justify-center px-6 pointer-events-none">
+          <div className="absolute bottom-[40%] left-0 right-0 flex justify-center px-6 pointer-events-none">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center drop-shadow-lg leading-tight">
               {displayTitle}
             </h1>
@@ -207,8 +207,8 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             {/* Divider */}
             <div className="border-t border-white/10 mb-4" />
 
-            {/* Progress + stats */}
-            <div className="flex items-center gap-4 mb-4">
+            {/* Progress + stats (share icon top-right) */}
+            <div className="relative flex items-center gap-4 mb-4 pr-12">
               <CircleProgress pct={progress} size={64} />
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div>
@@ -223,49 +223,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   <span>${cpm.toFixed(2)} CPM</span>
                 </div>
               </div>
-            </div>
-
-            {/* ── CTAs (with TikTok-style share icon top-right) ── */}
-            <div className="relative">
-              {!showSubmit ? (
-                <div className="flex gap-2 pr-12">
-                  <button
-                    onClick={() => setShowSubmit(true)}
-                    className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]"
-                  >
-                    EARN
-                  </button>
-                  <button
-                    onClick={handleDonate}
-                    className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all"
-                    style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}
-                  >
-                    DONATE
-                  </button>
-                </div>
-              ) : (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-white/[0.08] backdrop-blur-sm border border-white/10 p-4 space-y-3">
-                  <p className="text-sm font-semibold flex items-center gap-2 text-white"><Camera size={16} className="text-primary" />Submit your video</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'tiktok' as const, label: 'TikTok', bg: 'bg-[#ff005015]', text: 'text-[#ff0050]', letter: 'T' },
-                      { id: 'instagram' as const, label: 'Reels', bg: 'bg-[#E1306C15]', text: 'text-[#E1306C]', letter: 'R' },
-                      { id: 'youtube' as const, label: 'Shorts', bg: 'bg-[#FF000015]', text: 'text-[#FF0000]', letter: 'S' },
-                    ].map(p => (
-                      <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/10 bg-white/[0.03]'}`}>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${p.bg}`}><span className={`text-[10px] font-bold ${p.text}`}>{p.letter}</span></div>
-                        <span className="text-[10px] font-medium text-white/70">{p.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-lg bg-white/[0.08] border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50" autoFocus />
-                    <Button onClick={handleSubmitVideo} disabled={!submitUrl || submitting} className="shrink-0 text-sm">{submitting ? '...' : 'Submit'}</Button>
-                  </div>
-                  <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-white/50 hover:text-white/80">Cancel</button>
-                </motion.div>
-              )}
-              {/* TikTok-style share button — top right */}
+              {/* Share icon — top right of progress section */}
               <button
                 onClick={() => setShareOpen(true)}
                 className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.05] transition-colors active:scale-[0.95]"
@@ -275,7 +233,47 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 </svg>
                 <span className="text-[9px] font-medium text-white/50">Share</span>
               </button>
-          </div>
+            </div>
+
+            {/* ── CTAs ── */}
+            {!showSubmit ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowSubmit(true)}
+                  className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]"
+                >
+                  EARN
+                </button>
+                <button
+                  onClick={handleDonate}
+                  className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all"
+                  style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}
+                >
+                  DONATE
+                </button>
+              </div>
+            ) : (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-white/[0.08] backdrop-blur-sm border border-white/10 p-4 space-y-3">
+                <p className="text-sm font-semibold flex items-center gap-2 text-white"><Camera size={16} className="text-primary" />Submit your video</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'tiktok' as const, label: 'TikTok', bg: 'bg-[#ff005015]', text: 'text-[#ff0050]', letter: 'T' },
+                    { id: 'instagram' as const, label: 'Reels', bg: 'bg-[#E1306C15]', text: 'text-[#E1306C]', letter: 'R' },
+                    { id: 'youtube' as const, label: 'Shorts', bg: 'bg-[#FF000015]', text: 'text-[#FF0000]', letter: 'S' },
+                  ].map(p => (
+                    <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/10 bg-white/[0.03]'}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${p.bg}`}><span className={`text-[10px] font-bold ${p.text}`}>{p.letter}</span></div>
+                      <span className="text-[10px] font-medium text-white/70">{p.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-lg bg-white/[0.08] border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50" autoFocus />
+                  <Button onClick={handleSubmitVideo} disabled={!submitUrl || submitting} className="shrink-0 text-sm">{submitting ? '...' : 'Submit'}</Button>
+                </div>
+                <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-white/50 hover:text-white/80">Cancel</button>
+              </motion.div>
+            )}
         </div>
         </div>
 
@@ -361,8 +359,8 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
         {stickyBarVisible && (
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ duration: 0.25, ease: 'easeOut' }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.08] px-4 py-3">
             <div className="max-w-2xl mx-auto space-y-3">
-              {/* Compact progress section */}
-              <div className="flex items-center gap-3">
+              {/* Compact progress + share icon */}
+              <div className="relative flex items-center gap-3 pr-12">
                 <CircleProgress pct={progress} size={40} />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs">
@@ -375,13 +373,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                     <span className="text-muted-foreground/50">${cpm.toFixed(2)} CPM</span>
                   </div>
                 </div>
-              </div>
-              {/* Buttons + share icon */}
-              <div className="relative">
-                <div className="flex gap-2 pr-12">
-                  <button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">EARN</button>
-                  <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</button>
-                </div>
                 <button
                   onClick={() => setShareOpen(true)}
                   className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.04] transition-colors active:scale-[0.95]"
@@ -391,6 +382,11 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   </svg>
                   <span className="text-[8px] font-medium text-muted-foreground">Share</span>
                 </button>
+              </div>
+              {/* Buttons */}
+              <div className="flex gap-2">
+                <button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">EARN</button>
+                <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</button>
               </div>
             </div>
           </motion.div>
