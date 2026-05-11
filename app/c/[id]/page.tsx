@@ -20,23 +20,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const campaign = await getCampaign(params.id);
   if (!campaign) return { title: 'Campaign not found — Selah.fm' };
 
+  const displayTitle = campaign.title || campaign.track_title;
   const imageUrl = campaign.cover_art_url || 'https://selah.fm/images/hero-illustration.png';
   const desc = campaign.requirements
     ? `${campaign.requirements.slice(0, 120)}${campaign.requirements.length > 120 ? '…' : ''}`
-    : `Promote "${campaign.track_title}" on TikTok, Instagram Reels, and YouTube Shorts. Creators earn per verified view.`;
+    : `${displayTitle} on Selah.fm — creators earn per verified view.`;
 
   return {
-    title: `Promote "${campaign.track_title}" — Selah.fm`,
+    title: `${displayTitle} — Selah.fm`,
     description: desc,
     openGraph: {
-      title: `Promote "${campaign.track_title}" — Selah.fm`,
+      title: `${displayTitle} — Selah.fm`,
       description: desc,
       type: 'website',
       images: [{ url: imageUrl, width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Promote "${campaign.track_title}" — Selah.fm`,
+      title: `${displayTitle} — Selah.fm`,
       description: desc,
       images: [imageUrl],
     },

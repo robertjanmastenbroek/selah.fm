@@ -9,6 +9,7 @@ export async function GET(
   try {
     const campaigns = await sql`
       SELECT c.*, 
+        COALESCE(c.title, c.track_title) as title,
         COALESCE(v.approved_submissions, '0') as approved_submissions,
         COALESCE(v.pending_submissions, '0') as pending_submissions,
         COALESCE(v.total_verified_views, '0') as total_verified_views,
