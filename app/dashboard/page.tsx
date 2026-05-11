@@ -234,7 +234,10 @@ function DashboardContent() {
                   </div>
                 </div>
                 <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} placeholder="Spotify or SoundCloud link" />
-                <Input value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="Google Drive link (optional)" />
+                <div className="space-y-1">
+                  <Input value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="Google Drive link with creator assets (optional)" />
+                  <p className="text-[10px] text-muted-foreground">Share a folder with your track (.mp3 + .wav), cover art, reference videos, and any other creative assets. Creators need the official audio to make valid submissions.</p>
+                </div>
                 <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags (optional)" />
                 <Input value={requiredHashtags} onChange={e => setRequiredHashtags(e.target.value)} placeholder="Required hashtags — creators MUST include these" />
                 <div className="flex items-center gap-3 py-1">
