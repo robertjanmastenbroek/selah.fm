@@ -90,26 +90,51 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const campaignId = searchParams.get('campaignId');
+    const statusFilter = searchParams.get('status'); // 'pending', 'approved', 'rejected'
     let submissions;
     if (campaignId && campaignId !== 'all') {
-      submissions = await sql`
-        SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
-          u.display_name as creator_name
-        FROM submissions s
-        JOIN campaigns c ON c.id = s.campaign_id
-        LEFT JOIN users u ON u.id = s.creator_id
-        WHERE s.campaign_id = ${campaignId}
-        ORDER BY s.submitted_at DESC
-      `;
+      if (statusFilter) {
+        submissions = await sql`
+          SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
+            u.display_name as creator_name
+          FROM submissions s
+          JOIN campaigns c ON c.id = s.campaign_id
+          LEFT JOIN users u ON u.id = s.creator_id
+          WHERE s.campaign_id = ${campaignId} AND s.review_status = ${statusFilter}
+          ORDER BY s.submitted_at DESC
+        `;
+      } else {
+        submissions = await sql`
+          SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
+            u.display_name as creator_name
+          FROM submissions s
+          JOIN campaigns c ON c.id = s.campaign_id
+          LEFT JOIN users u ON u.id = s.creator_id
+          WHERE s.campaign_id = ${campaignId}
+          ORDER BY s.submitted_at DESC
+        `;
+      }
     } else {
-      submissions = await sql`
-        SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
-          u.display_name as creator_name
-        FROM submissions s
-        JOIN campaigns c ON c.id = s.campaign_id
-        LEFT JOIN users u ON u.id = s.creator_id
-        ORDER BY s.submitted_at DESC
-      `;
+      if (statusFilter) {
+        submissions = await sql`
+          SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
+            u.display_name as creator_name
+          FROM submissions s
+          JOIN campaigns c ON c.id = s.campaign_id
+          LEFT JOIN users u ON u.id = s.creator_id
+          WHERE s.review_status = ${statusFilter}
+          ORDER BY s.submitted_at DESC
+        `;
+      } else {
+        submissions = await sql`
+          SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
+            u.display_name as creator_name
+          FROM submissions s
+          JOIN campaigns c ON c.id = s.campaign_id
+          LEFT JOIN users u ON u.id = s.creator_id
+          ORDER BY s.submitted_at DESC
+        `;
+      }
     }
     return NextResponse.json(submissions);
   } catch (e: any) {
