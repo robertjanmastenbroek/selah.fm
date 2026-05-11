@@ -175,7 +175,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       <Header />
       <main className="max-w-2xl mx-auto pb-20">
 
-        {/* ══════ HERO (GoFundMe-style: artist top-left, title bottom overlay) ══════ */}
+        {/* ══════ HERO (GoFundMe-style: artist top-left, title + CTAs as bottom overlay) ══════ */}
         <div ref={heroRef} className="relative">
           <CampaignCover
             src={campaign.cover_art_url}
@@ -183,7 +183,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             className="w-full h-[55vh] sm:h-[50vh] max-h-[600px] rounded-none"
           />
           {/* Gradient overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 pointer-events-none" />
 
           {/* Artist name + avatar — top left */}
           <div className="absolute top-3 left-4 flex items-center gap-2">
@@ -193,32 +193,30 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             <span className="text-white text-sm font-semibold drop-shadow-sm">{artistName}</span>
           </div>
 
-          {/* Track title — bottom overlay with curved top */}
-          <div className="absolute bottom-0 left-0 right-0 bg-[#0A0A0A] rounded-t-3xl px-5 pt-5 pb-0">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight">
+          {/* Bottom overlay: title → divider → progress → CTAs */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent px-5 pt-8 pb-5">
+            {/* Track title */}
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight leading-tight text-white mb-4">
               {campaign.track_title}
             </h1>
-          </div>
-        </div>
 
-        {/* ══════ HEADER CARD (progress + CTAs) ══════ */}
-        <div className="px-4">
-          <div className="bg-[#0A0A0A] px-5 pt-2 pb-5 rounded-b-2xl mb-4">
+            {/* Divider */}
+            <div className="border-t border-white/10 mb-4" />
 
-            {/* Progress + tiny CPM in stats row */}
-            <div className="flex items-center gap-4 mb-5">
-              <CircleProgress pct={progress} size={72} />
-              <div className="flex-1 min-w-0 space-y-2">
+            {/* Progress + stats */}
+            <div className="flex items-center gap-4 mb-4">
+              <CircleProgress pct={progress} size={64} />
+              <div className="flex-1 min-w-0 space-y-1.5">
                 <div>
-                  <span className="text-xl font-bold">${spent.toFixed(0)}</span>
-                  <span className="text-xs text-muted-foreground ml-1.5">spent of</span>
-                  <span className="text-sm font-semibold ml-1">${budget.toFixed(0)} budget</span>
+                  <span className="text-lg font-bold text-white">${spent.toFixed(0)}</span>
+                  <span className="text-xs text-white/60 ml-1.5">spent of</span>
+                  <span className="text-sm font-semibold text-white/80 ml-1">${budget.toFixed(0)} budget</span>
                 </div>
                 <Progress value={Math.min(progress, 100)} className="h-1.5" />
-                <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-4 text-[10px] text-white/50">
                   <span className="flex items-center gap-1"><Camera size={10} /> {submissions} submissions</span>
                   <span className="flex items-center gap-1"><Play size={10} /> {views >= 1000 ? `${(views/1000).toFixed(1)}K` : views} views</span>
-                  <span className="text-muted-foreground/50">${cpm.toFixed(2)} CPM</span>
+                  <span>${cpm.toFixed(2)} CPM</span>
                 </div>
               </div>
             </div>
@@ -226,7 +224,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             {/* ── CTAs ── */}
             {!showSubmit ? (
               <div className="space-y-2">
-                {/* Two equal buttons */}
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowSubmit(true)}
@@ -242,34 +239,33 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                     DONATE
                   </button>
                 </div>
-                {/* Share text button */}
                 <button
                   onClick={() => setShareOpen(true)}
-                  className="w-full py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-xl hover:bg-white/[0.03] active:scale-[0.98]"
+                  className="w-full py-2.5 text-xs font-medium text-white/50 hover:text-white/80 transition-colors rounded-xl hover:bg-white/[0.05] active:scale-[0.98]"
                 >
                   Share
                 </button>
               </div>
             ) : (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-white/[0.04] border border-primary/10 p-4 space-y-3">
-                <p className="text-sm font-semibold flex items-center gap-2"><Camera size={16} className="text-primary" />Submit your video</p>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-white/[0.08] backdrop-blur-sm border border-white/10 p-4 space-y-3">
+                <p className="text-sm font-semibold flex items-center gap-2 text-white"><Camera size={16} className="text-primary" />Submit your video</p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { id: 'tiktok' as const, label: 'TikTok', bg: 'bg-[#ff005015]', text: 'text-[#ff0050]', letter: 'T' },
                     { id: 'instagram' as const, label: 'Reels', bg: 'bg-[#E1306C15]', text: 'text-[#E1306C]', letter: 'R' },
                     { id: 'youtube' as const, label: 'Shorts', bg: 'bg-[#FF000015]', text: 'text-[#FF0000]', letter: 'S' },
                   ].map(p => (
-                    <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
+                    <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/10 bg-white/[0.03]'}`}>
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${p.bg}`}><span className={`text-[10px] font-bold ${p.text}`}>{p.letter}</span></div>
-                      <span className="text-[10px] font-medium">{p.label}</span>
+                      <span className="text-[10px] font-medium text-white/70">{p.label}</span>
                     </button>
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" autoFocus />
+                  <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-lg bg-white/[0.08] border border-white/10 px-3 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-primary/50" autoFocus />
                   <Button onClick={handleSubmitVideo} disabled={!submitUrl || submitting} className="shrink-0 text-sm">{submitting ? '...' : 'Submit'}</Button>
                 </div>
-                <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-muted-foreground hover:text-foreground">Cancel</button>
+                <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-white/50 hover:text-white/80">Cancel</button>
               </motion.div>
             )}
           </div>
@@ -372,12 +368,12 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   </div>
                 </div>
               </div>
-              {/* Buttons */}
+              {/* Buttons — same size as top section */}
               <div className="flex gap-2">
-                <button onClick={() => setShowSubmit(true)} className="flex-1 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">SUBMIT</button>
-                <button onClick={handleDonate} className="flex-1 py-3 text-sm font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${GOLD}, ${GOLD}CC)`, color: '#0A0A0A' }}>DONATE</button>
-                <button onClick={() => setShareOpen(true)} className="px-3 py-3 text-xs font-medium text-muted-foreground hover:text-foreground rounded-xl hover:bg-white/[0.04] active:scale-[0.97] transition-all">Share</button>
+                <button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">SUBMIT</button>
+                <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${GOLD}, ${GOLD}CC)`, color: '#0A0A0A' }}>DONATE</button>
               </div>
+              <button onClick={() => setShareOpen(true)} className="w-full py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-xl hover:bg-white/[0.04] active:scale-[0.97] transition-all">Share</button>
             </div>
           </motion.div>
         )}
