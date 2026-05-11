@@ -1,47 +1,30 @@
 /**
  * Google Analytics / gtag event tracking utility.
  * All events are non-blocking — failures are silently ignored.
- * Events fired before GA loads are queued and flushed once GA is ready.
+ * Pushes directly to dataLayer (always available from inline script).
+ * Falls back to window.gtag when the GA library has loaded.
  */
 
 declare global {
   interface Window {
     gtag?: (...args: any[]) => void;
+    dataLayer?: any[];
   }
 }
 
-// ── Event queue — buffers events before GA loads ────────────────
-const eventQueue: Array<[string, Record<string, any>]> = [];
-
-function gtag(...args: any[]) {
-  if (typeof window !== 'undefined' && window.gtag) {
-    try { window.gtag(...args); } catch {}
-  }
-}
-
+// ── Track: push to dataLayer (always available), gtag as fallback ──
 function track(event: string, params: Record<string, any> = {}) {
-  if (typeof window !== 'undefined' && window.gtag) {
-    // GA is loaded — send directly and flush any pending events
-    flushAnalyticsQueue();
-    try { window.gtag('event', event, params); } catch {}
-  } else {
-    // GA not loaded yet — queue for later
-    eventQueue.push([event, params]);
-  }
-}
-
-/** Call this after GA script loads to replay queued events */
-export function flushAnalyticsQueue() {
-  if (typeof window === 'undefined' || !window.gtag) return;
-  while (eventQueue.length > 0) {
-    const [event, params] = eventQueue.shift()!;
-    try { window.gtag('event', event, params); } catch {}
-  }
-}
-
-// Also expose for inline script in Analytics component
-if (typeof window !== 'undefined') {
-  (window as any).__selahFlushGA = flushAnalyticsQueue;
+  if (typeof window === 'undefined') return;
+  try {
+    // Primary: push directly to dataLayer — always available from inline script
+    if (window.dataLayer) {
+      window.dataLayer.push(['event', event, params]);
+    }
+    // Secondary: also call window.gtag if the GA library has loaded
+    if (window.gtag) {
+      window.gtag('event', event, params);
+    }
+  } catch {}
 }
 
 // ── Conversions ────────────────────────────────────────────────
