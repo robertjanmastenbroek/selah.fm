@@ -40,7 +40,7 @@ export default function WelcomeArtistsPage() {
             {['No bots','You set the CPM','Approve every video','Pay only for real views'].map(t=><span key={t} className="flex items-center gap-1"><Check size={14} className="text-primary/60" strokeWidth={2}/>{t}</span>)}
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Link href="/dashboard" className="group inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] active:scale-[0.97]">Start My Campaign <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5"/></Link>
+            <Link href="/login?redirect=/onboarding" className="group inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] active:scale-[0.97]">Start My Campaign <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5"/></Link>
           </motion.div>
         </div>
       </section>
@@ -108,7 +108,7 @@ export default function WelcomeArtistsPage() {
         <div className="max-w-xl mx-auto px-6 relative z-10">
           <motion.h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight" initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} viewport={{once:true}}>Ready to stop guessing?</motion.h2>
           <motion.p className="text-muted-foreground mb-10 text-base" initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true}}>No credit card required to browse. Fund your campaign when you&apos;re ready.</motion.p>
-          <Link href="/dashboard" className="inline-flex items-center gap-2 px-10 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(91,127,255,0.3)] active:scale-[0.97]">Start My First Campaign — Free <ArrowRight size={16}/></Link>
+          <Link href="/login?redirect=/onboarding" className="inline-flex items-center gap-2 px-10 py-4 bg-primary text-primary-foreground rounded-xl font-semibold text-base transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(91,127,255,0.3)] active:scale-[0.97]">Start My First Campaign — Free <ArrowRight size={16}/></Link>
           <p className="text-xs text-muted-foreground mt-8"><Link href="/artists" className="hover:text-foreground transition-colors">Browse artists</Link><span className="mx-3 opacity-30">·</span><Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link></p>
         </div>
       </section>
