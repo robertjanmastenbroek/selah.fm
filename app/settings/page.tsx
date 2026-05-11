@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
 import CreatorAvatar from '@/components/CreatorAvatar';
+import ImageUpload from '@/components/ImageUpload';
 import { TikTok, Instagram, YouTube, Spotify } from '@/components/SocialIcons';
-import { User, Music4, DollarSign, Save, LogOut, Check, ArrowRight } from 'lucide-react';
+import { User, Music4, DollarSign, Save, LogOut, Check, ArrowRight, Camera } from 'lucide-react';
 
 export default function SettingsPage() {
   const { data: profileData, isLoading: profileLoading } = useSWR('/api/auth/me', fetcher, swrConfig);
@@ -24,6 +25,7 @@ export default function SettingsPage() {
   const [instagram, setInstagram] = useState('');
   const [youtube, setYouTube] = useState('');
   const [facebook, setFacebook] = useState('');
+  const [profileImage, setProfileImage] = useState('');
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
@@ -39,6 +41,7 @@ export default function SettingsPage() {
     setInstagram(profile.instagram_handle || '');
     setYouTube(profile.youtube_handle || '');
     setFacebook(profile.facebook_handle || '');
+    setProfileImage(profile.profile_image_url || '');
   }, [profile]);
 
   const save = async () => {
@@ -48,7 +51,8 @@ export default function SettingsPage() {
         method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, bio, genres, preferredCpm: cpm,
-          tiktok_handle: tiktok||null, instagram_handle: instagram||null, youtube_handle: youtube||null, facebook_handle: facebook||null }),
+          tiktok_handle: tiktok||null, instagram_handle: instagram||null, youtube_handle: youtube||null, facebook_handle: facebook||null,
+          profile_image_url: profileImage||null }),
       });
       if (res.ok) {
         addToast('Profile saved', 'success');
@@ -91,9 +95,32 @@ export default function SettingsPage() {
                 <p className="text-xs text-muted-foreground mb-5">Your public identity on Selah.fm.</p>
               </div>
               <div className="p-6 pt-0 space-y-4">
-                <div className="flex items-center gap-4 mb-2">
-                  <CreatorAvatar name={name||'You'} size="lg"/>
-                  <div><p className="font-medium text-sm">{name||'Set your name'}</p><p className="text-xs text-muted-foreground">{profile?.email||''}</p></div>
+                <div className="flex items-center gap-4 mb-4">
+                  <CreatorAvatar src={profileImage||null} name={name||'You'} size="xl"/>
+                  <div>
+                    <p className="font-medium text-sm">{name||'Set your name'}</p>
+                    <p className="text-xs text-muted-foreground">{profile?.email||''}</p>
+                    <button
+                      onClick={() => document.getElementById('profile-pic-upload')?.click()}
+                      className="mt-1.5 text-[10px] text-primary hover:underline flex items-center gap-1"
+                    >
+                      <Camera size={10} /> Change photo
+                    </button>
+                  </div>
+                </div>
+                <div className="hidden">
+                  <input
+                    id="profile-pic-upload"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      const reader = new FileReader();
+                      reader.onload = () => setProfileImage(reader.result as string);
+                      reader.readAsDataURL(f);
+                    }}
+                  />
                 </div>
                 <div>
                   <label className="text-[11px] text-muted-foreground mb-1 block">Display name</label>

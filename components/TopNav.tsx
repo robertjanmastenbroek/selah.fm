@@ -23,6 +23,7 @@ export default function Header({ minimal }: { minimal?: boolean }) {
   const pathname = usePathname();
 
   const initials = profile?.name?.[0]?.toUpperCase() || '?';
+  const profileImage = profile?.profile_image_url || null;
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   const handleLogout = async () => {
@@ -127,8 +128,12 @@ export default function Header({ minimal }: { minimal?: boolean }) {
               <NotificationBell />
               <button onClick={() => setOpen(!open)}
                 className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold
-                  ring-2 ring-primary/20 hover:ring-primary/40 hover:bg-primary/20 transition-all">
-                {initials}
+                  ring-2 ring-primary/20 hover:ring-primary/40 hover:bg-primary/20 transition-all overflow-hidden">
+                {profileImage ? (
+                  <img src={profileImage} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
               </button>
               {open && (
                 <div className="absolute right-0 top-11 z-50 w-52 bg-popover border border-border/20 rounded-xl shadow-xl py-1 animate-slide-up overflow-hidden">
