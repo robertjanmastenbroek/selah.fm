@@ -173,14 +173,14 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       <Header />
-      <main className="max-w-2xl mx-auto pb-24">
+      <main className="max-w-2xl mx-auto pb-20">
 
         {/* ══════ HERO (GoFundMe-style: artist top-left, title bottom overlay) ══════ */}
         <div ref={heroRef} className="relative">
           <CampaignCover
             src={campaign.cover_art_url}
             title={campaign.track_title}
-            className="w-full h-[40vh] sm:h-[45vh] max-h-[500px] rounded-none"
+            className="w-full h-[55vh] sm:h-[50vh] max-h-[600px] rounded-none"
           />
           {/* Gradient overlay for readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30 pointer-events-none" />
@@ -209,13 +209,10 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             <div className="flex items-center gap-4 mb-5">
               <CircleProgress pct={progress} size={72} />
               <div className="flex-1 min-w-0 space-y-2">
-                <div className="flex items-baseline justify-between">
-                  <div>
-                    <span className="text-xl font-bold">${spent.toFixed(0)}</span>
-                    <span className="text-xs text-muted-foreground ml-1.5">spent of</span>
-                    <span className="text-sm font-semibold ml-1">${budget.toFixed(0)} budget</span>
-                  </div>
-                  <span className="text-xs font-semibold text-primary">{Math.round(progress)}%</span>
+                <div>
+                  <span className="text-xl font-bold">${spent.toFixed(0)}</span>
+                  <span className="text-xs text-muted-foreground ml-1.5">spent of</span>
+                  <span className="text-sm font-semibold ml-1">${budget.toFixed(0)} budget</span>
                 </div>
                 <Progress value={Math.min(progress, 100)} className="h-1.5" />
                 <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
@@ -365,12 +362,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               <div className="flex items-center gap-3">
                 <CircleProgress pct={progress} size={40} />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <div className="text-xs">
-                      <span className="font-bold text-sm">${spent.toFixed(0)}</span>
-                      <span className="text-muted-foreground ml-1">of ${budget.toFixed(0)}</span>
-                    </div>
-                    <span className="text-[10px] font-semibold text-primary">{Math.round(progress)}%</span>
+                  <div className="text-xs">
+                    <span className="font-bold text-sm">${spent.toFixed(0)}</span>
+                    <span className="text-muted-foreground ml-1">of ${budget.toFixed(0)}</span>
                   </div>
                   <div className="flex items-center gap-3 text-[9px] text-muted-foreground mt-0.5">
                     <span className="flex items-center gap-0.5"><Users size={9} /> {donations.count}</span>
