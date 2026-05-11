@@ -63,6 +63,8 @@ function DashboardContent() {
   const [editSaving, setEditSaving] = useState(false);
 
   const [coverArt, setCoverArt] = useState('');
+  const [youtubeVideoUrl, setYoutubeVideoUrl] = useState('');
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [trackTitle, setTrackTitle] = useState('');
   const [campaignTitle, setCampaignTitle] = useState('');  // Display title (can differ from track title)
   const [trackUrl, setTrackUrl] = useState('');
@@ -131,6 +133,12 @@ function DashboardContent() {
     setMinVideoLength(raw.min_video_length_seconds ? String(raw.min_video_length_seconds) : '');
     setCaptionReq(raw.caption_requirements || '');
     setCoverArt(raw.cover_art_url || '');
+    // YouTube video + gallery images
+    setYoutubeVideoUrl(raw.youtube_video_url || '');
+    try {
+      const gallery = raw.gallery_images ? (typeof raw.gallery_images === 'string' ? JSON.parse(raw.gallery_images) : raw.gallery_images) : [];
+      setGalleryImages(Array.isArray(gallery) ? gallery : []);
+    } catch { setGalleryImages([]); }
     // Parse platforms from JSON array or default to all
     try {
       const existingPlatforms = raw.platforms ? JSON.parse(raw.platforms) : null;
@@ -155,11 +163,23 @@ function DashboardContent() {
           minVideoLength: minVideoLength ? parseInt(minVideoLength) : null,
           captionRequirements: captionReq,
           coverArtUrl: coverArt || undefined,
+          youtubeVideoUrl: youtubeVideoUrl || null,
+          galleryImages: galleryImages.length > 0 ? galleryImages : null,
           platforms,
         }),
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to save', 'error'); setEditSaving(false); return; }
-      await mutate();
+      const updated = await res.json();
+      // Optimistic cache update: immediately update the SWR cache with the returned data
+      mutate(
+        (current: any) => ({
+          ...current,
+          campaigns: (current?.campaigns || []).map((c: any) =>
+            c.id === editingId ? { ...c, ...updated } : c
+          ),
+        }),
+        { revalidate: false }
+      );
       addToast('Campaign updated!', 'success');
       setEditingId(null);
     } catch { addToast('Network error', 'error'); }
@@ -425,6 +445,28 @@ function DashboardContent() {
                   <div className="md:col-span-2">
                     <label className="text-xs text-muted-foreground mb-1 block">Requirements & guidelines</label>
                     <textarea value={requirements} onChange={e => setRequirements(e.target.value)} rows={4} className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/30 resize-y" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">YouTube video URL (demo/intro)</label>
+                    <Input value={youtubeVideoUrl} onChange={e => setYoutubeVideoUrl(e.target.value)} className="text-sm" placeholder="https://youtube.com/watch?v=..." />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-muted-foreground mb-2 block">Gallery images (shown as carousel)</label>
+                    <div className="space-y-2">
+                      {galleryImages.map((img, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Input value={img} onChange={e => {
+                            const next = [...galleryImages];
+                            next[i] = e.target.value;
+                            setGalleryImages(next);
+                          }} className="text-sm flex-1" placeholder="https://... image URL" />
+                          <button onClick={() => setGalleryImages(galleryImages.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300 shrink-0 p-1">✕</button>
+                        </div>
+                      ))}
+                      <button onClick={() => setGalleryImages([...galleryImages, ''])} className="text-[10px] text-primary hover:underline">
+                        + Add image
+                      </button>
+                    </div>
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-xs text-muted-foreground mb-2 block">Accepted platforms</label>
