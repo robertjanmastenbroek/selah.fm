@@ -32,28 +32,18 @@ export default function CampaignCover({
   title: string; 
   className?: string;
 }) {
-  const firstChar = title.trim()[0]?.toUpperCase() || '♪';
   const bg = campaignGradient(title);
 
   if (src) {
     return (
-      <div className={`overflow-hidden relative ${className}`}>
-        <img 
-          src={src} 
-          alt={title} 
+      <div className={`overflow-hidden relative ${className}`} style={{ background: bg }}>
+        <img
+          src={src}
+          alt=""
           className="w-full h-full object-cover"
           loading="lazy"
           onError={(e) => {
-            // If image fails to load, hide it and show gradient fallback
             (e.target as HTMLImageElement).style.display = 'none';
-            // Show the gradient fallback on the parent
-            const parent = (e.target as HTMLImageElement).parentElement;
-            if (parent) {
-              parent.style.background = bg;
-              // Add decorative elements
-              const firstChar = title.trim()[0]?.toUpperCase() || '♪';
-              parent.innerHTML += `<div class="flex items-center justify-center h-full"><span class="text-5xl font-extrabold text-white/10 select-none">${firstChar}</span></div>`;
-            }
           }}
         />
         {/* Subtle gradient overlay for text readability */}
@@ -62,33 +52,30 @@ export default function CampaignCover({
     );
   }
 
-  // Beautiful gradient fallback
+  // Gradient fallback — no text, just decorative
   return (
-    <div 
-      className={`flex items-center justify-center relative overflow-hidden ${className}`}
+    <div
+      className={`relative overflow-hidden ${className}`}
       style={{ background: bg }}
     >
       {/* Decorative circles */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/5" />
       <div className="absolute top-1/3 right-1/4 w-12 h-12 rounded-full bg-white/[0.03]" />
       <div className="absolute bottom-1/4 left-1/3 w-16 h-16 rounded-full bg-white/[0.04]" />
-      
+
       {/* Sound wave bars */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-end gap-[3px] h-8">
         {[1, 1.4, 0.6, 1.8, 0.8, 1.2, 0.5, 1.6, 1, 0.7, 1.3, 0.9].map((h, i) => (
-          <div 
+          <div
             key={i}
             className="w-[3px] rounded-full bg-accent-foreground/20"
-            style={{ 
+            style={{
               height: `${h * 20}px`,
               animationDelay: `${i * 0.15}s`
             }}
           />
         ))}
       </div>
-
-      {/* Track initial */}
-      <div className="text-5xl font-extrabold text-white/10 select-none">{firstChar}</div>
     </div>
   );
 }

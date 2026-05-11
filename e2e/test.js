@@ -76,8 +76,7 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
 
   await check('2.4 Logo links to home or browse', async () => {
     await page.goto(BASE + '/browse');
-    await page.click('text=Selah');
-    // Logo links to / for unauthenticated users, /browse for logged-in — both are valid
+    await page.click('img[alt="Selah.fm"]');
     await page.waitForURL(/selah\.fm(\/browse|\/)?$/, { timeout: 5000 });
   });
 
