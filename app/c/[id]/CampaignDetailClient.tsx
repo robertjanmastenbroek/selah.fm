@@ -218,16 +218,8 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const artistName = campaign.artist_name || 'Unknown Artist';
   const displayTitle = campaign.title || campaign.track_title;
 
-  // Sticky bar: appears when scrolled past hero, permanently dismissed once scrolled past donations
-  const [stickyBarDismissed, setStickyBarDismissed] = useState(false);
-  useEffect(() => {
-    // Dismiss sticky bar permanently once user scrolls past the Donations/More Campaigns area
-    const moreTop = moreRef.current?.offsetTop || Infinity;
-    if (scrollY > moreTop - 300 && !stickyBarDismissed) {
-      setStickyBarDismissed(true);
-    }
-  }, [scrollY, stickyBarDismissed]);
-  const stickyBarVisible = scrollY > heroBottom - 80 && !stickyBarDismissed;
+  // Sticky bar: appears when scrolled past hero, stays visible for the rest of the page
+  const stickyBarVisible = scrollY > heroBottom - 80;
 
   return (
     <div className="min-h-screen" style={{ background: bg }}>
