@@ -16,13 +16,10 @@ declare global {
 function track(event: string, params: Record<string, any> = {}) {
   if (typeof window === 'undefined') return;
   try {
-    // GA4 native dataLayer format: { event: 'sign_up', param1: 'val1', ... }
+    // Match the inline gtag() format: dataLayer.push(['event', name, params])
+    // This is how page_view and other built-in events are sent.
     if (window.dataLayer) {
-      window.dataLayer.push({ event, ...params });
-    }
-    // Also call window.gtag if the GA library has loaded (belt + suspenders)
-    if (window.gtag) {
-      window.gtag('event', event, params);
+      window.dataLayer.push(['event', event, params]);
     }
   } catch {}
 }
