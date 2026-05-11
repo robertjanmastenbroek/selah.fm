@@ -243,7 +243,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             <CampaignCover
               src={campaign.cover_art_url}
               title={campaign.track_title}
-              className="w-full h-[45vh] md:h-full rounded-none"
+              className="w-full h-[50vh] md:h-full rounded-none"
             />
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20 pointer-events-none" />
@@ -254,8 +254,8 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               </div>
               <span className="text-white text-sm font-semibold drop-shadow-sm">{artistName}</span>
             </div>
-            {/* Title — centered on image */}
-            <div className="absolute inset-0 flex items-center justify-center px-6 pointer-events-none">
+            {/* Title — bottom of image, above CTA */}
+            <div className="absolute bottom-10 left-0 right-0 flex justify-center px-6 pointer-events-none">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white text-center drop-shadow-lg leading-tight">
                 {displayTitle}
               </h1>
