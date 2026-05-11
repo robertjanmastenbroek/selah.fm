@@ -21,13 +21,12 @@ export default function SubmissionsFeed({ campaignId, count }: { campaignId: str
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/submissions?campaignId=${campaignId}`)
+    fetch(`/api/submissions?campaignId=${campaignId}&status=approved`)
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) {
-          // Only show approved submissions
           setSubmissions(
-            data.filter((s: any) => s.review_status === 'approved').map((s: any) => ({
+            data.map((s: any) => ({
               id: s.id,
               creator_name: s.creator_name || 'Creator',
               platform: s.platform,

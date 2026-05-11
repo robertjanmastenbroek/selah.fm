@@ -27,9 +27,9 @@ export default function ReviewPage() {
   const campaigns = (campaignsData?.campaigns || []).map((c: any) => ({ id: c.id, track_title: c.track_title }));
 
   const campaignId = selectedCampaign === 'all' ? 'all' : selectedCampaign;
-  const { data: submissions, error, isLoading, mutate } = useSWR(`/api/submissions?campaignId=${campaignId}`, fetcher, swrConfig);
+  const { data: submissions, error, isLoading, mutate } = useSWR(`/api/submissions?campaignId=${campaignId}&status=${statusFilter}`, fetcher, swrConfig);
 
-  const subs: Submission[] = submissions ? (Array.isArray(submissions) ? submissions.filter((s: Submission) => s.review_status === statusFilter) : []) : [];
+  const subs: Submission[] = submissions ? (Array.isArray(submissions) ? submissions : []) : [];
 
   const [undoState, setUndoState] = useState<{ id: string; status: string; timer: any } | null>(null);
 
