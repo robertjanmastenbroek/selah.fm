@@ -358,7 +358,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                           <span className="text-sm shrink-0 mt-0.5">{s.emoji}</span>
                           <div>
                             <p className="text-xs font-semibold text-foreground/70">{s.title}</p>
-                            <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{s.desc}</p>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5 break-words">{s.desc}</p>
                           </div>
                         </div>
                       ))}
