@@ -10,13 +10,12 @@ import CampaignCover from '@/components/CampaignCover';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Megaphone, Heart, Send, DollarSign, X, CheckCircle } from 'lucide-react';
+import { Megaphone, Send, DollarSign, X } from 'lucide-react';
 import { trackSubmitContent } from '@/lib/analytics';
 import { PlatformBadge } from '@/components/SocialIcons';
 
-interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; approved_submissions: string; pending_submissions: string; recommended_hashtags: string; }
+interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; }
 
 function buildQuery(filters: Record<string, any>) {
   const params = new URLSearchParams();
@@ -33,6 +32,20 @@ const platformOptions = [
   { id: 'instagram', label: 'Reels', color: '#E1306C', desc: 'Instagram' },
   { id: 'youtube', label: 'Shorts', color: '#FF0000', desc: 'YouTube' },
 ];
+
+// ── Circle Progress ─────────────────────────────────────────
+function CircleProgress({ pct, size = 40 }: { pct: number; size?: number }) {
+  const stroke = 4, radius = (size - stroke) / 2, circumference = radius * 2 * Math.PI, offset = circumference - (Math.min(pct, 100) / 100) * circumference;
+  return (
+    <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="hsl(var(--primary))" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} />
+      </svg>
+      <span className="absolute text-[11px] font-bold">{Math.round(pct)}%</span>
+    </div>
+  );
+}
 
 export default function BrowseClient({ initialCampaigns, initialTotal }: { initialCampaigns: Campaign[]; initialTotal: number }) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
@@ -60,7 +73,9 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
 
   const handleFilter = (f: any) => { setFilters(f); loadCampaigns(f); };
 
-  const openSubmitModal = (c: Campaign) => {
+  const openSubmitModal = (e: React.MouseEvent, c: Campaign) => {
+    e.stopPropagation();
+    e.preventDefault();
     setSubmitModal(c);
     setSubmitPlatform('tiktok');
     setSubmitUrl('');
@@ -69,29 +84,20 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
   const handleSubmit = async () => {
     if (!submitModal || !submitUrl) return;
     setSubmitting(true);
-    const campaignId = submitModal.id;
-
     try {
-      // Client-side pre-validation for instant feedback
       if (!submitUrl.startsWith('https://')) {
         addToast('Please paste a valid HTTPS link from TikTok, Instagram, YouTube, or Facebook', 'error');
         setSubmitting(false);
         return;
       }
-
       const res = await fetch('/api/submissions', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campaignId, contentUrl: submitUrl, platform: submitPlatform }),
+        body: JSON.stringify({ campaignId: submitModal.id, contentUrl: submitUrl, platform: submitPlatform }),
       });
       if (res.ok) {
         trackSubmitContent(submitPlatform);
         addToast('Submitted! Artist will review your video.', 'success');
-        setCampaigns(prev => prev.map(c =>
-          c.id === campaignId
-            ? { ...c, pending_submissions: String(parseInt(c.pending_submissions || '0') + 1) }
-            : c
-        ));
         setSubmitModal(null);
       } else {
         const err = await res.json();
@@ -148,48 +154,45 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
               const remaining = c.budget_remaining_cents / 100;
               const pct = budget > 0 ? ((budget - remaining) / budget) * 100 : 0;
               return (
-                <motion.div key={c.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }} whileHover={{ y: -2 }}
-                  onClick={() => router.push(`/c/${c.id}`)}
-                  className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex flex-col cursor-pointer transition-colors hover:border-primary/10">
-                  <CampaignCover src={c.cover_art_url} title={c.track_title} className="h-40" />
-                  <div className="p-5 flex flex-col flex-1 gap-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <span className="font-semibold text-lg leading-tight hover:text-primary transition-colors">{c.track_title}</span>
-                        <p className="text-muted-foreground text-sm">${cpm} CPM · ${budget} budget</p>
+                <Link key={c.id} href={`/c/${c.id}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                    whileHover={{ y: -2 }}
+                    className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden cursor-pointer transition-colors hover:border-primary/10"
+                  >
+                    {/* Cover image */}
+                    <CampaignCover src={c.cover_art_url} title={c.track_title} className="h-40" />
+
+                    {/* Card body */}
+                    <div className="p-4 space-y-3">
+                      {/* Track title + platform badges */}
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-sm leading-tight line-clamp-2">{c.track_title}</h3>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {(c.platforms || []).map((p: string) => <PlatformBadge key={p} platform={p} />)}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">{(c.platforms || []).map((p: string) => <PlatformBadge key={p} platform={p} />)}</div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {c.approved_submissions !== '0' && <>{c.approved_submissions} approved</>}
-                        {c.pending_submissions !== '0' && <>{c.approved_submissions !== '0' ? ' · ' : ''}{c.pending_submissions} pending</>}
-                        {c.approved_submissions === '0' && c.pending_submissions === '0' && '0 submissions'}
-                      </span>
-                      <span>{pct > 0 ? `${Math.round(pct)}% paid` : '0% used'}</span>
-                    </div>
-                    <Progress value={Math.min(pct, 100)} className="h-1.5" />
-                    {c.recommended_hashtags && <p className="text-xs text-muted-foreground truncate">{c.recommended_hashtags}</p>}
-                    <div className="flex-1" />
-                    <div onClick={e => e.stopPropagation()} className="flex gap-2">
-                      <Button
-                        onClick={() => openSubmitModal(c)}
-                        className="flex-1 text-xs font-semibold"
+
+                      {/* Circle progress + CPM (no horizontal bar) */}
+                      <div className="flex items-center gap-3">
+                        <CircleProgress pct={pct} size={40} />
+                        <div>
+                          <span className="text-xs font-semibold text-muted-foreground">${cpm.toFixed(2)} CPM</span>
+                        </div>
+                      </div>
+
+                      {/* Submit quick-action */}
+                      <button
+                        onClick={(e) => openSubmitModal(e, c)}
+                        className="w-full py-2 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/15 transition-colors flex items-center justify-center gap-1.5"
                       >
-                        <Send size={14} className="mr-1.5" />
-                        Submit Video
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 text-xs"
-                        onClick={() => router.push(`/c/${c.id}/donate`)}
-                      >
-                        <Heart size={14} className="mr-1.5" /> Donate
-                      </Button>
+                        <Send size={12} /> Submit Video
+                      </button>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </Link>
               );
             })}
           </div>
@@ -205,10 +208,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
               onClick={() => setSubmitModal(null)}
             >
-              {/* Backdrop */}
               <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-
-              {/* Modal */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -217,7 +217,6 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                 onClick={e => e.stopPropagation()}
                 className="relative z-10 w-full max-w-md rounded-2xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-hidden"
               >
-                {/* Header */}
                 <div className="p-5 border-b border-white/[0.06] flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
                     <CampaignCover src={submitModal.cover_art_url} title="" className="w-full h-full" />
@@ -230,10 +229,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                     <X size={18} />
                   </button>
                 </div>
-
-                {/* Body */}
                 <div className="p-5 space-y-5">
-                  {/* Platform selector — large clickable cards */}
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">Choose platform</label>
                     <div className="grid grid-cols-3 gap-2">
@@ -262,55 +258,27 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                       })}
                     </div>
                   </div>
-
-                  {/* URL input */}
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">Paste your video link</label>
-                    <Input
-                      value={submitUrl}
-                      onChange={e => setSubmitUrl(e.target.value)}
-                      placeholder="https://www.tiktok.com/@user/video/..."
-                      className="text-sm"
-                      autoFocus
-                    />
+                    <Input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="https://www.tiktok.com/@user/video/..." className="text-sm" autoFocus />
                   </div>
-
-                  {/* Earnings preview */}
                   {submitUrl && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4 flex items-center gap-3"
-                    >
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4 flex items-center gap-3">
                       <DollarSign size={18} className="text-emerald-400 shrink-0" />
                       <div>
-                        <p className="text-sm font-semibold text-emerald-400">
-                          ${((submitModal.cpm_rate_cents / 100) * 0.8).toFixed(2)} per 1K views
-                        </p>
+                        <p className="text-sm font-semibold text-emerald-400">${((submitModal.cpm_rate_cents / 100) * 0.8).toFixed(2)} per 1K views</p>
                         <p className="text-[10px] text-emerald-400/70">You keep 80% · Paid after approval</p>
                       </div>
                     </motion.div>
                   )}
-
-                  {/* Submit button */}
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!submitUrl || submitting}
-                    className="w-full py-5 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.25)]"
-                  >
+                  <Button onClick={handleSubmit} disabled={!submitUrl || submitting} className="w-full py-5 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.25)]">
                     {submitting ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                      <>
-                        <Send size={16} className="mr-2" />
-                        Submit for ${((submitModal.cpm_rate_cents / 100) * 0.8).toFixed(2)}/1K views
-                      </>
+                      <><Send size={16} className="mr-2" />Submit for ${((submitModal.cpm_rate_cents / 100) * 0.8).toFixed(2)}/1K views</>
                     )}
                   </Button>
-
-                  <p className="text-[10px] text-muted-foreground/60 text-center">
-                    The artist will review your video and approve it before paying.
-                  </p>
+                  <p className="text-[10px] text-muted-foreground/60 text-center">The artist will review your video and approve it before paying.</p>
                 </div>
               </motion.div>
             </motion.div>
