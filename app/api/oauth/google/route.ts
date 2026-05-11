@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     });
 
     if (!tokenRes.ok) {
+      console.error('Google OAuth token exchange failed:', tokenRes.status, await tokenRes.text().catch(()=>''));
       return NextResponse.redirect(new URL('/login?error=google', baseUrl));
     }
 
@@ -45,6 +46,7 @@ export async function GET(request: Request) {
     });
 
     if (!userRes.ok) {
+      console.error('Google OAuth userinfo fetch failed:', userRes.status);
       return NextResponse.redirect(new URL('/login?error=google', baseUrl));
     }
 
