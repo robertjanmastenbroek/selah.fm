@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Megaphone, Send, DollarSign, X } from 'lucide-react';
 import { trackSubmitContent } from '@/lib/analytics';
+import EarnModal from '@/components/EarnModal';
 import { PlatformBadge } from '@/components/SocialIcons';
 
 interface Campaign { id: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; }
@@ -59,10 +60,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<Record<string, any>>({});
-  const [submitModal, setSubmitModal] = useState<Campaign | null>(null);
-  const [submitPlatform, setSubmitPlatform] = useState('tiktok');
-  const [submitUrl, setSubmitUrl] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [earnModal, setEarnModal] = useState<Campaign | null>(null);
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -83,35 +81,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
   const openSubmitModal = (e: React.MouseEvent, c: Campaign) => {
     e.stopPropagation();
     e.preventDefault();
-    setSubmitModal(c);
-    setSubmitPlatform('tiktok');
-    setSubmitUrl('');
-  };
-
-  const handleSubmit = async () => {
-    if (!submitModal || !submitUrl) return;
-    setSubmitting(true);
-    try {
-      if (!submitUrl.startsWith('https://')) {
-        addToast('Please paste a valid HTTPS link from TikTok, Instagram, YouTube, or Facebook', 'error');
-        setSubmitting(false);
-        return;
-      }
-      const res = await fetch('/api/submissions', {
-        method: 'POST', credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campaignId: submitModal.id, contentUrl: submitUrl, platform: submitPlatform }),
-      });
-      if (res.ok) {
-        trackSubmitContent(submitPlatform);
-        addToast('Submitted! Artist will review your video.', 'success');
-        setSubmitModal(null);
-      } else {
-        const err = await res.json();
-        addToast(err.error || 'Failed to submit', 'error');
-      }
-    } catch { addToast('Network error — try again', 'error'); }
-    setSubmitting(false);
+    setEarnModal(c);
   };
 
   return (
@@ -205,105 +175,17 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
           </div>
         )}
 
-        {/* ── Submission Modal ─────────────────────────────────── */}
-        <AnimatePresence>
-          {submitModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              onClick={() => setSubmitModal(null)}
-            >
-              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                onClick={e => e.stopPropagation()}
-                className="relative z-10 w-full max-w-md rounded-2xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-hidden"
-              >
-                <div className="p-5 border-b border-white/[0.06] flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
-                    <CampaignCover src={submitModal.cover_art_url} title="" className="w-full h-full" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm truncate">{submitModal.track_title}</h3>
-                    <p className="text-xs text-muted-foreground">${(submitModal.cpm_rate_cents / 100).toFixed(2)} CPM · Submit your video</p>
-                  </div>
-                  <button onClick={() => setSubmitModal(null)} className="text-muted-foreground hover:text-foreground transition-colors">
-                    <X size={18} />
-                  </button>
-                </div>
-                <div className="p-5 space-y-5">
-                  {/* How it works — simple 3-step guide */}
-                  <div className="rounded-lg bg-primary/[0.04] border border-primary/10 p-3 space-y-2">
-                    <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">How to submit</p>
-                    <div className="space-y-1.5">
-                      {[
-                        { s: '1', t: `Open ${submitPlatform === 'tiktok' ? 'TikTok' : submitPlatform === 'instagram' ? 'Instagram' : 'YouTube'} and search for "${submitModal.track_title}" in the music library. Use the official audio.` },
-                        { s: '2', t: 'Record your video with the official audio. Pick the best part of the song.' },
-                        { s: '3', t: 'Post it publicly, copy the link, and paste it below.' },
-                      ].map(i => (
-                        <div key={i.s} className="flex gap-1.5 text-[10px] text-muted-foreground"><span className="font-semibold text-foreground/60">{i.s}.</span> {i.t}</div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Choose platform</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {platformOptions.map(p => {
-                        const active = submitPlatform === p.id;
-                        return (
-                          <button
-                            key={p.id}
-                            onClick={() => setSubmitPlatform(p.id)}
-                            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all ${
-                              active
-                                ? 'border-primary bg-primary/[0.06]'
-                                : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]'
-                            }`}
-                          >
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: p.color + '15' }}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill={p.color}>
-                                {p.id === 'tiktok' && <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>}
-                                {p.id === 'instagram' && <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke={p.color} strokeWidth="2"/><circle cx="12" cy="12" r="5" fill="none" stroke={p.color} strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1.5" fill={p.color}/></>}
-                                {p.id === 'youtube' && <><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.94 2C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58z" fill="none" stroke={p.color} strokeWidth="2"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill={p.color}/></>}
-                              </svg>
-                            </div>
-                            <span className="text-xs font-medium">{p.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Paste your video link</label>
-                    <Input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="https://www.tiktok.com/@user/video/..." className="text-sm" autoFocus />
-                  </div>
-                  {submitUrl && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4 flex items-center gap-3">
-                      <DollarSign size={18} className="text-emerald-400 shrink-0" />
-                      <div>
-                        <p className="text-sm font-semibold text-emerald-400">${((submitModal.cpm_rate_cents / 100) * 0.8).toFixed(2)} per 1K views</p>
-                        <p className="text-[10px] text-emerald-400/70">You keep 80% · Paid after approval</p>
-                      </div>
-                    </motion.div>
-                  )}
-                  <Button onClick={handleSubmit} disabled={!submitUrl || submitting} className="w-full py-5 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.25)]">
-                    {submitting ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <><Send size={16} className="mr-2" />Submit for ${((submitModal.cpm_rate_cents / 100) * 0.8).toFixed(2)}/1K views</>
-                    )}
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground/60 text-center">The artist will review your video and approve it before paying.</p>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* ── Earn Modal ── */}
+        {earnModal && (
+          <EarnModal
+            open={!!earnModal}
+            onClose={() => setEarnModal(null)}
+            campaignId={earnModal.id}
+            trackTitle={earnModal.track_title}
+            cpmCents={earnModal.cpm_rate_cents}
+            coverArtUrl={earnModal.cover_art_url}
+          />
+        )}
       </main>
     </div>
   );
