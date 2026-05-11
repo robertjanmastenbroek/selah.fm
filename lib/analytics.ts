@@ -22,7 +22,7 @@ function gtag(...args: any[]) {
 function track(event: string, params: Record<string, any> = {}) {
   if (typeof window !== 'undefined' && window.gtag) {
     // GA is loaded — send directly and flush any pending events
-    flushQueue();
+    flushAnalyticsQueue();
     try { window.gtag('event', event, params); } catch {}
   } else {
     // GA not loaded yet — queue for later
@@ -85,6 +85,10 @@ export function trackApproveSubmission() {
 
 export function trackConnectStripe() {
   track('connect_stripe', { event_category: 'conversion' });
+}
+
+export function trackConnectCompleted() {
+  track('connect_completed', { event_category: 'conversion' });
 }
 
 export function trackConnectSocial(platform: string) {

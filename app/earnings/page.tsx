@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import Header from '@/components/TopNav';
@@ -9,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/States';
 import RatingPrompt from '@/components/RatingPrompt';
+import { trackConnectStripe, trackConnectCompleted } from '@/lib/analytics';
 
 function formatMoney(cents: number): string {
   return '$' + (cents / 100).toFixed(2);
@@ -21,8 +24,17 @@ interface Submission {
 }
 
 export default function EarningsPage() {
+  const searchParams = useSearchParams();
+  const connectStatus = searchParams.get('connect');
   const { data: profileData } = useSWR('/api/auth/me', fetcher, swrConfig);
   const profile = profileData?.user || null;
+
+  // Track Stripe Connect completion
+  useEffect(() => {
+    if (connectStatus === 'success') {
+      trackConnectCompleted();
+    }
+  }, [connectStatus]);
 
   const { data, error, isLoading, mutate } = useSWR('/api/earnings', fetcher, swrConfig);
   const earnings = data?.submissions ? data : { submissions: [], totalPaid: 0, totalPending: 0, totalEarned: 0 };
@@ -38,6 +50,17 @@ export default function EarningsPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="page-container">
+        {connectStatus === 'success' && (
+          <div className="mb-6 rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/10 p-5 flex items-center gap-4 animate-fade-in">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-400"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Stripe Connect set up</p>
+              <p className="text-xs text-muted-foreground">Your bank account is connected. You can now receive payouts.</p>
+            </div>
+          </div>
+        )}
         <h1 className="section-title mb-8">Earnings</h1>
 
         {error ? (
@@ -89,6 +112,7 @@ export default function EarningsPage() {
                 <div className="flex gap-2 justify-center">
                   <button
                     onClick={async () => {
+                      trackConnectStripe();
                       try {
                         const res = await fetch('/api/stripe/connect');
                         if (!res.ok) {
