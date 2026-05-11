@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import StripePaymentModal from '@/components/StripePaymentModal';
 import PaymentSuccess from '@/components/PaymentSuccess';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
-import { Heart, Users, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
+import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
 
 // ── Sacred Gold accent ──────────────────────────────────────
 const GOLD = '#C9A84C';
@@ -216,10 +216,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 </div>
                 <Progress value={Math.min(progress, 100)} className="h-1.5" />
                 <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-1"><Users size={10} /> {donations.count} donors</span>
                   <span className="flex items-center gap-1"><Camera size={10} /> {submissions} submissions</span>
                   <span className="flex items-center gap-1"><Play size={10} /> {views >= 1000 ? `${(views/1000).toFixed(1)}K` : views} views</span>
-                  <span className="text-muted-foreground/50">${cpm.toFixed(2)}/1K views</span>
+                  <span className="text-muted-foreground/50">${cpm.toFixed(2)} CPM</span>
                 </div>
               </div>
             </div>
@@ -367,10 +366,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                     <span className="text-muted-foreground ml-1">of ${budget.toFixed(0)}</span>
                   </div>
                   <div className="flex items-center gap-3 text-[9px] text-muted-foreground mt-0.5">
-                    <span className="flex items-center gap-0.5"><Users size={9} /> {donations.count}</span>
                     <span className="flex items-center gap-0.5"><Camera size={9} /> {submissions}</span>
                     <span className="flex items-center gap-0.5"><Play size={9} /> {views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</span>
-                    <span className="text-muted-foreground/50">${cpm.toFixed(2)}/1K</span>
+                    <span className="text-muted-foreground/50">${cpm.toFixed(2)} CPM</span>
                   </div>
                 </div>
               </div>
