@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 
 export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) => void }) {
@@ -9,10 +8,22 @@ export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) 
   const [search, setSearch] = useState('');
   const [platform, setPlatform] = useState('');
   const [minCpm, setMinCpm] = useState('');
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const apply = () => {
-    onFilter({ search, platform, minCpm: minCpm ? parseFloat(minCpm) : undefined });
-    setOpen(false);
+  // Search-as-you-type with 300ms debounce
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onFilter({ search, platform, minCpm: minCpm ? parseFloat(minCpm) : undefined });
+    }, 300);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [search]);
+
+  // Apply platform/minCpm immediately
+  const applyFilters = (p?: string, c?: string) => {
+    const plat = p ?? platform;
+    const cpm = c ?? minCpm;
+    onFilter({ search, platform: plat, minCpm: cpm ? parseFloat(cpm) : undefined });
   };
 
   return (
@@ -25,10 +36,15 @@ export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) 
       </button>
       {open && (
         <div className="absolute top-12 right-0 w-72 bg-popover border rounded-xl p-4 shadow-xl z-50 space-y-3">
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Track name..." />
+          <Input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search tracks or artists..."
+            autoFocus
+          />
           <select
             value={platform}
-            onChange={e => setPlatform(e.target.value)}
+            onChange={e => { setPlatform(e.target.value); applyFilters(e.target.value, minCpm); }}
             className="w-full border rounded-md px-3 py-2 text-sm bg-background"
           >
             <option value="">All platforms</option>
@@ -38,24 +54,19 @@ export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) 
           </select>
           <Input
             value={minCpm}
-            onChange={e => setMinCpm(e.target.value)}
+            onChange={e => { setMinCpm(e.target.value); applyFilters(platform, e.target.value); }}
             placeholder="Min CPM ($)"
             type="number"
           />
-          <div className="flex gap-2">
-            <Button onClick={apply} size="sm" className="flex-1">Apply</Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex-1"
-              onClick={() => {
-                setSearch(''); setPlatform(''); setMinCpm('');
-                onFilter({}); setOpen(false);
-              }}
-            >
-              Clear
-            </Button>
-          </div>
+          <button
+            onClick={() => {
+              setSearch(''); setPlatform(''); setMinCpm('');
+              onFilter({}); setOpen(false);
+            }}
+            className="w-full text-xs text-muted-foreground hover:text-foreground py-1.5 transition-colors"
+          >
+            Clear all filters
+          </button>
         </div>
       )}
     </div>

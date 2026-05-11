@@ -9,12 +9,19 @@ import LiveTicker from '@/components/LiveTicker';
 import { Heart, ArrowLeft, Shield, Lock, AlertCircle, Check, Zap, Wallet, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
 const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
 
 const PRESETS = [
   { amount: 50 }, { amount: 100 }, { amount: 200, recommended: true }, { amount: 300 }, { amount: 500 }, { amount: 1000 },
 ];
+
+// Payment method order: Apple Pay first, Google Pay second, card last
+const payOptions = { 
+  layout: { type: 'tabs' as const, defaultCollapsed: false },
+  fields: { billingDetails: 'auto' as const },
+  wallets: { applePay: 'auto' as const, googlePay: 'auto' as const },
+};
 
 // ── Circle Progress ─────────────────────────────────────────
 function lerpColor(a: number, b: number, t: number) { return Math.round(a + (b - a) * t); }
