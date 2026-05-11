@@ -135,6 +135,7 @@ function DashboardContent() {
     setMinVideoLength(raw.min_video_length_seconds ? String(raw.min_video_length_seconds) : '');
     setCaptionReq(raw.caption_requirements || '');
     setCoverArt(raw.cover_art_url || '');
+    setDriveUrl(raw.content_assets_url || '');
     // YouTube video + gallery images
     setYoutubeVideoUrl(raw.youtube_video_url || '');
     try {
@@ -181,6 +182,7 @@ function DashboardContent() {
           minVideoLength: minVideoLength ? parseInt(minVideoLength) : null,
           captionRequirements: captionReq,
           coverArtUrl: coverArt || undefined,
+          contentAssetsUrl: driveUrl || null,
           youtubeVideoUrl: youtubeVideoUrl || null,
           galleryImages: galleryItems.length > 0 ? galleryItems : null,
           platforms,
@@ -447,6 +449,11 @@ function DashboardContent() {
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Spotify/SoundCloud URL</label>
                     <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} className="text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">📦 Creator resource pack (Google Drive)</label>
+                    <Input value={driveUrl} onChange={e => setDriveUrl(e.target.value)} className="text-sm" placeholder="https://drive.google.com/drive/folders/..." />
+                    <p className="text-[10px] text-muted-foreground mt-1">Share a folder with your master track (.wav + .mp3), cover art, and reference videos.</p>
                   </div>
                   <div className="md:col-span-2">
                     <p className="text-xs text-muted-foreground mb-2">💡 <strong>CPM rate is locked</strong> once a campaign has submissions. To change your rate, create a new campaign.</p>
