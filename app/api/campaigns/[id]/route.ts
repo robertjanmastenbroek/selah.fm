@@ -64,6 +64,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Not your campaign' }, { status: 403 });
     }
 
+    // ── CPM lock: reject cpmRate changes if submissions exist ──
+    if (body.cpmRate !== undefined) {
+      const subCount = await sql`SELECT COUNT(*)::int as c FROM submissions WHERE campaign_id = ${params.id}`;
+      if (subCount[0].c > 0) {
+        return NextResponse.json({ error: 'CPM rate is locked once submissions exist. Create a new campaign to change your rate.' }, { status: 400 });
+      }
+    }
+
     // ── Prepare update values ──────────────────────────────────
     const trackTitle = body.trackTitle !== undefined ? String(body.trackTitle).slice(0, 200) : null;
     const title = body.title !== undefined ? (body.title ? String(body.title).slice(0, 300) : null) : null;

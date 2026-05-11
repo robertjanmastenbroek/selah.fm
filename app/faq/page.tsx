@@ -57,8 +57,13 @@ const faqs: { section: string; items: FAQItem[] }[] = [
         section: 'For Artists',
       },
       {
+        q: 'Can I change my CPM rate after launching a campaign?',
+        a: 'Once a campaign receives any submissions, the CPM rate is locked. This protects creators — they submitted at a specific rate expecting that payout. To change your rate, create a new campaign with the updated CPM. Campaigns with zero submissions can still have their CPM adjusted.',
+        section: 'For Artists',
+      },
+      {
         q: 'Can I pause or cancel my campaign?',
-        a: 'Yes — from your Dashboard you can pause any campaign at any time. Paused campaigns won\'t accept new submissions. You can also cancel a campaign entirely. Your remaining budget stays in your account.',
+        a: 'Campaigns automatically stop accepting submissions when the budget is exhausted. To end a campaign early, simply stop funding it. Any remaining budget stays in your account for future campaigns.',
         section: 'For Artists',
       },
       {

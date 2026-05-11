@@ -156,7 +156,6 @@ function DashboardContent() {
           trackTitle,
           title: campaignTitle || null,
           trackUrl,
-          cpmRate: parseFloat(cpm),
           maxPayout: parseInt(maxPayout),
           requirements, hashtags,
           requiredHashtags, requireFtc,
@@ -418,9 +417,8 @@ function DashboardContent() {
                     <label className="text-xs text-muted-foreground mb-1 block">Spotify/SoundCloud URL</label>
                     <Input value={trackUrl} onChange={e => setTrackUrl(e.target.value)} className="text-sm" />
                   </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">CPM rate ($/1K views)</label>
-                    <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} className="text-sm" />
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-muted-foreground mb-2">💡 <strong>CPM rate is locked</strong> once a campaign has submissions. To change your rate, create a new campaign.</p>
                   </div>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Max payout per submission ($)</label>

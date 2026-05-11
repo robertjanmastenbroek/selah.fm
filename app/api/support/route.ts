@@ -9,6 +9,8 @@ Key facts about Selah.fm:
 - Artists create campaigns with budgets, set CPM rates, and deposit via Stripe
 - Creators browse campaigns, make TikToks/Reels/Shorts, submit for review
 - Artists approve/reject submissions, creators get paid for verified views
+- CPM rates are LOCKED once a campaign receives submissions. This protects creators.
+  Artists must create a new campaign to change their CPM rate.
 - 20% platform fee on creator payouts, Stripe takes 2.9% + $0.30 on deposits
 - YouTube views auto-verified via API, TikTok/Instagram via oEmbed
 - Google OAuth + email/password signup at selah.fm/login
@@ -113,7 +115,7 @@ function keywordMatch(msg: string): string | null {
     return "To create a campaign: go to your Dashboard, click New, choose a track, set your CPM rate and budget, and launch. Creators will find it on the Browse page and start making content!";
   }
   if (/(cpm|rate|budget|cost|price|pricing)/.test(m)) {
-    return "You set your own CPM rate (cost per 1,000 views). The platform takes a 20% service fee from creator payouts. There are no hidden costs.";
+    return "You set your own CPM rate (cost per 1,000 views). Once a campaign has submissions, the CPM is locked to protect creators. To change your rate, create a new campaign. The platform takes a 20% fee from creator payouts.";
   }
   if (/(fee|fees|charge|commission)/.test(m)) {
     return "Selah.fm charges a 20% platform fee on creator payouts. Artists pay exactly what they budget — no surprise costs.";
