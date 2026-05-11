@@ -309,9 +309,11 @@ export default function CheckoutPage() {
                     <AlertCircle size={14} className="shrink-0 mt-0.5" />{paymentError}
                   </div>
                 ) : clientSecret ? (
-                  <Elements stripe={stripePromise} options={{ clientSecret,
-                    appearance: { theme: 'night', variables: { colorPrimary: '#5B7FFF', colorBackground: '#0A0A0A', colorText: '#F0F0F0', colorTextSecondary: '#8C8C8C', borderRadius: '12px', spacingUnit: '4px' } }
-                  }}>
+                  <Elements stripe={stripePromise} options={{
+                    clientSecret,
+                    paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
+                    appearance: { theme: 'night', variables: { colorPrimary: '#5B7FFF', colorBackground: '#0A0A0A', colorText: '#F0F0F0', colorTextSecondary: '#8C8C8C', borderRadius: '12px', spacingUnit: '4px' } },
+                  } as any}>
                     <CheckoutForm clientSecret={clientSecret} amount={effectiveAmount} type={type}
                       onSuccess={() => setSuccessOpen(true)} onError={setPaymentError} />
                   </Elements>
