@@ -11,6 +11,7 @@ import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/States';
 import { Megaphone } from 'lucide-react';
 import { PlatformBadge } from '@/components/SocialIcons';
 
@@ -105,14 +106,21 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
             </div>
           ))}</div>
         ) : campaigns.length === 0 ? (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16">
-            {Object.keys(filters).length === 0 && (
-              <img src="/images/browse-mockup.png" alt="Browse campaigns" className="mx-auto mb-6 w-64 h-48 object-contain opacity-80 rounded-xl" loading="lazy" />
-            )}
-            <h2 className="text-xl font-semibold mb-2">{Object.keys(filters).length > 0 ? 'No matching campaigns' : 'No campaigns yet'}</h2>
-            <p className="text-muted-foreground text-sm mb-6">{Object.keys(filters).length > 0 ? 'Try adjusting your filters.' : "Be the first to create one — and share it with your fans!"}</p>
-            {Object.keys(filters).length > 0 ? <Button variant="outline" onClick={() => { setFilters({}); loadCampaigns({}); }}>Clear filters</Button> : <Link href="/dashboard"><Button>Create a campaign</Button></Link>}
-          </motion.div>
+          Object.keys(filters).length > 0 ? (
+            <EmptyState
+              icon={<span className="text-4xl">🔍</span>}
+              title="No matching campaigns"
+              description="Try adjusting your filters or search terms."
+              action={{ label: 'Clear filters', onClick: () => { setFilters({}); loadCampaigns({}); } }}
+            />
+          ) : (
+            <EmptyState
+              icon={<span className="text-4xl">🎵</span>}
+              title="No campaigns yet"
+              description="Be the first to create one — and share it with your fans."
+              action={{ label: 'Create a campaign', href: '/dashboard' }}
+            />
+          )
         ) : (
           <div className="campaign-grid">
             {campaigns.map((c, i) => {

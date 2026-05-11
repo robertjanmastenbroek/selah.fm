@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState, ErrorState } from '@/components/States';
 import VideoEmbed from '@/components/VideoEmbed';
 import RatingPrompt from '@/components/RatingPrompt';
 
@@ -115,13 +116,13 @@ export default function ReviewPage() {
         </div>
 
         {error ? (
-          <Card className="text-center py-16"><CardContent><h2 className="text-lg font-medium mb-2">Couldn't load submissions</h2><p className="text-muted-foreground text-sm mb-4">Check your connection.</p><Button variant="outline" onClick={() => mutate()}>Retry</Button></CardContent></Card>
+          <ErrorState message="We couldn't load your submissions right now." onRetry={() => mutate()} />
         ) : isLoading ? (
           <div className="space-y-4">
             {[1,2].map(i => <Card key={i}><CardContent className="p-5 space-y-3"><Skeleton className="h-5 w-1/2" /><Skeleton className="h-4 w-3/4" /><Skeleton className="h-16 w-full" /><div className="flex gap-2"><Skeleton className="h-10 flex-1" /><Skeleton className="h-10 flex-1" /></div></CardContent></Card>)}
           </div>
         ) : subs.length === 0 ? (
-          <Card className="text-center py-16"><CardContent><p className="text-4xl mb-4 opacity-10">✓</p><h2 className="text-lg font-medium">All caught up</h2><p className="text-muted-foreground text-sm">No submissions to review.</p></CardContent></Card>
+          <EmptyState icon={<span className="text-4xl">✓</span>} title="All caught up" description="No submissions waiting for review. Check back when creators submit videos." />
         ) : (
           <div className="space-y-4">
             {subs.map((s, i) => {
