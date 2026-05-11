@@ -16,7 +16,7 @@ export async function POST(
   if (!key) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
 
   try {
-    const { amount, donorName, message } = await request.json();
+    const { amount, donorName, email, message } = await request.json();
     const donationAmount = parseFloat(amount);
     if (!donationAmount || donationAmount < 1) return NextResponse.json({ error: 'Minimum donation is $1' }, { status: 400 });
 
@@ -41,6 +41,7 @@ export async function POST(
         campaignId: params.id,
         donorId: session?.id || '',
         donorName: (donorName || 'Anonymous fan').slice(0, 100),
+        donorEmail: email || '',
         message: (message || '').slice(0, 500),
       },
       description: `Support "${campaign.track_title}" on Selah.fm`,
