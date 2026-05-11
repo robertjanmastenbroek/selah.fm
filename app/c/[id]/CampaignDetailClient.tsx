@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import StripePaymentModal from '@/components/StripePaymentModal';
 import PaymentSuccess from '@/components/PaymentSuccess';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
+import EarnModal from '@/components/EarnModal';
 import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
 
 // ── Brand accent (deep indigo-purple) ──────────────────────
@@ -157,10 +158,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const [successOpen, setSuccessOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
-  const [showSubmit, setShowSubmit] = useState(false);
-  const [submitUrl, setSubmitUrl] = useState('');
-  const [submitPlatform, setSubmitPlatform] = useState('tiktok');
-  const [submitting, setSubmitting] = useState(false);
+  const [earnOpen, setEarnOpen] = useState(false);
 
   useEffect(() => {
     if (initialCampaign) return;
@@ -179,18 +177,6 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
     window.addEventListener('resize', calc);
     return () => window.removeEventListener('resize', calc);
   }, [campaign, loading]);
-
-  const handleSubmitVideo = async () => {
-    if (!submitUrl) return;
-    if (!submitUrl.startsWith('https://')) { addToast('Please paste a valid HTTPS link from TikTok, Instagram, YouTube, or Facebook', 'error'); return; }
-    setSubmitting(true);
-    try {
-      const r = await fetch('/api/submissions', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ campaignId: id, contentUrl: submitUrl, platform: submitPlatform }) });
-      if (r.ok) { addToast('Submitted! The artist will review your video.', 'success'); setShowSubmit(false); setSubmitUrl(''); }
-      else { const e = await r.json(); addToast(e.error || 'Failed to submit', 'error'); }
-    } catch { addToast('Network error', 'error'); }
-    setSubmitting(false);
-  };
 
   const handleDonate = async () => {
     try {
@@ -287,68 +273,21 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </div>
 
             {/* ── CTAs ── */}
-            {!showSubmit ? (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowSubmit(true)}
-                  className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]"
-                >
-                  EARN
-                </button>
-                <button
-                  onClick={handleDonate}
-                  className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all"
-                  style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}
-                >
-                  DONATE
-                </button>
-              </div>
-            ) : (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-white/[0.04] border border-primary/10 p-4 space-y-3">
-                <p className="text-sm font-semibold flex items-center gap-2"><Camera size={16} className="text-primary" />Submit your video</p>
-                
-                {/* How it works — simple 3-step guide */}
-                <div className="rounded-lg bg-primary/[0.04] border border-primary/10 p-3 space-y-2">
-                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">How to submit</p>
-                  <div className="space-y-2">
-                    {[
-                      { step: '1', text: `Open ${submitPlatform === 'tiktok' ? 'TikTok' : submitPlatform === 'instagram' ? 'Instagram' : 'YouTube'} and search for the track "${campaign.track_title}" in the app's music library. Use the official audio.`, icon: '🔍' },
-                      { step: '2', text: 'Record your video using the official audio. Pick the best part of the song.', icon: '🎬' },
-                      { step: '3', text: 'Post it, copy the link, and paste it below.', icon: '📋' },
-                    ].map(s => (
-                      <div key={s.step} className="flex gap-2 text-[11px] text-muted-foreground leading-relaxed">
-                        <span className="shrink-0 text-xs">{s.icon}</span>
-                        <span><strong className="text-foreground/70">{s.step}.</strong> {s.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {campaign.content_assets_url && (
-                    <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[10px] text-primary hover:underline mt-1">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      Download audio + assets (Google Drive)
-                    </a>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'tiktok' as const, label: 'TikTok', bg: 'bg-[#ff005015]', text: 'text-[#ff0050]', letter: 'T' },
-                    { id: 'instagram' as const, label: 'Reels', bg: 'bg-[#E1306C15]', text: 'text-[#E1306C]', letter: 'R' },
-                    { id: 'youtube' as const, label: 'Shorts', bg: 'bg-[#FF000015]', text: 'text-[#FF0000]', letter: 'S' },
-                  ].map(p => (
-                    <button key={p.id} onClick={() => setSubmitPlatform(p.id)} className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 transition-all ${submitPlatform === p.id ? 'border-primary bg-primary/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${p.bg}`}><span className={`text-[10px] font-bold ${p.text}`}>{p.letter}</span></div>
-                      <span className="text-[10px] font-medium">{p.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <input value={submitUrl} onChange={e => setSubmitUrl(e.target.value)} placeholder="Paste your video link..." className="flex-1 rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" autoFocus />
-                  <Button onClick={handleSubmitVideo} disabled={!submitUrl || submitting} className="shrink-0 text-sm">{submitting ? '...' : 'Submit'}</Button>
-                </div>
-                <button onClick={() => setShowSubmit(false)} className="w-full text-xs text-muted-foreground hover:text-foreground">Cancel</button>
-              </motion.div>
-            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setEarnOpen(true)}
+                className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]"
+              >
+                EARN
+              </button>
+              <button
+                onClick={handleDonate}
+                className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all"
+                style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}
+              >
+                DONATE
+              </button>
+            </div>
 
             {/* ── Donations + Submissions (desktop: below CTAs in right column) ── */}
             <div className="hidden md:block mt-6 space-y-4">
@@ -537,7 +476,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               </div>
               {/* Buttons */}
               <div className="flex gap-2">
-                <button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">EARN</button>
+                <button onClick={() => setEarnOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">EARN</button>
                 <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</button>
               </div>
             </div>
@@ -546,6 +485,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       </AnimatePresence>
 
       <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={displayTitle} imageUrl={campaign.cover_art_url} />
+      <EarnModal open={earnOpen} onClose={() => setEarnOpen(false)} campaignId={id} trackTitle={displayTitle} cpmCents={campaign.cpm_rate_cents} coverArtUrl={campaign.cover_art_url} contentAssetsUrl={campaign.content_assets_url} />
       <StripePaymentModal open={paymentModal} onClose={() => setPaymentModal(false)} onSuccess={() => { setPaymentModal(false); setSuccessOpen(true); }} clientSecret={clientSecret} title={displayTitle} subtitle="Your donation goes directly to the campaign budget" coverArtUrl={campaign.cover_art_url} amount={donationAmount} mode="donation" />
       <PaymentSuccess open={successOpen} mode="donation" amount={donationAmount} campaignTitle={displayTitle} campaignId={id} onClose={() => setSuccessOpen(false)} />
     </div>
