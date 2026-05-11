@@ -26,8 +26,8 @@ export default function SettingsPage() {
   const [youtube, setYouTube] = useState('');
   const [facebook, setFacebook] = useState('');
   const [profileImage, setProfileImage] = useState('');
-  const [isArtistAlso, setIsArtistAlso] = useState(false);
-  const [isCreatorAlso, setIsCreatorAlso] = useState(false);
+  const [isArtistAlso, setIsArtistAlso] = useState(true);
+  const [isCreatorAlso, setIsCreatorAlso] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();

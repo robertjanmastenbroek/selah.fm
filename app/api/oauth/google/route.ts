@@ -61,10 +61,10 @@ export async function GET(request: Request) {
     let user = await sql`SELECT id, email, display_name, user_type, is_artist, is_creator, profile_image_url FROM users WHERE email = ${email}`;
 
     if (user.length === 0) {
-      // Create new user — default to creator role
+      // Create new user — everyone gets both roles by default
       const result = await sql`
         INSERT INTO users (email, password_hash, display_name, user_type, is_artist, is_creator, email_verified, profile_image_url)
-        VALUES (${email}, 'google-oauth', ${name}, 'creator', false, true, true, ${picture})
+        VALUES (${email}, 'google-oauth', ${name}, 'creator', true, true, true, ${picture})
         RETURNING id, email, display_name, user_type, is_artist, is_creator
       `;
       user = result;

@@ -26,8 +26,9 @@ export async function POST(request: Request) {
 
     const validTypes = ['artist', 'creator'];
     const userType = validTypes.includes(type) ? type : 'creator';
-    const isArtist = userType === 'artist';
-    const isCreator = userType === 'creator';
+    // Everyone gets both roles by default — can create campaigns AND submit to them
+    const isArtist = true;
+    const isCreator = true;
 
     // Check for existing user
     const existing = await sql`SELECT id FROM users WHERE email = ${trimmedEmail}`;
