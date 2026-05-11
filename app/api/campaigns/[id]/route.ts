@@ -11,9 +11,11 @@ export async function GET(
       SELECT c.*, 
         COALESCE(v.approved_submissions, '0') as approved_submissions,
         COALESCE(v.pending_submissions, '0') as pending_submissions,
-        COALESCE(v.total_verified_views, '0') as total_verified_views
+        COALESCE(v.total_verified_views, '0') as total_verified_views,
+        u.display_name as artist_name
       FROM campaigns c
       LEFT JOIN campaign_stats v ON v.id = c.id
+      LEFT JOIN users u ON u.id = c.artist_id
       WHERE c.id = ${params.id}
     `;
     if (campaigns.length === 0) {

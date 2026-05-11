@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const minCpm = searchParams.get('minCpm') || '';
     const offset = parseInt(searchParams.get('offset') || '0');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
+    const sort = searchParams.get('sort') || 'newest';
 
     // If user is authenticated, show only their campaigns (dashboard).
     // If not, show all active/draft campaigns (public browse).
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
     let campaigns;
     if (isOwnerView) {
       const userId = session.id || await resolveUserId(session);
+      const orderClause = sort === 'popular' ? sql`COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC` : sql`c.created_at DESC`;
       campaigns = await sql`
         SELECT c.*, 
           COALESCE(v.approved_submissions, '0') as approved_submissions,
@@ -33,10 +35,11 @@ export async function GET(request: Request) {
         LEFT JOIN campaign_stats v ON v.id = c.id
         LEFT JOIN users u ON u.id = c.artist_id
         WHERE c.artist_id = ${userId}
-        ORDER BY c.created_at DESC
+        ORDER BY ${orderClause}
         LIMIT ${limit}
       `;
     } else {
+      const orderClause2 = sort === 'popular' ? sql`COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC` : sql`c.created_at DESC`;
       campaigns = await sql`
         SELECT c.*, 
           COALESCE(v.approved_submissions, '0') as approved_submissions,
@@ -47,7 +50,7 @@ export async function GET(request: Request) {
         LEFT JOIN campaign_stats v ON v.id = c.id
         LEFT JOIN users u ON u.id = c.artist_id
         WHERE c.status IN ('active', 'draft')
-        ORDER BY c.created_at DESC
+        ORDER BY ${orderClause2}
         LIMIT ${limit}
       `;
     }

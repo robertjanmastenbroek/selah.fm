@@ -3,7 +3,6 @@ import './globals.css';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PageTransition from '@/components/PageTransition';
-import SupportWidget from '@/components/SupportWidget';
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 
@@ -71,7 +70,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ToastProvider>{children}</ToastProvider>
             </main>
           </PageTransition>
-          <SupportWidget />
         </ErrorBoundary>
         {/* Footer */}
         <footer className="border-t border-white/[0.04] py-5 px-4">
