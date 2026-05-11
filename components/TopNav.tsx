@@ -171,6 +171,7 @@ export default function Header() {
 
                   {/* Navigation links */}
                   <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><LayoutDashboard size={16} strokeWidth={1.5} /> Dashboard</Link>
+                  <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><MessageCircle size={16} strokeWidth={1.5} /> Messages</Link>
                   <Link href="/review" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><ClipboardCheck size={16} strokeWidth={1.5} /> Review</Link>
                   <Link href="/earnings" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><Banknote size={16} strokeWidth={1.5} /> Earnings</Link>
                   <Link href="/analytics" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.04] transition-colors"><LayoutDashboard size={16} strokeWidth={1.5} /> Analytics</Link>
