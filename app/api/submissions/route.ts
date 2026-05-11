@@ -47,6 +47,20 @@ export async function POST(request: Request) {
       RETURNING *
     `;
 
+    // Live ticker event
+    const creatorName = session.name || 'Someone';
+    const creatorFirst = creatorName.split(' ')[0];
+    const creatorLastInitial = creatorName.split(' ').slice(1).join(' ')[0] || '';
+    const platformLabel = platform === 'instagram' ? 'Instagram Reels' : platform === 'youtube' ? 'YouTube Shorts' : platform === 'facebook' ? 'Facebook' : 'TikTok';
+    await sql`
+      INSERT INTO live_ticker_events (campaign_id, event_type, payload)
+      VALUES (${campaignId}, 'video_submitted', ${JSON.stringify({
+        first_name: creatorFirst,
+        last_initial: creatorLastInitial ? creatorLastInitial + '.' : '',
+        platform: platformLabel,
+      })})
+    `.catch(() => {});
+
     // Notify the artist
     try {
       const campaign = await sql`SELECT artist_id, track_title FROM campaigns WHERE id = ${campaignId}`;

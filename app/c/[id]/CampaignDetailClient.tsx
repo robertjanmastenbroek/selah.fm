@@ -13,6 +13,7 @@ import StripePaymentModal from '@/components/StripePaymentModal';
 import PaymentSuccess from '@/components/PaymentSuccess';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 import EarnModal from '@/components/EarnModal';
+import LiveTicker from '@/components/LiveTicker';
 import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
 
 // ── Brand accent (deep indigo-purple) ──────────────────────
@@ -306,11 +307,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   <span className="text-xs text-muted-foreground ml-1.5">spent of</span>
                   <span className="text-sm font-semibold ml-1">${budget.toFixed(0)} budget</span>
                 </div>
-                <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-1"><Camera size={10} /> {submissions} submissions</span>
-                  <span className="flex items-center gap-1"><Play size={10} /> {views >= 1000 ? `${(views/1000).toFixed(1)}K` : views} views</span>
-                  <span>${cpm.toFixed(2)} CPM</span>
-                </div>
+                <LiveTicker campaignId={id} />
               </div>
               {/* Share icon — TikTok-style ↗ */}
               <button
@@ -510,10 +507,8 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                     <span className="font-bold text-sm">${spent.toFixed(0)}</span>
                     <span className="text-muted-foreground ml-1">of ${budget.toFixed(0)}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-[9px] text-muted-foreground mt-0.5">
-                    <span className="flex items-center gap-0.5"><Camera size={9} /> {submissions}</span>
-                    <span className="flex items-center gap-0.5"><Play size={9} /> {views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</span>
-                    <span className="text-muted-foreground/50">${cpm.toFixed(2)} CPM</span>
+                  <div className="mt-0.5">
+                    <LiveTicker campaignId={id} />
                   </div>
                 </div>
                 <button

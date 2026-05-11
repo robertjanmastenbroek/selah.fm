@@ -71,6 +71,18 @@ export async function POST(request: Request) {
           VALUES (${campaignId}, ${donorId || null}, ${grossCents}, ${displayName}, ${message || null}, false)
         `;
 
+        // Live ticker event
+        const donorFirst = (displayName || 'Someone').split(' ')[0];
+        const donorLastInitial = (displayName || ' ').split(' ').slice(1).join(' ')[0] || '';
+        await sql`
+          INSERT INTO live_ticker_events (campaign_id, event_type, payload)
+          VALUES (${campaignId}, 'donation_received', ${JSON.stringify({
+            first_name: donorFirst,
+            last_initial: donorLastInitial ? donorLastInitial + '.' : '',
+            amount: Math.round(grossCents / 100),
+          })})
+        `.catch(() => {});
+
         // Notify artist + send email
         const campaignRows = await sql`
           SELECT c.artist_id, c.track_title, u.email
