@@ -157,8 +157,12 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const [earnOpen, setEarnOpen] = useState(false);
 
   useEffect(() => {
-    if (initialCampaign) return;
-    fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => { if (d.error) setCampaign(null); else setCampaign(d); setLoading(false); }).catch(() => setLoading(false));
+    if (!initialCampaign) {
+      fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => { if (d.error) setCampaign(null); else setCampaign(d); setLoading(false); }).catch(() => setLoading(false));
+    } else {
+      // Always fetch fresh data after mount — server cache may be stale
+      fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => { if (!d.error) setCampaign(d); }).catch(() => {});
+    }
   }, [id, initialCampaign]);
 
   useEffect(() => {
