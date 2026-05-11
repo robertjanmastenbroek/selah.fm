@@ -57,8 +57,8 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
   const artistLine = artistName ? `${artistName} — ` : '';
   const shareTitle = `${artistLine}"${trackTitle || title}" on Selah.fm 🎵`;
   const shareBody = cpmDollars
-    ? `Earn $${cpmDollars.toFixed(2)} per 1,000 verified views by creating content. Submit your video and get paid!`
-    : 'Create content for this track and earn per verified view.';
+    ? `Earn $${cpmDollars.toFixed(2)} per 1K verified views by creating content — or donate to support this track. Selah.fm is where music meets creators. 🎵`
+    : 'Create content and earn per verified view, or donate to support this track on Selah.fm 🎵';
   const fullShareText = `${shareTitle}\n\n${shareBody}\n\n${url}`;
   const encodedShare = encodeURIComponent(fullShareText);
 
