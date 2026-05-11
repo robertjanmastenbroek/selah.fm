@@ -10,8 +10,10 @@ export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) 
   const [minCpm, setMinCpm] = useState('');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Search-as-you-type with 300ms debounce
+  // Search-as-you-type with 300ms debounce (skip initial mount)
+  const mountedRef = useRef(false);
   useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       onFilter({ search, platform, minCpm: minCpm ? parseFloat(minCpm) : undefined });

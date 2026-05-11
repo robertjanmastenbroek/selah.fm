@@ -65,7 +65,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
     setLoading(true);
     try {
       const url = `/api/campaigns${buildQuery(f)}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { credentials: 'omit' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setCampaigns(data.campaigns || []);
