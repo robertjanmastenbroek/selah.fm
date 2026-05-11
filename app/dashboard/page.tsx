@@ -7,6 +7,7 @@ import { fetcher, swrConfig } from '@/lib/swr-config';
 import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
 import ImageUpload from '@/components/ImageUpload';
+import GalleryUpload, { type GalleryItem } from '@/components/GalleryUpload';
 import CampaignCover from '@/components/CampaignCover';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -65,7 +66,7 @@ function DashboardContent() {
 
   const [coverArt, setCoverArt] = useState('');
   const [youtubeVideoUrl, setYoutubeVideoUrl] = useState('');
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
   const [trackTitle, setTrackTitle] = useState('');
   const [campaignTitle, setCampaignTitle] = useState('');  // Display title (can differ from track title)
   const [trackUrl, setTrackUrl] = useState('');
@@ -103,7 +104,7 @@ function DashboardContent() {
     try {
       const res = await fetch('/api/campaigns', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trackTitle, title: campaignTitle || null, trackUrl, coverArtUrl: coverArt, galleryImages: [], cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags, requirements, requiredHashtags, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq, platforms }),
+        body: JSON.stringify({ trackTitle, title: campaignTitle || null, trackUrl, coverArtUrl: coverArt, galleryImages: [], cpmRate: parseFloat(cpm), budget: parseInt(budget), maxPayout: parseInt(maxPayout), driveUrl, hashtags: hashtags || undefined, requirements: requirements || undefined, requiredHashtags: requiredHashtags || undefined, requireFtc, minVideoLength: minVideoLength ? parseInt(minVideoLength) : null, captionRequirements: captionReq || undefined, platforms }),
       });
       if (!res.ok) { const err = await res.json(); addToast(err.error || 'Failed to create campaign', 'error'); setLoading(false); return; }
       const created = await res.json();
@@ -137,9 +138,26 @@ function DashboardContent() {
     // YouTube video + gallery images
     setYoutubeVideoUrl(raw.youtube_video_url || '');
     try {
-      const gallery = raw.gallery_images ? (typeof raw.gallery_images === 'string' ? JSON.parse(raw.gallery_images) : raw.gallery_images) : [];
-      setGalleryImages(Array.isArray(gallery) ? gallery : []);
-    } catch { setGalleryImages([]); }
+      const gallery = raw.gallery_images
+        ? (typeof raw.gallery_images === 'string' ? JSON.parse(raw.gallery_images) : raw.gallery_images)
+        : [];
+      // Map to GalleryItem format if it's a simple array of URLs (legacy format)
+      if (Array.isArray(gallery) && gallery.length > 0) {
+        if (typeof gallery[0] === 'string') {
+          // Legacy: plain URL array → convert to GalleryItem
+          setGalleryItems(gallery.map((url: string, i: number) => ({
+            id: crypto.randomUUID(),
+            type: url.includes('youtube') ? 'video' as const : 'image' as const,
+            url,
+          })));
+        } else if (gallery[0] && typeof gallery[0] === 'object' && 'type' in gallery[0]) {
+          // New format: already GalleryItem[]
+          setGalleryItems(gallery);
+        }
+      } else {
+        setGalleryItems([]);
+      }
+    } catch { setGalleryItems([]); }
     // Parse platforms from JSON array or default to all
     try {
       const existingPlatforms = raw.platforms ? JSON.parse(raw.platforms) : null;
@@ -164,7 +182,7 @@ function DashboardContent() {
           captionRequirements: captionReq,
           coverArtUrl: coverArt || undefined,
           youtubeVideoUrl: youtubeVideoUrl || null,
-          galleryImages: galleryImages.length > 0 ? galleryImages : null,
+          galleryImages: galleryItems.length > 0 ? galleryItems : null,
           platforms,
         }),
       });
@@ -462,22 +480,8 @@ function DashboardContent() {
                     <Input value={youtubeVideoUrl} onChange={e => setYoutubeVideoUrl(e.target.value)} className="text-sm" placeholder="https://youtube.com/watch?v=..." />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs text-muted-foreground mb-2 block">Gallery images (shown as carousel)</label>
-                    <div className="space-y-2">
-                      {galleryImages.map((img, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <Input value={img} onChange={e => {
-                            const next = [...galleryImages];
-                            next[i] = e.target.value;
-                            setGalleryImages(next);
-                          }} className="text-sm flex-1" placeholder="https://... image URL" />
-                          <button onClick={() => setGalleryImages(galleryImages.filter((_, j) => j !== i))} className="text-xs text-red-400 hover:text-red-300 shrink-0 p-1">✕</button>
-                        </div>
-                      ))}
-                      <button onClick={() => setGalleryImages([...galleryImages, ''])} className="text-[10px] text-primary hover:underline">
-                        + Add image
-                      </button>
-                    </div>
+                    <label className="text-xs text-muted-foreground mb-2 block">Gallery images & videos (shown as carousel)</label>
+                    <GalleryUpload items={galleryItems} onChange={setGalleryItems} />
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-xs text-muted-foreground mb-2 block">Accepted platforms</label>
