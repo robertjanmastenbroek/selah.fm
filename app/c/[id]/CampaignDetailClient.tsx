@@ -306,6 +306,30 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             ) : (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="rounded-xl bg-white/[0.04] border border-primary/10 p-4 space-y-3">
                 <p className="text-sm font-semibold flex items-center gap-2"><Camera size={16} className="text-primary" />Submit your video</p>
+                
+                {/* How it works — simple 3-step guide */}
+                <div className="rounded-lg bg-primary/[0.04] border border-primary/10 p-3 space-y-2">
+                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">How to submit</p>
+                  <div className="space-y-2">
+                    {[
+                      { step: '1', text: `Open ${submitPlatform === 'tiktok' ? 'TikTok' : submitPlatform === 'instagram' ? 'Instagram' : 'YouTube'} and search for the track "${campaign.track_title}" in the app's music library. Use the official audio.`, icon: '🔍' },
+                      { step: '2', text: 'Record your video using the official audio. Pick the best part of the song.', icon: '🎬' },
+                      { step: '3', text: 'Post it, copy the link, and paste it below.', icon: '📋' },
+                    ].map(s => (
+                      <div key={s.step} className="flex gap-2 text-[11px] text-muted-foreground leading-relaxed">
+                        <span className="shrink-0 text-xs">{s.icon}</span>
+                        <span><strong className="text-foreground/70">{s.step}.</strong> {s.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {campaign.content_assets_url && (
+                    <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[10px] text-primary hover:underline mt-1">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      Download audio + assets (Google Drive)
+                    </a>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { id: 'tiktok' as const, label: 'TikTok', bg: 'bg-[#ff005015]', text: 'text-[#ff0050]', letter: 'T' },
@@ -363,11 +387,50 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       {/* ══════ SCROLL CONTENT (mobile: donations + submissions below CTA) ══════ */}
       <main className="pb-20">
         <div className="px-4 space-y-6">
+          {/* How to participate — quick guide for creators */}
+          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
+              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><Camera size={14} className="text-primary/60" />How to participate</h3>
+              <div className="grid md:grid-cols-3 gap-3 text-[11px] text-muted-foreground">
+                {[
+                  { step: '1', title: 'Find the audio', desc: `Search "${campaign.track_title}" on TikTok, Instagram, or YouTube. You must use the official audio for your submission to count.` },
+                  { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Show your face, dance, react, or be creative — whatever fits the track.' },
+                  { step: '3', title: 'Submit & earn', desc: `Post your video publicly, copy the link, and paste it here. Earn $${(cpm * 0.8).toFixed(2)} for every 1,000 verified views.` },
+                ].map(s => (
+                  <div key={s.step} className="space-y-1">
+                    <span className="font-semibold text-foreground/70">{s.title}</span>
+                    <p className="leading-relaxed">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Creator resources — Google Drive with assets */}
+          {campaign.content_assets_url && (
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer" className="block rounded-2xl bg-gradient-to-r from-primary/[0.04] to-primary/[0.01] border border-primary/10 p-5 hover:border-primary/20 transition-colors group">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm text-primary group-hover:underline">Creator resource pack</h4>
+                    <p className="text-xs text-muted-foreground mt-1">The artist has shared audio files (.mp3, .wav), videos, and images to help you create your content. Download everything you need from Google Drive.</p>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-primary font-medium mt-2">
+                      Open Google Drive <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </motion.div>
+          )}
+
           {/* Campaign story */}
           {campaign.requirements && (
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
-                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><Music2 size={14} className="text-primary/60" />About this campaign</h3>
+                <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><Music2 size={14} className="text-primary/60" />Campaign requirements</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{campaign.requirements}</p>
                 {campaign.recommended_hashtags && <p className="text-xs font-mono text-primary mt-3">{campaign.recommended_hashtags}</p>}
               </div>

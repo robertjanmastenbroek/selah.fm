@@ -237,6 +237,19 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                   </button>
                 </div>
                 <div className="p-5 space-y-5">
+                  {/* How it works — simple 3-step guide */}
+                  <div className="rounded-lg bg-primary/[0.04] border border-primary/10 p-3 space-y-2">
+                    <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">How to submit</p>
+                    <div className="space-y-1.5">
+                      {[
+                        { s: '1', t: `Open ${submitPlatform === 'tiktok' ? 'TikTok' : submitPlatform === 'instagram' ? 'Instagram' : 'YouTube'} and search for "${submitModal.track_title}" in the music library. Use the official audio.` },
+                        { s: '2', t: 'Record your video with the official audio. Pick the best part of the song.' },
+                        { s: '3', t: 'Post it publicly, copy the link, and paste it below.' },
+                      ].map(i => (
+                        <div key={i.s} className="flex gap-1.5 text-[10px] text-muted-foreground"><span className="font-semibold text-foreground/60">{i.s}.</span> {i.t}</div>
+                      ))}
+                    </div>
+                  </div>
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">Choose platform</label>
                     <div className="grid grid-cols-3 gap-2">
