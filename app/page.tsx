@@ -290,7 +290,7 @@ export default function RootPage() {
               { icon: BadgeCheck, title: 'Verified views', desc: 'Only organic views count. No bots. No tricks.' },
               { icon: Zap, title: 'Instant payout', desc: 'Get paid via Stripe as soon as the artist approves.' },
               { icon: Shield, title: 'You own everything', desc: 'Your video, your music. We never claim ownership.' },
-              { icon: Star, title: formatMoney(stats.totalPaidCents || 0) + '+ paid', desc: 'To creators for real, verified views.' },
+              { icon: Star, title: stats.totalPaidCents > 0 ? formatMoney(stats.totalPaidCents) + '+ paid' : 'Fair pricing', desc: stats.totalPaidCents > 0 ? 'To creators for real, verified views.' : 'Set your own CPM. Pay only for what gets approved.' },
             ].map((item, i) => {
               const I = item.icon;
               return (
