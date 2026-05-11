@@ -59,30 +59,34 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
   };
 
   return (
-    <form onSubmit={handlePay} className="space-y-4">
-      <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] p-5">
-        <PaymentElement />
+    <form onSubmit={handlePay} className="space-y-5">
+      {/* Card input — clearly delineated with premium styling */}
+      <div className="rounded-2xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] border-2 border-primary/20 p-1">
+        <div className="rounded-xl bg-[#0A0A0A] p-4">
+          <PaymentElement />
+        </div>
       </div>
 
-      <div className="rounded-xl bg-white/[0.02] border border-white/[0.05] p-4 text-xs space-y-1">
-        <div className="flex justify-between text-muted-foreground">
-          <span>{type === 'donation' ? 'Your donation' : 'Your deposit'}</span>
-          <span className="font-semibold">${amount.toFixed(2)}</span>
+      {/* Summary */}
+      <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground font-medium">Total</span>
+          <span className="text-2xl font-bold">${amount.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between font-semibold pt-1.5 border-t border-white/[0.05]">
-          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Added to campaign</span>
-          <span className="text-emerald-400">${amount.toFixed(2)}</span>
+        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-white/[0.05]">
+          <Check size={12} className="text-emerald-400" />
+          <span className="text-[11px] text-emerald-400 font-medium">100% added to campaign</span>
         </div>
       </div>
 
       <Button type="submit" disabled={processing}
-        className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] disabled:opacity-50 transition-all">
+        className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary hover:shadow-[0_0_40px_rgba(91,127,255,0.3)] disabled:opacity-50 transition-all active:scale-[0.98]">
         {processing ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing...</span>
         ) : type === 'donation' ? (
-          <><Heart size={18} className="mr-2" /> Donate ${amount}</>
+          <span className="flex items-center justify-center gap-2"><Heart size={18} /> Donate ${amount}</span>
         ) : (
-          <><Zap size={18} className="mr-2" /> Deposit ${amount}</>
+          <span className="flex items-center justify-center gap-2"><Zap size={18} /> Deposit ${amount}</span>
         )}
       </Button>
     </form>
