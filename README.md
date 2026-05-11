@@ -1,8 +1,8 @@
-# Selah.fm
+# Selah.fm — v1.0 🚀
 
-**CPM marketplace for music promotion.** Artists set budgets and CPM rates. Creators make TikToks, Reels, and Shorts. Artists review and approve every submission. Creators get paid for verified views. Fans donate to campaigns.
+**CPM marketplace for music promotion.** Artists set CPM rates and fund campaigns via Stripe. Creators make TikToks, Reels, and Shorts. Artists review and approve every submission. Creators get paid for verified views. Fans donate to campaigns.
 
-🌐 [selah.fm](https://selah.fm) · 📊 [Status](./STATUS.md)
+🌐 [selah.fm](https://selah.fm) · 📊 [Status](./STATUS.md) · ⚡ [Performance](./PERFORMANCE.md)
 
 ---
 
