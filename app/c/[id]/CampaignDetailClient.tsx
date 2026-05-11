@@ -15,8 +15,8 @@ import PaymentSuccess from '@/components/PaymentSuccess';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
 
-// ── Sacred Gold accent ──────────────────────────────────────
-const GOLD = '#C9A84C';
+// ── Brand accent (deep indigo-purple) ──────────────────────
+const ACCENT = '#4F46E5';
 
 // ── Circle Progress ─────────────────────────────────────────
 function CircleProgress({ pct, size = 100 }: { pct: number; size?: number }) {
@@ -233,12 +233,12 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                     onClick={() => setShowSubmit(true)}
                     className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]"
                   >
-                    SUBMIT
+                    EARN
                   </button>
                   <button
                     onClick={handleDonate}
                     className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all"
-                    style={{ background: `linear-gradient(135deg, ${GOLD}, ${GOLD}CC)`, color: '#0A0A0A' }}
+                    style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}
                   >
                     DONATE
                   </button>
@@ -374,8 +374,8 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               </div>
               {/* Buttons — same size as top section */}
               <div className="flex gap-2">
-                <button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">SUBMIT</button>
-                <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${GOLD}, ${GOLD}CC)`, color: '#0A0A0A' }}>DONATE</button>
+                <button onClick={() => setShowSubmit(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">EARN</button>
+                <button onClick={handleDonate} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</button>
               </div>
               <button onClick={() => setShareOpen(true)} className="w-full py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-xl hover:bg-white/[0.04] active:scale-[0.97] transition-all">Share</button>
             </div>
