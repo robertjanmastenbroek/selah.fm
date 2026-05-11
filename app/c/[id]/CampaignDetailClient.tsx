@@ -14,6 +14,7 @@ import StripePaymentModal from '@/components/StripePaymentModal';
 import PaymentSuccess from '@/components/PaymentSuccess';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 import EarnModal from '@/components/EarnModal';
+import MediaCarousel from '@/components/MediaCarousel';
 import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
 
 // ── Brand accent (deep indigo-purple) ──────────────────────
@@ -199,6 +200,36 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const artistName = campaign.artist_name || 'Unknown Artist';
   const displayTitle = campaign.title || campaign.track_title;
 
+  // Build carousel items from gallery_images + youtube_video_url
+  const carouselItems: any[] = [];
+  if (campaign.gallery_images) {
+    const gallery = typeof campaign.gallery_images === 'string'
+      ? JSON.parse(campaign.gallery_images)
+      : campaign.gallery_images;
+    if (Array.isArray(gallery)) {
+      // Support both legacy string array and new GalleryItem[] format
+      gallery.forEach((item: any) => {
+        if (typeof item === 'string') {
+          // Legacy: plain URL
+          const isYoutube = item.includes('youtube.com') || item.includes('youtu.be');
+          carouselItems.push({ type: isYoutube ? 'video' : 'image', url: item });
+        } else if (item && typeof item === 'object' && item.url) {
+          // New GalleryItem format
+          carouselItems.push({ type: item.type || 'image', url: item.url });
+        }
+      });
+    }
+  }
+  // Add YouTube video URL as a carousel item if not already in gallery
+  if (campaign.youtube_video_url) {
+    const alreadyIncluded = carouselItems.some(
+      (item: any) => item.type === 'video' && item.url === campaign.youtube_video_url
+    );
+    if (!alreadyIncluded) {
+      carouselItems.push({ type: 'video', url: campaign.youtube_video_url });
+    }
+  }
+
   const stickyBarVisible = scrollY > heroBottom - 80;
 
   return (
@@ -281,6 +312,11 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
       <main className="pb-20">
         <div className="px-4 space-y-6">
+          {/* ── Media Carousel (gallery images + YouTube video) ── */}
+          {carouselItems.length > 0 && (
+            <MediaCarousel items={carouselItems} />
+          )}
+
           <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2"><Camera size={14} className="text-primary/60" />How to participate</h3>
