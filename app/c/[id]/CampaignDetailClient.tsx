@@ -16,7 +16,7 @@ import SubmissionsFeed from '@/components/SubmissionsFeed';
 import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
 
 // ── Brand accent (deep indigo-purple) ──────────────────────
-const ACCENT = '#4F46E5';
+const ACCENT = '#1E3A8A';
 
 // ── Circle Progress ─────────────────────────────────────────
 function CircleProgress({ pct, size = 100 }: { pct: number; size?: number }) {
@@ -202,7 +202,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           </div>
 
           {/* Bottom overlay: divider → progress → CTAs */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent px-5 pt-8 pb-5">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/95 to-transparent px-5 pt-14 pb-5">
 
             {/* Divider */}
             <div className="border-t border-white/10 mb-4" />
