@@ -68,7 +68,7 @@ export const getArtist = cache(async (id: string) => {
     SELECT id, display_name, bio, genres, profile_image_url,
       (SELECT c2.track_url FROM campaigns c2 WHERE c2.artist_id = u.id AND c2.track_url LIKE '%spotify%' ORDER BY c2.created_at DESC LIMIT 1) as spotify_url
     FROM users u
-    WHERE u.id = ${id} AND u.user_type = 'artist'
+    WHERE u.id = ${id} AND u.is_artist = true
   `;
   return users[0] || null;
 });
@@ -82,7 +82,7 @@ export const getCreator = cache(async (id: string) => {
       COALESCE((SELECT COUNT(*)::int FROM submissions WHERE creator_id = u.id AND review_status = 'approved'), 0) as approved_submissions,
       COALESCE((SELECT COALESCE(SUM(payout_amount_cents), 0)::int FROM submissions WHERE creator_id = u.id AND payout_status = 'paid'), 0) as total_earned_cents
     FROM users u
-    WHERE u.id = ${id} AND u.user_type = 'creator'
+    WHERE u.id = ${id} AND u.is_creator = true
   `;
   return users[0] || null;
 });

@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       FROM users u
       LEFT JOIN campaigns c ON c.artist_id = u.id
       LEFT JOIN campaign_stats cs ON cs.id = c.id
-      WHERE u.user_type = 'artist'
+      WHERE u.is_artist = true
       GROUP BY u.id, u.display_name, u.bio, u.tiktok_handle, u.instagram_handle, u.youtube_handle
       HAVING COUNT(c.id) > 0
       ORDER BY total_spent_cents DESC

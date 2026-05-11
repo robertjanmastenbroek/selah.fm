@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
       FROM users u
       LEFT JOIN campaigns c ON c.artist_id = u.id
       LEFT JOIN campaign_stats cs ON cs.id = c.id
-      WHERE u.id = ${params.id} AND u.user_type = 'artist'
+      WHERE u.id = ${params.id} AND u.is_artist = true
       GROUP BY u.id, u.display_name, u.bio, u.genres, u.tiktok_handle, u.instagram_handle, u.youtube_handle
     `;
 

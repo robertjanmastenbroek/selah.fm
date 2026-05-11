@@ -7,10 +7,10 @@ export const revalidate = 60; // Cache for 60s
 export async function GET() {
   try {
     const [artistCount] = await sql`
-      SELECT COUNT(*)::int as count FROM users WHERE user_type = 'artist'
+      SELECT COUNT(*)::int as count FROM users WHERE is_artist = true
     `;
     const [creatorCount] = await sql`
-      SELECT COUNT(*)::int as count FROM users WHERE user_type = 'creator'
+      SELECT COUNT(*)::int as count FROM users WHERE is_creator = true
     `;
     const [campaignCount] = await sql`
       SELECT COUNT(*)::int as count FROM campaigns WHERE status = 'active'

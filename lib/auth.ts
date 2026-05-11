@@ -39,6 +39,8 @@ export interface SessionUser {
   email: string;
   type: 'artist' | 'creator';
   name: string;
+  is_artist?: boolean;  // dual-role support (may be absent in old sessions)
+  is_creator?: boolean; // dual-role support (may be absent in old sessions)
 }
 
 // ── Core: parse + verify session cookie value ────────────────────

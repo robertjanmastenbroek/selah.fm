@@ -18,7 +18,7 @@ export async function GET(request: Request) {
         COALESCE(cs.total_earned_cents, 0) as total_earned_cents
       FROM users u
       LEFT JOIN creator_stats cs ON cs.creator_id = u.id
-      WHERE u.user_type = 'creator'
+      WHERE u.is_creator = true
       ORDER BY COALESCE(cs.total_earned_cents, 0) DESC
     `;
 

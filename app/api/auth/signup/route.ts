@@ -26,6 +26,8 @@ export async function POST(request: Request) {
 
     const validTypes = ['artist', 'creator'];
     const userType = validTypes.includes(type) ? type : 'creator';
+    const isArtist = userType === 'artist';
+    const isCreator = userType === 'creator';
 
     // Check for existing user
     const existing = await sql`SELECT id FROM users WHERE email = ${trimmedEmail}`;
@@ -37,9 +39,9 @@ export async function POST(request: Request) {
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
     const result = await sql`
-      INSERT INTO users (email, password_hash, display_name, user_type, email_verified, verification_token)
-      VALUES (${trimmedEmail}, ${hashedPassword}, ${name.trim().slice(0, 100)}, ${userType}, false, ${verificationToken})
-      RETURNING id, email, display_name, user_type
+      INSERT INTO users (email, password_hash, display_name, user_type, is_artist, is_creator, email_verified, verification_token)
+      VALUES (${trimmedEmail}, ${hashedPassword}, ${name.trim().slice(0, 100)}, ${userType}, ${isArtist}, ${isCreator}, false, ${verificationToken})
+      RETURNING id, email, display_name, user_type, is_artist, is_creator
     `;
 
     const user = result[0];
@@ -79,7 +81,7 @@ export async function POST(request: Request) {
     // Session is stateless (HMAC cookie) — no DB token needed
     const redirectTo = userType === 'artist' ? '/onboarding' : '/browse';
     const response = NextResponse.json({ ok: true, type: userType, redirectTo });
-    setSessionCookie(response, { id: user.id, email: user.email, name: user.display_name, type: user.user_type });
+    setSessionCookie(response, { id: user.id, email: user.email, name: user.display_name, type: user.user_type, is_artist: user.is_artist, is_creator: user.is_creator });
     return response;
   } catch (e: any) {
     console.error('Signup error:', e.message);

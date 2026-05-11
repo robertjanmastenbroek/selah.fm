@@ -11,6 +11,8 @@ CREATE TABLE users (
     email           TEXT NOT NULL UNIQUE,
     password_hash   TEXT NOT NULL,
     user_type       TEXT NOT NULL CHECK (user_type IN ('artist', 'creator')),
+    is_artist       BOOLEAN NOT NULL DEFAULT false,
+    is_creator      BOOLEAN NOT NULL DEFAULT false,
     display_name    TEXT NOT NULL,
     
     -- Creator-specific
@@ -36,6 +38,8 @@ CREATE TABLE users (
 
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_type ON users(user_type);
+CREATE INDEX idx_users_is_artist ON users(is_artist) WHERE is_artist = true;
+CREATE INDEX idx_users_is_creator ON users(is_creator) WHERE is_creator = true;
 
 -- ─── Campaigns ───────────────────────────────────────────────────────────────
 
@@ -197,7 +201,7 @@ SELECT
     COALESCE(SUM(s.payout_amount_cents), 0) AS total_earned_cents
 FROM users u
 LEFT JOIN submissions s ON s.creator_id = u.id AND s.payout_status = 'paid'
-WHERE u.user_type = 'creator'
+WHERE u.is_creator = true
 GROUP BY u.id, u.display_name;
 
 -- Creator stats (for marketplace directory — includes acceptance rate)
@@ -216,7 +220,7 @@ SELECT
     END AS acceptance_rate
 FROM users u
 LEFT JOIN submissions s ON s.creator_id = u.id
-WHERE u.user_type = 'creator'
+WHERE u.is_creator = true
 GROUP BY u.id, u.display_name;
 
 -- ─── Functions ───────────────────────────────────────────────────────────────

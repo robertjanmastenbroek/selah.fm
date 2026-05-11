@@ -58,14 +58,14 @@ export async function GET(request: Request) {
     }
 
     // Find or create user
-    let user = await sql`SELECT id, email, display_name, user_type, profile_image_url FROM users WHERE email = ${email}`;
+    let user = await sql`SELECT id, email, display_name, user_type, is_artist, is_creator, profile_image_url FROM users WHERE email = ${email}`;
 
     if (user.length === 0) {
-      // Create new user
+      // Create new user — default to creator role
       const result = await sql`
-        INSERT INTO users (email, password_hash, display_name, user_type, email_verified, profile_image_url)
-        VALUES (${email}, 'google-oauth', ${name}, 'creator', true, ${picture})
-        RETURNING id, email, display_name, user_type
+        INSERT INTO users (email, password_hash, display_name, user_type, is_artist, is_creator, email_verified, profile_image_url)
+        VALUES (${email}, 'google-oauth', ${name}, 'creator', false, true, true, ${picture})
+        RETURNING id, email, display_name, user_type, is_artist, is_creator
       `;
       user = result;
 
@@ -94,6 +94,8 @@ export async function GET(request: Request) {
       email: user[0].email,
       name: user[0].display_name,
       type: user[0].user_type,
+      is_artist: user[0].is_artist,
+      is_creator: user[0].is_creator,
     });
     return response;
   } catch (e: any) {

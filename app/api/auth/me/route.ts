@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const users = await sql`
       SELECT id, email, display_name, bio, genres, preferred_cpm_cents,
              tiktok_handle, instagram_handle, youtube_handle, facebook_handle,
-             user_type, stripe_connect_id, profile_image_url
+             user_type, is_artist, is_creator, stripe_connect_id, profile_image_url
       FROM users WHERE id = ${userId}
     `;
     if (users.length > 0) {
@@ -31,6 +31,8 @@ export async function GET(request: Request) {
           email: u.email,
           name: u.display_name || session.name,
           type: u.user_type || session.type,
+          is_artist: u.is_artist ?? (u.user_type === 'artist'),
+          is_creator: u.is_creator ?? (u.user_type === 'creator'),
           bio: u.bio,
           genres: u.genres,
           preferred_cpm_cents: u.preferred_cpm_cents,
@@ -67,6 +69,8 @@ export async function PATCH(request: Request) {
     await sql`
       UPDATE users SET
         user_type = COALESCE(${body.user_type || null}, user_type),
+        is_artist = CASE WHEN ${body.is_artist !== undefined} THEN ${body.is_artist ? true : false} ELSE is_artist END,
+        is_creator = CASE WHEN ${body.is_creator !== undefined} THEN ${body.is_creator ? true : false} ELSE is_creator END,
         display_name = COALESCE(${body.name || null}, display_name),
         bio = COALESCE(${body.bio ?? null}, bio),
         genres = COALESCE(${body.genres ?? null}, genres),

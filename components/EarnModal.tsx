@@ -202,7 +202,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     Don&apos;t have an account? You can create one after clicking.
                   </p>
                 </div>
-              ) : session.type === 'artist' ? (
+              ) : !session.is_creator && session.type !== 'creator' ? (
                 <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center space-y-4">
                   <Music4 size={32} className="mx-auto text-primary/40" />
                   <div>

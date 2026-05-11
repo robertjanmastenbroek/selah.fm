@@ -17,7 +17,7 @@ export async function GET(
         COALESCE(cs.total_verified_views, 0) as total_verified_views
       FROM users u
       LEFT JOIN creator_stats cs ON cs.creator_id = u.id
-      WHERE u.id = ${params.id} AND u.user_type = 'creator'
+      WHERE u.id = ${params.id} AND u.is_creator = true
     `;
 
     if (creators.length === 0) {
