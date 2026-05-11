@@ -75,6 +75,7 @@ export async function PATCH(request: Request) {
         instagram_handle = COALESCE(${body.instagram_handle ?? null}, instagram_handle),
         youtube_handle = COALESCE(${body.youtube_handle ?? null}, youtube_handle),
         facebook_handle = COALESCE(${body.facebook_handle ?? null}, facebook_handle),
+        profile_image_url = CASE WHEN ${body.profile_image_url !== undefined} THEN ${body.profile_image_url || null} ELSE profile_image_url END,
         updated_at = NOW()
       WHERE id = ${session.id}
     `;

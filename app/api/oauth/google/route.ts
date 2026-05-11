@@ -50,12 +50,12 @@ export async function GET(request: Request) {
     }
 
     // Find or create user
-    let user = await sql`SELECT id, email, display_name, type FROM users WHERE email = ${email}`;
+    let user = await sql`SELECT id, email, display_name, type, profile_image_url FROM users WHERE email = ${email}`;
 
     if (user.length === 0) {
       // Create new user
       const result = await sql`
-        INSERT INTO users (email, password_hash, display_name, type, email_verified, photo_url)
+        INSERT INTO users (email, password_hash, display_name, type, email_verified, profile_image_url)
         VALUES (${email}, 'google-oauth', ${name}, 'creator', true, ${picture})
         RETURNING id, email, display_name, type
       `;
@@ -73,7 +73,10 @@ export async function GET(request: Request) {
         }
       } catch {}
     } else {
-      user = user;
+      // Existing user: auto-import Google profile picture if they don't have one yet
+      if (picture && !user[0].profile_image_url) {
+        await sql`UPDATE users SET profile_image_url = ${picture}, updated_at = NOW() WHERE id = ${user[0].id}`;
+      }
     }
 
     const sessionToken = crypto.randomBytes(32).toString('hex');
