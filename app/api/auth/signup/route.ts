@@ -76,9 +76,7 @@ export async function POST(request: Request) {
       }
     } catch {}
 
-    const sessionToken = crypto.randomBytes(32).toString('hex');
-    await sql`UPDATE users SET session_token = ${sessionToken} WHERE id = ${user.id}`;
-
+    // Session is stateless (HMAC cookie) — no DB token needed
     const redirectTo = userType === 'artist' ? '/onboarding' : '/browse';
     const response = NextResponse.json({ ok: true, type: userType, redirectTo });
     setSessionCookie(response, { id: user.id, email: user.email, name: user.display_name, type: user.user_type });

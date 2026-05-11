@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import crypto from 'crypto';
 import { setSessionCookie } from '@/lib/auth';
 
 export async function GET(request: Request) {
@@ -80,9 +79,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const sessionToken = crypto.randomBytes(32).toString('hex');
-    await sql`UPDATE users SET session_token = ${sessionToken} WHERE id = ${user[0].id}`;
-
+    // Session is stateless (HMAC cookie) — no DB token needed
     const response = NextResponse.redirect(new URL('/browse', baseUrl));
     setSessionCookie(response, {
       id: user[0].id,
