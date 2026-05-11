@@ -32,7 +32,6 @@ export async function GET(request: Request) {
         email: session.email,
         capabilities: {
           transfers: { requested: true },
-          card_payments: { requested: true },
         },
         business_type: 'individual',
       });
