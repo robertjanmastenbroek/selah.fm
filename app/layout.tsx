@@ -82,7 +82,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
             <span className="text-muted-foreground/15 select-none">·</span>
-            <a href="/faq" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">FAQ</a>
+            <a href="/faq" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">FAQ & Support</a>
+            <span className="text-muted-foreground/15 select-none">·</span>
+            <a href="/privacy" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">Privacy</a>
+            <span className="text-muted-foreground/15 select-none">·</span>
+            <a href="/tos" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">Terms</a>
             <span className="text-muted-foreground/15 select-none">·</span>
             <a
               href="https://github.com/robertjanmastenbroek/selah.fm"
