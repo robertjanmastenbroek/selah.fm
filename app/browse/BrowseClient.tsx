@@ -33,14 +33,21 @@ const platformOptions = [
   { id: 'youtube', label: 'Shorts', color: '#FF0000', desc: 'YouTube' },
 ];
 
-// ── Circle Progress ─────────────────────────────────────────
+// ── Circle Progress (light-blue → dark-blue gradient) ──────
+function lerpColor(a: number, b: number, t: number) { return Math.round(a + (b - a) * t); }
+function pctColor(pct: number) {
+  const t = Math.min(pct, 100) / 100;
+  return `rgb(${lerpColor(0x5B,0x1E,t)},${lerpColor(0x7F,0x3A,t)},${lerpColor(0xFF,0x8A,t)})`;
+}
+
 function CircleProgress({ pct, size = 40 }: { pct: number; size?: number }) {
   const stroke = 4, radius = (size - stroke) / 2, circumference = radius * 2 * Math.PI, offset = circumference - (Math.min(pct, 100) / 100) * circumference;
+  const color = pctColor(pct);
   return (
     <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
-        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="hsl(var(--primary))" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} />
+        <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} />
       </svg>
       <span className="absolute text-[11px] font-bold">{Math.round(pct)}%</span>
     </div>

@@ -8,7 +8,6 @@ import Header from '@/components/TopNav';
 import CampaignCover from '@/components/CampaignCover';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import StripePaymentModal from '@/components/StripePaymentModal';
 import PaymentSuccess from '@/components/PaymentSuccess';
@@ -18,14 +17,28 @@ import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react
 // ── Brand accent (deep indigo-purple) ──────────────────────
 const ACCENT = '#1E3A8A';
 
-// ── Circle Progress ─────────────────────────────────────────
+// ── Circle Progress (light-blue → dark-blue gradient) ──────
+// Interpolates from #5B7FFF (0%) to #1E3A8A (100%)
+function lerpColor(a: number, b: number, t: number) {
+  return Math.round(a + (b - a) * t);
+}
+function pctColor(pct: number) {
+  const t = Math.min(pct, 100) / 100;
+  const r = lerpColor(0x5B, 0x1E, t);
+  const g = lerpColor(0x7F, 0x3A, t);
+  const b_ = lerpColor(0xFF, 0x8A, t);
+  return `rgb(${r},${g},${b_})`;
+}
+
 function CircleProgress({ pct, size = 100 }: { pct: number; size?: number }) {
-  const stroke = 6, radius = (size - stroke) / 2, circumference = radius * 2 * Math.PI, offset = circumference - (Math.min(pct, 100) / 100) * circumference;
+  const stroke = 6, radius = (size - stroke) / 2, circumference = radius * 2 * Math.PI;
+  const offset = circumference - (Math.min(pct, 100) / 100) * circumference;
+  const color = pctColor(pct);
   return (
     <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
-        <motion.circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="hsl(var(--primary))" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: offset }} transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }} />
+        <motion.circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: offset }} transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-xl font-bold">{Math.round(pct)}%</span>
@@ -261,8 +274,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   <span className="text-xs text-white/60 ml-1.5">spent of</span>
                   <span className="text-sm font-semibold text-white/80 ml-1">${budget.toFixed(0)} budget</span>
                 </div>
-                <Progress value={Math.min(progress, 100)} className="h-1.5" />
-                <div className="flex items-center gap-4 text-[10px] text-white/50">
+                <div className="flex items-center gap-4 text-[10px] text-white/50 mt-1">
                   <span className="flex items-center gap-1"><Camera size={10} /> {submissions} submissions</span>
                   <span className="flex items-center gap-1"><Play size={10} /> {views >= 1000 ? `${(views/1000).toFixed(1)}K` : views} views</span>
                   <span>${cpm.toFixed(2)} CPM</span>
