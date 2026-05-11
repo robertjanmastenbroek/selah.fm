@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     
     // Verify the submission exists and get campaign ownership
     const subs = await sql`
-      SELECT s.id, s.campaign_id, s.creator_id, s.views_verified,
+      SELECT s.id, s.campaign_id, s.creator_id, s.views_verified, s.payout_amount_cents,
              c.artist_id, c.cpm_rate_cents, c.max_payout_per_submission_cents, c.track_title, c.budget_remaining_cents, c.status as campaign_status
       FROM submissions s
       JOIN campaigns c ON c.id = s.campaign_id
@@ -33,6 +33,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'You can only review submissions on your own campaigns' }, { status: 403 });
     }
 
+    // If undoing (setting back to pending), restore gross amount to budget
+    if (status === 'pending' && sub.payout_amount_cents && sub.payout_amount_cents > 0) {
+      // payout_amount_cents is net (creator's 80% share). Restore gross = net / 0.8
+      const grossRestore = Math.round(sub.payout_amount_cents / 0.8);
+      await sql`
+        UPDATE campaigns
+        SET budget_remaining_cents = budget_remaining_cents + ${grossRestore},
+            updated_at = NOW()
+        WHERE id = ${sub.campaign_id}
+      `;
+    }
+
     // If approving, calculate payout
     if (status === 'approved') {
       const views = parseInt(sub.views_verified || '0');
@@ -47,12 +59,20 @@ export async function POST(request: Request) {
       const platformFeeCents = Math.round(grossCents * 0.20);
       const netCents = grossCents - platformFeeCents;
 
-      // Check budget remaining
-      if (sub.budget_remaining_cents < netCents) {
+      // Check budget remaining (use gross, not net — campaign pays full amount)
+      if (sub.budget_remaining_cents < grossCents) {
         return NextResponse.json({ 
-          error: `Insufficient budget. Remaining: $${(sub.budget_remaining_cents / 100).toFixed(2)}, payout: $${(netCents / 100).toFixed(2)}` 
+          error: `Insufficient budget. Remaining: $${(sub.budget_remaining_cents / 100).toFixed(2)}, payout: $${(grossCents / 100).toFixed(2)}` 
         }, { status: 400 });
       }
+
+      // Deduct gross from campaign budget (platform fee is taken from gross)
+      await sql`
+        UPDATE campaigns
+        SET budget_remaining_cents = budget_remaining_cents - ${grossCents},
+            updated_at = NOW()
+        WHERE id = ${sub.campaign_id}
+      `;
 
       const result = await sql`
         UPDATE submissions
