@@ -3,54 +3,80 @@
 
 ---
 
-## Current State — Production Ready
+## Current State
 
-All core features built, tested, deployed. 44/44 E2E tests pass. TypeScript zero errors.
+All core features built, tested, deployed. 44/44 E2E tests pass. TypeScript zero errors. Stripe test payments flowing end-to-end.
 
-### Recent Work (Today)
+### What's Working End-to-End
 
-**Campaign Edit Polish**
-- Save button: spinner → spring checkmark "Saved" → auto-close with floating confirmation badge
-- Edit form includes all fields: cover image, track title, campaign headline, Spotify URL, Google Drive link, CPM lock info, max payout, min video length, hashtags, caption requirements, requirements template, YouTube video URL, gallery carousel uploader, platform selector, FTC toggle
-- Campaign page cache: 5s revalidation + client-side refresh after mount — edits appear live instantly
-
-**Google Drive / Resource Pack**
-- Creator resource pack front-and-center in EarnModal (always visible, download card when available, amber warning when missing)
-- Campaign page: prominent bordered card with download icon and detailed description
-- Dashboard creation wizard: comprehensive amber info box listing exactly what to include (.wav, .mp3, cover art, reference videos, brand assets) with social proof
-- Edit form: Google Drive field added (was only in creation wizard before)
-
-**Gallery Carousel**
-- MediaCarousel component: horizontal snap-scroll with dot indicators
-- Image cards → tap to open full-screen lightbox
-- Video cards → YouTube thumbnail with play button → opens embedded player
-- GalleryUpload component in edit form: drag-drop ImageUpload for multiple images, YouTube URL inputs with auto-thumbnails
-- Backward-compatible with legacy URL arrays and new GalleryItem[] format
-
-**Submissions**
-- Server-side status filtering: `?status=pending|approved|rejected` — rejected submissions never reach the review page client
-- Review page + SubmissionsFeed now use server-side filtering (no client-side races)
-
-**Dashboard**
-- Campaign cards clickable → navigate to campaign page
-- Inner buttons (Review, Edit, Add budget) use stopPropagation
-
-**Requirements Template**
-- "Use template" button in both creation wizard and edit form fills a comprehensive guide (audio usage, video format, content ideas, must-include, prohibited, tips)
-- Auto-inserts artist's required hashtags
+| Flow | Status |
+|------|--------|
+| Artist creates campaign | ✅ Dashboard wizard with ImageUpload, GalleryUpload, requirements template, drive link |
+| Artist edits campaign | ✅ Full edit form with animated save confirmation |
+| Artist deposits funds | ✅ `/checkout?type=deposit` — Stripe Elements, PaymentIntent, webhook |
+| Fan donates to campaign | ✅ `/checkout?type=donation` — presets + custom, name/email capture, share CTA |
+| Webhook processes payments | ✅ `payment_intent.succeeded` → budget update + donation record + live ticker |
+| Creator browses campaigns | ✅ `/browse` with search, sort by popularity |
+| Creator submits video | ✅ EarnModal with platform selector, resource pack, earnings preview |
+| Artist reviews submission | ✅ Approve/reject with undo (4s), budget deduction, auto-payout |
+| Creator gets paid | ✅ Stripe Connect transfer, notification |
+| Campaign page renders | ✅ 60/40 desktop split, LiveTicker, MediaCarousel, donations, submissions |
+| Share campaign | ✅ ShareModal with native share API + brand logos |
+| Support | ✅ AI chatbot on FAQ page + floating widget |
 
 ---
 
-## Core Infrastructure Loop — Need Final Polish
+## Today's Changes (2026-05-11)
 
-These four components are the engine. Each needs zero-defect completeness:
+### Payments — Fixed & Hardened
+- `automatic_payment_methods` added to both PaymentIntent creation endpoints
+- Webhook now correctly references `stripe_payment_intent_id` column
+- Database: `stripe_payment_intent_id` + `payment_intent_id` columns added
+- Stripe Elements `paymentMethodOrder`: Apple Pay → Google Pay → card
+- Regional wallets auto-detected by Stripe (iDEAL for NL, Apple Pay for Safari, Google Pay for Chrome)
 
-| Component | Current State | Priority |
-|-----------|--------------|----------|
-| **Payments** (Stripe deposits + donations) | ✅ Working. Stripe Elements embedded. Webhook handles payment_intent.succeeded. Full gross amount added to budget. | Audit edge cases |
-| **Submissions** | ✅ Working. Server-side status filter. Rate limited. Platform verification. Ticker events. | Audit edge cases |
-| **Reviews** | ✅ Working. Approve/reject with undo (4s window). Auto-payout on approval. Notifications sent. | Audit edge cases |
-| **Payouts** | ✅ Working. Stripe Connect auto-payout. 80/20 split. Max payout cap. Budget check. | Audit edge cases |
+### Checkout Page — Complete Redesign
+- Big amount input with dollar sign prefix, 0.00 default
+- 6 preset buttons (50, 100, 200 recommended, 300, 500, 1000) above input
+- Campaign progress circle (72px) with stats
+- First name / Last name / Email capture
+- Live ticker showing recent activity
+- Payment section slides in after amount entered
+- Success overlay with share CTA ("Share this campaign")
+- Trust signals: SSL encrypted, secure, powered by Stripe
+
+### Campaign Page
+- MediaCarousel for gallery images + YouTube videos (horizontal snap-scroll)
+- Donations section redesigned (desktop sidebar + mobile) — premium cards, gradient avatars
+- SubmissionsFeed polished — clickable cards, platform badges, earnings display, hover arrow
+- Google Drive resource pack: prominent bordered card with download icon
+- Requirements: "Use template" button in create + edit forms
+
+### Dashboard
+- Campaign cards clickable → navigate to campaign page
+- Edit form: animated save (spinner → spring checkmark → floating emerald badge → auto-close)
+- Google Drive field added to edit form (was only in creation)
+- GalleryUpload component for multi-image carousel upload
+
+### Performance
+- HTML payload: stripped base64 images (1.1MB → <100KB)
+- ISR: campaign pages revalidate every 5s + client refresh after mount
+- webpack splitChunks: 50KB min, 200KB max
+- AVIF + WebP image formats
+- YouTube remote patterns
+- React.cache() deduplication for data fetching
+- Analytics lazy-loaded (3s delay or first interaction)
+- SVG favicon (185KB vector with transparent background)
+
+### Navigation
+- FAQ & Support link in hamburger menu + footer
+- Messages link in hamburger menu
+- Privacy + Terms links in footer
+
+### Core Loop Audit
+- Budget now deducted on approval (was missing entirely — critical bug fixed)
+- Budget check/deduction uses gross amount (was incorrectly using net)
+- Undo restores budget: computes gross from net/0.8
 
 ---
 
@@ -58,26 +84,26 @@ These four components are the engine. Each needs zero-defect completeness:
 
 | Area | Endpoints | Status |
 |------|----------|--------|
-| Auth | 9 (signup, login, logout, me, verify-email, forgot-password, reset-password, oauth/google, google callback) | ✅ |
-| Campaigns | 4 (list, create, detail, update) | ✅ |
-| Submissions | 2 (list, create) | ✅ |
-| Review | 1 (approve/reject) | ✅ |
-| Stripe | 4 (checkout, webhook, payout, connect) | ✅ |
-| Support | 2 (campaign support/donate, FAQ bot) | ✅ |
-| Artists | 2 (list, profile) | ✅ |
-| Creators | 2 (list, profile) | ✅ |
-| Notifications | 2 (list, update) | ✅ |
-| Messages | 2 (list, send) | ✅ |
+| Auth | 9 | ✅ |
+| Campaigns | 4 | ✅ |
+| Submissions | 2 | ✅ |
+| Review | 1 | ✅ |
+| Stripe | 4 | ✅ |
+| Support | 2 | ✅ |
+| Artists | 2 | ✅ |
+| Creators | 2 | ✅ |
+| Notifications | 2 | ✅ |
+| Messages | 2 | ✅ |
 | Earnings | 1 | ✅ |
 | Analytics | 1 | ✅ |
-| Admin | 6 (overview, users, emails, manage, seed, migrate) | ✅ |
-| Other | 7 (health, stats, sitemap, spotify, ratings, bugs, referral) | ✅ |
+| Admin | 6 | ✅ |
+| Other | 7 | ✅ |
 
 ---
 
 ## E2E Tests — 44/44 (100%)
 
 ```bash
-node e2e/test.js  # 44 tests, all passing
-npx tsc --noEmit  # zero errors
+node e2e/test.js
+npx tsc --noEmit
 ```
