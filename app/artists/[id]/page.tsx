@@ -148,7 +148,7 @@ export default function ArtistProfilePage() {
                 const spentCampaign = (c.total_budget_cents - c.budget_remaining_cents) / 100;
                 const pct = c.total_budget_cents > 0 ? ((spentCampaign / (c.total_budget_cents / 100)) * 100) : 0;
                 return (
-                  <Link key={c.id} href={`/c/${c.id}`} className="block rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden hover:border-primary/20 transition-all">
+                  <Link key={c.id} href={`/c/${c.slug || c.id}`} className="block rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden hover:border-primary/20 transition-all">
                     <div className="flex items-center gap-4 p-4">
                       <CampaignCover src={c.cover_art_url} title={c.track_title} className="w-16 h-16 rounded-xl shrink-0" />
                       <div className="flex-1 min-w-0">
