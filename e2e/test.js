@@ -130,16 +130,17 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
     await page.waitForSelector('text=📱 Creator', { timeout: 3000 });
   });
 
-  // ─── 7. Auth-protected pages (should return 200 even unauthenticated) ──────
+  // ─── 7. Auth-protected pages (redirect to login when unauthenticated) ──────
 
   for (const [path, label] of [
     ['/dashboard', 'Dashboard'], ['/review', 'Review'],
     ['/earnings', 'Earnings'], ['/settings', 'Settings'],
     ['/analytics', 'Analytics'], ['/onboarding', 'Onboarding'],
   ]) {
-    await check(`7.1 ${label} page (${path}) loads 200`, async () => {
+    await check(`7.1 ${label} page (${path}) redirects to login`, async () => {
       const res = await page.goto(BASE + path);
-      if (res.status() !== 200) throw new Error(`Status ${res.status()}`);
+      const url = res.url();
+      if (!url.includes('/login')) throw new Error(`Expected redirect to /login, got ${url}`);
     });
   }
 

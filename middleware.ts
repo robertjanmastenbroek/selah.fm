@@ -2,14 +2,18 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Admin guard middleware.
- * Does a lightweight session cookie presence check in Edge Runtime.
- * Full admin verification happens server-side in the admin layout via /api/auth/me.
+ * Auth guard middleware.
+ * Protects pages that require authentication: admin, dashboard, review, earnings,
+ * settings, analytics, onboarding.
+ * Lightweight session cookie presence check in Edge Runtime.
  */
+const PROTECTED = ['/admin', '/dashboard', '/review', '/earnings', '/settings', '/analytics', '/onboarding'];
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (!pathname.startsWith('/admin')) return NextResponse.next();
+  const isProtected = PROTECTED.some(p => pathname === p || pathname.startsWith(p + '/'));
+  if (!isProtected) return NextResponse.next();
 
   // Quick check: is there a session cookie at all?
   const cookieHeader = request.headers.get('cookie') || '';
@@ -23,5 +27,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/dashboard/:path*', '/review/:path*', '/earnings/:path*', '/settings/:path*', '/analytics/:path*', '/onboarding/:path*'],
 };
