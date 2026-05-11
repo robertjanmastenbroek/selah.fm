@@ -28,7 +28,7 @@ function LiveTicker({ donations }: { donations: any[] }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-        <Users size={11} /> Recent support
+        <Users size={11} /> Recent donations
       </div>
       <AnimatePresence>
         {donations.slice(0, 6).map((d: any, i: number) => (
@@ -221,7 +221,7 @@ export default function DonatePage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 py-3 border-y border-white/[0.06]">
                   <div><div className="text-lg font-bold">${totalRaised.toFixed(0)}</div><div className="text-[10px] text-muted-foreground uppercase">Raised</div></div>
-                  <div><div className="text-lg font-bold">{donations.count}</div><div className="text-[10px] text-muted-foreground uppercase">Supporters</div></div>
+                  <div><div className="text-lg font-bold">{donations.count}</div><div className="text-[10px] text-muted-foreground uppercase">Donors</div></div>
                 </div>
                 <LiveTicker donations={donations.supporters} />
               </div>
