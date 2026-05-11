@@ -369,7 +369,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       </div>
 
       {/* ══════ SCROLL CONTENT (mobile: donations + submissions below CTA) ══════ */}
-      <main className="max-w-2xl mx-auto pb-20">
+      <main className="pb-20">
         <div className="px-4 space-y-6">
           {/* Campaign story */}
           {campaign.requirements && (
@@ -455,7 +455,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       <AnimatePresence>
         {stickyBarVisible && (
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ duration: 0.25, ease: 'easeOut' }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.08] px-4 py-3">
-            <div className="max-w-2xl mx-auto space-y-3">
+            <div className="space-y-3">
               {/* Compact progress + share icon */}
               <div className="relative flex items-center gap-3 pr-12">
                 <CircleProgress pct={progress} size={40} />
