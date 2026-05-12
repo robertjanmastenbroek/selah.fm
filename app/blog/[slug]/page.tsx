@@ -101,7 +101,7 @@ export default async function BlogPostPage({ params }: Props) {
 
         {post.featured_image && (
           <div className="rounded-2xl overflow-hidden mb-10 ring-1 ring-white/[0.06]">
-            <img src={post.featured_image} alt={post.title} className="w-full h-auto object-cover" loading="eager" />
+            <img src={post.featured_image?.startsWith("/") ? "https://selah.fm" + post.featured_image : post.featured_image} alt={post.title} className="w-full h-auto object-cover" loading="eager" />
           </div>
         )}
 
