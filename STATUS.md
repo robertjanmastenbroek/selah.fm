@@ -11,10 +11,15 @@
 
 | Phase | Status |
 |-------|--------|
-| 1. DB migration + API (discovered_artists, artist_audits, outreach_log, campaign_claims) | 📋 Planned |
-| 2. Discovery Agent (Spotify API, YouTube API) | 📋 Planned |
-| 3. Campaign Builder (auto-create campaigns, rich media, share-optimized) | 📋 Planned |
-| 4. Outreach + Claim (Instagram DM, Spotify OAuth, /admin/outreach dashboard) | 📋 Planned |
+| 1. DB migration (012_outreach_pipeline) | ✅ Applied to production |
+| 2. lib/outreach.ts (Spotify auth, discovery, audit, AI detection, outreach templates) | ✅ Built |
+| 3. API routes (discover, audit, create_campaign, render_outreach, log_outreach) | ✅ Built |
+| 4. Admin dashboard (/admin/outreach) with pipeline stats + action buttons | ✅ Built |
+| 5. Autonomous cron endpoint (/api/cron/outreach-pipeline) — fully self-running | ✅ Built |
+| 6. Claim page (/claim/[code]) + ClaimButton + /api/claim | ✅ Built |
+| 7. Outreach template (personalized, copy-to-clipboard, Instagram DM ready) | ✅ Built |
+| 8. Spotify API verified working (genre search, artist lookup, top tracks) | ✅ Tested |
+| ⚠️ Next: Verify discovery returns artists (playlist API 403 → switched to genre search) | 🔍 Debugging |
 
 ---
 
@@ -60,6 +65,12 @@
 | CPM Calculator | ✅ |
 | Creator Earnings Estimator | ✅ |
 | Promotion Budget Planner | ✅ |
+
+### Recent Changes (May 11–12)
+| Change | Status |
+|--------|--------|
+| Campaign copy: "EARN" → "JOIN" (all CTA buttons, EarnModal, SEO metadata) | ✅ |
+| Outreach pipeline: DB, API, dashboard, cron, claim page | ✅ |
 
 ### Known Issues
 | Issue | Status |

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { isAdminRequest } from '@/lib/auth';
-import { discoverArtists, auditArtist, renderOutreachMessage } from '@/lib/outreach';
+import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMessage } from '@/lib/outreach';
 import { generateArticle, findVoiceExamples } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
 
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       case 'audit':                  return runAudit(body.artistId);
       case 'create_campaign':        return runCreateCampaign(body.artistId);
       case 'render_outreach':        return runRenderOutreach(body.artistId);
+      case 'render_follow_up':       return runRenderFollowUp(body.artistId);
       case 'log_outreach':           return runLogOutreach(body.artistId, body.channel, body.status);
       case 'get_pipeline':           return getPipelineOverview();
       case 'get_artist':             return getArtistById(body.artistId);
@@ -242,6 +243,67 @@ async function runRenderOutreach(artistId: string) {
     campaign_url: campaignUrl,
     instagram_handle: audit.instagram_handle,
     email_address: audit.email_address,
+  });
+}
+
+async function runRenderFollowUp(artistId: string) {
+  const [artist] = await sql`SELECT * FROM discovered_artists WHERE id = ${artistId}`;
+  if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
+
+  // Check if follow-up already exists
+  const [existingFollowUp] = await sql`
+    SELECT id FROM outreach_log
+    WHERE discovered_artist_id = ${artist.id} AND message_type = 'follow_up'
+    LIMIT 1
+  `;
+  if (existingFollowUp) {
+    return NextResponse.json({ error: 'Follow-up already sent for this artist' }, { status: 400 });
+  }
+
+  // Check if initial outreach was sent at least 7 days ago
+  const [initialOutreach] = await sql`
+    SELECT * FROM outreach_log
+    WHERE discovered_artist_id = ${artist.id} AND message_type = 'initial'
+    ORDER BY created_at DESC LIMIT 1
+  `;
+  if (!initialOutreach) {
+    return NextResponse.json({ error: 'No initial outreach found' }, { status: 400 });
+  }
+
+  const [claim] = await sql`SELECT * FROM campaign_claims WHERE discovered_artist_id = ${artist.id} ORDER BY created_at DESC LIMIT 1`;
+  if (!claim) return NextResponse.json({ error: 'No campaign found' }, { status: 400 });
+
+  const [campaign] = await sql`SELECT slug FROM campaigns WHERE id = ${claim.campaign_id}`;
+  const campaignUrl = `https://selah.fm/c/${campaign?.slug || ''}`;
+
+  // Get social proof
+  const [donations] = await sql`
+    SELECT COUNT(*)::int as count, COALESCE(SUM(amount_cents)::int, 0) as total
+    FROM campaign_donations WHERE campaign_id = ${claim.campaign_id}
+  `;
+  const [submissions] = await sql`
+    SELECT COUNT(*)::int as count
+    FROM submissions WHERE campaign_id = ${claim.campaign_id}
+  `;
+
+  const message = renderFollowUpMessage(
+    artist.artist_name,
+    artist.latest_track_name || 'your latest track',
+    campaignUrl,
+    donations?.count || 0,
+    (donations?.total || 0) / 100,
+    submissions?.count || 0,
+  );
+
+  return NextResponse.json({
+    message,
+    artist_name: artist.artist_name,
+    track_name: artist.latest_track_name,
+    campaign_url: campaignUrl,
+    donations: donations?.count || 0,
+    submission_count: submissions?.count || 0,
+    initial_sent_at: initialOutreach.created_at,
+    ready_to_send: true,
   });
 }
 

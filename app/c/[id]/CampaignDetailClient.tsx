@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 import EarnModal from '@/components/EarnModal';
 import MediaCarousel from '@/components/MediaCarousel';
-import { Heart, X, Link2, Play, Camera, Copy, Check, Music2 } from 'lucide-react';
+import { Heart, X, Link2, Play, Camera, Copy, Check, Music2, BarChart3 } from 'lucide-react';
 
 // ── Brand accent (deep indigo-purple) ──────────────────────
 const ACCENT = '#1E3A8A';
@@ -135,6 +135,35 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
   );
 }
 
+// ── Audience-specific share message generator ────────────────
+function getShareMessages(artistName: string, displayTitle: string, campaignId: string, trackTitle: string) {
+  const url = `https://selah.fm/c/${campaignId}`;
+  const cleanTitle = trackTitle || displayTitle;
+
+  return {
+    // Artist sharing with their fans
+    artist: {
+      title: `Someone built a promotion campaign for my track "${cleanTitle}" 🎵`,
+      body: `If you make TikToks or Reels, you can earn money featuring my song. Even $5 helps fund the campaign. Check it out:\n\n${url}`,
+    },
+    // Friends & family sharing to support
+    friend: {
+      title: `I just supported ${artistName}'s music on Selah.fm 🎵`,
+      body: `Someone made a promotion campaign for "${cleanTitle}". Anyone can chip in a few bucks or make a video to help boost the track. Check it out:\n\n${url}`,
+    },
+    // Creators sharing their submission
+    creator: {
+      title: `I'm earning on Selah.fm making content with "${cleanTitle}" 🎵`,
+      body: `Join this campaign for ${artistName}'s "${cleanTitle}" and earn per verified view on TikTok, Reels, or Shorts. No minimum followers:\n\n${url}`,
+    },
+    // Generic — pre-written DM template for the artist
+    dm: {
+      title: `${artistName} — "${cleanTitle}" campaign on Selah.fm`,
+      body: `Someone built a promotion campaign for your track "${cleanTitle}" on Selah.fm. Creators can make TikToks/Reels with your music and you only pay per verified view — no upfront cost. Friends and family can chip in to fund it. Claim it whenever you want (takes 30 seconds):\n\n${url}`,
+    },
+  };
+}
+
 // ── Main Component ──────────────────────────────────────────
 export default function CampaignDetailClient({ id, initialCampaign }: { id: string; initialCampaign: any }) {
   const [campaign, setCampaign] = useState<any>(initialCampaign);
@@ -188,6 +217,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const totalRaised = donations.totalCents / 100;
   const artistName = campaign.artist_name || 'Unknown Artist';
   const displayTitle = campaign.title || campaign.track_title;
+  const trackTitle = campaign.track_title || '';
 
   // Build carousel items from gallery_images + youtube_video_url
   const carouselItems: any[] = [];
@@ -219,8 +249,226 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
     }
   }
 
+  const isUnclaimed = campaign.is_unclaimed && !campaign.claimed_by_user_id;
+  const claimCode = campaign.claim_code;
+  const claimUrl = claimCode ? `https://selah.fm/claim/${claimCode}` : '';
+
   const stickyBarVisible = scrollY > heroBottom - 80;
 
+  // ── Unclaimed campaign: gift-like UX for friends & family sharing ──
+  if (isUnclaimed) {
+    return (
+      <div className="min-h-screen" style={{ background: bg }}>
+        <Header />
+
+        {/* ── Hero: Gift unwrapping feel ── */}
+        <div ref={heroRef} className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent pointer-events-none" />
+          <div className="max-w-2xl mx-auto px-4 py-12 md:py-20 text-center">
+            <div className="text-4xl md:text-6xl mb-4">🎁</div>
+            <h1 className="text-xl md:text-3xl font-bold mb-2">
+              Someone made this for {artistName}
+            </h1>
+            <p className="text-sm md:text-base text-muted-foreground max-w-lg mx-auto mb-8">
+              A promotion campaign for <strong className="text-foreground">"{trackTitle}"</strong>. Creators make TikToks and Reels with this track. The artist only pays when videos get verified views.
+            </p>
+
+            {/* Album art */}
+            <div className="w-48 h-48 md:w-64 md:h-64 mx-auto rounded-2xl overflow-hidden shadow-2xl shadow-primary/10 border border-white/[0.06] mb-6">
+              {campaign.cover_art_url ? (
+                <img src={campaign.cover_art_url} alt={displayTitle} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-white/[0.02] flex items-center justify-center">
+                  <Music2 size={48} className="text-muted-foreground/20" />
+                </div>
+              )}
+            </div>
+
+            {/* Listen on Spotify */}
+            {campaign.track_url && (
+              <a href={campaign.track_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8">
+                <Play size={14} className="text-primary" />
+                ▸ "{trackTitle}" — Listen on Spotify
+              </a>
+            )}
+
+            {/* Unclaimed badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/[0.08] border border-amber-500/15 text-amber-400/80 text-xs mb-6">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              Unclaimed Campaign
+            </div>
+            <p className="text-[11px] text-muted-foreground/60 max-w-sm mx-auto">
+              Created by the Selah.fm community. {artistName} hasn't claimed this page yet. Donations and creator submissions still work.
+            </p>
+          </div>
+        </div>
+
+        {/* ── Campaign stats (if any) ── */}
+        {(submissions > 0 || views > 0 || totalRaised > 0) && (
+          <div className="max-w-xl mx-auto px-4 mb-8">
+            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                <BarChart3 size={13} className="text-primary/50" /> Campaign Stats
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="rounded-xl bg-white/[0.02] p-3 text-center">
+                  <div className="text-lg font-bold">{submissions}</div>
+                  <div className="text-[9px] text-muted-foreground">Creators</div>
+                </div>
+                <div className="rounded-xl bg-white/[0.02] p-3 text-center">
+                  <div className="text-lg font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div>
+                  <div className="text-[9px] text-muted-foreground">Views</div>
+                </div>
+                <div className="rounded-xl bg-white/[0.02] p-3 text-center">
+                  <div className="text-lg font-bold">${spent.toFixed(0)}</div>
+                  <div className="text-[9px] text-muted-foreground">Earned</div>
+                </div>
+                <div className="rounded-xl bg-white/[0.02] p-3 text-center">
+                  <div className="text-lg font-bold">${remaining.toFixed(0)}</div>
+                  <div className="text-[9px] text-muted-foreground">Remaining</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Donation section (prominent) ── */}
+        <div className="max-w-xl mx-auto px-4 mb-8">
+          <div className="rounded-2xl bg-gradient-to-br from-primary/[0.06] to-primary/[0.01] border border-primary/10 p-6">
+            <div className="text-center mb-5">
+              <div className="text-2xl mb-1">💰</div>
+              <h2 className="text-lg font-bold mb-1">Support this artist</h2>
+              <p className="text-sm text-muted-foreground">Chip in any amount to fund the promotion</p>
+            </div>
+
+            {/* Pre-set donation amounts */}
+            <div className="grid grid-cols-4 gap-2 mb-5">
+              {[5, 10, 25, null].map((amount) => {
+                const isCustom = amount === null;
+                const href = isCustom
+                  ? `/checkout?type=donation&campaignId=${id}`
+                  : `/checkout?type=donation&campaignId=${id}&amount=${amount * 100}`;
+                return (
+                  <Link
+                    key={isCustom ? 'custom' : amount}
+                    href={href}
+                    className="py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-center hover:border-primary/30 hover:bg-primary/[0.04] transition-all active:scale-[0.97]"
+                  >
+                    <span className="text-sm font-bold">{isCustom ? 'Custom' : `$${amount}`}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Social proof */}
+            <div className="text-center">
+              {donations.count > 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">{donations.count}</strong> {donations.count === 1 ? 'person has' : 'people have'} chipped in{' '}
+                  <strong className="text-primary">${totalRaised.toFixed(0)}</strong>
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">No donations yet — be the first! ❤️</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Creator section (simplified — friends & family friendly) ── */}
+        <div className="max-w-xl mx-auto px-4 mb-8">
+          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+            <div className="text-center mb-5">
+              <div className="text-2xl mb-1">📱</div>
+              <h2 className="text-lg font-bold mb-1">Want to create a video?</h2>
+              <p className="text-sm text-muted-foreground">
+                Use this track in a TikTok or Reel and earn per verified view.
+              </p>
+              <p className="text-xs text-primary/70 mt-2 font-medium">
+                No minimum followers required. Got a phone? That's all you need.
+              </p>
+            </div>
+
+            {/* Submissions count with FOMO */}
+            <div className="text-center mb-4">
+              {submissions > 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">{submissions}</strong> {submissions === 1 ? 'person has' : 'people have'} made videos so far. Join them!
+                </p>
+              ) : (
+                <p className="text-sm text-primary/70 font-medium">0 people have made videos so far. Be the first!</p>
+              )}
+            </div>
+
+            <button
+              onClick={() => setJoinOpen(true)}
+              className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]"
+            >
+              Submit a video →
+            </button>
+          </div>
+        </div>
+
+        {/* ── Claim section ── */}
+        {claimCode && (
+          <div className="max-w-xl mx-auto px-4 mb-10">
+            <div className="rounded-2xl bg-gradient-to-br from-amber-500/[0.06] to-amber-500/[0.01] border border-amber-500/10 p-6 text-center">
+              <h3 className="font-semibold mb-1">Is this your track?</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Claim this campaign to manage it, review submissions, and withdraw funds.
+              </p>
+              <Link
+                href={`/claim/${claimCode}`}
+                className="inline-block px-8 py-3 rounded-xl bg-amber-500 text-black font-bold text-sm hover:bg-amber-400 transition-colors active:scale-[0.97]"
+              >
+                🎵 Claim this campaign
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ── Share + Chip in buttons ── */}
+        <div className="max-w-xl mx-auto px-4 mb-12">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setShareOpen(true)}
+              className="py-4 rounded-xl bg-white/[0.04] border border-white/[0.08] font-semibold text-sm hover:border-white/[0.15] transition-all active:scale-[0.97] flex items-center justify-center gap-2"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg>
+              Share this page
+            </button>
+            <Link
+              href={`/checkout?type=donation&campaignId=${id}&amount=500`}
+              className="py-4 rounded-xl text-center font-semibold text-sm active:scale-[0.97] transition-all flex items-center justify-center gap-2"
+              style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}
+            >
+              ❤️ Chip in $5
+            </Link>
+          </div>
+        </div>
+
+        {/* ── More campaigns + footer ── */}
+        <div className="px-4">
+          <div ref={moreRef}><h3 className="font-semibold text-sm mb-3">More campaigns</h3><InfiniteCampaigns currentId={id} /></div>
+          <footer className="text-center pb-8 pt-2 space-y-3">
+            <div className="flex items-center justify-center gap-4">
+              <a href="https://instagram.com/selahfm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+              <a href="https://x.com/selah_fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+              <a href="https://www.tiktok.com/@selah.fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+            </div>
+            <p className="text-xs text-muted-foreground/40">Selah.fm — The marketplace for music promotion</p>
+          </footer>
+        </div>
+
+        {/* Share modal */}
+        <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={displayTitle} imageUrl={campaign.cover_art_url} artistName={artistName} cpmDollars={cpm} trackTitle={trackTitle} />
+
+        {/* Earn modal */}
+        <EarnModal open={joinOpen} onClose={() => setJoinOpen(false)} campaignId={id} trackTitle={displayTitle} cpmCents={campaign.cpm_rate_cents} coverArtUrl={campaign.cover_art_url} contentAssetsUrl={campaign.content_assets_url} />
+      </div>
+    );
+  }
+
+  // ── Claimed campaign: professional creator marketplace UX ──
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       <Header />

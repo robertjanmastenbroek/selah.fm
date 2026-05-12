@@ -58,6 +58,7 @@ app/
 ├── faq/                  # 40+ FAQ entries + AI chat
 ├── open-source/          # Open source landing page
 ├── settings/             # User settings + roles
+├── claim/[code]/         # Campaign claim page (outreach pipeline)
 ├── blog/                 # Public blog (listing + post pages)
 ├── tools/[slug]/         # Interactive SEO tools (CPM calculator, etc.)
 └── admin/                # Admin panel
@@ -68,8 +69,11 @@ app/
     ├── payouts/          # Payout management
     ├── emails/           # Email inbox + compose
     ├── support-chats/    # Chat history
+    ├── outreach/          # Outreach pipeline dashboard (discover → audit → campaign → outreach)
     ├── blog/             # Blog dashboard + batch detail
     ├── blog/post/[id]/   # Blog post editor (preview → publish)
+    ├── blog-generator/   # Generate from voice library (one-click)
+    ├── source-questions/ # Browse real Reddit questions + batch generate
     ├── content/          # Content Hub (unified pipeline)
     └── interview/        # Interview Studio (voice capture)
 

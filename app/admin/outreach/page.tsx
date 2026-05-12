@@ -89,6 +89,19 @@ export default function OutreachDashboard() {
     setActionLoading('');
   };
 
+  const renderFollowUp = async (artistId: string) => {
+    setActionLoading(`followup-${artistId}`);
+    try {
+      const data = await api('render_follow_up', { artistId });
+      if (data.error) setMessage(data.error);
+      else {
+        await navigator.clipboard.writeText(data.message);
+        setMessage(`Follow-up copied to clipboard for ${data.artist_name}! ${data.donations ? `${data.donations} donors, ` : ''}${data.submission_count || 0} submissions.`);
+      }
+    } catch (e: any) { setMessage('Error: ' + e.message); }
+    setActionLoading('');
+  };
+
   const logOutreach = async (artistId: string) => {
     setActionLoading(`log-${artistId}`);
     try {
@@ -218,6 +231,22 @@ export default function OutreachDashboard() {
                           <button onClick={() => renderOutreach(a.id)} disabled={actionLoading === `outreach-${a.id}`}
                             className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-green-600/20 text-green-400 hover:bg-green-600/30 disabled:opacity-50 transition-colors">
                             {actionLoading === `outreach-${a.id}` ? <Loader2 size={10} className="animate-spin" /> : 'Msg'}
+                          </button>
+                          <button onClick={() => logOutreach(a.id)} disabled={actionLoading === `log-${a.id}`}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 disabled:opacity-50 transition-colors">
+                            {actionLoading === `log-${a.id}` ? <Loader2 size={10} className="animate-spin" /> : 'Sent'}
+                          </button>
+                        </>
+                      )}
+                      {a.status === 'outreach_sent' && (
+                        <>
+                          <button onClick={() => renderOutreach(a.id)} disabled={actionLoading === `outreach-${a.id}`}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-green-600/20 text-green-400 hover:bg-green-600/30 disabled:opacity-50 transition-colors">
+                            {actionLoading === `outreach-${a.id}` ? <Loader2 size={10} className="animate-spin" /> : 'Msg'}
+                          </button>
+                          <button onClick={() => renderFollowUp(a.id)} disabled={actionLoading === `followup-${a.id}`}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-pink-600/20 text-pink-400 hover:bg-pink-600/30 disabled:opacity-50 transition-colors">
+                            {actionLoading === `followup-${a.id}` ? <Loader2 size={10} className="animate-spin" /> : 'F/Up'}
                           </button>
                           <button onClick={() => logOutreach(a.id)} disabled={actionLoading === `log-${a.id}`}
                             className="px-2.5 py-1 rounded-lg text-[10px] font-medium bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 disabled:opacity-50 transition-colors">

@@ -270,7 +270,7 @@ export async function auditArtist(spotifyId: string, trackName: string): Promise
   }
 }
 
-// ── Outreach Template ─────────────────────────────────────────────
+// ── Outreach Templates ────────────────────────────────────────────
 
 export function renderOutreachMessage(artistName: string, trackName: string, audit: ArtistAudit, campaignUrl: string): string {
   return `Hey ${artistName},
@@ -290,4 +290,40 @@ Claim it whenever you want (takes 30 seconds). Or don't. The page just sits ther
 — Robert-Jan
   Founder, Selah.fm
   (former musician who got tired of labels taking 98%)`;
+}
+
+/**
+ * Day-7 follow-up message — sent if artist hasn't claimed after initial outreach.
+ * Softer tone, adds social proof if any exists (donations, submissions).
+ */
+export function renderFollowUpMessage(
+  artistName: string,
+  trackName: string,
+  campaignUrl: string,
+  donationCount: number,
+  donationTotal: number,
+  submissionCount: number,
+): string {
+  const socialProof: string[] = [];
+  if (donationCount > 0) {
+    socialProof.push(`${donationCount} ${donationCount === 1 ? 'person has' : 'people have'} chipped in $${donationTotal.toFixed(0)} to support "${trackName}"`);
+  }
+  if (submissionCount > 0) {
+    socialProof.push(`${submissionCount} ${submissionCount === 1 ? 'creator has' : 'creators have'} submitted videos`);
+  }
+  const proofLine = socialProof.length > 0
+    ? `\nSince last week, ${socialProof.join(' and ')} on your campaign page.`
+    : '';
+
+  return `Hey ${artistName} — just a quick follow-up.${proofLine}
+
+Your campaign page for "${trackName}" is still live at:
+👉 ${campaignUrl}
+
+No pressure at all. The page just keeps working — people can donate, creators can submit videos, and everything runs automatically. You can claim it whenever you want, or not at all.
+
+Either way, your music is out there getting attention. Wanted to make sure you knew.
+
+— Robert-Jan
+  Founder, Selah.fm`;
 }

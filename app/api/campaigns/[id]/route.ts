@@ -21,10 +21,13 @@ export async function GET(
             COALESCE(v.pending_submissions, '0') as pending_submissions,
             COALESCE(v.total_verified_views, '0') as total_verified_views,
             u.display_name as artist_name,
-            u.profile_image_url as artist_avatar
+            u.profile_image_url as artist_avatar,
+            cc.claim_code,
+            cc.claimed_at as claim_claimed_at
           FROM campaigns c
           LEFT JOIN campaign_stats v ON v.id = c.id
           LEFT JOIN users u ON u.id = c.artist_id
+          LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           WHERE c.id = ${params.id}::uuid
         `
       : await sql`
@@ -34,10 +37,13 @@ export async function GET(
             COALESCE(v.pending_submissions, '0') as pending_submissions,
             COALESCE(v.total_verified_views, '0') as total_verified_views,
             u.display_name as artist_name,
-            u.profile_image_url as artist_avatar
+            u.profile_image_url as artist_avatar,
+            cc.claim_code,
+            cc.claimed_at as claim_claimed_at
           FROM campaigns c
           LEFT JOIN campaign_stats v ON v.id = c.id
           LEFT JOIN users u ON u.id = c.artist_id
+          LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           WHERE c.slug = ${params.id}
         `;
 
