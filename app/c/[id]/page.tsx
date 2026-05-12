@@ -30,6 +30,7 @@ function slugify(text: string): string {
 function absoluteUrl(path: string): string {
   if (!path) return 'https://selah.fm/images/og-image.jpg';
   if (path.startsWith('data:')) return 'https://selah.fm/images/og-image.jpg';
+  if (path.startsWith('/images/campaigns/')) return `https://selah.fm${path}`;
   if (path.startsWith('http')) return path;
   const base = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
   return `${base}${path}`;

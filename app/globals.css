@@ -21,11 +21,11 @@
     --popover: 240 40% 18%;          /* #1C1C3A — elevation level 2 */
     --popover-foreground: 210 40% 98%;
 
-    /* ── Primary: Deep indigo/navy ─────────────────────────────── */
-    --primary: 242 44% 20%;           /* #1E1B4B — deep navy */
+    /* ── Primary: Bright indigo (visible on dark) ───────────────── */
+    --primary: 239 54% 49%;           /* #4338CA — indigo, visible on dark */
     --primary-foreground: 0 0% 100%;  /* #FFFFFF */
-    --secondary: 239 54% 49%;         /* #4338CA — indigo */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 242 44% 20%;         /* #1E1B4B — deep navy (for cards/surfaces) */
+    --secondary-foreground: 210 40% 98%;
     --muted: 240 35% 19%;            /* #27273B */
     --muted-foreground: 215 16% 65%;  /* #9CA3AF — readable secondary text */
     --accent: 142 71% 45%;            /* #22C55E — green CTA (play + growth) */
@@ -36,7 +36,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 239 64% 41% / 0.3;      /* #312E81 at 30% */
     --input: 240 35% 19%;
-    --ring: 242 44% 20%;             /* focus ring = primary */
+    --ring: 239 54% 49%;             /* focus ring = primary */
     --radius: 0.5rem;
 
     /* ── Extended semantic tokens ─────────────────────────────── */
@@ -79,7 +79,7 @@
 
   /* Selection highlight */
   ::selection {
-    background: rgba(67, 56, 202, 0.25); /* secondary at 25% */
+    background: rgba(67, 56, 202, 0.35); /* primary at 35% */
     color: #F8FAFC;
   }
 

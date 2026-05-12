@@ -37,7 +37,11 @@ const platformOptions = [
 function lerpColor(a: number, b: number, t: number) { return Math.round(a + (b - a) * t); }
 function pctColor(pct: number) {
   const t = Math.min(pct, 100) / 100;
-  return `rgb(${lerpColor(0x5B,0x1E,t)},${lerpColor(0x7F,0x3A,t)},${lerpColor(0xFF,0x8A,t)})`;
+  // Indigo-to-green gradient
+  const r = lerpColor(0x43, 0x22, t);
+  const g = lerpColor(0x38, 0xC5, t);
+  const b = lerpColor(0xCA, 0x5E, t);
+  return `rgb(${r},${g},${b})`;
 }
 
 function CircleProgress({ pct, size = 40 }: { pct: number; size?: number }) {
@@ -76,16 +80,16 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
   const handleFilter = (f: any) => { setFilters(f); loadCampaigns(f); };
 
   return (
-    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A' }}>
+    <div className="min-h-screen" style={{ background: '#0F0F23' }}>
       <Header />
       <main className="page-container">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-1">Discover campaigns</h1>
+            <h1 className="text-3xl font-heading tracking-tight mb-1">Discover campaigns</h1>
             <p className="text-muted-foreground text-sm">{total} campaigns available</p>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all duration-200 hover:shadow-[0_0_24px_rgba(91,127,255,0.25)] active:scale-[0.97]">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-sm transition-all duration-200 hover:shadow-[0_0_24px_rgba(67,56,202,0.35)] active:scale-[0.97]" style={{ background: 'linear-gradient(135deg, #4338CA, #5B7FFF)' }}>
               <Megaphone size={16} />
               Create campaign
             </Link>
@@ -144,7 +148,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                     <div className="p-4 space-y-3">
                       {/* Track title + platform badges */}
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-sm leading-tight line-clamp-2">{c.track_title}</h3>
+                        <h3 className="font-heading text-sm leading-tight line-clamp-2">{c.track_title}</h3>
                         <div className="flex items-center gap-1 shrink-0">
                           {(c.platforms || []).map((p: string) => <PlatformBadge key={p} platform={p} />)}
                         </div>

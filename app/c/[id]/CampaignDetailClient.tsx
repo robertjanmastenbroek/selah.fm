@@ -16,7 +16,7 @@ import MediaCarousel from '@/components/MediaCarousel';
 import { Heart, X, Link2, Play, Camera, Copy, Check, Music2, BarChart3 } from 'lucide-react';
 
 // ── Brand accent (deep indigo-purple) ──────────────────────
-const ACCENT = '#1E3A8A';
+const ACCENT = '#4338CA'; // Indigo primary
 
 // ── Circle Progress (light-blue → dark-blue gradient) ──────
 function lerpColor(a: number, b: number, t: number) {
@@ -24,9 +24,10 @@ function lerpColor(a: number, b: number, t: number) {
 }
 function pctColor(pct: number) {
   const t = Math.min(pct, 100) / 100;
-  const r = lerpColor(0x5B, 0x1E, t);
-  const g = lerpColor(0x7F, 0x3A, t);
-  const b_ = lerpColor(0xFF, 0x8A, t);
+  // Indigo-to-green gradient
+  const r = lerpColor(0x43, 0x22, t);
+  const g = lerpColor(0x38, 0xC5, t);
+  const b_ = lerpColor(0xCA, 0x5E, t);
   return `rgb(${r},${g},${b_})`;
 }
 
@@ -80,8 +81,8 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
     }, color: '#25D366', bg: 'bg-[#25D366]/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>, note: '(status & chat)' },
     { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(fullShareText)}`, color: '#1877F2', bg: 'bg-[#1877F2]/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> },
     { name: 'X', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareTitle}\n\n${url}`)}`, color: '#fff', bg: 'bg-white/10', icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
-    { name: 'Copy Link', action: copyLink, color: '#5B7FFF', bg: 'bg-primary/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> },
-    { name: 'Email', href: `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(fullShareText)}`, color: '#5B7FFF', bg: 'bg-primary/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> },
+    { name: 'Copy Link', action: copyLink, color: '#4338CA', bg: 'bg-primary/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> },
+    { name: 'Email', href: `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(fullShareText)}`, color: '#4338CA', bg: 'bg-primary/10', icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> },
   ];
 
   return (
@@ -89,7 +90,7 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
       {open && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
           <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
-          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 400, damping: 35 }} className="relative z-10 w-full sm:max-w-md max-h-[90vh] sm:rounded-3xl rounded-t-3xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 400, damping: 35 }} className="relative z-10 w-full sm:max-w-md max-h-[90vh] sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-10 h-1 rounded-full bg-white/20" /></div>
             <div className="p-6 space-y-5">
               <div className="flex items-center justify-between">
@@ -201,7 +202,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
     return () => window.removeEventListener('resize', calc);
   }, [campaign, loading]);
 
-  const bg = '#0A0A0A';
+  const bg = '#0F0F23';
 
   if (loading) return (<div className="min-h-screen" style={{ background: bg }}><Header /><main className="max-w-2xl mx-auto px-4 py-16"><Skeleton className="aspect-[4/3] rounded-none mb-4"/><Skeleton className="h-8 w-1/2"/></main></div>);
   if (!campaign) return (<div className="min-h-screen" style={{ background: bg }}><Header /><main className="max-w-2xl mx-auto px-4 py-20 text-center"><h1 className="text-2xl font-bold mb-4">Campaign not found</h1><Link href="/browse"><Button>Browse</Button></Link></main></div>);
@@ -401,7 +402,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
             <button
               onClick={() => setJoinOpen(true)}
-              className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]"
+              className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.35)]"
             >
               Submit a video →
             </button>
@@ -495,7 +496,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           </div>
 
           {/* ── RIGHT: CTA section ── */}
-          <div className="md:w-[40%] bg-[#0A0A0A] px-5 py-5 md:py-8 md:flex md:flex-col md:justify-center md:border-l md:border-white/[0.06]">
+          <div className="md:w-[40%] bg-[#0F0F23] px-5 py-5 md:py-8 md:flex md:flex-col md:justify-center md:border-l md:border-white/[0.06]">
             <div className="border-t border-white/10 mb-5 md:hidden" />
             <div className="relative flex items-center gap-4 mb-5 pr-12">
               <CircleProgress pct={progress} size={64} />
@@ -514,7 +515,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => setJoinOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]">JOIN</button>
+              <button onClick={() => setJoinOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.35)]">JOIN</button>
               <Link href={`/checkout?type=donation&campaignId=${id}`} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</Link>
             </div>
 
@@ -682,7 +683,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
       <AnimatePresence>
         {stickyBarVisible && (
-          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ duration: 0.25, ease: 'easeOut' }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-white/[0.08] px-4 py-3">
+          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ duration: 0.25, ease: 'easeOut' }} className="fixed bottom-0 left-0 right-0 z-50 bg-[#0F0F23]/95 backdrop-blur-xl border-t border-white/[0.08] px-4 py-3">
             <div className="space-y-3">
               <div className="relative flex items-center gap-3 pr-12">
                 <CircleProgress pct={progress} size={40} />

@@ -7,8 +7,8 @@
 ---
 
 **Project:** selah.fm
-**Generated:** 2026-05-13 00:41:19
-**Category:** Analytics Dashboard
+**Generated:** 2026-05-13 00:47:24
+**Category:** Music Streaming
 
 ---
 
@@ -18,29 +18,29 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#1E40AF` | `--color-primary` |
+| Primary | `#1E1B4B` | `--color-primary` |
 | On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#3B82F6` | `--color-secondary` |
-| Accent/CTA | `#D97706` | `--color-accent` |
-| Background | `#F8FAFC` | `--color-background` |
-| Foreground | `#1E3A8A` | `--color-foreground` |
-| Muted | `#E9EEF6` | `--color-muted` |
-| Border | `#DBEAFE` | `--color-border` |
-| Destructive | `#DC2626` | `--color-destructive` |
-| Ring | `#1E40AF` | `--color-ring` |
+| Secondary | `#4338CA` | `--color-secondary` |
+| Accent/CTA | `#22C55E` | `--color-accent` |
+| Background | `#0F0F23` | `--color-background` |
+| Foreground | `#F8FAFC` | `--color-foreground` |
+| Muted | `#27273B` | `--color-muted` |
+| Border | `#312E81` | `--color-border` |
+| Destructive | `#EF4444` | `--color-destructive` |
+| Ring | `#1E1B4B` | `--color-ring` |
 
-**Color Notes:** Blue data + amber highlights [Accent adjusted from #F59E0B for WCAG 3:1]
+**Color Notes:** Dark audio + play green
 
 ### Typography
 
-- **Heading Font:** Fira Code
-- **Body Font:** Fira Sans
-- **Mood:** dashboard, data, analytics, code, technical, precise
-- **Google Fonts:** [Fira Code + Fira Sans](https://fonts.google.com/share?selection.family=Fira+Code:wght@400;500;600;700|Fira+Sans:wght@300;400;500;600;700)
+- **Heading Font:** Righteous
+- **Body Font:** Poppins
+- **Mood:** music, entertainment, fun, energetic, bold, performance
+- **Google Fonts:** [Righteous + Poppins](https://fonts.google.com/share?selection.family=Poppins:wght@300;400;500;600;700|Righteous)
 
 **CSS Import:**
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Righteous&display=swap');
 ```
 
 ### Spacing Variables
@@ -73,7 +73,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #D97706;
+  background: #22C55E;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -90,8 +90,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #1E40AF;
-  border: 2px solid #1E40AF;
+  color: #1E1B4B;
+  border: 2px solid #1E1B4B;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -104,7 +104,7 @@
 
 ```css
 .card {
-  background: #F8FAFC;
+  background: #0F0F23;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -130,9 +130,9 @@
 }
 
 .input:focus {
-  border-color: #1E40AF;
+  border-color: #1E1B4B;
   outline: none;
-  box-shadow: 0 0 0 3px #1E40AF20;
+  box-shadow: 0 0 0 3px #1E1B4B20;
 }
 ```
 
@@ -158,28 +158,28 @@
 
 ## Style Guidelines
 
-**Style:** Data-Dense Dashboard
+**Style:** Dark Mode (OLED)
 
-**Keywords:** Multiple charts/widgets, data tables, KPI cards, minimal padding, grid layout, space-efficient, maximum data visibility
+**Keywords:** Dark theme, low light, high contrast, deep black, midnight blue, eye-friendly, OLED, night mode, power efficient
 
-**Best For:** Business intelligence dashboards, financial analytics, enterprise reporting, operational dashboards, data warehousing
+**Best For:** Night-mode apps, coding platforms, entertainment, eye-strain prevention, OLED devices, low-light
 
-**Key Effects:** Hover tooltips, chart zoom on click, row highlighting on hover, smooth filter animations, data loading spinners
+**Key Effects:** Minimal glow (text-shadow: 0 0 10px), dark-to-light transitions, low white emission, high readability, visible focus
 
 ### Page Pattern
 
-**Pattern Name:** Real-Time / Operations Landing
+**Pattern Name:** Marketplace / Directory
 
-- **Conversion Strategy:** For ops/security/iot products. Demo or sandbox link. Trust signals.
-- **CTA Placement:** Primary CTA in nav + After metrics
-- **Section Order:** 1. Hero (product + live preview or status), 2. Key metrics/indicators, 3. How it works, 4. CTA (Start trial / Contact)
+- **Conversion Strategy:** Search bar is the CTA. Reduce friction to search. Popular searches suggestions.
+- **CTA Placement:** Hero Search Bar + Navbar 'List your item'
+- **Section Order:** 1. Hero (Search focused), 2. Categories, 3. Featured Listings, 4. Trust/Safety, 5. CTA (Become a host/seller)
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Ornate design
-- ❌ No filtering
+- ❌ Cluttered layout
+- ❌ Poor audio player UX
 
 ### Additional Forbidden Patterns
 
