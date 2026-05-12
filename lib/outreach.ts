@@ -102,61 +102,79 @@ export interface DiscoveredArtist {
   is_ai_artist: boolean;
 }
 
-export async function discoverArtists(query: string = 'year:2025-2026', limit: number = 20): Promise<DiscoveredArtist[]> {
+export async function discoverArtists(_query: string = 'year:2025-2026', limit: number = 20): Promise<DiscoveredArtist[]> {
   const token = await getSpotifyToken();
 
-  // Search for tracks from the last 2 years
-  const searchRes = await fetch(
-    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  // Use genre-specific searches to find independent artists
+  // Generic year-only search returns mostly major label tracks
+  const genres = ['indie', 'alternative', 'electronic', 'hip-hop', 'r-n-b', 'pop', 'rock', 'folk', 'jazz', 'metal'];
+  const allTracks: any[] = [];
+  const seenTrackIds = new Set<string>();
 
-  if (!searchRes.ok) {
-    console.error('Spotify search failed:', searchRes.status);
+  // Search 3 random genres to get variety each run
+  const shuffled = [...genres].sort(() => Math.random() - 0.5);
+  for (const genre of shuffled.slice(0, 3)) {
+    try {
+      const q = `genre:${genre} year:2025-2026`;
+      const searchRes = await fetch(
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!searchRes.ok) continue;
+      const data = await searchRes.json();
+      for (const t of (data.tracks?.items || [])) {
+        if (!seenTrackIds.has(t.id)) {
+          seenTrackIds.add(t.id);
+          allTracks.push(t);
+        }
+      }
+    } catch {}
+  }
+
+  if (allTracks.length === 0) {
+    console.log('No tracks found from genre searches');
     return [];
   }
 
-  const searchData = await searchRes.json();
-  const tracks = searchData.tracks?.items || [];
+  console.log(`Found ${allTracks.length} tracks across genres, filtering for independent artists...`);
+
   const artists: DiscoveredArtist[] = [];
   const seen = new Set<string>();
 
-  for (const track of tracks) {
+  for (const track of allTracks) {
     for (const artist of track.artists) {
       if (seen.has(artist.id)) continue;
       seen.add(artist.id);
 
       try {
-        // Get full artist details
         const artistData = await spotifyGet(`/artists/${artist.id}`);
-
-        // Skip major label artists
-        const labelCheck = JSON.stringify(artistData).toLowerCase();
-        const majorLabels = ['universal', 'sony', 'warner', 'atlantic', 'columbia', 'interscope', 'capitol', 'def jam', 'republic', 'rca'];
-        if (majorLabels.some(l => labelCheck.includes(l))) continue;
-
-        // Skip if follower count out of range
         const followers = artistData.followers?.total || 0;
-        if (followers < 100 || followers > 50000) continue;
 
-        // Get top tracks for latest release info
+        // Only filter by follower range and AI signals — skip the unreliable label check
+        if (followers < 50 || followers > 200000) {
+          console.log(`  Skipping ${artistData.name}: ${followers} followers (out of range)`);
+          continue;
+        }
+
+        const aiSignals = detectAiSignals(artistData, []);
+        if (aiSignals >= 2) {
+          console.log(`  Skipping ${artistData.name}: ${aiSignals} AI signals detected`);
+          continue;
+        }
+
         const topTracks = await spotifyGet(`/artists/${artist.id}/top-tracks?market=US`);
         const latestTrack = topTracks.tracks?.[0];
 
-        // Check for AI signals
-        const aiSignals = detectAiSignals(artistData, []);
-        if (aiSignals >= 2) continue;
-
-        // Build social links
         const socialLinks: Record<string, string> = {};
         if (artistData.external_urls?.spotify) socialLinks.spotify = artistData.external_urls.spotify;
-        if (artistData.external_urls?.instagram) socialLinks.instagram = artistData.external_urls.instagram;
+
+        console.log(`  ✅ ${artistData.name} — ${followers.toLocaleString()} followers — ${artistData.genres?.slice(0, 3).join(', ') || 'no genre'}`);
 
         artists.push({
           artist_name: artistData.name,
           spotify_id: artistData.id,
           genres: artistData.genres || [],
-          monthly_listeners: followers, // Spotify doesn't expose monthly listeners in API; use followers as proxy
+          monthly_listeners: followers,
           followers,
           social_links: socialLinks,
           latest_track_name: latestTrack?.name || '',
@@ -167,13 +185,16 @@ export async function discoverArtists(query: string = 'year:2025-2026', limit: n
           ai_signals_detected: aiSignals,
           is_ai_artist: false,
         });
+
+        if (artists.length >= limit) break;
       } catch (e) {
-        // Skip individual artist errors
         continue;
       }
     }
+    if (artists.length >= limit) break;
   }
 
+  console.log(`Discovered ${artists.length} independent artists`);
   return artists;
 }
 
