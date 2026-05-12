@@ -9,7 +9,7 @@ import {
   getFallbackQuestions,
   sourceQuestionsFromReddit,
 } from '@/lib/blog-engine';
-import { fetchBlogImage } from '@/lib/blog-images';
+import { fetchBlogImage, loadUsedImages, markImageUsed } from '@/lib/blog-images';
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
@@ -90,6 +90,7 @@ async function createBatch() {
   const [batch] = await sql`
     INSERT INTO batches (month_year, status) VALUES (${monthYear}, 'sourcing')
     RETURNING *
+  if (post?.featured_image) markImageUsed(post.featured_image);
   `;
   return NextResponse.json({ batch, created: true });
 }
@@ -133,6 +134,7 @@ async function generateInterviews(batchId: string) {
       INSERT INTO batch_interviews (batch_id, question_id, generated_questions, status)
       VALUES (${batchId}, ${q.id}, ${JSON.stringify(generatedQs.map(q => ({ question: q })))}, 'pending')
       RETURNING *
+  if (post?.featured_image) markImageUsed(post.featured_image);
     `;
     interviews.push(interview);
   }
@@ -254,6 +256,7 @@ async function autoAnswerAll(batchId: string) {
 }
 
 async function previewPost(interviewId: string) {
+  await loadUsedImages(sql);
   // Generate a single draft post from one interview
   const [interview] = await sql`
     SELECT * FROM batch_interviews WHERE id = ${interviewId} AND status = 'answered'
@@ -301,6 +304,7 @@ async function previewPost(interviewId: string) {
       (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1)
     )
     RETURNING *
+  if (post?.featured_image) markImageUsed(post.featured_image);
   `;
 
   // Add JSON-LD
@@ -359,12 +363,14 @@ async function updatePost(postId: string, updates: any) {
       updated_at = NOW()
     WHERE id = ${postId}
     RETURNING *
+  if (post?.featured_image) markImageUsed(post.featured_image);
   `;
 
   return NextResponse.json({ post: result[0] });
 }
 
 async function finalizeBatch(batchId: string) {
+  await loadUsedImages(sql);
   await sql`UPDATE batches SET status = 'generating', updated_at = NOW() WHERE id = ${batchId}`;
 
   const interviews = await sql`
@@ -422,6 +428,7 @@ async function finalizeBatch(batchId: string) {
           (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1)
         )
         RETURNING *
+  if (post?.featured_image) markImageUsed(post.featured_image);
       `;
 
       // Store voice chunks for future batches
@@ -482,6 +489,7 @@ async function publishPost(postId: string) {
     UPDATE blog_posts SET status = 'published', published_at = NOW(), updated_at = NOW()
     WHERE id = ${postId}
     RETURNING *
+  if (post?.featured_image) markImageUsed(post.featured_image);
   `;
   return NextResponse.json({ post });
 }
