@@ -14,6 +14,17 @@ async function getPost(slug: string) {
   return posts[0] || null;
 }
 
+async function getRelatedPosts(currentSlug: string, tags: string[]) {
+  if (!tags.length) return [];
+  const related = await sql`
+    SELECT title, slug, excerpt, featured_image, published_at
+    FROM blog_posts
+    WHERE slug != ${currentSlug} AND status = 'published' AND tags && ${tags}
+    ORDER BY published_at DESC LIMIT 3
+  `;
+  return related;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getPost(params.slug);
   if (!post) return { title: 'Post not found — Selah.fm Blog' };
@@ -45,6 +56,11 @@ export default async function BlogPostPage({ params }: Props) {
   const post = await getPost(params.slug);
   if (!post) notFound();
 
+  const relatedPosts = post.tags ? await getRelatedPosts(params.slug, post.tags) : [];
+  const readingTime = post.content_html
+    ? Math.max(1, Math.round(post.content_html.replace(/<[^>]*>/g, '').split(/\s+/).length / 200))
+    : 5;
+
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A' }}>
       {/* JSON-LD Schema */}
@@ -72,6 +88,8 @@ export default async function BlogPostPage({ params }: Props) {
               </time>
             )}
             <span>·</span>
+            <span>{readingTime} min read</span>
+            <span>·</span>
             <span>Robert-Jan Mastenbroek</span>
           </div>
           {(post.tags || []).length > 0 && (
@@ -87,11 +105,11 @@ export default async function BlogPostPage({ params }: Props) {
 
         {/* Featured image */}
         {post.featured_image && (
-          <div className="rounded-2xl overflow-hidden mb-10">
+          <div className="rounded-2xl overflow-hidden mb-10 ring-1 ring-white/[0.06]">
             <img
               src={post.featured_image}
               alt={post.title}
-              className="w-full h-auto"
+              className="w-full h-auto object-cover"
               loading="eager"
             />
           </div>
@@ -100,19 +118,23 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Content */}
         <div
           className="prose prose-invert prose-lg max-w-none
-            prose-headings:text-foreground prose-headings:font-semibold
-            prose-p:text-muted-foreground prose-p:leading-relaxed
+            prose-headings:text-foreground prose-headings:font-semibold prose-headings:scroll-mt-20
+            prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
+            prose-p:text-muted-foreground prose-p:leading-relaxed prose-p:my-4
             prose-a:text-primary prose-a:no-underline hover:prose-a:underline
             prose-strong:text-foreground
-            prose-li:text-muted-foreground
-            prose-img:rounded-xl"
+            prose-li:text-muted-foreground prose-li:my-1
+            prose-img:rounded-xl prose-img:my-8
+            [&_figure]:my-8 [&_figure_img]:rounded-xl [&_figure_img]:w-full
+            [&_figcaption]:text-sm [&_figcaption]:text-gray-500 [&_figcaption]:mt-2 [&_figcaption]:text-center
+            [&_h3]:text-lg [&_h3]:mt-8 [&_h3]:mb-3"
           dangerouslySetInnerHTML={{ __html: post.content_html }}
         />
 
         {/* CTA */}
         <div className="mt-16 p-8 rounded-2xl bg-primary/[0.04] border border-primary/10 text-center">
           <h3 className="text-xl font-bold mb-2">Ready to promote your music?</h3>
-          <p className="text-muted-foreground mb-6">Join Selah.fm and connect with real creators who will promote your tracks on TikTok, Reels, and Shorts.</p>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">Join Selah.fm and connect with real creators who will promote your tracks on TikTok, Reels, and Shorts — you only pay for verified views.</p>
           <div className="flex gap-3 justify-center">
             <a href="/welcome-artists" className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
               I&apos;m an artist
@@ -122,6 +144,30 @@ export default async function BlogPostPage({ params }: Props) {
             </a>
           </div>
         </div>
+
+        {/* Related Posts */}
+        {relatedPosts.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-white/[0.06]">
+            <h2 className="text-xl font-bold mb-6">Related articles</h2>
+            <div className="grid gap-4 md:grid-cols-3">
+              {relatedPosts.map((rp: any) => (
+                <a key={rp.slug} href={`/blog/${rp.slug}`} className="group block rounded-xl bg-white/[0.02] border border-white/[0.06] overflow-hidden hover:bg-white/[0.04] transition-colors">
+                  {rp.featured_image && (
+                    <img src={rp.featured_image} alt={rp.title} className="w-full h-32 object-cover" loading="lazy" />
+                  )}
+                  <div className="p-4">
+                    <h3 className="text-sm font-semibold group-hover:text-primary transition-colors line-clamp-2">{rp.title}</h3>
+                    {rp.published_at && (
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {new Date(rp.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </article>
     </div>
   );
