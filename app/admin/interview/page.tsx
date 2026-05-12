@@ -95,6 +95,7 @@ export default function InterviewStudio() {
   const [sessionName, setSessionName] = useState('');
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [stats, setStats] = useState({ totalAnswers: 0, totalChunks: 0 });
 
@@ -259,6 +260,10 @@ export default function InterviewStudio() {
       updated[currentQ] = { ...q, answer, captured: true };
       setQuestions(updated);
 
+      // Flash saved feedback
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 1500);
+
       // Move to next
       voice.setTranscript('');
       if (currentQ < questions.length - 1) {
@@ -296,8 +301,10 @@ export default function InterviewStudio() {
             </p>
           </div>
           {phase === 'interviewing' && (
-            <div className="text-sm text-gray-400 bg-gray-900 px-4 py-2 rounded-lg">
-              {completed}/{questions.length} captured
+            <div className={`text-sm px-4 py-2 rounded-lg transition-all duration-300 ${
+              justSaved ? 'bg-green-900/30 text-green-400' : 'bg-gray-900 text-gray-400'
+            }`}>
+              {completed}/{questions.length} saved to database
             </div>
           )}
         </div>
@@ -471,7 +478,7 @@ export default function InterviewStudio() {
         {phase === 'interviewing' && (
           <div className="space-y-6">
             {/* Progress bar */}
-            <div className="flex gap-1">
+            <div className="flex gap-1 mb-1">
               {questions.map((q, i) => (
                 <button
                   key={q.id}
