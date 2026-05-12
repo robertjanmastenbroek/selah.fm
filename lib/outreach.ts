@@ -123,31 +123,31 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
     return { artists: [], diagnostics };
   }
 
-  // Strategy: search by year range (no genre filter — 'genre:' is not a valid Spotify search field)
-  // Genre filtering happens after we get artist data.
-  // Strategy A: year-filtered search for recent tracks
-  // Strategy B: browse new releases endpoint (returns curated fresh tracks)
+  // Strategy: search for recently released tracks using working query formats.
+  // Spotify search requires text terms; year-only or genre-only queries return 400.
+  // We use broad music terms + tag:new to surface recent independent releases.
   const allTracks: any[] = [];
   const seenTrackIds = new Set<string>();
 
-  // ── Strategy A: Year-filtered search ──
-  const yearQueries = ['year:2025', 'year:2026', 'year:2024'];
-  for (const yq of yearQueries) {
+  // ── Strategy A: tag:new + broad music terms ──
+  // tag:new returns tracks released in the last 2 weeks (Spotify's newest catalog)
+  const searchTerms = ['tag:new', 'tag:new hip-hop', 'tag:new indie', 'tag:new electronic', 'tag:new pop', 'tag:new r-b'];
+  for (const term of searchTerms) {
     try {
       const searchRes = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(yq)}&type=track&limit=15`,
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(term)}&type=track&limit=10`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (!searchRes.ok) {
         const errText = await searchRes.text().catch(() => '');
-        diagnostics.push(`⚠️  Search "${yq}" failed (${searchRes.status}): ${errText.slice(0, 100)}`);
+        diagnostics.push(`⚠️  Search "${term}" failed (${searchRes.status}): ${errText.slice(0, 100)}`);
         continue;
       }
 
       const data = await searchRes.json();
       const items = data.tracks?.items || [];
-      diagnostics.push(`🔍 Search "${yq}" → ${items.length} tracks`);
+      diagnostics.push(`🔍 Search "${term}" → ${items.length} tracks`);
 
       for (const t of items) {
         if (!seenTrackIds.has(t.id)) {
@@ -156,44 +156,36 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
         }
       }
     } catch (e: any) {
-      diagnostics.push(`⚠️  Search error for "${yq}": ${e.message}`);
+      diagnostics.push(`⚠️  Search error for "${term}": ${e.message}`);
     }
   }
 
-  // ── Strategy B: Browse new releases ──
+  // ── Strategy B: Artist recommendations from seed genres ──
+  // Get recommendations based on genre seeds — surfaces artists in those genres
   try {
-    const newReleasesRes = await fetch(
-      `https://api.spotify.com/v1/browse/new-releases?limit=20`,
+    const seedGenres = ['indie', 'alternative', 'electronic', 'hip-hop'];
+    const recsRes = await fetch(
+      `https://api.spotify.com/v1/recommendations?seed_genres=${seedGenres.slice(0, 2).join(',')}&limit=20`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    if (newReleasesRes.ok) {
-      const newData = await newReleasesRes.json();
-      const albums = newData.albums?.items || [];
-      diagnostics.push(`🔍 Browse new releases → ${albums.length} albums`);
-      for (const album of albums) {
-        for (const artist of (album.artists || [])) {
-          // Add the album's first track as a representative
-          // We'll look up the artist directly
-          if (!seenTrackIds.has(artist.id + '-album')) {
-            seenTrackIds.add(artist.id + '-album');
-            allTracks.push({
-              id: artist.id + '-album',
-              artists: [artist],
-              album: album,
-              name: album.name,
-              external_urls: album.external_urls,
-            });
-          }
+    if (recsRes.ok) {
+      const recsData = await recsRes.json();
+      const recTracks = recsData.tracks || [];
+      diagnostics.push(`🔍 Recommendations (${seedGenres.slice(0,2).join(',')}) → ${recTracks.length} tracks`);
+      for (const t of recTracks) {
+        if (!seenTrackIds.has(t.id)) {
+          seenTrackIds.add(t.id);
+          allTracks.push(t);
         }
       }
     } else {
-      diagnostics.push(`⚠️  New releases request failed: ${newReleasesRes.status}`);
+      diagnostics.push(`⚠️  Recommendations request failed: ${recsRes.status}`);
     }
   } catch (e: any) {
-    diagnostics.push(`⚠️  New releases error: ${e.message}`);
+    diagnostics.push(`⚠️  Recommendations error: ${e.message}`);
   }
 
-  diagnostics.push(`📊 Total unique tracks/albums to check: ${allTracks.length}`);
+  diagnostics.push(`📊 Total unique tracks to check: ${allTracks.length}`);
 
   if (allTracks.length === 0) {
     diagnostics.push('❌ No tracks found from any genre search');
