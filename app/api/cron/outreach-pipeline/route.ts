@@ -30,11 +30,14 @@ export async function GET(request: Request) {
     const genres = ['indie', 'alternative', 'electronic', 'hip-hop', 'r-n-b', 'pop', 'rock', 'folk', 'metal'];
     const shuffled = [...genres].sort(() => Math.random() - 0.5);
     
-    log.push(`Starting discovery across genres: ${shuffled.slice(0, 3).join(', ')}`);
+    log.push(`Starting multi-channel discovery (Reddit + Bandcamp + YouTube)`);
 
     const discoveryResult = await discoverArtists('year:2025-2026', 15);
     const discovered = discoveryResult.artists;
     log.push(...discoveryResult.diagnostics);
+    if (discoveryResult.channels) {
+      log.push(`Channels: Reddit ${discoveryResult.channels.reddit.candidates}, Bandcamp ${discoveryResult.channels.bandcamp.candidates}, YouTube ${discoveryResult.channels.youtube.candidates}`);
+    }
 
     if (discovered.length === 0) {
       log.push('No artists discovered in this run');

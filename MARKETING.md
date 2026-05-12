@@ -3,7 +3,7 @@
 **Goal:** 100 artists/day claiming their auto-generated campaign
 **Strategy:** Find artists → audit their presence → build a rich campaign → send one detailed outreach message → they claim and share
 **Budget:** $0 (Spotify API free tier, manual Instagram DMs, existing infra)
-**Updated:** 2026-05-12
+**Updated:** 2026-05-13 — Replaced Spotify search discovery with multi-channel (Reddit/Bandcamp/YouTube → Spotify cross-reference). Spotify search was unreliable for finding unsigned artists; direct artist lookup by name works well for the audit phase.
 
 ---
 
@@ -21,72 +21,68 @@ An artist claims their campaign. They share it with friends, family, fans. Those
 
 ## Phase 1: FIND — The Right Prospects
 
-**Where we look, in order of priority:**
+**Multi-channel strategy** — find artists where they actually promote themselves, then cross-reference with Spotify for authoritative data.
 
-### Spotify Search API (primary source)
+### Discovery Channels (in order of signal quality)
 
-Specific queries that return unsigned, active independent artists:
+**Reddit (highest signal)**
+Artists self-promote on Reddit constantly. Real humans, real music, real engagement.
 
-```
-All genres. No genre filter. If they're independent and active, they qualify.
-The Spotify API's search endpoint with no genre filter + year:2025-2026 already
-returns artists across every genre. We just filter by label and follower count.
+Subreddits scanned: r/indiemusic, r/listentothis, r/WeAreTheMusicMakers, r/ThisIsOurMusic, r/music, r/indie_rock, r/electronicmusic, r/hiphopheads
 
-Label exclusion (major label keyword filter):
-  - NOT: "Universal", "Sony", "Warner", "Atlantic", "Columbia", 
-    "Interscope", "Capitol", "Def Jam", "Republic", "RCA"
+What we extract from each post:
+- Artist name + track title (parsed from post title)
+- Spotify/YouTube links (from post body or URL)
+- Genre hints (from title tags like [indie rock])
+- Engagement signal (upvotes, comments)
 
-Follower range: artists with 100–50,000 monthly listeners
+Filtering: minimum 3 upvotes, must contain a Spotify or YouTube link, skip non-music domains (imgur, reddit self-posts without links).
 
-### AI Artist Detection (CRITICAL — skip these)
+**Bandcamp (high signal)**
+All artists on Bandcamp are independent by definition. No major labels.
 
-AI-generated music is flooding Spotify. We MUST filter these out.
-Signals that an artist is AI-generated (skip if 2+ of these are true):
+Genre pages scraped: electronic, hiphop-rap, rock, pop, folk, metal, punk, experimental, ambient, indie, alternative, r-b-soul, jazz, country (4 random genres per run)
 
-| Signal | How to detect |
-|--------|--------------|
-| Generic/empty bio | Spotify artist bio is blank, "AI generated", or just tags |
-| No social presence | No Instagram, TikTok, or YouTube linked from Spotify profile |
-| Unnatural release volume | 20+ tracks released on the same day |
-| AI distributor tags | Distributed by "Boomy", "Mubert", "Soundful", "AIVA", "Beatoven" |
-| No human imagery | Profile/cover photos are abstract, anime, or obviously AI-generated |
-| Generic artist name | Name follows AI patterns: "Lofi Study Beats", "Chill Synth Waves" |
-| Zero engagement | No comments on any social post, no fan interaction anywhere |
+What we extract:
+- Artist name + album/track title
+- Cover art URL
+- Genre tag
+- Bandcamp URL for direct link
 
-Skip the artist entirely if they trigger 2+ AI signals. Don't waste time
-building campaigns for machines.
-```
+**YouTube (medium signal)**
+Small music channels with real videos and low view counts.
 
-### Spotify Playlists (secondary source)
+Search terms (3 random per run): "official music video unsigned", "independent artist music video", "debut music video", "underground music video", "indie music video 2026"
 
-Curated playlists featuring unsigned/independent artists:
-- "Fresh Finds" (Spotify's official indie discovery)
-- "Independent Rising" 
-- "Fresh Finds: [Genre]" (genre-specific variants)
-- "Lorem" (indie/alternative)
-- "Pollen" (emerging artists)
-- Genre-specific: "Electronic Rising", "Indie Pop Road Trip", etc.
+Filtering: 100–100K views (small enough to be independent), video duration medium, ordered by date.
 
-Scrape playlist tracks → extract artists → filter by follower count and label status.
+**Cross-reference: Spotify**
+Once we have artist candidates from Reddit/Bandcamp/YouTube, we look them up on Spotify:
+- Direct artist search by name (NOT broad keyword search — much more reliable)
+- Match on Spotify ID if we have a direct link
+- Pull follower count, top tracks, cover art, genres
+- Filter: 50–500K followers (indie/emerging range)
 
-### Bandcamp New & Notable
+### AI Artist Detection (applied at candidate stage)
 
-Scrape genre pages for recent releases. Bandcamp artists are almost always independent. Filter by: has at least 1 review, released within 6 months.
+AI-generated music is flooding every platform. We filter BEFORE Spotify lookup to save API calls.
 
-### TikTok Trending Original Sounds
+| Signal | Detection |
+|--------|-----------|
+| Generic AI name pattern | Regex: "lofi", "chill", "study beats", "synth waves", "ambient", "sleep", "focus" |
+| Name too short | < 3 characters |
 
-Search for sounds categorized as "Original" with <10K video uses. These are artists uploading their own music. Cross-reference with Spotify to verify.
+Skip if 2+ signals. More signals checked at Spotify cross-reference stage (no profile images, no genres).
 
 ### What makes a "right" prospect:
 
 | Criteria | Why |
 |----------|-----|
-| 100–50K monthly Spotify listeners | Small enough to need promotion, big enough to have fans who'll share |
-| Released music in last 6 months | Active. Has something to promote NOW |
+| 50–500K Spotify followers | Small enough to need promotion, big enough to have fans who'll share |
+| Discovered on Reddit/Bandcamp (real self-promotion) | Active. Has something to promote NOW |
 | No major label affiliation | Independent artists are our market — labels won't use Selah.fm |
-| Has Instagram or TikTok presence | We need a channel to reach them |
-| Has at least 1 music video or visual content | Campaign needs rich media |
-| Engaged fanbase (comments on posts, shares) | These people become creators and funders |
+| Has Spotify presence | We need cover art, track data, and embed URL for the campaign |
+| Has at least some engagement | Upvotes on Reddit, views on YouTube, or followers on Spotify |
 
 ---
 
@@ -416,14 +412,21 @@ campaign_claims      — Claim code, campaign_id, verification method,
 
 ---
 
-## Implementation Plan (~12 hours)
+## Implementation Status
 
-| Phase | What | Time |
-|-------|------|------|
-| 1. DB + API | Migration, API endpoints, `unclaimed` campaign status, claim page | 3–4h |
-| 2. Discovery + Audit | Spotify API, YouTube API, Instagram scraping, dedup, store results | 2–3h |
-| 3. Campaign Builder | Auto-create campaigns with rich media, cover art cache, share-optimized UX | 2–3h |
-| 4. Outreach + Claim | Template rendering, IG DM, outreach logging, Spotify OAuth claim flow, `/admin/outreach` dashboard | 3–4h |
+| Phase | What | Status |
+|-------|------|--------|
+| 1. DB + API | Migration (4 tables), API endpoints (8 actions), `unclaimed` campaign status, claim page | ✅ Done |
+| 2. Discovery + Audit | Multi-channel (Reddit, Bandcamp, YouTube) → Spotify cross-reference, dedup, store | ✅ Done |
+| 3. Campaign Builder | Auto-create campaigns with rich media, cover art cache, share-optimized UX | ✅ Done |
+| 4. Outreach + Claim | Template rendering, IG DM copy-paste, outreach logging, claim flow, `/admin/outreach` dashboard | ✅ Done |
+| 5. Cron | Autonomous pipeline (discover→audit→build), Day-7 follow-up cron | ✅ Done |
+
+### To Deploy
+1. Run migration: visit `/api/admin/migrate` (or `railway run "node run-migration.cjs lib/db/migrations/012_outreach_pipeline.sql"`)
+2. Set `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `YOUTUBE_API_KEY`, `CRON_SECRET` on Railway
+3. Trigger discovery from `/admin/outreach` or call `/api/cron/outreach-pipeline?secret=CRON_SECRET`
+4. Schedule cron jobs on Railway
 
 ---
 
@@ -454,10 +457,14 @@ campaign_claims      — Claim code, campaign_id, verification method,
 
 ## Budget
 
-$0. Spotify API is free. YouTube API is free. Instagram is manual (free). DeepSeek is already paid for. Railway handles everything. The only cost is time.
+$0. Spotify API is free for direct artist lookups. YouTube Data API is free (10K units/day). Reddit JSON API is free (no auth needed). Bandcamp is scraped (no API). Instagram outreach is manual (free). DeepSeek is already paid for. Railway handles everything. The only cost is time.
 
 ---
 
-## Immediate Next Step
+## Immediate Next Steps
 
-Build Phase 1: database migration + API endpoints for the pipeline. Everything else flows from there.
+1. **Run migration** on Railway to create pipeline tables
+2. **Set env vars** — `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `YOUTUBE_API_KEY`, `CRON_SECRET`
+3. **Trigger first discovery** from `/admin/outreach` dashboard
+4. **Verify pipeline**: check that artists flow through discover → audit → campaign → outreach
+5. **Schedule cron**: Railway cron for `/api/cron/outreach-pipeline` (daily) and `/api/cron/outreach-followup` (daily)
