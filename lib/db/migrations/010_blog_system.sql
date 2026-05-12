@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS batch_interviews (
 -- Voice library: chunked interview transcripts with embeddings
 CREATE TABLE IF NOT EXISTS voice_chunks (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    interview_id  UUID NOT NULL REFERENCES batch_interviews(id),
+    interview_id  UUID REFERENCES batch_interviews(id),  -- nullable for seeded chunks
     chunk_text    TEXT NOT NULL,
     embedding     JSONB,               -- vector stored as JSON array
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
