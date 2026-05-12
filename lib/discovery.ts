@@ -620,7 +620,7 @@ export async function discoverFromSingleChannel(
 ): Promise<DiscoveryResult> {
   let candidates: RawArtistCandidate[] = [];
   let diagnostics: string[] = [];
-  let channelInfo = { reddit: { candidates: 0, searched: 0 }, bandcamp: { candidates: 0, genres: [] }, youtube: { candidates: 0, terms: [] } };
+  let channelInfo = { reddit: { candidates: 0, searched: 0 }, bandcamp: { candidates: 0, genres: [] as string[] }, youtube: { candidates: 0, terms: [] as string[] } };
 
   if (channel === 'reddit') {
     const result = await discoverFromReddit();
