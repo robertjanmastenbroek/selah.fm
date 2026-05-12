@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // response and break link previews on WhatsApp, Telegram, iMessage, etc.
   const imageUrl = (campaign.cover_art_url && !campaign.cover_art_url.startsWith('data:'))
     ? campaign.cover_art_url
-    : 'https://selah.fm/images/hero-illustration.png';
+    : 'https://selah.fm/images/og-image.jpg';
   const canonicalUrl = `https://selah.fm/c/${params.id}`;
 
   // Tiered title templates — balanced default
@@ -101,7 +101,7 @@ export default async function CampaignPage({ params }: Props) {
   const artistName = campaign?.artist_name || 'an artist';
   const trackTitle = campaign?.track_title || '';
   const coverUrl = campaign?.cover_art_url || '';
-  const imageUrl = (coverUrl && !coverUrl.startsWith('data:')) ? coverUrl : 'https://selah.fm/images/hero-illustration.png';
+  const imageUrl = (coverUrl && !coverUrl.startsWith('data:')) ? coverUrl : 'https://selah.fm/images/og-image.jpg';
   const canonicalUrl = `https://selah.fm/c/${params.id}`;
   const createdAt = campaign?.created_at || new Date().toISOString();
   const cpmDollars = campaign?.cpm_rate_cents ? (campaign.cpm_rate_cents / 100).toFixed(2) : null;

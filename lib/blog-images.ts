@@ -7,7 +7,7 @@
  */
 
 const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
-const FALLBACK_IMAGE = 'https://selah.fm/images/hero-illustration.png';
+const FALLBACK_IMAGE = 'https://selah.fm/images/og-image.jpg';
 
 /** Validate that a URL actually loads (HEAD request, follows redirects) */
 export async function validateImageUrl(url: string): Promise<string> {
