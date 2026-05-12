@@ -3,48 +3,54 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SELAH.FM — Dark Mode Only Design System
-   "Selah" = pause, reflect. The UI should feel like a calm sanctuary.
+   SELAH.FM — Dark Mode (OLED) Design System
+   Design System: ui-ux-pro-max v2.5.0
+   Product: Music Streaming Marketplace | Style: Dark Mode (OLED)
+   Colors: Deep navy + Indigo + Green CTA | Fonts: Righteous + Poppins
    ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Righteous&display=swap');
 
 @layer base {
   :root {
-    /* ── Surface palette (luminance-based elevation) ──────────── */
-    --background: 0 0% 5%;           /* #0D0D0D — near-OLED black */
-    --foreground: 0 0% 94%;          /* #F0F0F0 — off-white, AAA 17:1 */
-    --card: 0 0% 10%;               /* #1A1A1A — elevation level 1 */
-    --card-foreground: 0 0% 94%;
-    --popover: 0 0% 14%;             /* #242424 — elevation level 2 */
-    --popover-foreground: 0 0% 94%;
+    /* ── Surface palette (OLED-optimized) ──────────────────────── */
+    --background: 240 47% 10%;        /* #0F0F23 — deep navy, OLED-friendly */
+    --foreground: 210 40% 98%;        /* #F8FAFC — near-white, AAA 17:1 */
+    --card: 240 43% 13%;             /* #11112A — elevation level 1 */
+    --card-foreground: 210 40% 98%;
+    --popover: 240 40% 18%;          /* #1C1C3A — elevation level 2 */
+    --popover-foreground: 210 40% 98%;
 
-    /* ── Accent (DeepSeek blue — electric, focused, premium) ─── */
-    --primary: 230 100% 68%;          /* #5B7FFF — DeepSeek blue */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 16%;           /* #2A2A2A */
-    --secondary-foreground: 0 0% 72%; /* #B8B8B8 — AAA on #2A2A2A */
-    --muted: 0 0% 12%;               /* #1E1E1E */
-    --muted-foreground: 0 0% 55%;    /* #8C8C8C — readable placeholder */
-    --accent: 230 100% 68%;           /* #5B7FFF — same as primary */
-    --accent-foreground: 0 0% 100%;
+    /* ── Primary: Deep indigo/navy ─────────────────────────────── */
+    --primary: 242 44% 20%;           /* #1E1B4B — deep navy */
+    --primary-foreground: 0 0% 100%;  /* #FFFFFF */
+    --secondary: 239 54% 49%;         /* #4338CA — indigo */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 35% 19%;            /* #27273B */
+    --muted-foreground: 215 16% 65%;  /* #9CA3AF — readable secondary text */
+    --accent: 142 71% 45%;            /* #22C55E — green CTA (play + growth) */
+    --accent-foreground: 0 0% 5%;
 
     /* ── Semantic ─────────────────────────────────────────────── */
-    --destructive: 0 65% 77%;        /* #EF9A9A — soft, not alarming */
-    --destructive-foreground: 0 0% 5%;
-    --border: 0 0% 100% / 0.06;      /* almost invisible */
-    --input: 0 0% 10%;
-    --ring: 230 100% 68%;             /* focus ring = DeepSeek blue */
+    --destructive: 0 84% 60%;         /* #EF4444 */
+    --destructive-foreground: 0 0% 98%;
+    --border: 239 64% 41% / 0.3;      /* #312E81 at 30% */
+    --input: 240 35% 19%;
+    --ring: 242 44% 20%;             /* focus ring = primary */
     --radius: 0.5rem;
 
     /* ── Extended semantic tokens ─────────────────────────────── */
-    --success: 123 46% 64%;           /* #81C784 */
+    --success: 142 71% 45%;           /* #22C55E */
     --success-foreground: 0 0% 5%;
     --warning: 45 100% 65%;           /* #FFD54F */
     --warning-foreground: 0 0% 5%;
-    --accent-glow: 230 100% 68% / 0.15;
+    --accent-glow: 142 71% 45% / 0.15;
 
     /* ── Typography ───────────────────────────────────────────── */
+    --font-heading: 'Righteous', system-ui, sans-serif;
+    --font-body: 'Poppins', system-ui, sans-serif;
     --line-height-body: 1.6;
-    --heading-weight: 600;
+    --heading-weight: 400;
   }
 
   /* ── Base element resets ────────────────────────────────────── */
@@ -52,28 +58,29 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
     font-weight: 400;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Subtle grain texture via CSS — no extra DOM element, no HTTP request */
-    position: relative;
   }
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.015;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 256px 256px;
+
+  /* Headings use Righteous */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Righteous', system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  /* Brand/display text */
+  .font-heading {
+    font-family: 'Righteous', system-ui, sans-serif;
   }
 
   /* Selection highlight */
   ::selection {
-    background: rgba(91, 127, 255, 0.25);
-    color: #F0F0F0;
+    background: rgba(67, 56, 202, 0.25); /* secondary at 25% */
+    color: #F8FAFC;
   }
 
   /* Scrollbar */
@@ -102,7 +109,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer components {
   .page-container { @apply max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12 overflow-x-hidden; }
-  .section-title { @apply text-2xl md:text-3xl font-bold tracking-tight; }
+  .section-title { @apply text-2xl md:text-3xl font-bold tracking-tight font-heading; }
 
   /* Campaign grid */
   .campaign-grid {
@@ -110,13 +117,13 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   }
 
-  /* Card hover lift */
+  /* Card hover lift — 200ms ease, no layout shift */
   .hover-lift {
-    transition: transform 0.2s ease, background-color 0.2s ease;
+    transition: transform 200ms ease, background-color 200ms ease;
   }
   .hover-lift:hover {
     transform: translateY(-2px);
-    background-color: hsl(0 0% 12%);
+    background-color: hsl(240 35% 19%);
   }
 
   /* Ripple effect container */
@@ -124,10 +131,60 @@
     position: relative;
     overflow: hidden;
   }
+
+  /* ── Design system button classes ──────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm cursor-pointer;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    transition: all 200ms ease;
+  }
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 0 24px rgba(34, 197, 94, 0.25);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm cursor-pointer;
+    background: transparent;
+    color: hsl(var(--primary));
+    border: 2px solid hsl(var(--primary));
+    transition: all 200ms ease;
+  }
+
+  /* ── Card component ────────────────────────────────────────── */
+  .design-card {
+    @apply rounded-xl p-6 cursor-pointer;
+    background: hsl(var(--card));
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 200ms ease;
+  }
+  .design-card:hover {
+    box-shadow: 0 10px 15px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    border-color: rgba(49, 46, 129, 0.5);
+  }
+
+  /* ── Input ─────────────────────────────────────────────────── */
+  .design-input {
+    @apply px-4 py-3 rounded-lg text-base;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--input));
+    color: hsl(var(--foreground));
+    transition: border-color 200ms ease;
+  }
+  .design-input:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px rgba(30, 27, 75, 0.2);
+  }
+  .design-input::placeholder {
+    color: hsl(215 16% 55%);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   UTILITY LAYER — ANIMATIONS
+   UTILITY LAYER — ANIMATIONS (minimal glow, dark-to-light transitions)
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer utilities {
   .animate-slide-up {
@@ -178,9 +235,9 @@
 
 /* Micro-reward: success breathe */
 @keyframes breathe {
-  0% { box-shadow: 0 0 0 0 rgba(91, 127, 255, 0.3); }
-  50% { box-shadow: 0 0 0 8px rgba(91, 127, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(91, 127, 255, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
 .animate-breathe {
   animation: breathe 0.8s ease-out;
@@ -198,22 +255,6 @@
   animation: shake 0.3s ease-out;
 }
 
-/* Micro-reward: pulse glow */
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
-}
-
-/* Toast enter/exit */
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes toastOut {
-  from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(-8px) scale(0.95); }
-}
-
 /* Ripple */
 @keyframes ripple {
   to { transform: scale(4); opacity: 0; }
@@ -221,7 +262,7 @@
 .ripple-effect {
   position: absolute;
   border-radius: 50%;
-  background: rgba(91, 127, 255, 0.3);
+  background: rgba(67, 56, 202, 0.3);
   transform: scale(0);
   animation: ripple 0.6s linear;
   pointer-events: none;
@@ -231,13 +272,13 @@
 button:active:not([disabled]),
 a:active:not([disabled]) {
   transform: scale(0.97);
-  transition: transform 0.1s ease;
+  transition: transform 100ms ease-out;
 }
 
 /* ── Dark mode readability fixes ─────────────────────────────── */
 input::placeholder,
 textarea::placeholder {
-  color: hsl(0 0% 50%) !important;
+  color: hsl(215 16% 55%) !important;
 }
 
 select {
@@ -245,13 +286,12 @@ select {
 }
 
 .problem-card {
-  background: rgba(239, 154, 154, 0.04) !important;
-  border-color: rgba(239, 154, 154, 0.12) !important;
+  background: rgba(239, 68, 68, 0.04) !important;
+  border-color: rgba(239, 68, 68, 0.12) !important;
 }
 
 /* ══════════════════════════════════════════════════════════════
-   MICRO-INTERACTIONS — Universal smooth physical feel
-   Every interactive element gets a gentle press response.
+   MICRO-INTERACTIONS — 150-300ms transitions, no layout shift
    ══════════════════════════════════════════════════════════════ */
 @layer utilities {
   /* Gentle press on all interactive elements */
@@ -263,7 +303,6 @@ select {
   }
 
   /* Smooth transitions on hover/active for all interactive */
-  /* (buttons already use transition-all in most places — this fills gaps) */
   button, a, input, select, textarea, [role="button"] {
     transition: all 150ms ease-out;
   }

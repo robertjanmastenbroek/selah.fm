@@ -3,11 +3,12 @@ import './globals.css';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PageTransition from '@/components/PageTransition';
-import { Inter } from "next/font/google";
+import { Poppins, Righteous } from "next/font/google";
 import Analytics from '@/components/Analytics';
 import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans',display:'swap',preload:true});
+const poppins = Poppins({subsets:['latin'],weight:['300','400','500','600','700'],variable:'--font-sans',display:'swap',preload:true});
+const righteous = Righteous({subsets:['latin'],weight:'400',variable:'--font-heading',display:'swap',preload:true});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
   return (
-    <html lang="en" className={cn("font-sans", inter.variable)}>
+    <html lang="en" className={cn("font-sans", poppins.variable, righteous.variable)}>
       <head>
         <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
         {/* Preconnect external domains to resolve DNS + TLS early */}
