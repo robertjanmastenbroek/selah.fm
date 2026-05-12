@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       case 'finalize_batch':      return finalizeBatch(body.batchId);
       case 'publish_post':        return publishPost(body.postId);
       case 'update_post':         return updatePost(body.postId, body.updates);
+      case 'fetch_real_questions': return fetchRealQuestions();
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -80,6 +81,55 @@ async function createBatch() {
     RETURNING *
   `;
   return NextResponse.json({ batch, created: true });
+}
+
+async function fetchRealQuestions() {
+  try {
+    // Try Reddit for real human questions
+    const redditQs = (await sourceQuestionsFromReddit()).map(q => ({
+      question: q.question, url: q.url, platform: 'reddit' as const, category: q.category as string,
+    }));
+
+    // Add curated fallback questions
+    const fallbackQs = getFallbackQuestions(20).map(q => ({
+      question: q, url: '', platform: 'curated' as const, category: 'general' as const,
+    }));
+
+    // Combine and deduplicate by question text
+    const seen = new Set<string>();
+    const all = [...redditQs, ...fallbackQs].filter((q: { question: string; url: string; platform: string; category: string }) => {
+      const key = q.question.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Group by category for nice UI display
+    const byCategory: Record<string, { question: string; url: string; platform: string }[]> = {};
+    for (const q of all.slice(0, 30)) {
+      const cat = q.category || 'general';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push({ question: q.question, url: q.url, platform: q.platform || 'curated' });
+    }
+
+    return NextResponse.json({
+      questions: all.slice(0, 30),
+      by_category: byCategory,
+      total: all.length,
+      sourced_from: 'reddit_and_curated',
+    });
+  } catch (e: any) {
+    // Always fall back to curated questions
+    const fallbackQs: { question: string; url: string; platform: string; category: string }[] = getFallbackQuestions(30).map(q => ({
+      question: q, url: '', platform: 'curated', category: 'general',
+    }));
+    return NextResponse.json({
+      questions: fallbackQs,
+      by_category: { general: fallbackQs },
+      total: fallbackQs.length,
+      sourced_from: 'curated_fallback',
+    });
+  }
 }
 
 async function sourceQuestions(batchId: string) {
