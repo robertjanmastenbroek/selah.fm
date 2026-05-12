@@ -123,15 +123,13 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
     return { artists: [], diagnostics };
   }
 
-  // Strategy: search for recently released tracks using working query formats.
-  // Spotify search requires text terms; year-only or genre-only queries return 400.
-  // We use broad music terms + tag:new to surface recent independent releases.
+  // Strategy: broad text search with common words that appear in song titles
+  // across every genre. Then filter by release date + followers after getting artist data.
   const allTracks: any[] = [];
   const seenTrackIds = new Set<string>();
 
-  // ── Strategy A: tag:new + broad music terms ──
-  // tag:new returns tracks released in the last 2 weeks (Spotify's newest catalog)
-  const searchTerms = ['tag:new', 'tag:new hip-hop', 'tag:new indie', 'tag:new electronic', 'tag:new pop', 'tag:new r-b'];
+  // Common song-title words that appear in tracks from metal to pop to hip-hop
+  const searchTerms = ['love', 'night', 'dream', 'fire', 'heart', 'remastered', '2025'];
   for (const term of searchTerms) {
     try {
       const searchRes = await fetch(
@@ -158,31 +156,6 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
     } catch (e: any) {
       diagnostics.push(`⚠️  Search error for "${term}": ${e.message}`);
     }
-  }
-
-  // ── Strategy B: Artist recommendations from seed genres ──
-  // Get recommendations based on genre seeds — surfaces artists in those genres
-  try {
-    const seedGenres = ['indie', 'alternative', 'electronic', 'hip-hop'];
-    const recsRes = await fetch(
-      `https://api.spotify.com/v1/recommendations?seed_genres=${seedGenres.slice(0, 2).join(',')}&limit=20`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (recsRes.ok) {
-      const recsData = await recsRes.json();
-      const recTracks = recsData.tracks || [];
-      diagnostics.push(`🔍 Recommendations (${seedGenres.slice(0,2).join(',')}) → ${recTracks.length} tracks`);
-      for (const t of recTracks) {
-        if (!seenTrackIds.has(t.id)) {
-          seenTrackIds.add(t.id);
-          allTracks.push(t);
-        }
-      }
-    } else {
-      diagnostics.push(`⚠️  Recommendations request failed: ${recsRes.status}`);
-    }
-  } catch (e: any) {
-    diagnostics.push(`⚠️  Recommendations error: ${e.message}`);
   }
 
   diagnostics.push(`📊 Total unique tracks to check: ${allTracks.length}`);
