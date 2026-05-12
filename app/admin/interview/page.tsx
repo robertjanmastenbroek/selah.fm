@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, MicOff, Send, Plus, Clock, Check, Sparkles, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Send, Plus, Clock, Check, Sparkles, Loader2, X } from 'lucide-react';
 
 interface Question {
   id: string;
@@ -22,6 +22,8 @@ function useVoiceInput() {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<any>(null);
+  // Track audio activity (any sound detected)
+  const [hasSound, setHasSound] = useState(false);
 
   const startListening = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -41,8 +43,12 @@ function useVoiceInput() {
         fullTranscript += event.results[i][0].transcript;
         if (!event.results[i].isFinal) hasInterim = true;
       }
+      setHasSound(true);
       setTranscript(hasInterim ? fullTranscript + ' (...)' : fullTranscript);
     };
+
+    recognition.onaudiostart = () => setHasSound(true);
+    recognition.onaudioend = () => setTimeout(() => setHasSound(false), 500);
 
     recognition.onerror = (event: any) => {
       if (event.error === 'no-speech' || event.error === 'aborted') return;
@@ -52,18 +58,18 @@ function useVoiceInput() {
 
     recognitionRef.current = recognition;
     recognition.start();
-    setTranscript(''); // clear previous transcript when starting fresh
+    setTranscript('');
     setListening(true);
   }, []);
 
   const stopListening = useCallback((): string => {
     recognitionRef.current?.stop();
     setListening(false);
-    // Return cleaned transcript synchronously (before React re-render)
+    setHasSound(false);
     return transcript.replace(/\(\.\.\.\)$/, '').trim();
   }, [transcript]);
 
-  return { listening, transcript, setTranscript, startListening, stopListening };
+  return { listening, hasSound, transcript, setTranscript, startListening, stopListening };
 }
 
 // ── Main Page ─────────────────────────────────────────────────────
@@ -81,6 +87,7 @@ export default function InterviewStudio() {
   const [justSaved, setJustSaved] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [stats, setStats] = useState({ totalAnswers: 0, totalChunks: 0 });
+  const [showSavedFeedback, setShowSavedFeedback] = useState(false);
 
   const voice = useVoiceInput();
   const answerRef = useRef<HTMLTextAreaElement>(null);
@@ -156,11 +163,11 @@ export default function InterviewStudio() {
     setGenerating(false);
   };
 
-  // ── Capture Answer ──────────────────────────────────────────────
+  // ── Mic Actions ─────────────────────────────────────────────────
 
   const doMicAction = () => {
     if (voice.listening) {
-      // STOP: capture transcript synchronously, then append to existing answer
+      // STOP: capture transcript, append to existing answer
       const cleanedTranscript = voice.stopListening();
       if (cleanedTranscript) {
         const updated = [...questions];
@@ -169,7 +176,7 @@ export default function InterviewStudio() {
         setQuestions(updated);
       }
     } else {
-      // START: begin recording (existing answer is preserved, transcript appends live)
+      // START
       voice.startListening();
     }
   };
@@ -184,11 +191,15 @@ export default function InterviewStudio() {
 
   const captureAnswer = async () => {
     const q = questions[currentQ];
-    // If still recording, stop first and capture
+    // Stop mic if still running and capture all text
     let answer = q.answer || '';
     if (voice.listening) {
       const cleaned = voice.stopListening();
       answer = answer ? answer + ' ' + cleaned : cleaned;
+      // Update the question state
+      const updated = [...questions];
+      updated[currentQ] = { ...updated[currentQ], answer };
+      setQuestions(updated);
     }
     if (!answer || answer.length < 10) return;
 
@@ -201,11 +212,17 @@ export default function InterviewStudio() {
       const updated = [...questions];
       updated[currentQ] = { ...q, answer, captured: true };
       setQuestions(updated);
-      setJustSaved(true); setTimeout(() => setJustSaved(false), 1500);
+      
+      // Flash feedback
+      setShowSavedFeedback(true);
+      setTimeout(() => setShowSavedFeedback(false), 1500);
+      
       voice.setTranscript('');
       if (currentQ < questions.length - 1) {
         setCurrentQ(currentQ + 1);
-        setTimeout(() => answerRef.current?.focus(), 100);
+        const q = questions[currentQ + 1];
+        // Restore any existing answer for the next question
+        voice.setTranscript(q?.answer || '');
       } else { setPhase('done'); fetchStats(); }
     } catch (e: any) { alert('Save failed: ' + e.message); }
     setSaving(false);
@@ -213,11 +230,13 @@ export default function InterviewStudio() {
 
   const goToQuestion = (idx: number) => {
     if (voice.listening) voice.stopListening();
-    voice.setTranscript('');
+    voice.setTranscript(questions[idx]?.answer || '');
     setCurrentQ(idx);
   };
 
   const completed = questions.filter(q => q.captured).length;
+  const currentAnswer = (questions[currentQ]?.answer || '') +
+    (voice.listening ? (voice.transcript ? ' ' + voice.transcript : '') : '');
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white p-6">
@@ -225,10 +244,17 @@ export default function InterviewStudio() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold">Interview Studio</h1>
-            <p className="text-sm text-gray-500 mt-1">Voice library: {stats.totalChunks} chunks · {stats.totalAnswers || sessions.length} sessions</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Voice library: {stats.totalChunks} chunks · {stats.totalAnswers || sessions.length} sessions
+            </p>
           </div>
           {phase === 'interviewing' && (
-            <div className={`text-sm px-4 py-2 rounded-lg transition-all duration-300 ${justSaved ? 'bg-green-900/30 text-green-400' : 'bg-gray-900 text-gray-400'}`}>
+            <div className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition-all duration-300 ${
+              showSavedFeedback 
+                ? 'bg-green-900/30 text-green-400 scale-105' 
+                : 'bg-gray-900 text-gray-400'
+            }`}>
+              {showSavedFeedback ? <Check size={14} /> : null}
               {completed}/{questions.length} saved to database
             </div>
           )}
@@ -236,6 +262,7 @@ export default function InterviewStudio() {
 
         {phase === 'setup' && (
           <div className="space-y-6">
+            {/* Coverage overview */}
             {sessions.length > 0 && (
               <div className="bg-gray-900 rounded-2xl p-6 space-y-4">
                 <div className="flex items-center justify-between">
@@ -266,6 +293,7 @@ export default function InterviewStudio() {
               </div>
             )}
 
+            {/* Topic + question setup */}
             <div className="bg-gray-900 rounded-2xl p-8 space-y-6">
               <h2 className="text-lg font-semibold">New Interview Session</h2>
               <p className="text-sm text-gray-400">Pick a topic and I'll generate deep interview questions. Answer by speaking (🎤) or typing.</p>
@@ -322,50 +350,95 @@ export default function InterviewStudio() {
 
         {phase === 'interviewing' && (
           <div className="space-y-6">
+            {/* Progress bar */}
             <div className="flex gap-1">
               {questions.map((q,i)=>(
                 <button key={q.id} onClick={()=>goToQuestion(i)} className={`h-2 flex-1 rounded-full transition-all ${q.captured?'bg-green-500':i===currentQ?'bg-blue-500':'bg-gray-800'}`} title={q.text.slice(0,60)}/>
               ))}
             </div>
 
+            {/* Question */}
             <div className="bg-gray-900 rounded-2xl p-8">
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
                 <span>Question {currentQ+1} of {questions.length}</span><span>·</span><span>{topic==='custom'?customTopic:topic}</span>
               </div>
               <h2 className="text-xl font-semibold mb-6 leading-relaxed">{questions[currentQ]?.text}</h2>
 
+              {/* Answer textarea */}
               <div className="space-y-3">
-                <textarea
-                  ref={answerRef}
-                  value={voice.listening ? (questions[currentQ]?.answer||'') + (voice.transcript?' '+voice.transcript:'') : (questions[currentQ]?.answer||'')}
-                  onChange={e=>{const u=[...questions];u[currentQ]={...u[currentQ],answer:e.target.value};setQuestions(u);}}
-                  placeholder={voice.listening?'🎤 Listening — speak now...':'Type your answer or click the mic...'}
-                  className={`w-full bg-gray-800 rounded-xl p-4 text-white text-sm min-h-[160px] resize-y border transition-all focus:outline-none ${voice.listening?'border-blue-500 ring-2 ring-blue-500/20':'border-gray-700 focus:border-blue-500'}`}
-                  rows={6}
-                />
+                <div className="relative">
+                  <textarea
+                    ref={answerRef}
+                    value={currentAnswer}
+                    onChange={e=>{
+                      const u=[...questions]; u[currentQ]={...u[currentQ], answer: e.target.value}; setQuestions(u);
+                    }}
+                    placeholder={voice.listening?'🎤 Listening — speak now...':'Type your answer or click the mic...'}
+                    className={`w-full bg-gray-800 rounded-xl p-4 text-white text-sm min-h-[160px] resize-y border transition-all focus:outline-none ${
+                      voice.listening && voice.hasSound
+                        ? 'border-green-500 ring-2 ring-green-500/20' 
+                        : voice.listening
+                        ? 'border-blue-500 ring-2 ring-blue-500/20'
+                        : 'border-gray-700 focus:border-blue-500'
+                    }`}
+                    rows={6}
+                  />
+                  
+                  {/* Mic activity indicator */}
+                  {voice.listening && (
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                      {voice.hasSound ? (
+                        <div className="flex items-center gap-0.5">
+                          {[0,1,2,3].map(i => (
+                            <div key={i} 
+                              className="w-0.5 bg-green-400 rounded-full animate-pulse" 
+                              style={{
+                                height: `${8 + Math.random() * 12}px`,
+                                animationDelay: `${i * 0.15}s`,
+                              }} 
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                      )}
+                    </div>
+                  )}
+                </div>
 
+                {/* Action buttons */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <button onClick={doMicAction} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${voice.listening?'bg-red-600 hover:bg-red-500 animate-pulse':'bg-gray-800 hover:bg-gray-700 text-gray-300'}`}>
-                      {voice.listening?<><MicOff className="w-4 h-4"/>Stop & Edit</>:<><Mic className="w-4 h-4"/>Speak Answer</>}
+                    <button onClick={doMicAction} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      voice.listening
+                        ? 'bg-red-600 hover:bg-red-500'
+                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    }`}>
+                      {voice.listening ? <><MicOff size={14}/> Stop & Edit</> : <><Mic size={14}/> Speak Answer</>}
                     </button>
-                    {(questions[currentQ]?.answer||voice.transcript)&&(
-                      <button onClick={clearAnswer} className="px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-red-400 hover:bg-gray-800 transition-all" title="Clear answer">Clear</button>
-                    )}
+                    {(questions[currentQ]?.answer || voice.transcript) ? (
+                      <button onClick={clearAnswer} className="flex items-center gap-1 px-2 py-2 rounded-lg text-xs text-gray-500 hover:text-red-400 hover:bg-gray-800 transition-all">
+                        <X size={12} /> Clear
+                      </button>
+                    ) : null}
                   </div>
+                  
                   <div className="flex items-center gap-3">
                     <button onClick={()=>goToQuestion(Math.max(0,currentQ-1))} disabled={currentQ===0} className="px-3 py-2 text-sm text-gray-500 hover:text-white disabled:opacity-30">← Prev</button>
-                    <button onClick={captureAnswer} disabled={saving||(!voice.transcript&&!questions[currentQ]?.answer)} className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg text-sm font-semibold transition-all">
-                      {saving?<><Loader2 className="w-4 h-4 animate-spin"/>Saving...</>:questions[currentQ]?.captured?<><Check className="w-4 h-4"/>Captured ✓</>:<><Send className="w-4 h-4"/>Capture & Next</>}
+                    <button onClick={captureAnswer} disabled={saving || !currentAnswer.trim()} className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg text-sm font-semibold transition-all">
+                      {saving?<><Loader2 size={14} className="animate-spin"/> Saving...</>:<><Send size={14}/> Capture & Next</>}
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Question navigator */}
             <div className="grid grid-cols-5 gap-2">
               {questions.map((q,i)=>(
-                <button key={q.id} onClick={()=>goToQuestion(i)} className={`p-2 rounded-lg text-xs text-left transition-all ${i===currentQ?'bg-blue-600 text-white':q.captured?'bg-green-900/50 text-green-400 border border-green-800':'bg-gray-800 text-gray-500 hover:bg-gray-700'}`}>
+                <button key={q.id} onClick={()=>goToQuestion(i)} className={`p-2 rounded-lg text-xs text-left transition-all ${
+                  i===currentQ?'bg-blue-600 text-white':q.captured?'bg-green-900/50 text-green-400 border border-green-800':'bg-gray-800 text-gray-500 hover:bg-gray-700'
+                }`}>
                   <span className="block font-mono text-[10px] opacity-50">{i+1}</span><span className="line-clamp-2">{q.text.slice(0,50)}</span>
                 </button>
               ))}
