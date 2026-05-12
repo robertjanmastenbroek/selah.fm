@@ -153,9 +153,15 @@ export async function GET(request: Request) {
 // ── Question Generation ───────────────────────────────────────────
 
 async function generateQuestions(topic: string, count: number) {
-  // Use fallback questions if DeepSeek key missing or for well-covered topics
   const fallbacks = TOPIC_QUESTIONS[topic];
-  if (!DEEPSEEK_API_KEY || fallbacks) {
+
+  // If we have enough curated questions for the requested count, use them directly
+  if (fallbacks && fallbacks.length >= count) {
+    return NextResponse.json({ questions: fallbacks.slice(0, count), generated_by: 'curated' });
+  }
+
+  // If no DeepSeek key, return whatever fallbacks we have (even if fewer than requested)
+  if (!DEEPSEEK_API_KEY) {
     const questions = fallbacks || [
       `What is your perspective on ${topic}?`,
       `How has ${topic} shaped your life?`,
@@ -163,8 +169,11 @@ async function generateQuestions(topic: string, count: number) {
       `What would you tell your younger self about ${topic}?`,
       `Where do you see ${topic} going in the next 5 years?`,
     ];
-    return NextResponse.json({ questions: questions.slice(0, count), generated_by: fallbacks ? 'curated' : 'fallback' });
+    return NextResponse.json({ questions: questions, generated_by: fallbacks ? 'curated' : 'fallback' });
   }
+
+  // Need more questions than we have cached — use DeepSeek for the full set
+  // (mixing curated + generated creates quality inconsistency)
 
   // DeepSeek generation for custom topics
   const topicContext = topic === 'Life Story'
