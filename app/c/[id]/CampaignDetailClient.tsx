@@ -315,7 +315,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
         </div>
       </div>
 
-      <main className="pb-20">
+      <main className="pb-32 md:pb-20">
         <div className="px-4 space-y-6">
           {/* ── Media Carousel (gallery images + YouTube video) ── */}
           {carouselItems.length > 0 && (
