@@ -16,6 +16,7 @@ export default function OutreachDashboard() {
   const api = async (action: string, body: any = {}) => {
     const res = await fetch('/api/admin/outreach', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...body }),
     });
@@ -30,7 +31,7 @@ export default function OutreachDashboard() {
   const fetchPipeline = async () => {
     setLoading(true);
     try {
-      const data = await fetch('/api/admin/outreach').then(r => r.json());
+      const data = await fetch('/api/admin/outreach', { credentials: 'include' }).then(r => r.json());
       setPipeline(data);
       setArtists(data.recent || []);
     } catch {}
@@ -42,9 +43,13 @@ export default function OutreachDashboard() {
     setMessage('');
     try {
       const data = await api('discover', { query: 'year:2025-2026', limit: 20 });
-      setMessage(`Found ${data.discovered} artists · Stored ${data.stored} new · ${data.total_in_db} total in database`);
-      fetchPipeline();
-    } catch (e: any) { setMessage('Error: ' + e.message); }
+      if (data.error) {
+        setMessage('Error: ' + data.error);
+      } else {
+        setMessage(`Found ${data.discovered} artists · Stored ${data.stored} new · ${data.total_in_db} total in database`);
+        fetchPipeline();
+      }
+    } catch (e: any) { setMessage('Error: ' + (e.message || 'Unknown error')); }
     setActionLoading('');
   };
 
