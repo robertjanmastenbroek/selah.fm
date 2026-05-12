@@ -75,3 +75,10 @@ CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug);
 CREATE INDEX IF NOT EXISTS idx_batch_questions_batch ON batch_questions(batch_id);
 CREATE INDEX IF NOT EXISTS idx_batch_interviews_batch ON batch_interviews(batch_id);
 CREATE INDEX IF NOT EXISTS idx_voice_chunks_interview ON voice_chunks(interview_id);
+
+-- GEO + SEO enhancements: added after initial migration
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS primary_keyword TEXT;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS internal_links JSONB DEFAULT '[]';
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS faq_schema JSONB;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS word_count INTEGER;
+ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS cta_positions JSONB DEFAULT '[]';

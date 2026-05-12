@@ -191,12 +191,24 @@ async function finalizeBatch(batchId: string) {
       const [post] = await sql`
         INSERT INTO blog_posts (
           interview_id, title, slug, content_html, excerpt, featured_image,
-          meta_title, meta_description, tags, image_suggestions, status, publish_at, author_id
+          meta_title, meta_description, tags, image_suggestions,
+          primary_keyword, internal_links, faq_schema, word_count, cta_positions,
+          status, publish_at, author_id
         )
         VALUES (
           ${interview.id}, ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
           ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
-          ${JSON.stringify(article.image_suggestions || [])}, 'scheduled', ${publishDate.toISOString()},
+          ${JSON.stringify(article.image_suggestions || [])},
+          ${article.primary_keyword || (article.tags?.[0] || null)},
+          ${JSON.stringify(article.internal_links || [])},
+          ${JSON.stringify(article.faq_schema || null)},
+          ${article.word_count_estimate || null},
+          ${JSON.stringify([
+            {position: 'intro', type: 'soft', text: 'I built Selah.fm because...'},
+            {position: 'mid', type: 'tip_box', text: 'Try this: browse campaigns on Selah.fm'},
+            {position: 'end', type: 'strong', text: 'Ready to promote your music?'}
+          ])},
+          'scheduled', ${publishDate.toISOString()},
           (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1)
         )
         RETURNING *
@@ -230,16 +242,25 @@ async function finalizeBatch(batchId: string) {
 
   // Add JSON-LD schema to each post
   for (const post of posts) {
-    const schema = {
+    const schema: any = {
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: post.title,
       description: post.meta_description || post.excerpt,
       image: post.featured_image,
       datePublished: post.publish_at,
-      author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek' },
+      author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
       publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${post.slug}` },
     };
+    // Add FAQ schema if post has FAQ data
+    if (post.faq_schema && Array.isArray(post.faq_schema) && post.faq_schema.length > 0) {
+      schema.mainEntity = post.faq_schema.map((faq: any) => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+      }));
+    }
     await sql`UPDATE blog_posts SET schema_markup = ${JSON.stringify(schema)} WHERE id = ${post.id}`;
   }
 
