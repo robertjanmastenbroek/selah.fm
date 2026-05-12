@@ -105,25 +105,37 @@ export interface DiscoveredArtist {
 export async function discoverArtists(_query: string = 'year:2025-2026', limit: number = 20): Promise<DiscoveredArtist[]> {
   const token = await getSpotifyToken();
 
-  // Use genre-specific searches to find independent artists
-  // Generic year-only search returns mostly major label tracks
-  const genres = ['indie', 'alternative', 'electronic', 'hip-hop', 'r-n-b', 'pop', 'rock', 'folk', 'jazz', 'metal'];
+  // Strategy: scrape Spotify-curated indie playlists for unsigned/independent artists
+  // These playlists are hand-picked by Spotify editors and feature emerging talent
+  const indiePlaylistIds = [
+    '37i9dQZF1DX0eerS8JbhUF', // Fresh Finds (the best independent/unsigned tracks)
+    '37i9dQZF1DX5g856aiKiDS', // Fresh Finds: Electronic
+    '37i9dQZF1DX6W1YbI0N1Nc', // Fresh Finds: Indie
+    '37i9dQZF1DWVFeEut75ACH', // Fresh Finds: Hip-Hop
+    '37i9dQZF1DX2nX8HgBDmgL', // Fresh Finds: Pop
+    '37i9dQZF1DWUv0cKxNh7F6', // Fresh Finds: Rock
+    '37i9dQZF1DWZMWLrh2UYgX', // Fresh Finds: R&B
+    '37i9dQZF1DX0XUsuxWHRQd', // Independent Rising
+    '37i9dQZF1DXcSC8oOisCOR', // Lorem (indie/alternative)
+    '37i9dQZF1DWWBHeXOYZf74', // Pollen (emerging artists)
+  ];
+
   const allTracks: any[] = [];
   const seenTrackIds = new Set<string>();
 
-  // Search 3 random genres to get variety each run
-  const shuffled = [...genres].sort(() => Math.random() - 0.5);
-  for (const genre of shuffled.slice(0, 3)) {
+  // Pick 3 random playlists for variety each run
+  const shuffled = [...indiePlaylistIds].sort(() => Math.random() - 0.5);
+  for (const playlistId of shuffled.slice(0, 3)) {
     try {
-      const q = `genre:${genre} year:2025-2026`;
-      const searchRes = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10`,
+      const playlistRes = await fetch(
+        `https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=30`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!searchRes.ok) continue;
-      const data = await searchRes.json();
-      for (const t of (data.tracks?.items || [])) {
-        if (!seenTrackIds.has(t.id)) {
+      if (!playlistRes.ok) continue;
+      const data = await playlistRes.json();
+      for (const item of (data.items || [])) {
+        const t = item.track;
+        if (t && !seenTrackIds.has(t.id)) {
           seenTrackIds.add(t.id);
           allTracks.push(t);
         }
@@ -132,11 +144,11 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
   }
 
   if (allTracks.length === 0) {
-    console.log('No tracks found from genre searches');
+    console.log('No tracks found from playlists');
     return [];
   }
 
-  console.log(`Found ${allTracks.length} tracks across genres, filtering for independent artists...`);
+  console.log(`Found ${allTracks.length} tracks from indie playlists, filtering...`);
 
   const artists: DiscoveredArtist[] = [];
   const seen = new Set<string>();
@@ -150,17 +162,10 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
         const artistData = await spotifyGet(`/artists/${artist.id}`);
         const followers = artistData.followers?.total || 0;
 
-        // Only filter by follower range and AI signals — skip the unreliable label check
-        if (followers < 50 || followers > 200000) {
-          console.log(`  Skipping ${artistData.name}: ${followers} followers (out of range)`);
-          continue;
-        }
+        if (followers < 50 || followers > 200000) continue;
 
         const aiSignals = detectAiSignals(artistData, []);
-        if (aiSignals >= 2) {
-          console.log(`  Skipping ${artistData.name}: ${aiSignals} AI signals detected`);
-          continue;
-        }
+        if (aiSignals >= 2) continue;
 
         const topTracks = await spotifyGet(`/artists/${artist.id}/top-tracks?market=US`);
         const latestTrack = topTracks.tracks?.[0];
@@ -168,7 +173,7 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
         const socialLinks: Record<string, string> = {};
         if (artistData.external_urls?.spotify) socialLinks.spotify = artistData.external_urls.spotify;
 
-        console.log(`  ✅ ${artistData.name} — ${followers.toLocaleString()} followers — ${artistData.genres?.slice(0, 3).join(', ') || 'no genre'}`);
+        console.log(`  ✅ ${artistData.name} — ${followers.toLocaleString()} followers`);
 
         artists.push({
           artist_name: artistData.name,
@@ -181,7 +186,7 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
           latest_track_spotify_url: latestTrack?.external_urls?.spotify || '',
           latest_track_cover_url: latestTrack?.album?.images?.[0]?.url || '',
           latest_release_date: latestTrack?.album?.release_date || '',
-          discovery_source: 'spotify_search',
+          discovery_source: 'spotify_playlist',
           ai_signals_detected: aiSignals,
           is_ai_artist: false,
         });
@@ -194,7 +199,7 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
     if (artists.length >= limit) break;
   }
 
-  console.log(`Discovered ${artists.length} independent artists`);
+  console.log(`Discovered ${artists.length} independent artists from playlists`);
   return artists;
 }
 
