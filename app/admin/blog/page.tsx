@@ -176,10 +176,21 @@ export default function AdminBlogPage() {
 
         {/* Active batch status */}
         {overview?.activeBatch && (
-          <div className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/10">
-            <p className="text-sm font-medium mb-1">Active batch: {overview.activeBatch.month_year}</p>
+          <button
+            onClick={() => {
+              // Use fetch to navigate client-side (this is a client component)
+              const batchId = overview.activeBatch.id;
+              // Navigate to batch detail page
+              window.location.href = `/admin/blog/batch/${batchId}`;
+            }}
+            className="mt-6 w-full text-left p-4 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors"
+          >
+            <p className="text-sm font-medium mb-1">
+              Active batch: {overview.activeBatch.month_year}
+              <span className="text-primary ml-2">→ Open interview editor</span>
+            </p>
             <p className="text-xs text-muted-foreground">Status: {overview.activeBatch.status}</p>
-          </div>
+          </button>
         )}
       </div>
 
