@@ -40,6 +40,8 @@ export async function POST(request: Request) {
         return autoAnswerAll(body.batchId);
       case 'preview_post':
         return previewPost(body.interviewId);
+      case 'generate_from_voice':
+        return generateFromVoice(body.topic, body.keyword);
       case 'finalize_batch':
         return finalizeBatch(body.batchId);
       case 'publish_post':
@@ -369,6 +371,24 @@ async function updatePost(postId: string, updates: any) {
   return NextResponse.json({ post: result[0] });
 }
 
+
+async function generateFromVoice(topic: string, keyword: string) {
+  if (!topic && !keyword) return NextResponse.json({ error: "topic or keyword required" }, { status: 400 });
+  const searchTopic = keyword || topic;
+  const chunks = await sql`SELECT chunk_text FROM voice_chunks WHERE chunk_text NOT LIKE '%_session_start%' AND chunk_text NOT LIKE '%_interview_answer%' ORDER BY created_at DESC LIMIT 40`;
+  if (chunks.length === 0) return NextResponse.json({ error: "Voice library is empty. Do some interviews first at /admin/interview" }, { status: 400 });
+  const keywords = searchTopic.toLowerCase().split(/\s+/);
+  const relevantChunks = chunks.map((c: any) => c.chunk_text).filter((t: string) => keywords.some((kw: string) => t.toLowerCase().includes(kw)));
+  const transcript = (relevantChunks.length > 0 ? relevantChunks : chunks.map((c: any) => c.chunk_text)).slice(0, 15).join('\n\n');
+  const voiceExamples = await findVoiceExamples(transcript, chunks.map((c: any) => ({ chunk_text: c.chunk_text, embedding: null })));
+  const article = await generateArticle(transcript, voiceExamples);
+  const baseSlug = slugify(article.slug || article.title);
+  const slug = baseSlug + '-' + Date.now().toString(36);
+  const imageQuery = article.image_suggestions?.[0]?.description || article.tags?.[0] || searchTopic;
+  const featuredImage = await fetchBlogImage(imageQuery);
+  const [post] = await sql`INSERT INTO blog_posts (title, slug, content_html, excerpt, featured_image, meta_title, meta_description, tags, image_suggestions, primary_keyword, internal_links, faq_schema, word_count, cta_positions, status, author_id) VALUES (${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage}, ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []}, ${JSON.stringify(article.image_suggestions || [])}, ${keyword || article.primary_keyword || (article.tags?.[0] || null)}, ${JSON.stringify(article.internal_links || [])}, ${JSON.stringify(article.faq_schema || null)}, ${article.word_count_estimate || null}, ${JSON.stringify([{position: 'intro', type: 'soft', text: 'I built Selah.fm because...'}, {position: 'mid', type: 'tip_box', text: 'Try this: browse campaigns on Selah.fm'}, {position: 'end', type: 'strong', text: 'Ready to promote your music?'}])}, 'draft', (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1)) RETURNING *`;
+  return NextResponse.json({ post, generated_from: 'voice_library', chunks_used: relevantChunks.length || chunks.length, total_chunks_in_library: chunks.length });
+}
 async function finalizeBatch(batchId: string) {
   await loadUsedImages(sql);
   await sql`UPDATE batches SET status = 'generating', updated_at = NOW() WHERE id = ${batchId}`;
