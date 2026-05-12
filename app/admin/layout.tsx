@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Users, Megaphone, FileCheck, Banknote, Mail, Bug, MessageCircle, BookOpen, Mic, Layers, Search, PenTool, LogOut, ArrowLeft, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, Megaphone, FileCheck, Banknote, Mail, Bug, MessageCircle, BookOpen, Mic, Layers, Search, PenTool, Send, LogOut, ArrowLeft, Shield } from 'lucide-react';
 import { ADMIN_EMAILS } from '@/lib/constants';
 
 const nav = [
@@ -16,6 +16,7 @@ const nav = [
   { href: '/admin/emails', label: 'Emails', icon: Mail },
   { href: '/admin/bugs', label: 'Bugs', icon: Bug },
   { href: '/admin/support-chats', label: 'Chats', icon: MessageCircle },
+  { href: '/admin/outreach', label: 'Outreach', icon: Send },
   { href: '/admin/blog', label: 'Blog', icon: BookOpen },
   { href: '/admin/source-questions', label: 'Questions', icon: Search },
   { href: '/admin/blog-generator', label: 'Generate', icon: PenTool },
