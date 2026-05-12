@@ -82,9 +82,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  // Programmatic SEO landing pages (keyword-targeted)
-  const toolSlugs = ["music-promotion","promote-music","independent-artist","spotify-promotion","tiktok-promotion","earn-money","cpm-rates","side-hustle","tiktok-marketing","hire-creators","creator-marketplace"];
-  const toolPages = toolSlugs.map(slug => ({ url: `${baseUrl}/tools/${slug}`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 }));
+  // Data-driven tools (high-value, unique data, interactive)
+  const toolPages: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/tools/cpm-calculator`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    { url: `${baseUrl}/tools/creator-earnings`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    { url: `${baseUrl}/tools/promotion-budget`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+  ];
 
   return [...staticPages, ...toolPages, ...blogPages, ...campaignPages, ...artistPages, ...creatorPages];
 }
