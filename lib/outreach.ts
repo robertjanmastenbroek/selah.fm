@@ -123,51 +123,77 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
     return { artists: [], diagnostics };
   }
 
-  // Strategy: genre-based search with fallback
-  const genres = ['indie', 'alternative', 'electronic', 'hip-hop', 'r-n-b', 'pop', 'rock', 'folk', 'metal'];
+  // Strategy: search by year range (no genre filter — 'genre:' is not a valid Spotify search field)
+  // Genre filtering happens after we get artist data.
+  // Strategy A: year-filtered search for recent tracks
+  // Strategy B: browse new releases endpoint (returns curated fresh tracks)
   const allTracks: any[] = [];
   const seenTrackIds = new Set<string>();
 
-  // Search 3 random genres to get variety each run
-  const shuffled = [...genres].sort(() => Math.random() - 0.5);
-  const selectedGenres = shuffled.slice(0, 3);
-  let totalTracksFromSearch = 0;
+  // ── Strategy A: Year-filtered search ──
+  const yearQueries = ['year:2025', 'year:2026', 'year:2024'];
+  for (const yq of yearQueries) {
+    try {
+      const searchRes = await fetch(
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(yq)}&type=track&limit=15`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-  for (const genre of selectedGenres) {
-    // Try with year filter first, fallback without
-    for (const yearFilter of ['year:2025-2026', '']) {
-      const q = yearFilter ? `genre:${genre} ${yearFilter}` : `genre:${genre}`;
-      try {
-        const searchRes = await fetch(
-          `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        if (!searchRes.ok) {
-          const errText = await searchRes.text().catch(() => '');
-          diagnostics.push(`⚠️  Spotify search failed (${searchRes.status}) for "${q}": ${errText.slice(0, 100)}`);
-          continue;
-        }
-
-        const data = await searchRes.json();
-        const items = data.tracks?.items || [];
-        diagnostics.push(`🔍 Search "${q}" → ${items.length} tracks`);
-
-        for (const t of items) {
-          if (!seenTrackIds.has(t.id)) {
-            seenTrackIds.add(t.id);
-            allTracks.push(t);
-          }
-        }
-        totalTracksFromSearch += items.length;
-        break; // Don't try fallback if this succeeded
-      } catch (e: any) {
-        diagnostics.push(`⚠️  Search error for "${q}": ${e.message}`);
+      if (!searchRes.ok) {
+        const errText = await searchRes.text().catch(() => '');
+        diagnostics.push(`⚠️  Search "${yq}" failed (${searchRes.status}): ${errText.slice(0, 100)}`);
+        continue;
       }
+
+      const data = await searchRes.json();
+      const items = data.tracks?.items || [];
+      diagnostics.push(`🔍 Search "${yq}" → ${items.length} tracks`);
+
+      for (const t of items) {
+        if (!seenTrackIds.has(t.id)) {
+          seenTrackIds.add(t.id);
+          allTracks.push(t);
+        }
+      }
+    } catch (e: any) {
+      diagnostics.push(`⚠️  Search error for "${yq}": ${e.message}`);
     }
   }
 
-  diagnostics.push(`📊 Total unique tracks from search: ${allTracks.length}`);
+  // ── Strategy B: Browse new releases ──
+  try {
+    const newReleasesRes = await fetch(
+      `https://api.spotify.com/v1/browse/new-releases?limit=20`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (newReleasesRes.ok) {
+      const newData = await newReleasesRes.json();
+      const albums = newData.albums?.items || [];
+      diagnostics.push(`🔍 Browse new releases → ${albums.length} albums`);
+      for (const album of albums) {
+        for (const artist of (album.artists || [])) {
+          // Add the album's first track as a representative
+          // We'll look up the artist directly
+          if (!seenTrackIds.has(artist.id + '-album')) {
+            seenTrackIds.add(artist.id + '-album');
+            allTracks.push({
+              id: artist.id + '-album',
+              artists: [artist],
+              album: album,
+              name: album.name,
+              external_urls: album.external_urls,
+            });
+          }
+        }
+      }
+    } else {
+      diagnostics.push(`⚠️  New releases request failed: ${newReleasesRes.status}`);
+    }
+  } catch (e: any) {
+    diagnostics.push(`⚠️  New releases error: ${e.message}`);
+  }
+
+  diagnostics.push(`📊 Total unique tracks/albums to check: ${allTracks.length}`);
 
   if (allTracks.length === 0) {
     diagnostics.push('❌ No tracks found from any genre search');
@@ -189,7 +215,8 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
         const artistData = await spotifyGet(`/artists/${artist.id}`);
         const followers = artistData.followers?.total || 0;
 
-        if (followers < 50 || followers > 200000) {
+        // Accept artists with 10–500k followers (was 50–200k)
+        if (followers < 10 || followers > 500000) {
           skippedFollowers++;
           continue;
         }
