@@ -99,20 +99,31 @@ VOICE GUIDELINES:
 - Include concrete examples and actionable steps from your own experience
 
 STRUCTURE:
-1. Click-worthy title (under 70 chars)
-2. Compelling opening hook (2-3 sentences that grab attention)
-3. Body with practical advice, stories, and steps
-4. Conclusion with a call to action (join Selah.fm, try it yourself, etc.)
+1. Click-worthy title (under 70 chars) — include the primary keyword naturally
+2. Compelling opening hook (2-3 sentences that grab attention and include primary keyword)
+3. Body with practical advice, stories, and steps — use H2 for main sections, H3 for sub-sections
+4. Naturally mention Selah.fm 1-2 times where relevant (not forced)
+5. Include 2-3 internal link suggestions to other relevant blog posts or selah.fm pages (e.g., /browse, /welcome-artists)
+6. Conclusion with a call to action
+
+SEO REQUIREMENTS:
+- Primary keyword MUST appear in: title, first paragraph, one H2, and meta description
+- Use short paragraphs (2-4 sentences max)
+- Include bullet points or numbered lists where appropriate
+- Readability: aim for 8th grade reading level — simple, direct language
+- Meta description must be under 160 chars and compel clicks
 
 FORMAT:
 Return ONLY a JSON object with these fields:
 {
-  "title": "SEO-optimized title under 70 chars",
-  "meta_description": "Compelling meta description under 160 chars",
-  "slug": "url-friendly-slug",
-  "content_html": "<h2>Section</h2><p>Full HTML content with proper heading hierarchy...</p>",
-  "excerpt": "2-3 sentence excerpt for previews",
-  "tags": ["tag1", "tag2", "tag3"],
+  "title": "SEO-optimized title under 70 chars with primary keyword",
+  "meta_description": "Compelling meta description under 160 chars with keyword",
+  "slug": "url-friendly-slug-with-keyword",
+  "content_html": "<h2>Section</h2><p>Full HTML content with proper heading hierarchy, internal links as <a href='/page'>anchor</a>...</p>",
+  "excerpt": "2-3 sentence excerpt for previews with keyword",
+  "tags": ["primary-keyword", "secondary-keyword", "category"],
+  "primary_keyword": "the main keyword this post targets",
+  "internal_links": [{"url": "/page", "anchor": "descriptive anchor text"}],
   "image_suggestions": [
     {"type": "featured", "description": "Description of ideal featured image"}
   ]
@@ -184,37 +195,57 @@ export async function findVoiceExamples(
 
 // ── Batch Question Sourcing ──────────────────────────────────────
 
+// ── SEO-optimized fallback questions targeting high-value keywords ──
+// Organized by content pillar with primary keyword targets
+
 const FALLBACK_QUESTIONS = [
-  "How much should I budget for my first music promotion campaign?",
-  "What CPM rate do top creators actually expect in 2026?",
-  "Is TikTok still the best platform for music promotion or is Reels catching up?",
-  "How do I find creators who genuinely like my music genre?",
-  "Can I make a living as a short-form video creator for musicians?",
-  "What's the difference between playlist botting and real creator promotion?",
-  "How many views does a typical TikTok video get from a $50 campaign?",
-  "Should I require creators to use specific hashtags in their videos?",
-  "How do I verify that views on submitted videos are real and not bought?",
-  "What kind of content performs best for Christian/electronic music?",
-  "How much do content creators actually earn per video on these platforms?",
-  "What's the best way to write campaign requirements that attract good creators?",
-  "Can I promote my music if I don't have a big social media following?",
-  "How do I transition from running Facebook ads to creator-driven promotion?",
-  "What makes a campaign cover image stand out to creators browsing?",
-  "How do I calculate my ROI on music promotion campaigns?",
-  "Is it better to run one big campaign or multiple small ones?",
-  "What platforms should I accept submissions from for my campaign?",
-  "How do I handle creators who submit low-quality content?",
-  "What's the future of music promotion — are we moving away from ads?",
-  "How do independent artists build real fan bases without major label budgets?",
-  "What's the secret to getting your music used in viral TikTok trends?",
-  "How much does the average creator earn per 1,000 views in 2026?",
-  "Should I offer bonuses to creators who get exceptional view counts?",
-  "What music genres perform best on short-form video platforms right now?",
-  "How do I write a compelling campaign title that attracts creators?",
-  "Is YouTube Shorts worth including in my music promotion strategy?",
-  "What's the most common mistake artists make when launching a campaign?",
-  "How do I build long-term relationships with creators who promote my music?",
-  "What does a successful music promotion campaign look like from start to finish?",
+  // PILLAR 1: Music Promotion for Independent Artists
+  // Keywords: "promote music without label", "independent artist promotion", "music marketing"
+  "How can independent artists promote their music without a record label in 2025?",
+  "What's the most cost-effective way to market a new single on a $500 budget?",
+  "How do I get my music heard by real people (not bots) on social media?",
+  "What music promotion strategies actually work for unknown artists starting from zero?",
+  "How do I find content creators who will make TikToks using my song?",
+  
+  // PILLAR 2: Creator Earnings & Monetization
+  // Keywords: "get paid for TikTok views", "creator CPM rates", "earn making short videos"
+  "How much money can you realistically make creating short-form videos for musicians?",
+  "What CPM rates do content creators actually earn promoting music in 2025?",
+  "How many views do you need on TikTok to start earning real money?",
+  "Can you make a living as a short-form video creator without millions of followers?",
+  "What's the difference between brand deals and CPM-based creator earnings?",
+  
+  // PILLAR 3: Platform Strategy
+  // Keywords: "TikTok vs Reels for music", "YouTube Shorts monetization"
+  "Is TikTok, Instagram Reels, or YouTube Shorts best for music promotion?",
+  "How do the algorithms differ for music content on TikTok vs Instagram?",
+  "Should independent artists focus on one platform or be everywhere at once?",
+  "Do YouTube Shorts pay creators better than TikTok for music content?",
+  "What's the best time to post music content for maximum views?",
+  
+  // PILLAR 4: CPM & Campaign Mechanics
+  // Keywords: "CPM music promotion", "cost per view music", "pay per view marketing"
+  "How does CPM-based music promotion work compared to traditional advertising?",
+  "What's a good CPM rate to offer creators for promoting your music?",
+  "How do you calculate the ROI of a CPM-based music promotion campaign?",
+  "Is pay-per-view music promotion better than paying for playlist placement?",
+  "How do you set a campaign budget that protects you from overspending?",
+  
+  // PILLAR 5: Creator Marketplace Model
+  // Keywords: "UGC music promotion", "creator marketplace for artists", "hire creators"
+  "How does a creator marketplace for music promotion actually work?",
+  "What should artists look for when hiring content creators to promote music?",
+  "How do you write campaign requirements that attract high-quality creators?",
+  "What's the difference between UGC promotion and influencer marketing?",
+  "How do you verify that video views are real and not bought?",
+  
+  // PILLAR 6: Faith, Purpose & Independent Music Business
+  // Keywords: "faith music business", "christian electronic music", "purpose driven music"
+  "How do you balance making money with making meaningful music?",
+  "What does it look like to build a music career around faith and purpose?",
+  "Can independent Christian/electronic artists find real audiences online?",
+  "How do you stay true to your message while growing a music business?",
+  "What's the future for independent artists who want creative freedom?",
 ];
 
 export function getFallbackQuestions(count: number = 30): string[] {

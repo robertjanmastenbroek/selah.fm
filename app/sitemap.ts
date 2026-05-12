@@ -10,6 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
     { url: `${baseUrl}/browse`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.9 },
+    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
     { url: `${baseUrl}/artists`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/creators`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/login`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
@@ -23,26 +24,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/report-bug`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
   ];
 
-  // Dynamic campaign pages
+  // Blog posts (highest SEO priority)
+  let blogPages: MetadataRoute.Sitemap = [];
+  try {
+    const posts = await sql`
+      SELECT slug, updated_at FROM blog_posts WHERE status = 'published'
+      ORDER BY published_at DESC LIMIT 500
+    `;
+    blogPages = posts.map((p: any) => ({
+      url: `${baseUrl}/blog/${p.slug}`,
+      lastModified: new Date(p.updated_at),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+  } catch {}
+
+  // Campaign pages
   let campaignPages: MetadataRoute.Sitemap = [];
   try {
     const campaigns = await sql`
-      SELECT id, updated_at FROM campaigns WHERE status IN ('active', 'draft')
+      SELECT id, slug, updated_at FROM campaigns WHERE status IN ('active', 'draft')
       ORDER BY updated_at DESC LIMIT 500
     `;
     campaignPages = campaigns.map((c: any) => ({
-      url: `${baseUrl}/c/${c.id}`,
+      url: `${baseUrl}/c/${c.slug || c.id}`,
       lastModified: new Date(c.updated_at),
       changeFrequency: 'daily' as const,
       priority: 0.9,
     }));
   } catch {}
 
-  // Dynamic artist pages
+  // Artist pages
   let artistPages: MetadataRoute.Sitemap = [];
   try {
     const artists = await sql`
-      SELECT id, updated_at FROM users WHERE type = 'artist' ORDER BY created_at DESC LIMIT 200
+      SELECT id, updated_at FROM users WHERE is_artist = true ORDER BY created_at DESC LIMIT 200
     `;
     artistPages = artists.map((a: any) => ({
       url: `${baseUrl}/artists/${a.id}`,
@@ -52,11 +68,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  // Dynamic creator pages
+  // Creator pages
   let creatorPages: MetadataRoute.Sitemap = [];
   try {
     const creators = await sql`
-      SELECT id, updated_at FROM users WHERE type = 'creator' ORDER BY created_at DESC LIMIT 200
+      SELECT id, updated_at FROM users WHERE is_creator = true ORDER BY created_at DESC LIMIT 200
     `;
     creatorPages = creators.map((c: any) => ({
       url: `${baseUrl}/creators/${c.id}`,
@@ -66,5 +82,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  return [...staticPages, ...campaignPages, ...artistPages, ...creatorPages];
+  return [...staticPages, ...blogPages, ...campaignPages, ...artistPages, ...creatorPages];
 }
