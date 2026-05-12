@@ -27,6 +27,14 @@ function slugify(text: string): string {
     .slice(0, 100);
 }
 
+function absoluteUrl(path: string): string {
+  if (!path) return 'https://selah.fm/images/og-image.jpg';
+  if (path.startsWith('data:')) return 'https://selah.fm/images/og-image.jpg';
+  if (path.startsWith('http')) return path;
+  const base = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
+  return `${base}${path}`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const campaign = await getCampaign(params.id);
   if (!campaign) return { title: 'Campaign not found — Selah.fm' };
@@ -35,11 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const artistName = campaign.artist_name || 'the artist';
   const trackTitle = campaign.track_title;
   const cpm = campaign.cpm_rate_cents ? (campaign.cpm_rate_cents / 100).toFixed(2) : null;
-  // Never embed base64 data URLs in OG/Twitter meta tags — they bloat the HTML
-  // response and break link previews on WhatsApp, Telegram, iMessage, etc.
-  const imageUrl = (campaign.cover_art_url && !campaign.cover_art_url.startsWith('data:'))
-    ? campaign.cover_art_url
-    : 'https://selah.fm/images/og-image.jpg';
+  const imageUrl = absoluteUrl(campaign.cover_art_url);
   const canonicalUrl = `https://selah.fm/c/${params.id}`;
 
   // Tiered title templates — balanced default
@@ -100,8 +104,7 @@ export default async function CampaignPage({ params }: Props) {
   const displayTitle = campaign?.title || campaign?.track_title || 'Untitled';
   const artistName = campaign?.artist_name || 'an artist';
   const trackTitle = campaign?.track_title || '';
-  const coverUrl = campaign?.cover_art_url || '';
-  const imageUrl = (coverUrl && !coverUrl.startsWith('data:')) ? coverUrl : 'https://selah.fm/images/og-image.jpg';
+  const imageUrl = absoluteUrl(campaign?.cover_art_url);
   const canonicalUrl = `https://selah.fm/c/${params.id}`;
   const createdAt = campaign?.created_at || new Date().toISOString();
   const cpmDollars = campaign?.cpm_rate_cents ? (campaign.cpm_rate_cents / 100).toFixed(2) : null;
