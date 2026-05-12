@@ -5,7 +5,7 @@
 
 ## Current State — Production Ready
 
-Selah.fm is live with real Stripe payments, a published blog, and all core flows operational.
+Selah.fm is live with real Stripe payments, a published blog, interactive tools, and all core flows operational.
 
 ### What We Built (May 9–12, 2026)
 
@@ -28,7 +28,7 @@ Selah.fm is live with real Stripe payments, a published blog, and all core flows
 | Analytics page (platform breakdown, monthly trends) | ✅ |
 | AI support chat + FAQ (40+ entries) | ✅ |
 | Report-a-bug form | ✅ |
-| Admin panel (users, campaigns, submissions, payouts, emails, support chats, blog) | ✅ |
+| Admin panel (users, campaigns, submissions, payouts, emails, support chats, blog, content) | ✅ |
 | SEO: JSON-LD schemas, OG/Twitter metadata, canonical URLs, sitemap | ✅ |
 | SEO campaign slugs (`/c/artist-song-1234`) | ✅ |
 | Dual-role system (everyone is both artist + creator) | ✅ |
@@ -39,15 +39,15 @@ Selah.fm is live with real Stripe payments, a published blog, and all core flows
 #### Blog System
 | Area | Status |
 |------|--------|
-| Batch blog engine (monthly 30-post cycles) | ✅ |
 | DeepSeek article generation with founder voice | ✅ |
-| Anti-AI-detection guardrails (7 patterns broken) | ✅ |
+| Anti-AI-detection guardrails (7 patterns broken, 30 banned words) | ✅ |
 | SEO template: ToC + Key Takeaways + FAQ + bulleted lists | ✅ |
-| Image validation + fallback (never broken images) | ✅ |
+| Pexels image cache → local domain, never broken images, dedup | ✅ |
 | Blog post page with typography + related posts + CTA | ✅ |
-| Admin preview → editor → publish workflow | ✅ |
-| Blog listing page | ✅ |
-| 469 keyword database across 6 content pillars | ✅ |
+| Admin preview → editor → publish/schedule workflow | ✅ |
+| Content Hub: unified pipeline visualization | ✅ |
+| Generate from Voice: interview library → blog post in one click | ✅ |
+| Blog listing page + footer link | ✅ |
 | Sitemap with blog posts (priority 0.9) | ✅ |
 | 1 published post (Worlds Collide founder story) | ✅ |
 
@@ -57,16 +57,19 @@ Selah.fm is live with real Stripe payments, a published blog, and all core flows
 | Voice-powered interview capture (browser SpeechRecognition) | ✅ |
 | 52 topics across 9 categories | ✅ |
 | Context-aware question generation (avoids repeats) | ✅ |
-| Voice library: 140 chunks across 3 topics | ✅ |
-| Coverage tracking with progress bars | ✅ |
+| Voice library: 220 chunks, 45 answers, 5 sessions | ✅ |
+| Coverage tracking with category progress bars | ✅ |
+| Audio activity visualization (sound waves + silent pulsing dot) | ✅ |
 | Answer persistence (saved immediately to DB) | ✅ |
 
-#### OG Image
+#### Data-Driven SEO Tools
 | Area | Status |
 |------|--------|
-| Midjourney-generated social sharing image | ✅ |
-| 1200×630 JPEG, 145KB | ✅ |
-| Applied to: homepage, campaign pages, blog fallback | ✅ |
+| CPM Calculator — live DB data, platform comparison, interactive sliders | ✅ |
+| Creator Earnings Estimator — monthly earnings with 3-platform comparison | ✅ |
+| Promotion Budget Planner — what $10-$500 buys at live CPM | ✅ |
+| Old 46 thin SEO pages removed + 301 redirects in place | ✅ |
+| Tools in sitemap (weekly, priority 0.8) | ✅ |
 
 ### Known Issues
 
@@ -75,27 +78,22 @@ Selah.fm is live with real Stripe payments, a published blog, and all core flows
 | Inbound email (Resend webhook → admin inbox) | ⚠️ Endpoint rewritten, needs subdomain DNS + testing |
 | View verification automation | 📋 Planned |
 | Email campaigns (Resend drip sequences) | 📋 Planned |
-| Marketing/User acquisition | 🔴 Starting now |
+| Marketing / User acquisition | 🔴 In research phase |
 
 ### Database
-- 1 live campaign (Merhav Yah)
+- 1 live campaign (Merhav Yah, $0.10 CPM, $25 budget)
 - 1 published blog post
-- Voice library: 140 chunks, 3 topics covered
+- Voice library: 220 chunks, ~45 answers across 5 sessions
 - Migrations: 001–010 applied
 
 ### Stripe
-- Live keys, webhook, Connect all configured
+- Live keys, webhook, Connect configured
 - Capabilities: `transfers` + `card_payments`
 
 ### Google Analytics
 - Property: G-K0T51LCSCT
 - Server-side Measurement Protocol (GA_API_SECRET configured)
 - Events: sign_up, login, create_campaign, fund_campaign, donation, submit_content, approve_submission
-
-### Blog System
-- Published: 1 post (Worlds Collide founder story)
-- 30 interviews in May 2026 batch (3 answered, 27 pending)
-- Daily cron at 09:00 UTC via Railway cron (needs setup)
 
 ---
 
@@ -131,8 +129,8 @@ node e2e/test.js       # 44 tests, 100% passing
 
 ## What's Next (Priority Order)
 
-1. **Marketing engine** — automated user acquisition (100 users/day target)
+1. **Marketing engine** — user acquisition strategy (100 users/day target) — **current focus**
 2. View verification automation
 3. Email drip campaigns (Resend)
 4. Voice library expansion (interview more topics)
-5. Blog batch answer + generate + publish flow
+5. Blog publishing (answer remaining 27 interviews, generate posts, set up cron)

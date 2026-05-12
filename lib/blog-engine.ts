@@ -257,7 +257,8 @@ Return ONLY a JSON object with these fields:
 export async function generateArticle(
   interviewTranscript: string,
   voiceExamples: string[] = [],
-  founderName: string = 'Robert-Jan Mastenbroek'
+  founderName: string = 'Robert-Jan Mastenbroek',
+  keyword?: string
 ): Promise<{
   title: string;
   meta_description: string;
@@ -275,11 +276,19 @@ export async function generateArticle(
     ? `\n\nVOICE EXAMPLES (write in this style):\n${voiceExamples.map((ex, i) => `Example ${i + 1}:\n${ex}`).join('\n\n')}`
     : '';
 
-  const prompt = `${ARTICLE_PROMPT}\n\nFOUNDER: ${founderName}${voiceContext}\n\nINTERVIEW TRANSCRIPT:\n${interviewTranscript}`;
+  // Strong keyword injection — ensures the post targets the right query
+  const keywordDirective = keyword
+    ? `\n\n🔑 PRIMARY KEYWORD (non-negotiable): "${keyword}"\n- The TITLE must include this keyword naturally (or a very close variant)\n- The SLUG must be built from this keyword\n- The keyword MUST appear in the first 100 words of the post\n- One H2 heading must include the keyword or a close variant\n- The meta description must include the keyword\n- At least one bulleted list item should mention the keyword\n- The post should ANSWER the question implied by the keyword\n- Frame the entire post as answering someone who typed "${keyword}" into Google`
+    : '';
+
+  const prompt = `${ARTICLE_PROMPT}\n\nFOUNDER: ${founderName}${voiceContext}${keywordDirective}\n\nINTERVIEW TRANSCRIPT:\n${interviewTranscript}`;
 
   const response = await chat([
     { role: 'system', content: prompt },
-    { role: 'user', content: 'Write the blog post based on this interview.' },
+    { role: 'user', content: keyword
+      ? `Write a blog post targeting the keyword "${keyword}". This should answer the question someone typing "${keyword}" into Google would ask. Use the interview transcript as source material but make the post a definitive answer to that query.`
+      : 'Write the blog post based on this interview.'
+    },
   ], { temperature: 0.7, max_tokens: 4000 });
 
   try {
