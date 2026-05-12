@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Eye, Save, Send, Calendar, Edit3, Tag } from 'lucide-react';
+import { ArrowLeft, Eye, Save, Send, Calendar, Edit3, Tag, Clock } from 'lucide-react';
 
 export default function BlogPostEditor() {
   const params = useParams();
@@ -17,20 +17,17 @@ export default function BlogPostEditor() {
   const [editingMeta, setEditingMeta] = useState(false);
   const [editingContent, setEditingContent] = useState(false);
 
-  // Editable fields
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [metaDescription, setMetaDescription] = useState('');
   const [slug, setSlug] = useState('');
-  const [publishAt, setPublishAt] = useState('');
 
   const fetchPost = async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/admin/blog/batch?postId=${postId}`);
       const data = await res.json();
-      
       if (data && !data.error) {
         setPost(data);
         setTitle(data.title || '');
@@ -38,7 +35,6 @@ export default function BlogPostEditor() {
         setExcerpt(data.excerpt || '');
         setMetaDescription(data.meta_description || '');
         setSlug(data.slug || '');
-        setPublishAt(data.publish_at ? new Date(data.publish_at).toISOString().slice(0, 16) : '');
       }
     } catch (e: any) {
       setMessage('Failed to load: ' + e.message);
@@ -61,20 +57,59 @@ export default function BlogPostEditor() {
           updates: {
             title, content_html: content, excerpt, meta_description: metaDescription,
             slug, status: newStatus || post.status,
-            ...(newStatus === 'scheduled' && publishAt ? { publish_at: new Date(publishAt).toISOString() } : {}),
           },
         }),
       });
       const data = await res.json();
-      if (data.error) { setMessage(data.error); }
-      else {
+      if (data.error) { setMessage(data.error); setSaving(false); return; }
+
+      setPost(data.post);
+      setMessage(newStatus === 'published' ? 'Published! Live at /blog/' + data.post.slug : 'Saved!');
+      if (!newStatus) { setEditingMeta(false); setEditingContent(false); }
+      setSaving(false);
+    } catch (e: any) { setMessage(e.message); setSaving(false); }
+  };
+
+  const autoSchedule = async () => {
+    // First save current edits as draft
+    setSaving(true);
+    setMessage('');
+    try {
+      // Save draft first
+      await fetch('/api/admin/blog/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update_post',
+          postId,
+          updates: {
+            title, content_html: content, excerpt, meta_description: metaDescription, slug,
+            status: 'draft',
+          },
+        }),
+      });
+
+      // Now auto-schedule to next available day
+      const res = await fetch('/api/admin/blog/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'auto_schedule', postId }),
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        setMessage(data.error);
+      } else {
         setPost(data.post);
-        setMessage(newStatus === 'published' ? 'Published! Live at /blog/' + data.post.slug : newStatus === 'scheduled' ? 'Scheduled!' : 'Saved!');
-        if (!newStatus) { setEditingMeta(false); setEditingContent(false); }
+        const date = new Date(data.scheduled_for);
+        const formatted = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+        setMessage(`Scheduled for ${formatted}${data.skipped_days > 0 ? ` (skipped ${data.skipped_days} already-taken day${data.skipped_days !== 1 ? 's' : ''})` : ''}`);
       }
     } catch (e: any) { setMessage(e.message); }
     setSaving(false);
   };
+
+  const publish = () => save('published');
 
   if (loading) {
     return (
@@ -95,7 +130,7 @@ export default function BlogPostEditor() {
   }
 
   const wordCount = content.replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
-  const statusBadge = post.status === 'published' ? 'bg-green-600' : post.status === 'scheduled' ? 'bg-amber-600' : post.status === 'draft' ? 'bg-gray-600' : 'bg-blue-600';
+  const statusBadge = post.status === 'published' ? 'bg-green-600' : post.status === 'scheduled' ? 'bg-amber-600' : 'bg-gray-600';
 
   return (
     <div className="space-y-6">
@@ -110,39 +145,37 @@ export default function BlogPostEditor() {
             <div className="flex items-center gap-2 mt-1">
               <span className={`text-[10px] px-2 py-0.5 rounded-full text-white ${statusBadge}`}>{post.status}</span>
               <span className="text-xs text-muted-foreground">{wordCount} words</span>
+              {post.publish_at && post.status === 'scheduled' && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock size={10} /> {new Date(post.publish_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              )}
               {post.primary_keyword && <span className="text-xs text-muted-foreground">· {post.primary_keyword}</span>}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {post.status !== 'published' && (
-            <button
-              onClick={() => save('published')}
-              disabled={saving}
-              className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-500 disabled:opacity-50 flex items-center gap-2"
-            >
+            <button onClick={publish} disabled={saving}
+              className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-500 disabled:opacity-50 flex items-center gap-2">
               <Send size={14} /> Publish Now
             </button>
           )}
-          <button
-            onClick={() => save('scheduled')}
-            disabled={saving || !publishAt}
-            className="px-4 py-2 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-500 disabled:opacity-50 flex items-center gap-2"
-          >
-            <Calendar size={14} /> Schedule
-          </button>
-          <button
-            onClick={() => save()}
-            disabled={saving}
-            className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 disabled:opacity-50 flex items-center gap-2"
-          >
+          {post.status !== 'published' && (
+            <button onClick={autoSchedule} disabled={saving}
+              className="px-4 py-2 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-500 disabled:opacity-50 flex items-center gap-2">
+              <Calendar size={14} /> Auto-Schedule
+            </button>
+          )}
+          <button onClick={() => save()} disabled={saving}
+            className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 disabled:opacity-50 flex items-center gap-2">
             <Save size={14} /> {saving ? 'Saving...' : 'Save Draft'}
           </button>
         </div>
       </div>
 
       {message && (
-        <div className={`text-sm px-4 py-3 rounded-xl ${message.includes('error') || message.includes('Error') ? 'bg-destructive/10 text-destructive' : 'bg-emerald-500/10 text-emerald-400'}`}>
+        <div className={`text-sm px-4 py-3 rounded-xl ${message.includes('error') || message.includes('Error') || message.includes('Failed') ? 'bg-destructive/10 text-destructive' : 'bg-emerald-500/10 text-emerald-400'}`}>
           {message}
         </div>
       )}
@@ -156,7 +189,7 @@ export default function BlogPostEditor() {
           </button>
         </div>
 
-        {editingContent ? (
+        {editingMeta ? (
           <div className="space-y-3">
             <div>
               <label className="text-[10px] text-muted-foreground">Title</label>
@@ -184,16 +217,24 @@ export default function BlogPostEditor() {
         )}
       </div>
 
-      {/* Schedule */}
+      {/* Auto-Schedule info */}
       <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
-        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2"><Calendar size={14} className="text-primary" /> Schedule</h2>
-        <input
-          type="datetime-local"
-          value={publishAt}
-          onChange={e => setPublishAt(e.target.value)}
-          className="bg-gray-800 rounded-lg p-2 text-sm text-white border border-gray-700"
-        />
-        <p className="text-[10px] text-muted-foreground mt-1">Leave empty to save as draft. Click "Schedule" to set.</p>
+        <h2 className="text-sm font-semibold mb-2 flex items-center gap-2">
+          <Calendar size={14} className="text-primary" /> Schedule
+        </h2>
+        <p className="text-xs text-muted-foreground mb-3">
+          Click <strong>Auto-Schedule</strong> above to automatically pick the next available day without a post.
+          Posts are published one per day at 09:00 UTC.
+        </p>
+        {post.publish_at && post.status === 'scheduled' && (
+          <div className="p-3 rounded-xl bg-amber-600/10 border border-amber-600/20 text-xs text-amber-400 flex items-center gap-2">
+            <Clock size={12} />
+            Scheduled for {new Date(post.publish_at).toLocaleDateString('en-US', {
+              weekday: 'long', month: 'long', day: 'numeric',
+              hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+            })}
+          </div>
+        )}
       </div>
 
       {/* Content Editor */}
@@ -210,29 +251,21 @@ export default function BlogPostEditor() {
           )}
         </div>
 
-        {/* Content tabs: Edit | Preview */}
         <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => setEditingContent(!editingContent)}
-            className={`text-xs px-3 py-1 rounded-lg ${!editingContent ? 'bg-primary text-white' : 'bg-gray-800 text-gray-400'}`}
-          >
+          <button onClick={() => setEditingContent(!editingContent)}
+            className={`text-xs px-3 py-1 rounded-lg ${!editingContent ? 'bg-primary text-white' : 'bg-gray-800 text-gray-400'}`}>
             Edit
           </button>
-          <button
-            onClick={() => setEditingContent(false)}
-            className={`text-xs px-3 py-1 rounded-lg ${editingContent ? 'bg-gray-800 text-gray-400' : 'bg-primary text-white'}`}
-          >
+          <button onClick={() => setEditingContent(false)}
+            className={`text-xs px-3 py-1 rounded-lg ${editingContent ? 'bg-gray-800 text-gray-400' : 'bg-primary text-white'}`}>
             Preview
           </button>
         </div>
 
         {editingContent ? (
-          <textarea
-            value={content}
-            onChange={e => setContent(e.target.value)}
+          <textarea value={content} onChange={e => setContent(e.target.value)}
             className="w-full bg-gray-800 rounded-lg p-4 text-sm text-white font-mono min-h-[500px] border border-gray-700 focus:border-blue-500 focus:outline-none resize-y"
-            placeholder="<h2>Section</h2><p>Your content...</p>"
-          />
+            placeholder="<h2>Section</h2><p>Your content...</p>" />
         ) : (
           <div className="prose prose-invert prose-sm max-w-none bg-gray-800/50 rounded-lg p-6 min-h-[300px]">
             <div dangerouslySetInnerHTML={{ __html: content }} />

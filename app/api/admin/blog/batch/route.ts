@@ -38,6 +38,8 @@ export async function POST(request: Request) {
       case 'publish_post':        return publishPost(body.postId);
       case 'update_post':         return updatePost(body.postId, body.updates);
       case 'fetch_real_questions': return fetchRealQuestions();
+      case 'auto_schedule':        return autoSchedulePost(body.postId);
+      case 'batch_generate':       return batchGenerate(body.questions || []);
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -69,6 +71,76 @@ export async function GET(request: Request) {
 }
 
 // ── Action handlers ──────────────────────────────────────────────
+
+async function autoSchedulePost(postId: string) {
+  // Find the next available day that doesn't have a scheduled post
+  const existingDates = await sql`
+    SELECT publish_at::date as d FROM blog_posts
+    WHERE status = 'scheduled' AND publish_at > NOW()
+    ORDER BY d
+  `;
+  const takenDays = new Set(existingDates.map((r: any) => r.d));
+
+  // Start from tomorrow at 09:00 UTC
+  let next = new Date();
+  next.setUTCHours(9, 0, 0, 0);
+  next.setDate(next.getDate() + 1);
+
+  // Skip days that already have a scheduled post
+  while (takenDays.has(next.toISOString().slice(0, 10))) {
+    next.setDate(next.getDate() + 1);
+  }
+
+  const result = await sql`
+    UPDATE blog_posts SET
+      status = 'scheduled',
+      publish_at = ${next.toISOString()},
+      updated_at = NOW()
+    WHERE id = ${postId}
+    RETURNING *
+  `;
+
+  return NextResponse.json({
+    post: result[0],
+    scheduled_for: next.toISOString(),
+    skipped_days: existingDates.length,
+  });
+}
+
+async function batchGenerate(questions: string[]) {
+  if (!questions || questions.length === 0) {
+    return NextResponse.json({ error: 'No questions provided' }, { status: 400 });
+  }
+
+  const results: any[] = [];
+  const errors: { question: string; error: string }[] = [];
+
+  for (const q of questions) {
+    try {
+      const req = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'generate_from_voice', keyword: q }),
+      });
+      const res = await POST(req);
+      const data = await res.json();
+
+      if (data.post) {
+        results.push({ question: q, post: data.post });
+      } else if (data.error) {
+        errors.push({ question: q, error: data.error });
+      }
+    } catch (e: any) {
+      errors.push({ question: q, error: e.message });
+    }
+  }
+
+  return NextResponse.json({
+    generated: results.length,
+    total: questions.length,
+    errors: errors.length > 0 ? errors : undefined,
+    posts: results.map(r => ({ question: r.question, id: r.post.id, title: r.post.title, slug: r.post.slug })),
+  });
+}
 
 async function createBatch() {
   const monthYear = new Date().toISOString().slice(0, 7);
