@@ -128,12 +128,13 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
   const allTracks: any[] = [];
   const seenTrackIds = new Set<string>();
 
-  // Common song-title words that appear in tracks from metal to pop to hip-hop
+  // Common song-title words that appear across every genre.
+  // Filter by popularity < 40: low-popularity tracks come from independent artists.
   const searchTerms = ['love', 'night', 'dream', 'fire', 'heart', 'remastered', '2025'];
   for (const term of searchTerms) {
     try {
       const searchRes = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(term)}&type=track&limit=10`,
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(term)}&type=track&limit=20`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -145,9 +146,12 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
 
       const data = await searchRes.json();
       const items = data.tracks?.items || [];
-      diagnostics.push(`🔍 Search "${term}" → ${items.length} tracks`);
+      
+      // Only keep low-popularity tracks (< 40) — these are from independent artists
+      const lowPop = items.filter((t: any) => (t.popularity || 0) < 40);
+      diagnostics.push(`🔍 Search "${term}" → ${items.length} tracks (${lowPop.length} low-pop)`);
 
-      for (const t of items) {
+      for (const t of lowPop) {
         if (!seenTrackIds.has(t.id)) {
           seenTrackIds.add(t.id);
           allTracks.push(t);
