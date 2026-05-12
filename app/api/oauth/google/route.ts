@@ -35,6 +35,8 @@ export async function GET(request: Request) {
     });
 
     if (!tokenRes.ok) {
+      const errBody = await tokenRes.text();
+      console.error('Google token exchange failed:', tokenRes.status, errBody.slice(0, 200));
       return NextResponse.redirect(new URL('/login?error=google', baseUrl));
     }
 
@@ -46,6 +48,8 @@ export async function GET(request: Request) {
     });
 
     if (!userRes.ok) {
+      const errBody = await userRes.text();
+      console.error('Google userinfo fetch failed:', userRes.status, errBody.slice(0, 200));
       return NextResponse.redirect(new URL('/login?error=google', baseUrl));
     }
 
