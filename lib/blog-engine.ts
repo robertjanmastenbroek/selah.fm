@@ -219,6 +219,12 @@ CTA PLACEMENT (3 per post):
 2. MID-CONTENT: Tip box with specific action — "<div class='bg-primary/5 border border-primary/10 rounded-xl p-4 my-6'><strong>💡 Try this:</strong> [specific action] — <a href='/page'>do it here</a>.</div>"
 3. END: Strong, direct — "Ready to..." with link to /browse, /welcome-artists, or /welcome-creators
 
+IMAGE RULES:
+- Generate exactly ONE image_suggestion (not multiple)
+- NO captions, NO figure tags, NO figcaption in the content_html
+- The featured image in the JSON metadata is the ONLY image for the post
+- image_suggestions should be a single-item array: [{"type":"featured","description":"short description"}]
+- Content MUST NOT contain any <img>, <figure>, or <figcaption> tags
 INTERNAL LINKING:
 - Link to 2-3 specific Selah.fm pages using descriptive anchor text (NOT "click here" — use "browse music promotion campaigns" or "see how creator earnings work")
 - Link to 1-2 other relevant blog posts if they exist

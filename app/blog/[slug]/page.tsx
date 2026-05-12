@@ -118,8 +118,6 @@ export default async function BlogPostPage({ params }: Props) {
           .blog-content ul, .blog-content ol { padding-left: 1.5rem; margin: 1.25rem 0; }
           .blog-content li { color: #b0b0b0; margin: 0.4rem 0; line-height: 1.75; padding-left: 0.25rem; }
           .blog-content img { border-radius: 0.75rem; margin: 2rem 0; max-width: 100%; }
-          .blog-content figure { margin: 2rem 0; }
-          .blog-content figcaption { font-size: 0.8rem; color: #666; text-align: center; margin-top: 0.5rem; }
           .blog-content blockquote { border-left: 3px solid rgba(91,127,255,0.4); padding: 0.5rem 0 0.5rem 1.5rem; margin: 1.5rem 0; color: #999; font-style: italic; }
           .blog-content hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 2.5rem 0; }
         `}} />

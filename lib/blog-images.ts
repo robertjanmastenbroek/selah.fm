@@ -1,75 +1,59 @@
 /**
- * Image sourcing for blog posts — Unsplash API (free tier).
- * Falls back to a default Selah.fm image if API is unavailable.
- * All URLs are validated before use to prevent broken images.
+ * Image sourcing for blog posts — Pexels API (free tier).
+ * 200 req/hour, 20,000/month — more than enough for our blog system.
+ * Falls back to the Selah.fm OG image if unavailable.
  *
- * Requires UNSPLASH_ACCESS_KEY in environment (optional).
+ * Requires PEXELS_API_KEY in environment.
+ * Get a free key: https://www.pexels.com/api/
  */
 
-const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 const FALLBACK_IMAGE = 'https://selah.fm/images/og-image.jpg';
 
-/** Validate that a URL actually loads (HEAD request, follows redirects) */
-export async function validateImageUrl(url: string): Promise<string> {
+/** Validate that a URL actually loads (HEAD request) */
+async function validateUrl(url: string): Promise<string> {
   if (!url || url.startsWith('data:')) return FALLBACK_IMAGE;
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3000);
     const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
     clearTimeout(timeout);
-    if (res.ok) return url;
-    return FALLBACK_IMAGE;
+    return res.ok ? url : FALLBACK_IMAGE;
   } catch {
     return FALLBACK_IMAGE;
   }
 }
 
+/** Fetch a single landscape photo from Pexels matching the query */
 export async function fetchBlogImage(query: string): Promise<string> {
-  if (!UNSPLASH_ACCESS_KEY) return FALLBACK_IMAGE;
+  if (!PEXELS_API_KEY) return FALLBACK_IMAGE;
 
   try {
     const res = await fetch(
-      `https://api.unsplash.com/photos/random?query=${encodeURIComponent(query)}&orientation=landscape&w=1200&h=630`,
-      { headers: { Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}` } }
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape&size=large`,
+      { headers: { Authorization: PEXELS_API_KEY } }
     );
 
     if (!res.ok) return FALLBACK_IMAGE;
 
     const data = await res.json();
-    const url = data.urls?.regular || data.urls?.small || FALLBACK_IMAGE;
-    // Validate the returned URL actually loads
-    return validateImageUrl(url);
+    if (!data.photos?.length) return FALLBACK_IMAGE;
+
+    // Pick a random photo from the top 5 results for variety
+    const photo = data.photos[Math.floor(Math.random() * Math.min(data.photos.length, 5))];
+    const url = photo.src?.large2x || photo.src?.large || photo.src?.original || FALLBACK_IMAGE;
+
+    return validateUrl(url);
   } catch {
     return FALLBACK_IMAGE;
   }
 }
 
+/** Fetch multiple images (uses rate limit efficiently) */
 export async function fetchBlogImages(queries: string[]): Promise<Map<string, string>> {
   const results = new Map<string, string>();
   for (const query of queries.slice(0, 5)) {
-    const url = await fetchBlogImage(query);
-    results.set(query, url);
+    results.set(query, await fetchBlogImage(query));
   }
   return results;
-}
-
-/** Sanitize post content: replace any broken <img> tags with the fallback image */
-export function sanitizePostImages(html: string): string {
-  if (!html) return html;
-  // Replace src attributes that point to known-broken patterns with fallback
-  // Also ensure every <img> has an onerror fallback
-  return html.replace(
-    /<img([^>]*?)src="([^"]*?)"([^>]*?)>/g,
-    (match, before, src, after) => {
-      // If src is empty or a data URL that's too long (base64), replace
-      if (!src || src.startsWith('data:') || src.length < 10) {
-        return `<img${before}src="${FALLBACK_IMAGE}"${after} onerror="this.src='${FALLBACK_IMAGE}'">`;
-      }
-      // Add onerror fallback to every image
-      if (!match.includes('onerror')) {
-        return `<img${before}src="${src}"${after} onerror="this.src='${FALLBACK_IMAGE}'">`;
-      }
-      return match;
-    }
-  );
 }
