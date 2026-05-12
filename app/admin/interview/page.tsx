@@ -39,25 +39,34 @@ function useVoiceInput() {
     recognition.lang = 'en-US';
 
     recognition.onresult = (event: any) => {
-      let final = '';
-      let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) final += event.results[i][0].transcript;
-        else interim += event.results[i][0].transcript;
+      // Build transcript from ALL results (SpeechRecognitionResultList)
+      // This avoids duplication because each result is only added once
+      let fullTranscript = '';
+      let hasInterim = false;
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        fullTranscript += result[0].transcript;
+        if (!result.isFinal) hasInterim = true;
       }
-      setTranscript(prev => {
-        const base = prev.replace(/\(\.\.\.\)$/, '').trim();
-        return (base ? base + ' ' : '') + (final || interim) + (interim && !final ? ' (...)' : '');
-      });
+      // Add trailing indicator only if we're still listening and the latest result isn't final
+      setTranscript(hasInterim ? fullTranscript + ' (...)' : fullTranscript);
     };
 
     recognition.onerror = (event: any) => {
-      if (event.error === 'no-speech') return;
+      if (event.error === 'no-speech') {
+        // Don't stop on no-speech, just keep listening
+        return;
+      }
+      if (event.error === 'aborted') return;
       console.error('Speech error:', event.error);
       setListening(false);
     };
 
-    recognition.onend = () => setListening(false);
+    recognition.onend = () => {
+      // Auto-restart if user hasn't manually stopped
+      // This prevents the mic from dying mid-sentence
+      setListening(false);
+    };
 
     recognitionRef.current = recognition;
     recognition.start();
