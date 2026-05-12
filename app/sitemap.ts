@@ -82,5 +82,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  return [...staticPages, ...blogPages, ...campaignPages, ...artistPages, ...creatorPages];
+  // Programmatic SEO landing pages (keyword-targeted)
+  const toolSlugs = ["music-promotion","promote-music","independent-artist","indie-promotion","music-marketing","organic-promotion","spotify-promotion","tiktok-promotion","promote-song","music-campaign","promotion-budget","promotion-cost","promotion-roi","earn-money","make-money","creator-earnings","paid-views","content-creator","tiktok-earnings","tiktok-monetization","side-hustle","cpm-rates","cost-per-view","pay-per-view","creator-calculator","tiktok-marketing","tiktok-growth","instagram-reels","youtube-shorts","platform-comparison","vertical-video","what-is-cpm","cpm-explained","campaign-budget","verified-views","create-campaign","hire-creators","find-creators","creator-marketplace","ugc-platform","ugc-creator","ugc-marketing","creator-search","browse-creators","christian-music","worship-music","electronic-worship","music-production","independent-music"];
+  const toolPages = toolSlugs.map(slug => ({ url: `${baseUrl}/tools/${slug}`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 }));
+
+  return [...staticPages, ...toolPages, ...blogPages, ...campaignPages, ...artistPages, ...creatorPages];
 }
