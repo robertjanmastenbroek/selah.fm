@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Play, CheckCircle, Clock, FileText, RefreshCw, Send } from 'lucide-react';
+import { BookOpen, Play, CheckCircle, Clock, FileText, RefreshCw, Send, Edit3, ArrowRight } from 'lucide-react';
 
 export default function AdminBlogPage() {
   const [overview, setOverview] = useState<any>(null);
   const [batches, setBatches] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState('');
   const [message, setMessage] = useState('');
 
   const fetchData = async () => {
@@ -31,28 +30,14 @@ export default function AdminBlogPage() {
 
   useEffect(() => { fetchData(); }, []);
 
-  const apiCall = async (action: string, body: any = {}) => {
-    setActionLoading(action);
-    setMessage('');
-    try {
-      const res = await fetch('/api/admin/blog/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, ...body }),
-      });
-      const data = await res.json();
-      if (data.error) setMessage(data.error);
-      else setMessage(`${action} complete`);
-      await fetchData();
-    } catch (e: any) {
-      setMessage(e.message);
-    }
-    setActionLoading('');
-  };
-
   if (loading) {
     return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
   }
+
+  const activeBatch = overview?.activeBatch;
+  const publishedPosts = posts.filter((p: any) => p.status === 'published');
+  const draftPosts = posts.filter((p: any) => p.status === 'draft');
+  const scheduledPosts = posts.filter((p: any) => p.status === 'scheduled');
 
   return (
     <div className="space-y-6">
@@ -76,9 +61,9 @@ export default function AdminBlogPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: 'Published', value: overview.publishedPosts, icon: FileText },
+            { label: 'Drafts', value: draftPosts.length, icon: Edit3 },
             { label: 'Scheduled', value: overview.scheduledPosts, icon: Clock },
             { label: 'Voice Chunks', value: overview.voiceLibrarySize, icon: BookOpen },
-            { label: 'Batches', value: overview.totalBatches, icon: Play },
             { label: 'Next Post', value: overview.nextPost ? new Date(overview.nextPost.publish_at).toLocaleDateString() : '—', icon: Send },
           ].map(card => {
             const Icon = card.icon;
@@ -93,140 +78,111 @@ export default function AdminBlogPage() {
         </div>
       )}
 
-      {/* Monthly batch workflow */}
-      <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
-        <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
-          <Play size={18} className="text-primary" /> Monthly Batch
-        </h2>
-
-        <div className="space-y-3">
-          {/* Step 1: Create batch */}
-          <div className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.02]">
-            <span className="text-lg font-bold text-primary/40 w-8">1</span>
-            <div className="flex-1">
-              <p className="font-medium text-sm">Create monthly batch</p>
-              <p className="text-[11px] text-muted-foreground">Creates a new batch for {new Date().toLocaleString('en', { month: 'long', year: 'numeric' })}</p>
+      {/* Active Batch — Primary CTA */}
+      {activeBatch && (
+        <a
+          href={`/admin/blog/batch/${activeBatch.id}`}
+          className="block rounded-2xl bg-gradient-to-r from-primary/10 to-blue-500/5 border border-primary/20 p-6 hover:border-primary/40 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold mb-1">
+                Active Batch: {activeBatch.month_year}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Status: {activeBatch.status} · {activeBatch.answered_count || 0} interviews answered
+              </p>
+              {activeBatch.answered_count > 0 && (
+                <p className="text-xs text-primary mt-2">
+                  {activeBatch.answered_count} interviews ready — click Preview to generate draft posts
+                </p>
+              )}
             </div>
-            <button
-              onClick={() => apiCall('create_batch')}
-              disabled={!!actionLoading}
-              className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-            >
-              {actionLoading === 'create_batch' ? '...' : 'Create'}
-            </button>
-          </div>
-
-          {/* Step 2: Source questions */}
-          <div className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.02]">
-            <span className="text-lg font-bold text-primary/40 w-8">2</span>
-            <div className="flex-1">
-              <p className="font-medium text-sm">Source 30 questions</p>
-              <p className="text-[11px] text-muted-foreground">Fetches from Reddit + fallback questions</p>
+            <div className="flex items-center gap-2 text-primary font-semibold text-sm group-hover:gap-3 transition-all">
+              Open Interview Editor <ArrowRight size={16} />
             </div>
-            <button
-              onClick={() => {
-                const batch = batches[0];
-                if (batch) apiCall('source_questions', { batchId: batch.id });
-              }}
-              disabled={!!actionLoading || batches.length === 0}
-              className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-            >
-              {actionLoading === 'source_questions' ? '...' : 'Source'}
-            </button>
           </div>
+        </a>
+      )}
 
-          {/* Step 3: Generate interviews */}
-          <div className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.02]">
-            <span className="text-lg font-bold text-primary/40 w-8">3</span>
-            <div className="flex-1">
-              <p className="font-medium text-sm">Generate interview questions</p>
-              <p className="text-[11px] text-muted-foreground">Uses DeepSeek to create 4-6 Qs per topic</p>
+      {/* Posts — Draft, Scheduled, Published */}
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Drafts */}
+        <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
+          <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
+            <Edit3 size={14} className="text-amber-400" /> Drafts ({draftPosts.length})
+          </h2>
+          {draftPosts.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">No drafts. Generate previews from the batch editor.</p>
+          ) : (
+            <div className="space-y-1">
+              {draftPosts.map((post: any) => (
+                <a key={post.id} href={`/admin/blog/post/${post.id}`} className="block p-2 rounded-lg hover:bg-white/[0.04] text-xs transition-colors">
+                  <span className="truncate block">{post.title}</span>
+                  <span className="text-muted-foreground">{post.primary_keyword ? '· ' + post.primary_keyword : ''}</span>
+                </a>
+              ))}
             </div>
-            <button
-              onClick={() => {
-                const batch = batches.find(b => b.status === 'interviewing' || b.status === 'sourcing');
-                if (batch) apiCall('generate_interviews', { batchId: batch.id });
-              }}
-              disabled={!!actionLoading}
-              className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-            >
-              {actionLoading === 'generate_interviews' ? '...' : 'Generate'}
-            </button>
-          </div>
-
-          {/* Step 4: Finalize */}
-          <div className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.02]">
-            <span className="text-lg font-bold text-primary/40 w-8">4</span>
-            <div className="flex-1">
-              <p className="font-medium text-sm">Finalize &amp; generate articles</p>
-              <p className="text-[11px] text-muted-foreground">Writes 30 blog posts, fetches images, schedules them</p>
-            </div>
-            <button
-              onClick={() => {
-                const batch = batches.find(b => b.status === 'answers_complete');
-                if (batch) apiCall('finalize_batch', { batchId: batch.id });
-              }}
-              disabled={!!actionLoading}
-              className="px-4 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:opacity-90 disabled:opacity-50"
-            >
-              {actionLoading === 'finalize_batch' ? '...' : 'Finalize'}
-            </button>
-          </div>
+          )}
         </div>
 
-        {/* Active batch status */}
-        {overview?.activeBatch && (
-          <button
-            onClick={() => {
-              // Use fetch to navigate client-side (this is a client component)
-              const batchId = overview.activeBatch.id;
-              // Navigate to batch detail page
-              window.location.href = `/admin/blog/batch/${batchId}`;
-            }}
-            className="mt-6 w-full text-left p-4 rounded-xl bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors"
-          >
-            <p className="text-sm font-medium mb-1">
-              Active batch: {overview.activeBatch.month_year}
-              <span className="text-primary ml-2">→ Open interview editor</span>
-            </p>
-            <p className="text-xs text-muted-foreground">Status: {overview.activeBatch.status}</p>
-          </button>
-        )}
+        {/* Scheduled */}
+        <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
+          <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
+            <Clock size={14} className="text-blue-400" /> Scheduled ({scheduledPosts.length})
+          </h2>
+          {scheduledPosts.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">No scheduled posts.</p>
+          ) : (
+            <div className="space-y-1">
+              {scheduledPosts.map((post: any) => (
+                <a key={post.id} href={`/admin/blog/post/${post.id}`} className="block p-2 rounded-lg hover:bg-white/[0.04] text-xs transition-colors">
+                  <span className="truncate block">{post.title}</span>
+                  <span className="text-muted-foreground">
+                    {post.publish_at ? new Date(post.publish_at).toLocaleDateString() : '—'}
+                  </span>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Published */}
+        <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
+          <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
+            <CheckCircle size={14} className="text-emerald-400" /> Published ({publishedPosts.length})
+          </h2>
+          {publishedPosts.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">No published posts yet.</p>
+          ) : (
+            <div className="space-y-1">
+              {publishedPosts.map((post: any) => (
+                <div key={post.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/[0.04] text-xs">
+                  <a href={`/admin/blog/post/${post.id}`} className="truncate flex-1 hover:text-primary transition-colors">{post.title}</a>
+                  <a href={`/blog/${post.slug}`} target="_blank" className="text-muted-foreground hover:text-foreground ml-2 shrink-0" title="View live">↗</a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Scheduled posts */}
-      <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
-        <h2 className="font-semibold text-lg mb-4">Scheduled &amp; Published Posts</h2>
-        {posts.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">No posts yet. Start a monthly batch above.</p>
-        ) : (
-          <div className="space-y-2">
-            {posts.slice(0, 20).map((post: any) => (
-              <div key={post.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02]">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{post.title}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {post.status} · {post.publish_at ? new Date(post.publish_at).toLocaleDateString() : '—'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {post.status === 'scheduled' && (
-                    <button
-                      onClick={() => apiCall('publish_post', { postId: post.id })}
-                      className="px-3 py-1 rounded-lg bg-primary text-primary-foreground text-[10px] font-semibold hover:opacity-90"
-                    >
-                      Publish now
-                    </button>
-                  )}
-                  {post.status === 'published' && (
-                    <CheckCircle size={14} className="text-emerald-400" />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Monthly batch workflow (collapsed — for advanced use) */}
+      <details className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+        <summary className="font-semibold text-sm cursor-pointer flex items-center gap-2 text-muted-foreground hover:text-foreground">
+          <Play size={14} /> Monthly Batch Workflow (advanced)
+        </summary>
+        <div className="mt-4 space-y-2">
+          {overview?.activeBatch ? (
+            <p className="text-xs text-muted-foreground mb-2">
+              Active batch: {overview.activeBatch.month_year} (status: {overview.activeBatch.status}). 
+              Use the <a href={`/admin/blog/batch/${overview.activeBatch.id}`} className="text-primary hover:underline">batch editor</a> for the new workflow.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground mb-2">Create a new monthly batch to generate 30 blog posts.</p>
+          )}
+        </div>
+      </details>
     </div>
   );
 }
