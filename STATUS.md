@@ -19,7 +19,11 @@
 | 6. Claim page (/claim/[code]) + ClaimButton + /api/claim | ✅ Built |
 | 7. Outreach template (personalized, copy-to-clipboard, Instagram DM ready) | ✅ Built |
 | 8. Spotify API verified working (genre search, artist lookup, top tracks) | ✅ Tested |
-| ⚠️ Next: Verify discovery returns artists (playlist API 403 → switched to genre search) | 🔍 Debugging |
+| 9. Discovery pipeline: text search + popularity < 40 filter (24 search terms, limit=10) | ✅ Working |
+| 10. Admin dashboard polished (Framer Motion, toast notifications, cover art thumbnails, micro-rewards) | ✅ Built |
+| 11. Follow-up system (Day-7 cron + admin action + social proof injection) | ✅ Built |
+| 12. Campaign page unclaimed state (gift-like UX, pre-set donations, FOMO slots, share messages) | ✅ Built |
+| 13. OG image fix (relative paths → absolute URLs for WhatsApp/Telegram/iMessage previews) | ✅ Fixed |
 
 ---
 
@@ -66,17 +70,22 @@
 | Creator Earnings Estimator | ✅ |
 | Promotion Budget Planner | ✅ |
 
-### Recent Changes (May 11–12)
+### Recent Changes (May 12)
 | Change | Status |
 |--------|--------|
 | Campaign copy: "EARN" → "JOIN" (all CTA buttons, EarnModal, SEO metadata) | ✅ |
-| Outreach pipeline: DB, API, dashboard, cron, claim page | ✅ |
+| Outreach pipeline: DB migration, discovery, audit, API routes, admin dashboard, cron, claim page | ✅ |
+| Campaign page: unclaimed gift-like UX + audience-specific share messages | ✅ |
+| Follow-up system: Day-7 cron + admin action + social proof | ✅ |
+| OG image: fixed relative paths → absolute URLs for link previews | ✅ |
+| Admin dashboard: complete polish redesign (Framer Motion, toasts, cover art, micro-rewards) | ✅ |
+| Discovery: iterated through genre/yearch/tag:new/recommendations → settled on text search + popularity filter | ✅ |
 
 ### Known Issues
 | Issue | Status |
 |-------|--------|
+| Discovery returns 0 artists when no low-popularity tracks match follower range | ⚠️ Being tuned (popularity threshold, search terms, follower range) |
 | Inbound email (Resend webhook → admin inbox) | ⚠️ Endpoint ready, needs subdomain DNS |
-| View verification automation | 📋 Planned |
 
 ### Database
 - 1 live campaign (Merhav Yah)
