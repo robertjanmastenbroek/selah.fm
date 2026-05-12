@@ -56,6 +56,7 @@ export async function GET(request: Request) {
 // ── Action Handlers ───────────────────────────────────────────────
 
 async function runDiscovery(query: string = 'year:2025-2026', limit: number = 10) {
+  try {
   const result = await discoverArtists(query, limit || 10);
   const { artists, diagnostics } = result;
   
@@ -92,6 +93,18 @@ async function runDiscovery(query: string = 'year:2025-2026', limit: number = 10
     artists: artists.slice(0, 5),
     diagnostics,
   });
+  } catch (e: any) {
+    console.error('Discovery error:', e.message);
+    return NextResponse.json({
+      error: e.message,
+      discovered: 0,
+      stored: 0,
+      total_in_db: 0,
+      awaiting_audit: 0,
+      artists: [],
+      diagnostics: [`❌ Discovery crashed: ${e.message}`],
+    });
+  }
 }
 
 async function runAudit(artistId: string) {
