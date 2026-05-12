@@ -197,10 +197,47 @@ async function generateQuestions(topic: string, count: number) {
     return NextResponse.json({ questions: questions, generated_by: fallbacks ? 'curated' : 'fallback' });
   }
 
-  // Need more questions than we have cached — use DeepSeek for the full set
-  // (mixing curated + generated creates quality inconsistency)
+  // ── Context-aware DeepSeek generation ─────────────────────────
+  // Build context from ALL previous answers (any topic) so the system
+  // knows what's been covered heavily vs. what's untouched
 
-  // DeepSeek generation for custom topics
+  const allPrevAnswers = prevAnswers.map((r: any) => {
+    try {
+      const d = JSON.parse(r.chunk_text);
+      return { question: d.question, answer: (d.answer || '').slice(0, 300) };
+    } catch { return null; }
+  }).filter(Boolean);
+
+  // Get summary of what topics have been covered
+  const topicsCovered = await sql`
+    SELECT DISTINCT chunk_text FROM voice_chunks
+    WHERE chunk_text LIKE '%_session_start%'
+  `;
+  const coveredTopics = topicsCovered.map((r: any) => {
+    try { return JSON.parse(r.chunk_text).phase; } catch { return null; }
+  }).filter(Boolean);
+
+  // Get count of total answers in the library
+  const [totalCount] = await sql`
+    SELECT COUNT(*)::int FROM voice_chunks WHERE chunk_text LIKE '%_interview_answer%'
+  `;
+  const totalAnswers = totalCount?.count || 0;
+
+  // Build the context for DeepSeek
+  const alreadyCoveredContext = allPrevAnswers.length > 0
+    ? `\n\nALREADY ANSWERED QUESTIONS ON THIS TOPIC (do NOT repeat these or ask about the same specific stories):\n${
+        allPrevAnswers.map((a: any, i: number) => `${i + 1}. Q: ${a.question}\n   Their answer touched on: ${a.answer.slice(0, 150)}...`).join('\n')
+      }`
+    : '';
+
+  const libraryContext = totalAnswers > 0
+    ? `\n\nVOICE LIBRARY STATUS: ${totalAnswers} total answers across ${coveredTopics.length} topics (${coveredTopics.slice(0, 8).join(', ')}${coveredTopics.length > 8 ? '...' : ''}). Topics already covered: ${coveredTopics.join(', ')}.`
+    : '';
+
+  const avoidanceHint = allPrevAnswers.length > 0
+    ? `\n\nCRITICAL: The founder has ALREADY answered questions about this topic. DO NOT ask about the same specific events, stories, or angles. Push into NEW territory — aspects of "${topic}" they haven't discussed yet. If they've talked about the WHAT, ask about the WHY. If they've shared stories, ask about principles. If they've covered the past, ask about the future.`
+    : '';
+
   const topicContext = topic === 'Life Story'
     ? "This is a deeply personal interview about the founder's entire life — childhood, family, career, failures, faith, transformation. Ask questions that uncover the full story, not just achievements."
     : `This is a deep-dive interview about "${topic}". Ask thought-provoking questions that reveal the founder's authentic perspective, hard-won lessons, and personal experiences.`;
@@ -208,7 +245,13 @@ async function generateQuestions(topic: string, count: number) {
   const response = await deepseekChat([
     {
       role: 'system',
-      content: `You are a world-class interviewer preparing questions for Robert-Jan Mastenbroek, founder of Selah.fm. He is a Dutch entrepreneur who walked away from a record deal, built a EUR6M crowdfunding platform, lost everything, lived in a campervan busking on Tenerife beaches, found faith, and now builds electronic worship music. He has been a multi-millionaire and homeless — he has depth.
+      content: `You are a world-class interviewer preparing questions for a founder with a rich and varied life story. Their voice library contains ${totalAnswers} answers across ${coveredTopics.length} topics.${libraryContext}
+
+CRITICAL CONTEXT-AWARENESS RULES:
+- The founder's voice library GROWS over time. Don't assume they've only talked about the bio below — check what's ALREADY been covered.
+- If previous answers exist for this topic, generate questions about UNCOVERED angles, deeper layers, or fresh perspectives — NOT rehashes of the same stories.${avoidanceHint}
+- If this is a brand-new topic with no previous answers, start broad and exploratory.
+- Questions should feel like a natural conversation that picks up where previous sessions left off.
 
 ${topicContext}
 
@@ -216,12 +259,12 @@ Generate ${count} interview questions that:
 - Cannot be answered with one word or a simple yes/no
 - Dig into emotions, specific moments, and personal philosophy
 - Mix practical questions with spiritual/meaning questions
-- Feel like a conversation with a close friend
+- Feel like a conversation with a close friend${allPrevAnswers.length > 0 ? '\n- Explore NEW angles not covered in the already-answered questions above' : ''}
 
-Return ONLY a JSON array of strings. Example: ["Question 1?", "Question 2?"]`,
+Return ONLY a JSON array of strings. Example: ["Question 1?", "Question 2?"]${alreadyCoveredContext}`,
     },
-    { role: 'user', content: `Generate ${count} interview questions about: ${topic}` },
-  ], 800);
+    { role: 'user', content: `Generate ${count} NEW interview questions about: ${topic}. ${allPrevAnswers.length > 0 ? 'Avoid repeating the already-answered questions listed above.' : ''}` },
+  ], 1500);
 
   try {
     const jsonMatch = response.match(/\[[\s\S]*\]/);
