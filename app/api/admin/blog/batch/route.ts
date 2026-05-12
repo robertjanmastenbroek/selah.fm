@@ -75,13 +75,20 @@ export async function GET(request: Request) {
 // ── Action handlers ──────────────────────────────────────────────
 
 async function autoSchedulePost(postId: string) {
-  // Find the next available day that doesn't have a scheduled post
+  // Find all currently scheduled dates (including today if time already passed)
+  // Use DATE comparison so posts whose 09:00 time passed today still block today
   const existingDates = await sql`
     SELECT publish_at::date as d FROM blog_posts
-    WHERE status = 'scheduled' AND publish_at > NOW()
+    WHERE status = 'scheduled'
+      AND publish_at::date >= CURRENT_DATE
+      AND id != ${postId}
     ORDER BY d
   `;
-  const takenDays = new Set(existingDates.map((r: any) => r.d));
+  const takenDays = new Set(existingDates.map((r: any) => {
+    // PostgreSQL ::date returns YYYY-MM-DD string in ISO format
+    const d = typeof r.d === 'string' ? r.d : new Date(r.d).toISOString().slice(0, 10);
+    return d;
+  }));
 
   // Start from tomorrow at 09:00 UTC
   let next = new Date();
