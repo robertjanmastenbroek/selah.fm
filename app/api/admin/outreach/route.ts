@@ -5,6 +5,8 @@ import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMess
 import { generateArticle, findVoiceExamples } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
 
+export const maxDuration = 120; // 2 minutes — discovery does searches + artist lookups
+
 // ── POST /api/admin/outreach ──────────────────────────────────────
 
 export async function POST(request: Request) {

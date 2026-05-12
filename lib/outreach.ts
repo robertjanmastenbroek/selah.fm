@@ -132,9 +132,9 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
   // on Spotify's free-tier search (limit=15 and limit=20 both return 400 "Invalid limit").
   // We use many search terms to compensate for the small per-query limit.
   const searchTerms = [
-    'love', 'night', 'dream', 'fire', 'heart', 'rain', 'sun', 'moon',
-    'blue', 'gold', 'wild', 'free', 'lost', 'home', 'light', 'dark',
-    'fall', 'rise', 'ghost', 'storm', 'river', 'ocean', 'summer',
+    'love', 'night', 'dream', 'fire', 'rain',
+    'wild', 'free', 'lost', 'ghost', 'storm',
+    'river', 'summer',
   ];
   for (const term of searchTerms) {
     try {
