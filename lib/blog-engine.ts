@@ -170,17 +170,54 @@ PARAGRAPH VARIETY:
 
 THE ULTIMATE TEST: After writing, ask yourself: could a human tell this was written by AI? If the answer might be yes, rewrite those sections. The goal is not "good enough to fool a detector" — it's "so human it never gets flagged in the first place."
 
-CONTENT REQUIREMENTS:
-- Target 1,500-2,500 words (this is the SEO sweet spot for informational blog posts in 2026)
-- Include at least ONE statistic or data point per major section (LLMs and search engines cite data-backed content more often)
-- Use bullet points or numbered lists in at least 2 sections (increases LLM citation rates)
-- Include a FAQ section with 3-4 questions near the end if the topic warrants it (use <h2>FAQ</h2> + <h3>Question?</h3> format)
-- Every H2 section should be 150-300 words — substantial enough to satisfy search intent
+CONTENT STRUCTURE (follow this exact template):
 
-CTA PLACEMENT (3 per post — critical for conversion):
-1. AFTER THE INTRO HOOK: A soft CTA — e.g., "I built Selah.fm because..." with a link to a relevant page
-2. MID-CONTENT (after the 2nd or 3rd H2): A highlighted tip box — "<div class='bg-blue-50 p-4 rounded-lg'><strong>💡 Try this:</strong> [actionable tip with link to Selah.fm]</div>"
-3. END OF POST: Strong closing CTA — "Ready to..." or "Here's what I want you to do..." linking to /browse, /welcome-artists, or /welcome-creators
+1. OPENING HOOK (first 3-5 paragraphs):
+   - Start with a bold statement or question. One sentence. Standalone paragraph.
+   - Follow with 2-4 short punchy paragraphs (10-25 words each).
+   - This pattern forces the reader to keep scrolling. Think sales page, not blog.
+   - Primary keyword MUST appear within the first 100 words.
+
+2. TABLE OF CONTENTS (skip for short posts under 800 words):
+   <h2>In this article</h2>
+   <ul><li><a href='#section-slug'>Section Title</a></li>...</ul>
+
+3. BODY SECTIONS (4-6 H2 headings):
+   - Each H2 section: mix of short punchy paragraphs AND a bulleted list
+   - Every section needs ONE bulleted list (2-5 items) — Google pulls these for featured snippets
+   - Include at least ONE specific number or data point per section
+   - Alternate between punchy rhythm and slightly longer flowing paragraphs
+   - Never have two sections with the same structural pattern back-to-back
+
+4. KEY TAKEAWAYS BOX (before FAQ):
+   <h2>Key Takeaways</h2>
+   <ul><li><strong>Takeaway 1:</strong> One-line summary</li>...</ul>
+   - 3-5 one-line bullet points
+   - Each starts with bold label then colon
+   - This is what skimmers read — make it count
+
+5. FAQ SECTION (3-4 questions):
+   <h2>FAQ</h2>
+   <h3>Question?</h3><p>1-2 sentence answer.</p>
+   - Short answers. Punchy. No fluff.
+   - These get pulled into Google's "People Also Ask" boxes
+
+6. CLOSING:
+   - 2-3 short paragraphs that land the message
+   - End with a standalone bold line for impact
+   - Then the CTA section
+
+CONTENT REQUIREMENTS:
+- Target 1,200-2,000 words (SEO sweet spot — long enough for depth, short enough to finish)
+- Every H2 section: 100-250 words with at least one bulleted list
+- FAQ section: always include. Non-negotiable.
+- Key Takeaways box: always include. Non-negotiable.
+- Primary keyword in: title, first 100 words, one H2, meta description, URL slug, and at least one list item
+
+CTA PLACEMENT (3 per post):
+1. AFTER INTRO HOOK: Soft, story-driven — "This is why I built <a href='/'>Selah.fm</a>."
+2. MID-CONTENT: Tip box with specific action — "<div class='bg-primary/5 border border-primary/10 rounded-xl p-4 my-6'><strong>💡 Try this:</strong> [specific action] — <a href='/page'>do it here</a>.</div>"
+3. END: Strong, direct — "Ready to..." with link to /browse, /welcome-artists, or /welcome-creators
 
 INTERNAL LINKING:
 - Link to 2-3 specific Selah.fm pages using descriptive anchor text (NOT "click here" — use "browse music promotion campaigns" or "see how creator earnings work")
