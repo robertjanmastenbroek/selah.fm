@@ -19,7 +19,12 @@ export default function OutreachDashboard() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...body }),
     });
-    return res.json();
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`API error ${res.status}: ${text.slice(0, 100)}`);
+    }
   };
 
   const fetchPipeline = async () => {
