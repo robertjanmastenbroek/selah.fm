@@ -159,6 +159,31 @@ export default function InterviewStudio() {
     },
   ];
 
+  // ── Compute Coverage & Suggestions ──────────────────────────────
+
+  const allTopics = topicCategories.flatMap(c => c.topics);
+  const coveredTopics = sessions.map(s => s.phase);
+  const uncoveredByCategory = topicCategories.map(cat => {
+    const covered = cat.topics.filter(t => coveredTopics.includes(t));
+    const uncovered = cat.topics.filter(t => !coveredTopics.includes(t));
+    return { ...cat, covered, uncovered, pct: Math.round((covered.length / cat.topics.length) * 100) };
+  });
+  const totalCovered = allTopics.filter(t => coveredTopics.includes(t)).length;
+  const totalPct = Math.round((totalCovered / allTopics.length) * 100);
+
+  // Priority topics: most relevant to current blog batch + uncovered
+  const blogBatchTopics = [
+    'Music Industry', 'Creator Economy', 'Marketing Strategy', 'TikTok Strategy',
+    'Money Mindset', 'Platform Algorithms', 'Spotify for Artists', 'Content Creation',
+    'Monetization Models', 'Brand Building', 'Entrepreneurship', 'Community Building',
+    'Streaming & Distribution', 'Songwriting', 'Email Marketing', 'Personal Development',
+    'Success Redefined', 'AI & Technology',
+  ];
+
+  const suggested = blogBatchTopics
+    .filter(t => !coveredTopics.includes(t))
+    .slice(0, 5);
+
   // ── Generate Questions ──────────────────────────────────────────
 
   const generateQuestions = async () => {
@@ -279,7 +304,60 @@ export default function InterviewStudio() {
 
         {/* ── SETUP PHASE ──────────────────────────────────────── */}
         {phase === 'setup' && (
-          <div className="bg-gray-900 rounded-2xl p-8 space-y-6">
+          <div className="space-y-6">
+            {/* ── Coverage & Suggestions ──────────────────────── */}
+            {sessions.length > 0 && (
+              <div className="bg-gray-900 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold">Voice Library Coverage</h2>
+                  <span className="text-xs text-gray-500">{totalCovered}/{allTopics.length} topics · {totalPct}%</span>
+                </div>
+
+                {/* Category progress bars */}
+                <div className="space-y-2">
+                  {uncoveredByCategory.map(cat => (
+                    <div key={cat.label} className="flex items-center gap-3">
+                      <span className="text-[10px] text-gray-500 w-28 shrink-0 truncate">{cat.label}</span>
+                      <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${cat.pct === 100 ? 'bg-green-500' : cat.pct > 0 ? 'bg-blue-500' : 'bg-gray-700'}`}
+                          style={{ width: `${Math.max(cat.pct, 3)}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-gray-600 w-8 text-right">{cat.pct}%</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Suggested next topics */}
+                {suggested.length > 0 && (
+                  <div className="pt-3 border-t border-gray-800">
+                    <p className="text-xs text-gray-500 mb-2 flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-yellow-500" />
+                      Recommended next — helpful for your blog batch
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {suggested.map(t => (
+                        <button
+                          key={t}
+                          onClick={() => {
+                            setTopic(t);
+                            setCustomTopic('');
+                            window.scrollTo({ top: 500, behavior: 'smooth' });
+                          }}
+                          className="px-2.5 py-1 rounded-md text-xs bg-yellow-900/30 text-yellow-400 border border-yellow-800/50 hover:bg-yellow-900/50 transition-all"
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Topic Selector ──────────────────────────────── */}
+            <div className="bg-gray-900 rounded-2xl p-8 space-y-6">
             <h2 className="text-lg font-semibold">New Interview Session</h2>
             <p className="text-sm text-gray-400">
               Pick a topic and I'll generate deep interview questions. Answer by speaking (🎤) or typing.
@@ -386,6 +464,7 @@ export default function InterviewStudio() {
               </div>
             )}
           </div>
+          </div>
         )}
 
         {/* ── INTERVIEWING PHASE ────────────────────────────────── */}
@@ -421,15 +500,13 @@ export default function InterviewStudio() {
               <div className="space-y-3">
                 <textarea
                   ref={answerRef}
-                  value={voice.listening ? voice.transcript : questions[currentQ]?.answer || ''}
+                  value={questions[currentQ]?.answer || voice.transcript || ''}
                   onChange={e => {
-                    if (voice.listening) return;
                     const updated = [...questions];
                     updated[currentQ] = { ...updated[currentQ], answer: e.target.value };
                     setQuestions(updated);
                   }}
-                  onFocus={() => voice.stopListening()}
-                  placeholder={voice.listening ? 'Listening...' : 'Type your answer or click the mic...'}
+                  placeholder={voice.listening ? '🎤 Listening — speak now...' : 'Type your answer or click the mic...'}
                   className={`w-full bg-gray-800 rounded-xl p-4 text-white text-sm min-h-[160px] resize-y border transition-all focus:outline-none ${
                     voice.listening ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-700 focus:border-blue-500'
                   }`}
@@ -437,20 +514,47 @@ export default function InterviewStudio() {
                 />
 
                 <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => voice.listening ? voice.stopListening() : voice.startListening()}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      voice.listening
-                        ? 'bg-red-600 hover:bg-red-500 animate-pulse'
-                        : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
-                    }`}
-                  >
-                    {voice.listening ? (
-                      <><MicOff className="w-4 h-4" /> Stop Recording</>
-                    ) : (
-                      <><Mic className="w-4 h-4" /> Speak Answer</>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        if (voice.listening) {
+                          // Stop recording and transfer transcript to editable answer
+                          voice.stopListening();
+                          const updated = [...questions];
+                          updated[currentQ] = { ...updated[currentQ], answer: voice.transcript };
+                          setQuestions(updated);
+                        } else {
+                          voice.startListening();
+                        }
+                      }}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        voice.listening
+                          ? 'bg-red-600 hover:bg-red-500 animate-pulse'
+                          : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                      }`}
+                    >
+                      {voice.listening ? (
+                        <><MicOff className="w-4 h-4" /> Stop & Edit</>
+                      ) : (
+                        <><Mic className="w-4 h-4" /> Speak Answer</>
+                      )}
+                    </button>
+                    {(questions[currentQ]?.answer || voice.transcript) && (
+                      <button
+                        onClick={() => {
+                          voice.stopListening();
+                          voice.setTranscript('');
+                          const updated = [...questions];
+                          updated[currentQ] = { ...updated[currentQ], answer: '' };
+                          setQuestions(updated);
+                        }}
+                        className="px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-red-400 hover:bg-gray-800 transition-all"
+                        title="Clear answer"
+                      >
+                        Clear
+                      </button>
                     )}
-                  </button>
+                  </div>
 
                   <div className="flex items-center gap-3">
                     <button
