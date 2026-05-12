@@ -28,18 +28,33 @@ An artist claims their campaign. They share it with friends, family, fans. Those
 Specific queries that return unsigned, active independent artists:
 
 ```
-Genre searches (repeat for each genre):
-  genre:"electronic" year:2025-2026
-  genre:"indie pop" year:2025-2026
-  genre:"hip-hop" year:2025-2026
-  genre:"alternative" year:2025-2026
-  genre:"christian" year:2025-2026
+All genres. No genre filter. If they're independent and active, they qualify.
+The Spotify API's search endpoint with no genre filter + year:2025-2026 already
+returns artists across every genre. We just filter by label and follower count.
 
 Label exclusion (major label keyword filter):
   - NOT: "Universal", "Sony", "Warner", "Atlantic", "Columbia", 
     "Interscope", "Capitol", "Def Jam", "Republic", "RCA"
 
 Follower range: artists with 100–50,000 monthly listeners
+
+### AI Artist Detection (CRITICAL — skip these)
+
+AI-generated music is flooding Spotify. We MUST filter these out.
+Signals that an artist is AI-generated (skip if 2+ of these are true):
+
+| Signal | How to detect |
+|--------|--------------|
+| Generic/empty bio | Spotify artist bio is blank, "AI generated", or just tags |
+| No social presence | No Instagram, TikTok, or YouTube linked from Spotify profile |
+| Unnatural release volume | 20+ tracks released on the same day |
+| AI distributor tags | Distributed by "Boomy", "Mubert", "Soundful", "AIVA", "Beatoven" |
+| No human imagery | Profile/cover photos are abstract, anime, or obviously AI-generated |
+| Generic artist name | Name follows AI patterns: "Lofi Study Beats", "Chill Synth Waves" |
+| Zero engagement | No comments on any social post, no fan interaction anywhere |
+
+Skip the artist entirely if they trigger 2+ AI signals. Don't waste time
+building campaigns for machines.
 ```
 
 ### Spotify Playlists (secondary source)
@@ -136,11 +151,11 @@ Every auto-generated campaign includes:
 - **Spotify embed** — play the track directly on the campaign page
 
 ### Campaign settings
-- **CPM rate:** $0.10–0.20 based on genre (electronic: $0.10, pop: $0.15, hip-hop: $0.20)
+- **CPM rate:** $0.10 default across all genres. Artists can adjust after claiming. The goal is low barrier — we want creators to see campaigns as easy money, and artists to see promotion as affordable.
 - **Max budget:** $100 default (artist adjusts after claiming)
 - **Platforms:** TikTok, Instagram Reels, YouTube Shorts (all enabled)
-- **Hashtags:** genre + mood tags from the audit
-- **Requirements:** friendly, encouraging template
+- **Hashtags:** pulled from the audit — whatever genre/vibe tags apply
+- **Requirements:** "Make a video featuring this track. Any style. Any length. No minimum followers. Just good content." — welcoming, not gatekeeping
 
 ### Designed for sharing
 
@@ -238,6 +253,34 @@ just sits there until you're ready.
 - Never a third message.
 - If they say no, mark "declined" and move on.
 - Track everything in `outreach_log`.
+
+---
+
+### Campaign Page Optimizations Needed
+
+The current campaign page (`/c/[slug]`) was designed for professional creators.
+For the friends/family strategy, it needs these changes:
+
+**Before claiming (unclaimed state):**
+- Hero section: "🎁 Someone made this for {artist name}" instead of generic campaign title
+- Replace "Create campaign" CTA with "Claim this campaign" for the artist
+- "Share" button generates a message tailored to each audience (artist→fans, friend→friends, creator→followers)
+- Funding progress bar: "3 people chipped in $35 of $100 goal" — motivates more donations
+- Creator slots: "0 people have made videos so far. Be the first!" — FOMO for friends
+- Remove any intimidating language about "submission requirements" or "approval process"
+- Add: "Got a phone? That's all you need."
+
+**After claiming:**
+- First screen: "Now share this with your people" with one-click share buttons
+- Artist dashboard light: key stats visible without overwhelming
+- "Invite creators" button that generates a DM template for friends
+
+**For all visitors (regardless of claim status):**
+- Donation section always visible and prominent
+- Pre-set donation amounts: $5, $10, $25, Custom
+- Social proof: "{count} people have supported this campaign"
+- "Submit a video" flow must be extremely simple — paste a TikTok/Reels link, done
+- Remove "minimum video length" and "FTC disclosure" requirements — too corporate for friends/family
 
 ---
 
