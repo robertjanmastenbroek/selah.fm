@@ -38,10 +38,14 @@ export async function POST(request: Request) {
         return autoAnswer(body.batchId, body.interviewId);
       case 'auto_answer_all':
         return autoAnswerAll(body.batchId);
+      case 'preview_post':
+        return previewPost(body.interviewId);
       case 'finalize_batch':
         return finalizeBatch(body.batchId);
       case 'publish_post':
         return publishPost(body.postId);
+      case 'update_post':
+        return updatePost(body.postId, body.updates);
       default:
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
@@ -60,10 +64,12 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const batchId = searchParams.get('batchId');
   const action = searchParams.get('action');
+  const postId = searchParams.get('postId');
 
   try {
     if (action === 'overview') return getOverview();
     if (action === 'posts') return getPosts();
+    if (postId) return getSinglePost(postId);
     if (batchId) return getBatch(batchId);
     return getBatches();
   } catch (e: any) {
@@ -245,6 +251,117 @@ async function autoAnswerAll(batchId: string) {
   }
 
   return NextResponse.json({ success: true, autoAnswered: count, total: pending.length });
+}
+
+async function previewPost(interviewId: string) {
+  // Generate a single draft post from one interview
+  const [interview] = await sql`
+    SELECT * FROM batch_interviews WHERE id = ${interviewId} AND status = 'answered'
+  `;
+  if (!interview) return NextResponse.json({ error: 'Interview not found or not answered' }, { status: 404 });
+
+  const pastChunks = await sql`
+    SELECT chunk_text, embedding FROM voice_chunks ORDER BY created_at DESC LIMIT 50
+  `;
+
+  const voiceExamples = await findVoiceExamples(
+    interview.transcript || '',
+    pastChunks.map((c: any) => ({ chunk_text: c.chunk_text, embedding: c.embedding }))
+  );
+
+  const article = await generateArticle(interview.transcript || '', voiceExamples);
+
+  const baseSlug = slugify(article.slug || article.title);
+  const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+  const imageQuery = article.image_suggestions?.[0]?.description || article.tags?.[0] || 'music promotion';
+  const featuredImage = await fetchBlogImage(imageQuery);
+
+  const [post] = await sql`
+    INSERT INTO blog_posts (
+      interview_id, title, slug, content_html, excerpt, featured_image,
+      meta_title, meta_description, tags, image_suggestions,
+      primary_keyword, internal_links, faq_schema, word_count, cta_positions,
+      status, author_id
+    )
+    VALUES (
+      ${interview.id}, ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
+      ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
+      ${JSON.stringify(article.image_suggestions || [])},
+      ${article.primary_keyword || (article.tags?.[0] || null)},
+      ${JSON.stringify(article.internal_links || [])},
+      ${JSON.stringify(article.faq_schema || null)},
+      ${article.word_count_estimate || null},
+      ${JSON.stringify([
+        {position: 'intro', type: 'soft', text: 'I built Selah.fm because...'},
+        {position: 'mid', type: 'tip_box', text: 'Try this: browse campaigns on Selah.fm'},
+        {position: 'end', type: 'strong', text: 'Ready to promote your music?'}
+      ])},
+      'draft',
+      (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1)
+    )
+    RETURNING *
+  `;
+
+  // Add JSON-LD
+  const schema: any = {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: post.title, description: post.meta_description || post.excerpt,
+    image: post.featured_image, datePublished: post.publish_at,
+    author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
+    publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${post.slug}` },
+  };
+  if (post.faq_schema && Array.isArray(post.faq_schema) && post.faq_schema.length > 0) {
+    schema.mainEntity = post.faq_schema.map((faq: any) => ({
+      '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+    }));
+  }
+  await sql`UPDATE blog_posts SET schema_markup = ${JSON.stringify(schema)} WHERE id = ${post.id}`;
+
+  // Store voice chunks
+  if (interview.transcript) {
+    const chunks = interview.transcript.match(/.{1,500}/g) || [];
+    for (const chunk of chunks.slice(0, 3)) {
+      await sql`INSERT INTO voice_chunks (interview_id, chunk_text) VALUES (${interview.id}, ${chunk})`;
+    }
+  }
+
+  return NextResponse.json({ post, preview: true });
+}
+
+async function updatePost(postId: string, updates: any) {
+  if (!updates || Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
+  }
+
+  // Build dynamic UPDATE using tagged template — Neon driver doesn't support .query()
+  const title = updates.title !== undefined ? String(updates.title).slice(0, 300) : undefined;
+  const content_html = updates.content_html !== undefined ? updates.content_html : undefined;
+  const excerpt = updates.excerpt !== undefined ? String(updates.excerpt).slice(0, 500) : undefined;
+  const meta_description = updates.meta_description !== undefined ? String(updates.meta_description).slice(0, 300) : undefined;
+  const slug = updates.slug !== undefined ? String(updates.slug).slice(0, 200) : undefined;
+  const status = updates.status !== undefined ? updates.status : undefined;
+  const publish_at = (status === 'scheduled' && updates.publish_at) ? new Date(updates.publish_at).toISOString() : undefined;
+  const tags = updates.tags !== undefined ? updates.tags : undefined;
+
+  const result = await sql`
+    UPDATE blog_posts SET
+      title = COALESCE(${title ?? null}, title),
+      content_html = COALESCE(${content_html ?? null}, content_html),
+      excerpt = COALESCE(${excerpt ?? null}, excerpt),
+      meta_description = COALESCE(${meta_description ?? null}, meta_description),
+      slug = COALESCE(${slug ?? null}, slug),
+      status = COALESCE(${status ?? null}, status),
+      publish_at = CASE WHEN ${publish_at !== undefined} THEN ${publish_at ?? null}::timestamptz ELSE publish_at END,
+      published_at = CASE WHEN ${status === 'published'} THEN NOW() ELSE published_at END,
+      tags = COALESCE(${tags ?? null}, tags),
+      updated_at = NOW()
+    WHERE id = ${postId}
+    RETURNING *
+  `;
+
+  return NextResponse.json({ post: result[0] });
 }
 
 async function finalizeBatch(batchId: string) {
@@ -435,6 +552,18 @@ async function getBatch(batchId: string) {
   `;
 
   return NextResponse.json({ batch, questions, interviews, posts });
+}
+
+async function getSinglePost(postId: string) {
+  const [post] = await sql`
+    SELECT bp.*, bi.transcript, b.month_year as batch_month
+    FROM blog_posts bp
+    LEFT JOIN batch_interviews bi ON bi.id = bp.interview_id
+    LEFT JOIN batches b ON b.id = bi.batch_id
+    WHERE bp.id = ${postId}
+  `;
+  if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+  return NextResponse.json(post);
 }
 
 async function getPosts() {

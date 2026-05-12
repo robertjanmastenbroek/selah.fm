@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, CheckCircle, Circle, Clock, Send, FileText } from 'lucide-react';
+import { ArrowLeft, MessageSquare, CheckCircle, Circle, Clock, Send, FileText, Eye } from 'lucide-react';
 
 export default function BatchDetailPage() {
   const params = useParams();
@@ -17,6 +17,7 @@ export default function BatchDetailPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [finalizing, setFinalizing] = useState(false);
+  const [previewing, setPreviewing] = useState<string | null>(null);
   const [message, setMessage] = useState('');
 
   const fetchData = async () => {
@@ -61,6 +62,25 @@ export default function BatchDetailPage() {
       setMessage(e.message);
     }
     setFinalizing(false);
+  };
+
+  const previewPost = async (interviewId: string) => {
+    setPreviewing(interviewId);
+    setMessage('Generating preview...');
+    try {
+      const res = await fetch('/api/admin/blog/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'preview_post', interviewId }),
+      });
+      const data = await res.json();
+      if (data.error) { setMessage(data.error); }
+      else {
+        setMessage('Preview generated!');
+        router.push(`/admin/blog/post/${data.post.id}`);
+      }
+    } catch (e: any) { setMessage(e.message); }
+    setPreviewing(null);
   };
 
   const answeredCount = interviews.filter((i: any) => i.status === 'answered' || i.status === 'converted').length;
@@ -142,12 +162,16 @@ export default function BatchDetailPage() {
           </h2>
           <div className="space-y-1">
             {posts.map((post: any) => (
-              <div key={post.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] text-xs">
+              <button
+                key={post.id}
+                onClick={() => router.push(`/admin/blog/post/${post.id}`)}
+                className="w-full text-left flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] text-xs hover:bg-white/[0.05] transition-colors"
+              >
                 <span className="truncate flex-1">{post.title}</span>
                 <span className="text-muted-foreground shrink-0 ml-2">
-                  {post.status === 'published' ? '📰 Live' : post.status === 'scheduled' ? `⏳ ${new Date(post.publish_at).toLocaleDateString()}` : post.status}
+                  {post.status === 'published' ? '📰 Live' : post.status === 'scheduled' ? `⏳ ${new Date(post.publish_at).toLocaleDateString()}` : post.status === 'draft' ? '📝 Draft' : post.status}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -189,9 +213,20 @@ export default function BatchDetailPage() {
                     {genQuestions.length} questions · {sourceQuestion?.platform || 'fallback'} · {sourceQuestion?.category || 'general'}
                   </p>
                 </div>
-                <span className="text-[10px] text-muted-foreground shrink-0">
-                  {isAnswered ? 'Done' : interview.status === 'in_progress' ? 'In progress' : 'Pending'}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isAnswered && !posts.some((p: any) => p.interview_id === interview.id) && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); previewPost(interview.id); }}
+                      disabled={previewing === interview.id}
+                      className="text-[10px] px-2 py-1 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 disabled:opacity-50"
+                    >
+                      {previewing === interview.id ? '...' : 'Preview'}
+                    </button>
+                  )}
+                  <span className="text-[10px] text-muted-foreground">
+                    {isAnswered ? 'Done' : interview.status === 'in_progress' ? 'In progress' : 'Pending'}
+                  </span>
+                </div>
               </button>
             );
           })}
