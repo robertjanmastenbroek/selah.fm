@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ExternalLink, MessageCircle, AtSign, Sparkles, Loader2, ChevronRight, CheckSquare, Square, Wand2 } from 'lucide-react';
+import { Search, ExternalLink, MessageCircle, AtSign, Sparkles, Loader2, ChevronRight, CheckSquare, Square, Wand2, XCircle } from 'lucide-react';
 
 interface Question {
   question: string;
@@ -18,6 +18,7 @@ export default function SourceQuestionsPage() {
   const [search, setSearch] = useState('');
   const [batchGenerating, setBatchGenerating] = useState(false);
   const [batchResult, setBatchResult] = useState<any>(null);
+  const [metadata, setMetadata] = useState<{ already_used?: number; total_available?: number }>({});
   const router = useRouter();
 
   useEffect(() => { fetchQuestions(); }, []);
@@ -33,6 +34,7 @@ export default function SourceQuestionsPage() {
       const data = await res.json();
       if (data.questions) setQuestions(data.questions);
       if (data.by_category) setByCategory(data.by_category);
+      setMetadata({ already_used: data.already_used || 0, total_available: data.total_available || 0 });
     } catch {}
     setLoading(false);
   };
@@ -71,6 +73,20 @@ export default function SourceQuestionsPage() {
   const goToGenerator = (question: string) => {
     if (batchGenerating) return;
     router.push(`/admin/blog-generator?q=${encodeURIComponent(question)}`);
+  };
+
+  const skipQuestion = async (question: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await fetch('/api/admin/blog/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'skip_question', question }),
+      });
+      // Remove from local state
+      setQuestions(prev => prev.filter(q => q.question !== question));
+      setMetadata(prev => ({ ...prev, already_used: (prev.already_used || 0) + 1 }));
+    } catch {}
   };
 
   const batchGenerate = async () => {
@@ -114,7 +130,8 @@ export default function SourceQuestionsPage() {
         <div>
           <h1 className="text-2xl font-bold">Find Real Questions</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Questions people are actually asking. Pick one to generate a blog post, or select multiple for batch.
+            {metadata.already_used ? `${metadata.already_used} already answered · ` : ''}
+            {metadata.total_available !== undefined ? `${metadata.total_available} fresh questions available` : 'Pick one to generate a blog post, or select multiple for batch.'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -233,6 +250,11 @@ export default function SourceQuestionsPage() {
                       </button>
 
                       <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={(e) => skipQuestion(q.question, e)}
+                          className="text-muted-foreground hover:text-red-400 transition-colors p-1 -m-1"
+                          title="Skip — mark as irrelevant">
+                          <XCircle size={12} />
+                        </button>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-muted-foreground flex items-center gap-1">
                           <PlatformIcon size={10} /> {q.platform}
                         </span>
@@ -271,6 +293,10 @@ export default function SourceQuestionsPage() {
                     <p className="text-sm text-white group-hover:text-primary transition-colors leading-relaxed">{q.question}</p>
                   </button>
                   <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={(e) => skipQuestion(q.question, e)}
+                      className="text-muted-foreground hover:text-red-400 transition-colors p-1 -m-1" title="Skip">
+                      <XCircle size={12} />
+                    </button>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-muted-foreground flex items-center gap-1">
                       <PlatformIcon size={10} /> {q.platform}
                     </span>

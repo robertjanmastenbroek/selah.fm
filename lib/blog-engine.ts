@@ -443,16 +443,26 @@ export function getFallbackQuestions(count: number = 30): string[] {
 }
 
 export async function sourceQuestionsFromReddit(): Promise<{ question: string; url: string; category: string }[]> {
-  // Attempt to fetch from Reddit API (r/musicmarketing, r/wearethemusicmakers, r/creators)
-  // If fails, fall back to curated questions
+  // Fetch from Reddit API with rotating sort orders for freshness
+  // Uses multiple subreddits and alternates between hot/new/top to get different questions each run
   try {
-    const subreddits = ['musicmarketing', 'wearethemusicmakers', 'creators', 'tiktokhelp'];
+    const subreddits = ['musicmarketing', 'wearethemusicmakers', 'creators', 'tiktokhelp', 'instagrammarketing', 'newtubers'];
+    const sortOrders = ['hot', 'new', 'top'];
+    
+    // Pick a random sort order each time for freshness
+    const sort = sortOrders[Math.floor(Math.random() * sortOrders.length)];
+    const timeFilter = sort === 'top' ? '&t=week' : ''; // For top, get weekly to avoid stale results
+    
     const results: { question: string; url: string; category: string }[] = [];
     
-    for (const sub of subreddits.slice(0, 2)) { // Limit to 2 to avoid rate limits
-      const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=25`, {
-        headers: { 'User-Agent': 'Selah.fm Blog Bot/1.0' },
-      });
+    // Shuffle subreddits and take 3 for variety
+    const shuffled = [...subreddits].sort(() => Math.random() - 0.5);
+    
+    for (const sub of shuffled.slice(0, 3)) {
+      const res = await fetch(
+        `https://www.reddit.com/r/${sub}/${sort}.json?limit=25${timeFilter}`,
+        { headers: { 'User-Agent': 'Selah.fm Blog Bot/1.0' } }
+      );
       if (!res.ok) continue;
       
       const data = await res.json();

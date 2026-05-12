@@ -40,6 +40,8 @@ export async function POST(request: Request) {
       case 'fetch_real_questions': return fetchRealQuestions();
       case 'auto_schedule':        return autoSchedulePost(body.postId);
       case 'batch_generate':       return batchGenerate(body.questions || []);
+      case 'skip_question':        return skipQuestion(body.question);
+      case 'get_used_questions':   return getUsedQuestions();
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -126,6 +128,8 @@ async function batchGenerate(questions: string[]) {
 
       if (data.post) {
         results.push({ question: q, post: data.post });
+        // Mark as used
+        markQuestionUsed(q, data.post.id, 'answered');
       } else if (data.error) {
         errors.push({ question: q, error: data.error });
       }
@@ -157,15 +161,21 @@ async function createBatch() {
 
 async function fetchRealQuestions() {
   try {
-    // Try Reddit for real human questions
-    const redditQs = (await sourceQuestionsFromReddit()).map(q => ({
-      question: q.question, url: q.url, platform: 'reddit' as const, category: q.category as string,
-    }));
+    // Load already-used question texts for dedup
+    const usedRows = await sql`SELECT normalized_text FROM used_questions WHERE status IN ('answered', 'skipped')`;
+    const usedSet = new Set(usedRows.map((r: any) => r.normalized_text));
 
-    // Add curated fallback questions
-    const fallbackQs = getFallbackQuestions(20).map(q => ({
-      question: q, url: '', platform: 'curated' as const, category: 'general' as const,
-    }));
+    // Try Reddit for real human questions, filtering out used ones
+    const redditQs = (await sourceQuestionsFromReddit())
+      .map(q => ({
+        question: q.question, url: q.url, platform: 'reddit' as const, category: q.category as string,
+      }))
+      .filter(q => !usedSet.has(q.question.toLowerCase().trim()));
+
+    // Add curated fallback questions, also filtered
+    const fallbackQs = getFallbackQuestions(20)
+      .map(q => ({ question: q, url: '', platform: 'curated' as const, category: 'general' as const }))
+      .filter(q => !usedSet.has(q.question.toLowerCase().trim()));
 
     // Combine and deduplicate by question text
     const seen = new Set<string>();
@@ -175,6 +185,10 @@ async function fetchRealQuestions() {
       seen.add(key);
       return true;
     });
+
+    // Track counts for UI
+    const totalAvailable = all.length;
+    const usedCount = usedSet.size;
 
     // Group by category for nice UI display
     const byCategory: Record<string, { question: string; url: string; platform: string }[]> = {};
@@ -188,20 +202,60 @@ async function fetchRealQuestions() {
       questions: all.slice(0, 30),
       by_category: byCategory,
       total: all.length,
-      sourced_from: 'reddit_and_curated',
+      total_available: totalAvailable,
+      already_used: usedCount,
+      sourced_from: all.length > 0 ? 'reddit_and_curated' : 'all_exhausted',
     });
   } catch (e: any) {
-    // Always fall back to curated questions
-    const fallbackQs: { question: string; url: string; platform: string; category: string }[] = getFallbackQuestions(30).map(q => ({
-      question: q, url: '', platform: 'curated', category: 'general',
-    }));
+    // Always fall back to curated questions, filtering used ones
+    const usedRows = await sql`SELECT normalized_text FROM used_questions WHERE status IN ('answered', 'skipped')`.catch(() => ({ rows: [] }));
+    const usedSet = new Set(usedRows.rows?.map((r: any) => r.normalized_text) || []);
+
+    const fallbackQs: { question: string; url: string; platform: string; category: string }[] = getFallbackQuestions(30)
+      .map(q => ({ question: q, url: '', platform: 'curated', category: 'general' }))
+      .filter(q => !usedSet.has(q.question.toLowerCase().trim()));
+
     return NextResponse.json({
       questions: fallbackQs,
       by_category: { general: fallbackQs },
       total: fallbackQs.length,
+      total_available: fallbackQs.length,
+      already_used: usedSet.size,
       sourced_from: 'curated_fallback',
     });
   }
+}
+
+/** Mark a question as used when a blog post is generated from it */
+async function markQuestionUsed(question: string, blogPostId?: string, status: string = 'answered') {
+  const normalized = question.toLowerCase().trim();
+  try {
+    await sql`
+      INSERT INTO used_questions (question_text, normalized_text, blog_post_id, status)
+      VALUES (${question}, ${normalized}, ${blogPostId || null}, ${status})
+      ON CONFLICT (normalized_text) DO UPDATE
+      SET blog_post_id = COALESCE(${blogPostId || null}, used_questions.blog_post_id),
+          status = ${status},
+          updated_at = NOW()
+    `;
+  } catch (e) {
+    console.error('Failed to mark question as used:', (e as Error).message);
+  }
+}
+
+async function skipQuestion(question: string) {
+  await markQuestionUsed(question, undefined, 'skipped');
+  return NextResponse.json({ skipped: true, question });
+}
+
+async function getUsedQuestions() {
+  const rows = await sql`
+    SELECT question_text, status, blog_post_id, created_at
+    FROM used_questions ORDER BY created_at DESC LIMIT 100
+  `;
+  const answered = rows.filter((r: any) => r.status === 'answered').length;
+  const skipped = rows.filter((r: any) => r.status === 'skipped').length;
+  return NextResponse.json({ used: rows, answered, skipped, total: rows.length });
 }
 
 async function sourceQuestions(batchId: string) {
@@ -466,6 +520,9 @@ async function generateFromVoice(topic: string, keyword: string) {
   `;
 
   if (post?.featured_image) markImageUsed(post.featured_image);
+
+  // Mark the question as used so we don't answer it again
+  if (keyword) markQuestionUsed(keyword, post.id, 'answered');
 
   return NextResponse.json({ post, generated_from: 'voice_library', chunks_used: relevantChunks.length || chunks.length, total_chunks_in_library: chunks.length });
 }
