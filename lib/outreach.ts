@@ -128,13 +128,18 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
   const allTracks: any[] = [];
   const seenTrackIds = new Set<string>();
 
-  // Common song-title words that appear across every genre.
-  // Filter by popularity < 40: low-popularity tracks come from independent artists.
-  const searchTerms = ['love', 'night', 'dream', 'fire', 'heart', 'remastered', '2025'];
+  // Broad text search + popularity filter. limit=10 is the only value that works reliably
+  // on Spotify's free-tier search (limit=15 and limit=20 both return 400 "Invalid limit").
+  // We use many search terms to compensate for the small per-query limit.
+  const searchTerms = [
+    'love', 'night', 'dream', 'fire', 'heart', 'rain', 'sun', 'moon',
+    'blue', 'gold', 'wild', 'free', 'lost', 'home', 'light', 'dark',
+    'fall', 'rise', 'ghost', 'storm', 'river', 'ocean', 'summer',
+  ];
   for (const term of searchTerms) {
     try {
       const searchRes = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(term)}&type=track&limit=20`,
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(term)}&type=track&limit=10`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
