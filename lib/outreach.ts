@@ -102,44 +102,83 @@ export interface DiscoveredArtist {
   is_ai_artist: boolean;
 }
 
-export async function discoverArtists(_query: string = 'year:2025-2026', limit: number = 20): Promise<DiscoveredArtist[]> {
-  const token = await getSpotifyToken();
+export async function discoverArtists(_query: string = 'year:2025-2026', limit: number = 20): Promise<{ artists: DiscoveredArtist[], diagnostics: string[] }> {
+  const diagnostics: string[] = [];
 
-  // Strategy: genre-based search (genre:indie year:2025 etc.)
-  // Playlist API is 403-blocked for our app. Genre search works reliably.
+  // Check credentials
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    diagnostics.push('❌ SPOTIFY_CLIENT_ID and/or SPOTIFY_CLIENT_SECRET not set in environment');
+    return { artists: [], diagnostics };
+  }
+  diagnostics.push('✅ Spotify credentials present');
+
+  let token: string;
+  try {
+    token = await getSpotifyToken();
+    diagnostics.push('✅ Spotify token obtained');
+  } catch (e: any) {
+    diagnostics.push(`❌ Spotify auth failed: ${e.message}`);
+    return { artists: [], diagnostics };
+  }
+
+  // Strategy: genre-based search with fallback
   const genres = ['indie', 'alternative', 'electronic', 'hip-hop', 'r-n-b', 'pop', 'rock', 'folk', 'metal'];
   const allTracks: any[] = [];
   const seenTrackIds = new Set<string>();
 
   // Search 3 random genres to get variety each run
   const shuffled = [...genres].sort(() => Math.random() - 0.5);
-  for (const genre of shuffled.slice(0, 3)) {
-    try {
-      const q = `genre:${genre} year:2025-2026`;
-      const searchRes = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!searchRes.ok) continue;
-      const data = await searchRes.json();
-      for (const t of (data.tracks?.items || [])) {
-        if (!seenTrackIds.has(t.id)) {
-          seenTrackIds.add(t.id);
-          allTracks.push(t);
+  const selectedGenres = shuffled.slice(0, 3);
+  let totalTracksFromSearch = 0;
+
+  for (const genre of selectedGenres) {
+    // Try with year filter first, fallback without
+    for (const yearFilter of ['year:2025-2026', '']) {
+      const q = yearFilter ? `genre:${genre} ${yearFilter}` : `genre:${genre}`;
+      try {
+        const searchRes = await fetch(
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=10`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (!searchRes.ok) {
+          const errText = await searchRes.text().catch(() => '');
+          diagnostics.push(`⚠️  Spotify search failed (${searchRes.status}) for "${q}": ${errText.slice(0, 100)}`);
+          continue;
         }
+
+        const data = await searchRes.json();
+        const items = data.tracks?.items || [];
+        diagnostics.push(`🔍 Search "${q}" → ${items.length} tracks`);
+
+        for (const t of items) {
+          if (!seenTrackIds.has(t.id)) {
+            seenTrackIds.add(t.id);
+            allTracks.push(t);
+          }
+        }
+        totalTracksFromSearch += items.length;
+        break; // Don't try fallback if this succeeded
+      } catch (e: any) {
+        diagnostics.push(`⚠️  Search error for "${q}": ${e.message}`);
       }
-    } catch {}
+    }
   }
+
+  diagnostics.push(`📊 Total unique tracks from search: ${allTracks.length}`);
 
   if (allTracks.length === 0) {
-    console.log('No tracks found from genre searches');
-    return [];
+    diagnostics.push('❌ No tracks found from any genre search');
+    return { artists: [], diagnostics };
   }
-
-  console.log(`Found ${allTracks.length} tracks from genre searches, filtering...`);
 
   const artists: DiscoveredArtist[] = [];
   const seen = new Set<string>();
+  let skippedFollowers = 0;
+  let skippedAi = 0;
+  let artistLookupErrors = 0;
 
   for (const track of allTracks) {
     for (const artist of track.artists) {
@@ -150,10 +189,16 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
         const artistData = await spotifyGet(`/artists/${artist.id}`);
         const followers = artistData.followers?.total || 0;
 
-        if (followers < 50 || followers > 200000) continue;
+        if (followers < 50 || followers > 200000) {
+          skippedFollowers++;
+          continue;
+        }
 
         const aiSignals = detectAiSignals(artistData, []);
-        if (aiSignals >= 2) continue;
+        if (aiSignals >= 2) {
+          skippedAi++;
+          continue;
+        }
 
         const topTracks = await spotifyGet(`/artists/${artist.id}/top-tracks?market=US`);
         const latestTrack = topTracks.tracks?.[0];
@@ -161,7 +206,7 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
         const socialLinks: Record<string, string> = {};
         if (artistData.external_urls?.spotify) socialLinks.spotify = artistData.external_urls.spotify;
 
-        console.log(`  ✅ ${artistData.name} — ${followers.toLocaleString()} followers`);
+        diagnostics.push(`  ✅ ${artistData.name} — ${followers.toLocaleString()} followers, genres: ${(artistData.genres || []).slice(0,3).join(', ')}`);
 
         artists.push({
           artist_name: artistData.name,
@@ -180,15 +225,18 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
         });
 
         if (artists.length >= limit) break;
-      } catch (e) {
-        continue;
+      } catch (e: any) {
+        artistLookupErrors++;
+        diagnostics.push(`  ⚠️  Artist lookup error for ${artist.id}: ${e.message}`);
       }
     }
     if (artists.length >= limit) break;
   }
 
-  console.log(`Discovered ${artists.length} independent artists from genre search`);
-  return artists;
+  diagnostics.push(`📊 Filtered: ${skippedFollowers} by follower count, ${skippedAi} by AI detection, ${artistLookupErrors} artist lookup errors`);
+  diagnostics.push(`✅ Discovered ${artists.length} artists`);
+
+  return { artists, diagnostics };
 }
 
 // ── Audit ─────────────────────────────────────────────────────────

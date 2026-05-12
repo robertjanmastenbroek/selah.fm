@@ -45,6 +45,9 @@ export default function OutreachDashboard() {
       const data = await api('discover', { query: 'year:2025-2026', limit: 20 });
       if (data.error) {
         setMessage('Error: ' + data.error);
+      } else if (data.discovered === 0) {
+        const diags = data.diagnostics?.join('\n') || 'No results';
+        setMessage(`❌ Found 0 artists. Diagnostics:\n${diags}`);
       } else {
         setMessage(`Found ${data.discovered} artists · Stored ${data.stored} new · ${data.total_in_db} total in database`);
         fetchPipeline();
@@ -147,7 +150,11 @@ export default function OutreachDashboard() {
       </div>
 
       {message && (
-        <div className="text-sm px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+        <div className={`text-sm px-4 py-3 rounded-xl whitespace-pre-wrap font-mono ${
+          message.startsWith('❌') 
+            ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+            : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+        }`}>
           {message}
         </div>
       )}

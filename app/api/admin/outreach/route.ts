@@ -54,7 +54,8 @@ export async function GET(request: Request) {
 // ── Action Handlers ───────────────────────────────────────────────
 
 async function runDiscovery(query: string = 'year:2025-2026', limit: number = 10) {
-  const artists = await discoverArtists(query, limit || 10);
+  const result = await discoverArtists(query, limit || 10);
+  const { artists, diagnostics } = result;
   
   // Store in database
   let stored = 0;
@@ -87,6 +88,7 @@ async function runDiscovery(query: string = 'year:2025-2026', limit: number = 10
     total_in_db: count?.count || 0,
     awaiting_audit: awaiting?.count || 0,
     artists: artists.slice(0, 5),
+    diagnostics,
   });
 }
 

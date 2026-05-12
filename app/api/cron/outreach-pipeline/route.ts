@@ -32,7 +32,9 @@ export async function GET(request: Request) {
     
     log.push(`Starting discovery across genres: ${shuffled.slice(0, 3).join(', ')}`);
 
-    const discovered = await discoverArtists('year:2025-2026', 15);
+    const discoveryResult = await discoverArtists('year:2025-2026', 15);
+    const discovered = discoveryResult.artists;
+    log.push(...discoveryResult.diagnostics);
 
     if (discovered.length === 0) {
       log.push('No artists discovered in this run');
