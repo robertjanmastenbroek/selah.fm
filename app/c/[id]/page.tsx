@@ -43,12 +43,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalUrl = `https://selah.fm/c/${params.id}`;
 
   // Tiered title templates — balanced default
-  const title = `Submit a Video for ${artistName}'s "${trackTitle}" & Earn Per View — Selah.fm`;
+  const title = `Join this campaign for ${artistName}'s "${trackTitle}" — Selah.fm`;
 
   // Rich meta description
   const desc = cpm
-    ? `Help promote ${artistName}'s track "${trackTitle}". Creators: submit your video and earn $${cpm} per 1K verified views. Fans: donate to boost the campaign. Join now on Selah.fm, the UGC music marketplace.`
-    : `Help promote ${artistName}'s track "${trackTitle}". Creators: submit your video and earn per view. Fans: donate to support. Join now on Selah.fm.`;
+    ? `Join ${artistName}'s campaign for "${trackTitle}". Creators: submit your video and earn $${cpm} per 1K verified views. Fans: donate to boost the campaign. Join now on Selah.fm, the UGC music marketplace.`
+    : `Join ${artistName}'s campaign for "${trackTitle}". Creators: submit your video and earn per view. Fans: donate to support. Join now on Selah.fm.`;
 
   return {
     title,
@@ -116,8 +116,8 @@ export default async function CampaignPage({ params }: Props) {
         '@type': 'VideoObject',
         name: `${artistName} - ${trackTitle} Campaign`,
         description: cpmDollars
-          ? `Earn $${cpmDollars} per 1,000 verified views by submitting a video for "${trackTitle}".`
-          : `Submit a video for "${trackTitle}" and earn per verified view.`,
+          ? `Join this campaign and earn $${cpmDollars} per 1,000 verified views by submitting a video for "${trackTitle}".`
+          : `Join this campaign for "${trackTitle}" and earn per verified view.`,
         thumbnailUrl: imageUrl,
         contentUrl: canonicalUrl,
         uploadDate: createdAt,
@@ -127,8 +127,8 @@ export default async function CampaignPage({ params }: Props) {
         '@type': 'EventSeries',
         name: `${trackTitle} Video Contest`,
         description: cpmDollars
-          ? `Submit your video and earn $${cpmDollars} per 1K views, or donate to support ${artistName}.`
-          : `Submit your video and earn, or donate to support ${artistName}.`,
+          ? `Join this campaign and earn $${cpmDollars} per 1K views, or donate to support ${artistName}.`
+          : `Join this campaign and earn, or donate to support ${artistName}.`,
         url: canonicalUrl,
         startDate: createdAt,
         organizer: {
@@ -148,7 +148,7 @@ export default async function CampaignPage({ params }: Props) {
       // Offer
       ...(cpmDollars ? [{
         '@type': 'Offer',
-        name: `Earn $${cpmDollars} per 1,000 verified views`,
+        name: `Join campaign — earn $${cpmDollars} per 1,000 verified views`,
         price: cpmDollars,
         priceCurrency: 'USD',
         description: `Creators earn 80% of $${cpmDollars} CPM rate.${budget ? ` Total budget: $${budget}.` : ''}`,

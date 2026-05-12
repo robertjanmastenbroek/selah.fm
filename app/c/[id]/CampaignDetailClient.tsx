@@ -54,8 +54,8 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
   const artistLine = artistName ? `${artistName} — ` : '';
   const shareTitle = `${artistLine}"${trackTitle || title}" on Selah.fm 🎵`;
   const shareBody = cpmDollars
-    ? `Earn $${cpmDollars.toFixed(2)} per 1K verified views by creating content — or donate to support this track. Selah.fm is where music meets creators. 🎵`
-    : 'Create content and earn per verified view, or donate to support this track on Selah.fm 🎵';
+    ? `Join to earn $${cpmDollars.toFixed(2)} per 1K verified views by creating content — or donate to support this track. Selah.fm is where music meets creators. 🎵`
+    : 'Join a campaign, create content and earn per verified view, or donate to support this track on Selah.fm 🎵';
   const fullShareText = `${shareTitle}\n\n${shareBody}\n\n${url}`;
   const encodedShare = encodeURIComponent(fullShareText);
 
@@ -148,7 +148,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const [heroBottom, setHeroBottom] = useState(0);
 
   const [shareOpen, setShareOpen] = useState(false);
-  const [earnOpen, setEarnOpen] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
 
   useEffect(() => {
     if (!initialCampaign) {
@@ -266,7 +266,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </div>
 
             <div className="flex gap-2">
-              <button onClick={() => setEarnOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]">EARN</button>
+              <button onClick={() => setJoinOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.3)]">JOIN</button>
               <Link href={`/checkout?type=donation&campaignId=${id}`} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</Link>
             </div>
 
@@ -329,7 +329,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 {[
                   { step: '1', title: 'Find the audio', desc: `Search "${campaign.track_title}" on TikTok, Instagram, YouTube, or Facebook. Use the official audio.` },
                   { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Be creative — dance, react, duet.' },
-                  { step: '3', title: 'Submit & earn', desc: `Post publicly, copy the link, paste it here. Earn $${(cpm * 0.8).toFixed(2)} per 1K verified views.` },
+                  { step: '3', title: 'Join campaign', desc: `Post publicly, copy the link, paste it here. Earn $${(cpm * 0.8).toFixed(2)} per 1K verified views.` },
                 ].map(s => (
                   <div key={s.step} className="space-y-1"><span className="font-semibold text-foreground/70">{s.title}</span><p className="leading-relaxed break-words">{s.desc}</p></div>
                 ))}
@@ -445,7 +445,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 <button onClick={() => setShareOpen(true)} className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.04] transition-colors active:scale-[0.95]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg><span className="text-[8px] font-medium text-muted-foreground">Share</span></button>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setEarnOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">EARN</button>
+                <button onClick={() => setJoinOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">JOIN</button>
                 <Link href={`/checkout?type=donation&campaignId=${id}`} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</Link>
               </div>
             </div>
@@ -454,7 +454,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       </AnimatePresence>
 
       <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={displayTitle} imageUrl={campaign.cover_art_url} artistName={artistName} cpmDollars={cpm} trackTitle={campaign.track_title} />
-      <EarnModal open={earnOpen} onClose={() => setEarnOpen(false)} campaignId={id} trackTitle={displayTitle} cpmCents={campaign.cpm_rate_cents} coverArtUrl={campaign.cover_art_url} contentAssetsUrl={campaign.content_assets_url} />
+      <EarnModal open={joinOpen} onClose={() => setJoinOpen(false)} campaignId={id} trackTitle={displayTitle} cpmCents={campaign.cpm_rate_cents} coverArtUrl={campaign.cover_art_url} contentAssetsUrl={campaign.content_assets_url} />
     </div>
   );
 }

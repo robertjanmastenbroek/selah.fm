@@ -175,7 +175,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                   <ArrowLeft size={20} className="text-muted-foreground" />
                 </button>
                 <div className="flex-1 min-w-0">
-                  <h2 className="font-semibold text-lg truncate">Earn with this track</h2>
+                  <h2 className="font-semibold text-lg truncate">Join this campaign</h2>
                   <p className="text-xs text-muted-foreground truncate">{trackTitle}</p>
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     onClick={() => router.push(`/login?redirect=/c/${campaignId}`)}
                     className="w-full py-5 rounded-xl bg-gradient-to-r from-primary to-primary/80"
                   >
-                    Sign in as creator
+                    Sign in to join
                   </Button>
                   <p className="text-[10px] text-muted-foreground/60">
                     Don&apos;t have an account? You can create one after clicking.
@@ -230,7 +230,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                   </div>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={onClose} className="flex-1">Close</Button>
-                    <Button onClick={() => { setSubmitted(false); setUrl(''); }} className="flex-1">Submit another</Button>
+                    <Button onClick={() => { setSubmitted(false); setUrl(''); }} className="flex-1">Join another</Button>
                   </div>
                 </motion.div>
               ) : (
@@ -334,7 +334,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     {submitting ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                      <><Camera size={16} className="mr-2" /> Submit for ${creatorEarnings}/1K views</>
+                      <><Camera size={16} className="mr-2" /> Join — earn ${creatorEarnings}/1K views</>
                     )}
                   </Button>
 
