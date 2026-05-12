@@ -124,6 +124,17 @@ export default function ContentHub() {
           </Link>
         </div>
 
+        {/* Generate from Voice */}
+        <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
+          <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
+            <Sparkles size={14} className="text-amber-400" /> Generate from Voice Library
+          </h2>
+          <p className="text-xs text-muted-foreground mb-3">
+            Pulls from your {voiceChunks} voice chunks. No batch interviews needed.
+          </p>
+          <GenerateFromVoiceButton voiceChunks={voiceChunks} />
+        </div>
+
         {/* Blog batch */}
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6">
           <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
@@ -156,6 +167,53 @@ export default function ContentHub() {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function GenerateFromVoiceButton({ voiceChunks }: { voiceChunks: number }) {
+  const [topic, setTopic] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+
+  const generate = async () => {
+    if (!topic) return;
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch('/api/admin/blog/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate_from_voice', keyword: topic }),
+      });
+      const data = await res.json();
+      if (data.error) setResult({ error: data.error });
+      else {
+        setResult(data);
+        if (data.post?.id) window.location.href = '/admin/blog/post/' + data.post.id;
+      }
+    } catch (e: any) { setResult({ error: e.message }); }
+    setLoading(false);
+  };
+
+  return (
+    <div className="space-y-2">
+      <input
+        type="text"
+        value={topic}
+        onChange={e => setTopic(e.target.value)}
+        placeholder="Topic or keyword (e.g. music promotion)..."
+        className="w-full bg-gray-800 rounded-lg p-2 text-sm text-white border border-gray-700 focus:border-amber-500 focus:outline-none"
+        onKeyDown={e => e.key === 'Enter' && generate()}
+      />
+      <button
+        onClick={generate}
+        disabled={!topic || loading || voiceChunks === 0}
+        className="w-full p-2 rounded-lg bg-amber-600/20 border border-amber-600/30 text-amber-400 text-sm hover:bg-amber-600/30 disabled:opacity-30 transition-colors"
+      >
+        {loading ? 'Generating...' : voiceChunks === 0 ? 'Do interviews first →' : 'Generate Blog Post from Voice Library'}
+      </button>
+      {result?.error && <p className="text-xs text-red-400">{result.error}</p>}
     </div>
   );
 }
