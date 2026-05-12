@@ -155,9 +155,34 @@ export async function GET(request: Request) {
 async function generateQuestions(topic: string, count: number) {
   const fallbacks = TOPIC_QUESTIONS[topic];
 
-  // If we have enough curated questions for the requested count, use them directly
-  if (fallbacks && fallbacks.length >= count) {
-    return NextResponse.json({ questions: fallbacks.slice(0, count), generated_by: 'curated' });
+  // Fetch previously asked questions for this topic to avoid duplicates
+  const prevAnswers = await sql`
+    SELECT chunk_text FROM voice_chunks
+    WHERE chunk_text LIKE '%_interview_answer%'
+    AND chunk_text LIKE '%' || ${'topic":"' + topic + '"'} || '%'
+  `;
+  const prevQuestions = new Set(
+    prevAnswers.map((r: any) => {
+      try { return JSON.parse(r.chunk_text).question?.toLowerCase().trim(); }
+      catch { return null; }
+    }).filter(Boolean)
+  );
+
+  // Filter out previously answered questions from fallbacks
+  const freshFallbacks = fallbacks
+    ? fallbacks.filter(q => !prevQuestions.has(q.toLowerCase().trim()))
+    : null;
+
+  // If we have enough fresh curated questions, use them
+  if (freshFallbacks && freshFallbacks.length >= count) {
+    return NextResponse.json({ questions: freshFallbacks.slice(0, count), generated_by: 'curated' });
+  }
+
+  // If all curated questions are exhausted, note it and use DeepSeek
+  const alreadyAnswered = fallbacks ? fallbacks.length - (freshFallbacks?.length || 0) : 0;
+  if (alreadyAnswered > 0 && fallbacks && fallbacks.length === alreadyAnswered) {
+    // All curated questions answered — force DeepSeek
+    count = Math.max(count, 3); // ensure at least some questions
   }
 
   // If no DeepSeek key, return whatever fallbacks we have (even if fewer than requested)
