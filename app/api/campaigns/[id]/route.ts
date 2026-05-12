@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
@@ -150,12 +152,29 @@ export async function PATCH(
     const hasCaptionReq = body.captionRequirements !== undefined;
     const hasMinVideoLength = body.minVideoLength !== undefined;
 
+    // Convert base64 cover art to a real file for OG sharing
+    let finalCoverArt = coverArtUrl;
+    if (coverArtUrl && coverArtUrl.startsWith("data:")) {
+      try {
+        const matches = coverArtUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+        if (matches) {
+          const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
+          const buffer = Buffer.from(matches[2], "base64");
+          const dir = path.join(process.cwd(), "public/images/campaigns");
+          fs.mkdirSync(dir, { recursive: true });
+          const filename = "campaign-" + campaignId.slice(0, 8) + "." + ext;
+          fs.writeFileSync(path.join(dir, filename), buffer);
+          finalCoverArt = "/images/campaigns/" + filename;
+        }
+      } catch (e) { console.error("Failed to save cover art:", e.message); }
+    }
+
     const result = await sql`
       UPDATE campaigns SET
         track_title = COALESCE(${trackTitle}, track_title),
         title = CASE WHEN ${body.title !== undefined} THEN ${title} ELSE title END,
         track_url = COALESCE(${trackUrl}, track_url),
-        cover_art_url = CASE WHEN ${hasCoverArt} THEN ${coverArtUrl} ELSE cover_art_url END,
+        cover_art_url = CASE WHEN ${hasCoverArt} THEN ${finalCoverArt} ELSE cover_art_url END,
         cpm_rate_cents = COALESCE(${cpmRateCents}, cpm_rate_cents),
         max_payout_per_submission_cents = COALESCE(${maxPayoutCents}, max_payout_per_submission_cents),
         requirements = COALESCE(${requirements}, requirements),
