@@ -166,7 +166,7 @@ export async function PATCH(
           fs.writeFileSync(path.join(dir, filename), buffer);
           finalCoverArt = "/images/campaigns/" + filename;
         }
-      } catch (e) { console.error("Failed to save cover art:", e.message); }
+      } catch (e: any) { console.error("Failed to save cover art:", e.message); }
     }
 
     const result = await sql`
