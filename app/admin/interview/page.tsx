@@ -111,10 +111,43 @@ export default function InterviewStudio() {
     } catch {}
   };
 
-  const predefinedTopics = [
-    'Life Story', 'Faith & Spirituality', 'Music Industry', 'Entrepreneurship',
-    'Marketing & Growth', 'Money & Mindset', 'Creator Economy', 'AI & Technology',
-    'Crowdfunding', 'Social Media Strategy', 'Personal Development', 'Electronic Music Production',
+  const topicCategories = [
+    {
+      label: 'Identity & Life',
+      topics: ['Life Story', 'Childhood & Family', 'Dutch Roots', 'Tenerife Life', 'Relationships', 'Darkest Moments', 'Greatest Wins'],
+    },
+    {
+      label: 'Faith & Spirit',
+      topics: ['Faith Journey', 'Prayer & Practice', 'Worship & Music', 'Theology & Beliefs', 'Spiritual Warfare', 'Faith in Business'],
+    },
+    {
+      label: 'Music & Art',
+      topics: ['Music Industry', 'Songwriting', 'Electronic Production', 'Live Performance', 'Music Tech & Gear', 'Record Labels', 'Streaming & Distribution', 'DJing & Sets'],
+    },
+    {
+      label: 'Business & Money',
+      topics: ['Entrepreneurship', 'Crowdfunding', 'Startup Failure', 'Money Mindset', 'Investing', 'Sales & Negotiation', 'Leadership', 'Business Ethics'],
+    },
+    {
+      label: 'Marketing & Growth',
+      topics: ['Marketing Strategy', 'Email Marketing', 'Content Creation', 'Brand Building', 'Community Building', 'Growth Hacking', 'Conversion Optimization'],
+    },
+    {
+      label: 'Creator Economy',
+      topics: ['Creator Economy', 'Platform Algorithms', 'TikTok Strategy', 'YouTube Strategy', 'Instagram Strategy', 'Spotify for Artists', 'Monetization Models'],
+    },
+    {
+      label: 'Mindset & Growth',
+      topics: ['Personal Development', 'Resilience', 'Habits & Discipline', 'Overcoming Fear', 'Identity & Self-Worth', 'Success Redefined', 'Purpose & Meaning'],
+    },
+    {
+      label: 'Tech & Future',
+      topics: ['AI & Technology', 'Web3 & Crypto', 'Future of Work', 'Automation', 'Digital Nomad Life', 'Tech Ethics'],
+    },
+    {
+      label: 'Philosophy',
+      topics: ['Freedom', 'Risk & Courage', 'Legacy & Impact', 'Truth & Deception', 'Justice & Fairness', 'Beauty & Excellence'],
+    },
   ];
 
   // ── Generate Questions ──────────────────────────────────────────
@@ -243,33 +276,42 @@ export default function InterviewStudio() {
               Pick a topic and I'll generate deep interview questions. Answer by speaking (🎤) or typing.
             </p>
 
-            {/* Topic selector */}
+            {/* Topic selector — categorized */}
             <div>
-              <label className="text-sm text-gray-400 block mb-2">Topic</label>
-              <div className="grid grid-cols-3 gap-2">
-                {predefinedTopics.map(t => (
+              <label className="text-sm text-gray-400 block mb-3">Topic</label>
+              <div className="space-y-5">
+                {topicCategories.map(cat => (
+                  <div key={cat.label}>
+                    <h3 className="text-[10px] uppercase tracking-wider text-gray-600 mb-2">{cat.label}</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {cat.topics.map(t => (
+                        <button
+                          key={t}
+                          onClick={() => { setTopic(t); setCustomTopic(''); }}
+                          className={`px-3 py-1.5 rounded-md text-xs transition-all ${
+                            topic === t
+                              ? 'bg-blue-600 text-white ring-1 ring-blue-400'
+                              : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div>
                   <button
-                    key={t}
-                    onClick={() => { setTopic(t); setCustomTopic(''); }}
-                    className={`p-3 rounded-lg text-sm text-left transition-all ${
-                      topic === t
-                        ? 'bg-blue-600 text-white ring-2 ring-blue-400'
-                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    onClick={() => setTopic('custom')}
+                    className={`px-3 py-1.5 rounded-md text-xs transition-all ${
+                      topic === 'custom'
+                        ? 'bg-blue-600 text-white ring-1 ring-blue-400'
+                        : 'bg-gray-800 text-gray-500 hover:bg-gray-700 hover:text-gray-300 italic'
                     }`}
                   >
-                    {t}
+                    ✏️ Custom topic...
                   </button>
-                ))}
-                <button
-                  onClick={() => setTopic('custom')}
-                  className={`p-3 rounded-lg text-sm text-left transition-all ${
-                    topic === 'custom'
-                      ? 'bg-blue-600 text-white ring-2 ring-blue-400'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  ✏️ Custom topic...
-                </button>
+                </div>
               </div>
               {topic === 'custom' && (
                 <input

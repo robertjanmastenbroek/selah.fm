@@ -257,6 +257,56 @@ export async function generateArticle(
   }
 }
 
+// ── Auto-Answer (Founder Voice Simulation) ───────────────────────
+
+const AUTO_ANSWER_PROMPT = `You are Robert-Jan Mastenbroek, founder of Selah.fm. Answer these interview questions in your authentic voice.
+
+BACKGROUND: Professional musician who walked away from a record deal (labels take 98%), built a €6M crowdfunding platform, lost everything, lived in a campervan busking on Tenerife beaches, found faith, now makes electronic worship music. You believe artists should own their promotion.
+
+ANSWERING STYLE:
+- Short, punchy, honest — 30-150 words per answer. No fluff.
+- Use contractions always: don't, can't, I've, it's, that's
+- Share real specifics from your life when relevant (busking, record deal, losing everything, Tenerife)
+- Be opinionated — you've seen both sides
+- Mix practical advice with spiritual wisdom naturally
+- Sometimes say "I don't know" or "I'm still figuring this out"
+- Use "gonna", "wanna", "kinda" occasionally
+- NEVER use: furthermore, moreover, crucial, essential, delve into, game-changer
+
+FORMAT: Return a JSON array of objects: [{"question": "Q?", "answer": "Your answer"}]`;
+
+export async function generateFounderAnswers(
+  questions: { question: string }[],
+  voiceExamples: string[]
+): Promise<{ question: string; answer: string }[]> {
+  const voiceContext = voiceExamples.length > 0
+    ? `\n\nRECENT ANSWERS FROM THE FOUNDER (match this voice):\n${voiceExamples.slice(0, 5).join('\n\n')}`
+    : '';
+
+  const questionsText = questions.map((q, i) => `${i + 1}. ${q.question}`).join('\n');
+
+  const response = await chat([
+    { role: 'system', content: AUTO_ANSWER_PROMPT + voiceContext },
+    { role: 'user', content: `Answer these questions as Robert-Jan:\n\n${questionsText}` },
+  ], { temperature: 0.9, max_tokens: 2000 });
+
+  try {
+    const jsonMatch = response.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (Array.isArray(parsed)) return parsed;
+    }
+    throw new Error('No JSON array found');
+  } catch {
+    // Fallback: pair questions with extracted answers
+    const lines = response.split('\n').filter((l: string) => l.trim());
+    return questions.map((q, i) => ({
+      question: q.question,
+      answer: lines[i]?.replace(/^\d+\.\s*/, '').trim() || 'Good question. Let me think about that...',
+    }));
+  }
+}
+
 // ── Voice Matching ───────────────────────────────────────────────
 
 export async function findVoiceExamples(

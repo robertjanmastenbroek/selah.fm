@@ -4,6 +4,7 @@ import { getSession, isAdminRequest } from '@/lib/auth';
 import {
   generateInterviewQuestions,
   generateArticle,
+  generateFounderAnswers,
   findVoiceExamples,
   getFallbackQuestions,
   sourceQuestionsFromReddit,
@@ -33,6 +34,10 @@ export async function POST(request: Request) {
         return generateInterviews(body.batchId);
       case 'save_answers':
         return saveAnswers(body.batchId, body.interviewId, body.answers);
+      case 'auto_answer':
+        return autoAnswer(body.batchId, body.interviewId);
+      case 'auto_answer_all':
+        return autoAnswerAll(body.batchId);
       case 'finalize_batch':
         return finalizeBatch(body.batchId);
       case 'publish_post':
@@ -152,6 +157,94 @@ async function saveAnswers(batchId: string, interviewId: string, answers: { ques
   }
 
   return NextResponse.json({ success: true, interviewId, totalAnswered: Number(status[0].answered), total: Number(status[0].total) });
+}
+
+async function autoAnswer(batchId: string, interviewId: string) {
+  // Get the interview with generated questions
+  const [interview] = await sql`
+    SELECT * FROM batch_interviews WHERE id = ${interviewId} AND batch_id = ${batchId}
+  `;
+  if (!interview) return NextResponse.json({ error: 'Interview not found' }, { status: 404 });
+
+  const questions = interview.generated_questions || [];
+  if (questions.length === 0) {
+    return NextResponse.json({ error: 'No generated questions for this interview' }, { status: 400 });
+  }
+
+  // Get voice examples: first from already-answered interviews in this batch, then from library
+  const [existingAnswers] = await sql`
+    SELECT transcript FROM batch_interviews
+    WHERE batch_id = ${batchId} AND status = 'answered' AND id != ${interviewId}
+    ORDER BY created_at LIMIT 3
+  `;
+
+  const [voiceChunks] = await sql`
+    SELECT chunk_text FROM voice_chunks ORDER BY created_at DESC LIMIT 5
+  `;
+
+  const voiceExamples: string[] = [
+    ...(existingAnswers ? [existingAnswers.transcript] : []),
+    ...voiceChunks?.rows?.map((r: any) => r.chunk_text) || [],
+  ].filter(Boolean);
+
+  // Generate answers
+  const answers = await generateFounderAnswers(questions, voiceExamples);
+
+  // Save them
+  const transcript = answers.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
+  await sql`
+    UPDATE batch_interviews
+    SET founder_answers = ${JSON.stringify(answers)}, transcript = ${transcript}, status = 'answered', updated_at = NOW()
+    WHERE id = ${interviewId} AND batch_id = ${batchId}
+  `;
+
+  // Check progress
+  const status = await sql`
+    SELECT COUNT(*) as total,
+           COUNT(*) FILTER (WHERE status = 'answered') as answered
+    FROM batch_interviews WHERE batch_id = ${batchId}
+  `;
+
+  if (Number(status[0].total) === Number(status[0].answered)) {
+    await sql`UPDATE batches SET status = 'answers_complete', updated_at = NOW() WHERE id = ${batchId}`;
+  }
+
+  return NextResponse.json({
+    success: true,
+    interviewId,
+    answers,
+    totalAnswered: Number(status[0].answered),
+    total: Number(status[0].total),
+  });
+}
+
+async function autoAnswerAll(batchId: string) {
+  const pending = await sql`
+    SELECT id FROM batch_interviews
+    WHERE batch_id = ${batchId} AND status = 'pending'
+    ORDER BY created_at
+  `;
+
+  if (pending.length === 0) {
+    return NextResponse.json({ success: true, message: 'No pending interviews', autoAnswered: 0 });
+  }
+
+  let count = 0;
+  for (const row of pending) {
+    try {
+      // Simulate a fake request to reuse autoAnswer logic
+      const req = new Request('http://localhost', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'auto_answer', batchId, interviewId: row.id }),
+      });
+      const res = await POST(req);
+      if (res.ok) count++;
+    } catch (e: any) {
+      console.error(`Auto-answer failed for ${row.id}:`, e.message);
+    }
+  }
+
+  return NextResponse.json({ success: true, autoAnswered: count, total: pending.length });
 }
 
 async function finalizeBatch(batchId: string) {
