@@ -5,7 +5,7 @@ import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMess
 import { generateArticle, findVoiceExamples } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
 
-export const maxDuration = 120; // 2 minutes — discovery does searches + artist lookups
+export const maxDuration = 180; // 3 minutes — 20 searches + up to 200 artist lookups
 
 // ── POST /api/admin/outreach ──────────────────────────────────────
 

@@ -59,27 +59,22 @@ async function spotifyGet(path: string) {
 const AI_DISTRIBUTORS = ['boomy', 'mubert', 'soundful', 'aiva', 'beatoven', 'soundraw', 'loudly', 'evoke'];
 const AI_NAME_PATTERNS = [/^lofi\s/i, /^chill\s/i, /study\sbeats/i, /synth\swaves/i, /ambient\s/i, /sleep\s/i, /focus\s/i];
 
-function detectAiSignals(artist: any, albums: any[]): number {
+function detectAiSignals(artist: any, _albums: any[]): number {
   let signals = 0;
 
-  // 1. Empty/generic bio
-  const bio = (artist.genres || []).join(' ') + ' ' + (artist.name || '');
-  if (!artist.images?.length || bio.length < 20) signals++;
+  // 1. No profile images at all (real artists always have at least 1)
+  if (!artist.images?.length) signals++;
 
-  // 2. No social links in external_urls
-  if (!artist.external_urls?.spotify) signals++;
-
-  // 3. Unnatural release volume (check albums for many tracks same day)
-  // We can't check this from the artist endpoint alone — requires album lookup
-
-  // 4. AI distributor check (from album data)
-  // Would need to check album labels
-
-  // 5. Generic name patterns
+  // 2. Generic AI name patterns (e.g. "Lofi Study Beats")
   if (AI_NAME_PATTERNS.some(p => p.test(artist.name || ''))) signals++;
 
-  // 6. No images or abstract images
-  if (!artist.images?.length || artist.images.length < 2) signals++;
+  // 3. Empty genres + no bio (Spotify returns empty genres for AI-generated artists)
+  const hasGenres = (artist.genres || []).length > 0;
+  const hasBio = (artist.name || '').length > 3;
+  if (!hasGenres && !hasBio) signals++;
+
+  // 4. No followers at all (0 followers = likely fake or newly created AI account)
+  if ((artist.followers?.total || 0) === 0) signals++;
 
   return signals;
 }
@@ -123,18 +118,17 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
     return { artists: [], diagnostics };
   }
 
-  // Strategy: broad text search with common words that appear in song titles
-  // across every genre. Then filter by release date + followers after getting artist data.
+  // Strategy: broad text search — no pre-filtering. Let artist lookup + follower range
+  // do the narrowing. limit=10 is the only value that works on Spotify free tier.
   const allTracks: any[] = [];
   const seenTrackIds = new Set<string>();
 
-  // Broad text search + popularity filter. limit=10 is the only value that works reliably
-  // on Spotify's free-tier search (limit=15 and limit=20 both return 400 "Invalid limit").
-  // We use many search terms to compensate for the small per-query limit.
+  // 20 common song-title words that appear in tracks from every genre.
+  // No popularity filter — we want ALL tracks so we can discover artists at every level.
   const searchTerms = [
-    'love', 'night', 'dream', 'fire', 'rain',
-    'wild', 'free', 'lost', 'ghost', 'storm',
-    'river', 'summer',
+    'love', 'night', 'dream', 'fire', 'rain', 'wild', 'free', 'lost',
+    'ghost', 'storm', 'river', 'summer', 'heart', 'blue', 'gold',
+    'light', 'dark', 'fall', 'home', 'sun',
   ];
   for (const term of searchTerms) {
     try {
@@ -145,29 +139,26 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
 
       if (!searchRes.ok) {
         const errText = await searchRes.text().catch(() => '');
-        diagnostics.push(`⚠️  Search "${term}" failed (${searchRes.status}): ${errText.slice(0, 100)}`);
+        diagnostics.push(`⚠️  Search "${term}" failed (${searchRes.status}): ${errText.slice(0, 80)}`);
         continue;
       }
 
       const data = await searchRes.json();
       const items = data.tracks?.items || [];
-      
-      // Only keep low-popularity tracks (< 40) — these are from independent artists
-      const lowPop = items.filter((t: any) => (t.popularity || 0) < 40);
-      diagnostics.push(`🔍 Search "${term}" → ${items.length} tracks (${lowPop.length} low-pop)`);
+      diagnostics.push(`🔍 "${term}" → ${items.length}`);
 
-      for (const t of lowPop) {
+      for (const t of items) {
         if (!seenTrackIds.has(t.id)) {
           seenTrackIds.add(t.id);
           allTracks.push(t);
         }
       }
     } catch (e: any) {
-      diagnostics.push(`⚠️  Search error for "${term}": ${e.message}`);
+      diagnostics.push(`⚠️  "${term}" error: ${e.message}`);
     }
   }
 
-  diagnostics.push(`📊 Total unique tracks to check: ${allTracks.length}`);
+  diagnostics.push(`📊 ${allTracks.length} unique tracks to check`);
 
   if (allTracks.length === 0) {
     diagnostics.push('❌ No tracks found from any genre search');
@@ -189,14 +180,15 @@ export async function discoverArtists(_query: string = 'year:2025-2026', limit: 
         const artistData = await spotifyGet(`/artists/${artist.id}`);
         const followers = artistData.followers?.total || 0;
 
-        // Accept artists with 10–500k followers (was 50–200k)
-        if (followers < 10 || followers > 500000) {
+        // Wide net: 1 – 1,000,000 followers. Let AI detection catch fakes.
+        if (followers < 1 || followers > 1000000) {
           skippedFollowers++;
           continue;
         }
 
         const aiSignals = detectAiSignals(artistData, []);
-        if (aiSignals >= 2) {
+        // Only skip if 3+ AI signals (was 2 — too aggressive, caught real artists)
+        if (aiSignals >= 3) {
           skippedAi++;
           continue;
         }
