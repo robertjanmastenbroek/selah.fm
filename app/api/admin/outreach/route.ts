@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { isAdminRequest } from '@/lib/auth';
@@ -193,8 +195,22 @@ async function runCreateCampaign(artistId: string) {
     ? `${artist.artist_name} — ${artist.latest_track_name}`
     : `${artist.artist_name} — Latest Release`;
 
-  // Cover art: use Bandcamp CDN (fast, reliable, permanent)
+  // Cover art: download external URLs and re-host locally so OG images always work
   let coverArtUrl = artist.latest_track_cover_url || '/images/og-image.jpg';
+  if (coverArtUrl && coverArtUrl.startsWith('http')) {
+    try {
+      const res = await fetch(coverArtUrl, { headers: { 'User-Agent': 'SelahFM/1.0' } });
+      if (res.ok) {
+        const buffer = Buffer.from(await res.arrayBuffer());
+        const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+        const dir = path.join(process.cwd(), 'public/images/campaigns');
+        fs.mkdirSync(dir, { recursive: true });
+        const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+        fs.writeFileSync(path.join(dir, filename), buffer);
+        coverArtUrl = `/images/campaigns/${filename}`;
+      }
+    } catch { /* keep original URL if download fails */ }
+  }
 
   const [campaign] = await sql`
     INSERT INTO campaigns (
