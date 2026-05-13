@@ -556,7 +556,7 @@ function MoreCampaigns({ currentId }: { currentId: string }) {
   const router = useRouter();
 
   useEffect(() => {
-    fetch('/api/campaigns?limit=50')
+    fetch('/api/campaigns?limit=50', { credentials: 'omit' })
       .then(r => r.json())
       .then(data => {
         const all = (data.campaigns || [])
