@@ -50,8 +50,8 @@ export default function OutreachQueue({ count, actionLoading, setActionLoading, 
 
   const dmArtist = async (artist: QueueArtist) => {
     const id = `dm-${artist.id}`;
-    if (!artist.instagram_handle) {
-      addToast('info', `No Instagram handle for ${artist.artist_name}`);
+    if (!artist.instagram_handle && !artist.tiktok_handle) {
+      addToast('info', `No social handles for ${artist.artist_name}`);
       return;
     }
     setActionLoading(id);
@@ -64,8 +64,12 @@ export default function OutreachQueue({ count, actionLoading, setActionLoading, 
       const data = await res.json();
       if (data.error) { addToast('error', 'Failed', data.error); setActionLoading(''); return; }
       await navigator.clipboard.writeText(data.message);
-      window.open(`https://ig.me/m/${artist.instagram_handle}`, '_blank');
-      addToast('success', `Message copied — ${artist.artist_name}`, `📋 Copied · 📸 IG: https://ig.me/m/${artist.instagram_handle}`);
+      const ig = data.instagram_handle || artist.instagram_handle;
+      const tt = data.tiktok_handle || artist.tiktok_handle;
+      if (ig) window.open(`https://ig.me/m/${ig}`, '_blank');
+      if (tt) window.open(`https://www.tiktok.com/@${tt}`, '_blank');
+      const channels = [ig && `📸 IG: https://ig.me/m/${ig}`, tt && `🎵 TikTok: https://www.tiktok.com/@${tt}`].filter(Boolean).join(' · ');
+      addToast('success', `Message copied — ${artist.artist_name}`, `📋 Copied · ${channels}`);
     } catch (e: any) {
       addToast('error', 'Failed', e.message);
     }
@@ -111,7 +115,8 @@ export default function OutreachQueue({ count, actionLoading, setActionLoading, 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-sm truncate">{artist.artist_name}</span>
-                    <span className="text-[10px] text-pink-400 shrink-0">📸 @{artist.instagram_handle}</span>
+                    {artist.instagram_handle && <span className="text-[10px] text-pink-400 shrink-0">📸 @{artist.instagram_handle}</span>}
+                    {artist.tiktok_handle && <span className="text-[10px] text-blue-400 shrink-0">🎵 @{artist.tiktok_handle}</span>}
                   </div>
                   <div className="text-[10px] text-muted-foreground truncate mt-0.5">
                     {artist.latest_track_name ? `🎵 ${artist.latest_track_name}` : 'Click to copy message'}

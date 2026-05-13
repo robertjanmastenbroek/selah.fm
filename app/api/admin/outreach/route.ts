@@ -180,8 +180,8 @@ async function runCreateCampaign(artistId: string) {
   const [audit] = await sql`SELECT * FROM artist_audits WHERE discovered_artist_id = ${artist.id} ORDER BY audited_at DESC LIMIT 1`;
   if (!audit) return NextResponse.json({ error: 'No audit found — run audit first' }, { status: 400 });
 
-  if (!audit.instagram_handle) {
-    return NextResponse.json({ error: 'No Instagram handle — cannot DM this artist. Campaign not created.' }, { status: 400 });
+  if (!audit.instagram_handle && !audit.tiktok_handle) {
+    return NextResponse.json({ error: 'No Instagram or TikTok handle — cannot DM this artist. Campaign not created.' }, { status: 400 });
   }
 
   // Clean slug: artist-name-track-name-random4 (ASCII only, max 100 chars)
@@ -303,6 +303,7 @@ async function runRenderOutreach(artistId: string) {
     campaignUrl,
     audit.instagram_handle || undefined,
     audit.youtube_video_url || undefined,
+    audit.tiktok_handle || undefined,
   );
 
   return NextResponse.json({
@@ -537,7 +538,7 @@ async function getOutreachQueue() {
     JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
     JOIN campaigns c ON c.id = cc.campaign_id
     WHERE da.status = 'campaign_created'
-      AND aa.instagram_handle IS NOT NULL
+      AND (aa.instagram_handle IS NOT NULL OR aa.tiktok_handle IS NOT NULL)
       AND NOT EXISTS (SELECT 1 FROM outreach_log ol WHERE ol.discovered_artist_id = da.id AND ol.status = 'sent')
     ORDER BY da.id, aa.audited_at DESC
     LIMIT 50

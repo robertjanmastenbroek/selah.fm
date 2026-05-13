@@ -266,11 +266,11 @@ export async function generateOutreachMessage(
   campaignUrl: string,
   instagramHandle?: string,
   youtubeUrl?: string,
+  tiktokHandle?: string,
 ): Promise<string> {
   const apiKey = process.env.DEEPSEEK_API_KEY;
   if (!apiKey) {
-    // Fallback to template if no API key
-    return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
+    return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl, tiktokHandle);
   }
 
   // Randomized context for maximum uniqueness
@@ -283,6 +283,7 @@ Genre: ${genre || 'independent music'}
 Campaign page: ${campaignUrl}
 Tone: ${style}${Math.random() < 0.5 ? ' — be brief' : ''}
 ${instagramHandle ? `Instagram: @${instagramHandle}` : ''}
+${tiktokHandle ? `TikTok: @${tiktokHandle}` : ''}
 ${youtubeUrl ? `YouTube video: ${youtubeUrl}` : ''}
 
 Write this message in a ${style} style. Make the opening about their track "${trackName}" specifically — not generic.`;
@@ -308,14 +309,14 @@ Write this message in a ${style} style. Make the opening about their track "${tr
     });
 
     if (!res.ok) {
-      return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
+      return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl, tiktokHandle);
     }
 
     const data = await res.json();
     const message = data.choices?.[0]?.message?.content?.trim();
-    return message || renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
+    return message || renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl, tiktokHandle);
   } catch {
-    return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
+    return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl, tiktokHandle);
   }
 }
 

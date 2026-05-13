@@ -55,7 +55,7 @@ export async function GET(request: Request) {
       WHERE ol.message_type = 'initial'
         AND ol.status = 'sent'
         AND ol.created_at < NOW() - INTERVAL '7 days'
-        AND aa.instagram_handle IS NOT NULL
+        AND (aa.instagram_handle IS NOT NULL OR aa.tiktok_handle IS NOT NULL)
         AND c.is_unclaimed = true
         AND cc.claimed_at IS NULL
         AND NOT EXISTS (

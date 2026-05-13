@@ -80,7 +80,7 @@ export default function ArtistCard({
     || actionLoading.startsWith(`followup-${artist.id}`)
     || actionLoading.startsWith(`skip-${artist.id}`)
     || actionLoading === `log-${artist.id}`;
-  const hasInstagram = !!artist.instagram_handle;
+  const hasSocial = !!(artist.instagram_handle || artist.tiktok_handle);
 
   return (
     <motion.div
@@ -110,9 +110,9 @@ export default function ArtistCard({
               <StatusIcon size={10} />
               {status.label}
             </span>
-            {artist.status === 'audited' && !hasInstagram && (
+            {artist.status === 'audited' && !hasSocial && (
               <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-500/10 text-red-400">
-                <X size={10} />No IG
+                <X size={10} />No socials
               </span>
             )}
           </div>
@@ -120,7 +120,7 @@ export default function ArtistCard({
             {artist.followers ? <span className="font-medium text-foreground/60">{artist.followers.toLocaleString()} followers</span> : null}
             {artist.genres?.length ? <span>{artist.genres.slice(0, 3).join(', ')}</span> : null}
             {artist.latest_track_name && <span className="truncate max-w-[200px]">🎵 {artist.latest_track_name}</span>}
-            {hasInstagram && <span className="text-pink-400 font-medium">📸 @{artist.instagram_handle}</span>}
+            {artist.instagram_handle && <span className="text-pink-400 font-medium">📸 @{artist.instagram_handle}</span>}
             {artist.tiktok_handle && <span className="text-blue-400 font-medium">🎵 @{artist.tiktok_handle}</span>}
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function ArtistCard({
           )}
           {artist.status === 'audited' && (
             <>
-              {hasInstagram && (
+              {hasSocial && (
                 <ActionBtn onClick={() => onCreateCampaign(artist.id)} loading={actionLoading === `campaign-${artist.id}`}
                   disabled={isBusy} color="amber" label="Create" />
               )}

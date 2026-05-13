@@ -154,8 +154,8 @@ export async function GET(request: Request) {
           ORDER BY audited_at DESC LIMIT 1
         `;
         const audit = auditCheck[0];
-        if (!audit?.instagram_handle) {
-          log.push(`  ⚠️  No Instagram handle for ${artist.artist_name} — skipping (can't DM)`);
+        if (!audit?.instagram_handle && !audit?.tiktok_handle) {
+          log.push(`  ⚠️  No social handles for ${artist.artist_name} — skipping (can't DM)`);
           continue;
         }
 

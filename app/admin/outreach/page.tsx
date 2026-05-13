@@ -99,9 +99,11 @@ export default function OutreachDashboard() {
       if (data.error) { addToast('error', 'Could not render message', data.error); setActionLoading(''); return; }
       await navigator.clipboard.writeText(data.message);
       const ig = data.instagram_handle || igHandle;
+      const tt = data.tiktok_handle || ttHandle;
       if (ig) window.open(`https://ig.me/m/${ig}`, '_blank');
-      const detail = ig ? `📋 Copied · 📸 IG: https://ig.me/m/${ig}` : '📋 Copied to clipboard';
-      addToast('success', `Message copied — ${data.artist_name}`, detail);
+      if (tt) window.open(`https://www.tiktok.com/@${tt}`, '_blank');
+      const channels = [ig && `📸 IG: https://ig.me/m/${ig}`, tt && `🎵 TikTok: https://www.tiktok.com/@${tt}`].filter(Boolean).join(' · ');
+      addToast('success', `Message copied — ${data.artist_name}`, `📋 Copied · ${channels || 'Paste into DM'}`);
     } catch (e: any) { addToast('error', 'Could not render message', e.message); }
     setActionLoading('');
   };
