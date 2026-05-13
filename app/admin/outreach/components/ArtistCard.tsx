@@ -78,8 +78,8 @@ export default function ArtistCard({
     || actionLoading.startsWith(`outreach-${artist.id}`)
     || actionLoading.startsWith(`dm-${artist.id}`)
     || actionLoading.startsWith(`followup-${artist.id}`)
-    || actionLoading.startsWith(`log-${artist.id}`)
-    || actionLoading.startsWith(`skip-${artist.id}`);
+    || actionLoading.startsWith(`skip-${artist.id}`)
+    || actionLoading === `log-${artist.id}`;
   const hasInstagram = !!artist.instagram_handle;
 
   return (

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Music2, Loader2 } from 'lucide-react';
+import { Send, Music2, Loader2, Check } from 'lucide-react';
 import type { Toast } from './ToastBar';
 
 interface QueueArtist {
@@ -21,9 +21,10 @@ interface OutreachQueueProps {
   setActionLoading: (v: string) => void;
   addToast: (type: Toast['type'], title: string, detail?: string) => void;
   fetchPipeline: () => void;
+  onLogOutreach: (artistId: string) => void;
 }
 
-export default function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetchPipeline }: OutreachQueueProps) {
+export default function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetchPipeline, onLogOutreach }: OutreachQueueProps) {
   const [queue, setQueue] = useState<QueueArtist[]>([]);
   const [loaded, setLoaded] = useState(false);
   const isGlobalBusy = actionLoading === 'discover' || actionLoading === 'batch-audit';
@@ -87,7 +88,7 @@ export default function OutreachQueue({ count, actionLoading, setActionLoading, 
       ) : (
         <div className="space-y-2">
           {queue.map((artist) => {
-            const isBusy = actionLoading === `dm-${artist.id}` || actionLoading === `outreach-${artist.id}` || isGlobalBusy;
+            const isBusy = actionLoading === `dm-${artist.id}` || actionLoading === `outreach-${artist.id}` || actionLoading === `log-${artist.id}` || isGlobalBusy;
             return (
               <motion.div
                 key={artist.id}
@@ -117,19 +118,35 @@ export default function OutreachQueue({ count, actionLoading, setActionLoading, 
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {isBusy ? (
+                  {isBusy && actionLoading !== `log-${artist.id}` ? (
                     <Loader2 size={14} className="animate-spin text-[#22C55E]" />
                   ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={(e) => { e.stopPropagation(); dmArtist(artist); }}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-semibold
-                        hover:bg-[#22C55E]/20 transition-colors"
-                    >
-                      <Send size={11} />
-                      Message
-                    </motion.button>
+                    <>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => { e.stopPropagation(); dmArtist(artist); }}
+                        disabled={actionLoading === `log-${artist.id}`}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-semibold
+                          hover:bg-[#22C55E]/20 transition-colors disabled:opacity-40"
+                      >
+                        <Send size={11} />
+                        Message
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => { e.stopPropagation(); onLogOutreach(artist.id); }}
+                        disabled={isBusy}
+                        title="✓ Mark DM as sent"
+                        className="flex items-center justify-center w-7 h-7 rounded-lg
+                          border border-white/[0.06] text-muted-foreground
+                          hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20
+                          transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        {actionLoading === `log-${artist.id}` ? <Loader2 size={11} className="animate-spin" /> : <Check size={12} />}
+                      </motion.button>
+                    </>
                   )}
                 </div>
               </motion.div>

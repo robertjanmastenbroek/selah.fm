@@ -189,7 +189,8 @@ export default function OutreachDashboard() {
 
       {/* Ready for Outreach */}
       <OutreachQueue count={p.campaigns_created - p.outreach_sent}
-        actionLoading={actionLoading} setActionLoading={setActionLoading} addToast={addToast} fetchPipeline={fetchPipeline} />
+        actionLoading={actionLoading} setActionLoading={setActionLoading} addToast={addToast}
+        fetchPipeline={fetchPipeline} onLogOutreach={logOutreach} />
 
       {/* Artist list */}
       <div>
