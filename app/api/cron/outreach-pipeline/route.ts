@@ -30,9 +30,11 @@ export async function GET(request: Request) {
     const genres = ['indie', 'alternative', 'electronic', 'hip-hop', 'r-n-b', 'pop', 'rock', 'folk', 'metal'];
     const shuffled = [...genres].sort(() => Math.random() - 0.5);
     
-    const discoveryLimit = parseInt(searchParams.get('limit') || '5');
+    const discoveryLimit = parseInt(searchParams.get('limit') || '10');
+    const auditBatchSize = parseInt(searchParams.get('audit') || '50');
+    const campaignBatchSize = parseInt(searchParams.get('campaigns') || '50');
 
-    log.push(`Starting multi-channel discovery (Reddit + Bandcamp + YouTube) [limit=${discoveryLimit}]`);
+    log.push(`Pipeline config: discover=${discoveryLimit}, audit=${auditBatchSize}, campaigns=${campaignBatchSize}`);
 
     const discoveryResult = await discoverArtists('year:2025-2026', discoveryLimit);
     const discovered = discoveryResult.artists;
@@ -80,7 +82,6 @@ export async function GET(request: Request) {
     log.push(`Stored ${stored} new artists`);
 
     // ── Phase 2: Audit ─────────────────────────────────────
-    const auditBatchSize = parseInt(searchParams.get('audit') || '10');
     const toAudit = await sql`
       SELECT * FROM discovered_artists
       WHERE status = 'discovered' AND is_ai_artist = false
@@ -136,7 +137,7 @@ export async function GET(request: Request) {
       JOIN artist_audits aa ON aa.discovered_artist_id = da.id
       WHERE da.status = 'audited'
       ORDER BY aa.audited_at ASC
-      LIMIT 3
+      LIMIT ${campaignBatchSize}
     `;
 
     for (const artist of toCreate) {

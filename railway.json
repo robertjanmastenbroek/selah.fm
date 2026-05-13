@@ -9,8 +9,12 @@
     "healthcheckTimeout": 30,
     "cron": [
       {
-        "schedule": "0 6 * * *",
-        "path": "/api/cron/outreach-pipeline?secret=ROTATED_SECRET&limit=5"
+        "schedule": "0 2 * * *",
+        "path": "/api/cron/outreach-pipeline?secret=ROTATED_SECRET&limit=10&audit=30&campaigns=30"
+      },
+      {
+        "schedule": "0 14 * * *",
+        "path": "/api/cron/outreach-pipeline?secret=ROTATED_SECRET&limit=10&audit=30&campaigns=30"
       },
       {
         "schedule": "0 18 * * *",

@@ -465,7 +465,20 @@ export default function OutreachDashboard() {
         addToast('error', 'Could not render message', data.error);
       } else {
         await navigator.clipboard.writeText(data.message);
-        addToast('success', 'Message copied', `Ready to send to ${data.artist_name} via Instagram DM.`);
+        const igHandle = data.instagram_handle;
+        const igLink = igHandle ? `https://ig.me/m/${igHandle}` : null;
+        
+        // Show toast with DM link
+        addToast('success', 'Message copied', 
+          igLink 
+            ? `📋 Copied · 📸 DM ${data.artist_name}: ${igLink}`
+            : `Ready to send to ${data.artist_name} via Instagram DM.`
+        );
+        
+        // Open Instagram DM in new tab if handle found
+        if (igLink) {
+          setTimeout(() => window.open(igLink, '_blank'), 500);
+        }
       }
     } catch (e: any) {
       addToast('error', 'Could not render message', e.message);
