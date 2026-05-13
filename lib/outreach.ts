@@ -186,27 +186,30 @@ BANNED WORDS: furthermore, moreover, consequently, thus, hence, crucial, essenti
 
 const OUTREACH_PROMPT = `${FOUNDER_VOICE}
 
-TASK: Write a short, personal outreach message to an independent artist. You discovered their music and already built a campaign page for them on Selah.fm. You're reaching out to let them know — no pressure, just genuine appreciation for their music.
+TASK: Write a short Instagram DM to an independent artist. Follow this exact 2-part structure:
+
+PART 1 — THE PROBLEM (1-2 sentences):
+Acknowledge that their music deserves to be heard by more people. It's stuck in the noise. The algorithm isn't helping. They're making great music but it's not reaching ears. Be specific — reference their track name.
+
+PART 2 — THE SOLUTION (3-4 sentences):
+You already built a page for them on Selah.fm. Here's what that means: they can share this page with their family, friends, and fans. Those people can either (a) create a TikTok/Reel with the song and earn per view, or (b) chip in a few dollars to fund promotion by other creators. The artist doesn't pay anything upfront — they only pay when videos get verified views. All they have to do is claim the page and share it with their people.
 
 RULES:
-- Keep it under 200 words — this is an Instagram DM, not an email
-- Open with a specific, genuine compliment about their music (use the track name and genre)
-- Don't sound like a template. Every message must feel like you actually listened to their track
-- Share a brief personal connection if it fits: "I used to make [genre] music myself" or "This reminds me of..."
-- Mention the campaign page naturally, not as a pitch. "I actually built a page for it" not "Check out our platform"
-- Include the campaign URL
-- End with warmth, not a hard CTA. "No rush, no pressure. The page is just there whenever."
+- Keep it under 180 words — this is an Instagram DM
+- The problem must feel real, not manufactured. "Your song's not getting the reach it deserves" not "in today's competitive landscape"
+- The solution must feel like a gift, not a pitch. "I built a page for it" not "our platform can help"
+- Include the campaign URL on its own line with 👉
+- You can reference their Instagram handle if you DM'd them there: "DM'd you here since I follow you"
+- End authentically, not with a fake CTA. Something like: "Claim it when you're ready. Or don't. It just sits there."
 - Sign as: — Robert-Jan (founder, Selah.fm)
 
-ANTI-SPAM RULES (CRITICAL):
-- Never use: "I came across your profile", "I was impressed by", "Your music is amazing" (too generic)
-- Never use: "As a fellow musician", "We'd love to have you", "Join our community" (spam signals)
-- Never use: more than one exclamation mark total
-- Never: ALL CAPS words
-- Never: emojis in the body (signature emojis are fine)
-- The message must sound like a human being wrote it specifically for this artist
+ANTI-SPAM RULES:
+- Never: "I came across your profile", "I was impressed by", "Your music is amazing", "As a fellow musician", "We'd love to have you", "Join our community"
+- Never: more than one exclamation mark total
+- Never: ALL CAPS or emojis in body
+- Sound like a human, not a template
 
-FORMAT: Return ONLY the message text, ready to paste. No quotes, no JSON wrapper.`;
+FORMAT: Return ONLY the message text. No quotes, no JSON.`;
 
 export async function generateOutreachMessage(
   artistName: string,
@@ -272,42 +275,39 @@ function renderOutreachTemplate(
   youtubeUrl?: string,
   tiktokHandle?: string,
 ): string {
-  const videoLine = youtubeUrl ? `\nI even found a music video on YouTube and added it.` : '';
+  const videoLine = youtubeUrl ? `\nI even added the music video I found.` : '';
   const handleLines: string[] = [];
   if (instagramHandle) handleLines.push(`Instagram (@${instagramHandle})`);
   if (tiktokHandle) handleLines.push(`TikTok (@${tiktokHandle})`);
-  const handleLine = handleLines.length > 0 ? `\nP.S. — I'll DM you on ${handleLines.join(' and ')} too.` : '';
+  const handleLine = handleLines.length > 0 ? `\nDM'd you here on ${handleLines.join(' and ')}.` : '';
 
   const genreAngles: Record<string, string> = {
-    electronic: `I've been digging through new electronic music and "${trackName}" stopped me mid-scroll.`,
-    rock: `Heard "${trackName}" and it hit me — this is the kind of rock that deserves way more ears.`,
-    indie: `"${trackName}" has that raw, honest indie energy that's getting harder to find.`,
-    metal: `The production on "${trackName}" is tight. This is the metal I wish I heard more of.`,
-    pop: `"${trackName}" is catchy in the best way — not manufactured, just genuinely good pop.`,
-    folk: `There's something honest about "${trackName}". The kind of folk music that tells a real story.`,
-    'hip-hop': `"${trackName}" has bars that actually say something. Refreshing in a sea of filler.`,
-    experimental: `"${trackName}" is doing something different and I'm here for it.`,
+    electronic: `"${trackName}" deserves way more ears than it's getting.`,
+    rock: `"${trackName}" hits hard — and almost nobody's hearing it.`,
+    indie: `"${trackName}" has that raw energy but it's buried in the noise.`,
+    metal: `The production on "${trackName}" is tight. Shouldn't be this hard to find.`,
+    pop: `"${trackName}" is catchy. Like, actually good. But the algorithm doesn't care.`,
+    folk: `"${trackName}" tells a real story. Problem is, not enough people are hearing it.`,
+    'hip-hop': `The bars on "${trackName}" are solid. But the reach isn't matching the quality.`,
+    experimental: `"${trackName}" is doing something different. Deserves an audience.`,
   };
 
-  const angle = genreAngles[genre.toLowerCase()] || `"${trackName}" caught my attention — and I don't say that lightly.`;
+  const angle = genreAngles[genre.toLowerCase()] || `"${trackName}" isn't getting the reach it deserves.`;
 
   return `Hey ${artistName},
 
 ${angle}
 
-Look, here's the thing. I run Selah.fm — a platform where people make TikToks and Reels with your music. You set the terms. You approve every video. You only pay when views actually happen. No upfront cost. No bots.
+Here's the thing. I run Selah.fm — and I built a page for this track. Here's what that means:
 
-I already built a campaign page for "${trackName}" with your cover art and everything.${videoLine}
+You share this page with your friends, family, and fans. They can either make a TikTok or Reel with your song and earn per view, or chip in a few bucks to fund promotion by other creators. You don't pay anything upfront — you only pay when videos get verified views.${videoLine}
 
 👉 ${campaignUrl}
 
-Your friends and fans can chip in a few bucks to fund it. Anyone can submit a video — even someone with 300 followers. You're in control the whole time.
-
-Claim it when you want. Or don't. No pressure. No rush. The page just sits there working in the background.${handleLine}
+Just claim it and share it with your people. Or don't. The page is there whenever you want it.${handleLine}
 
 — Robert-Jan
-  Founder, Selah.fm
-  (former musician who got tired of labels taking 98%)`;
+  Founder, Selah.fm`;
 }
 
 /**
