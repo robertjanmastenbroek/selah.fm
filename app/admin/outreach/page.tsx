@@ -245,18 +245,49 @@ function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetch
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {isBusy ? (
                     <Loader2 size={14} className="animate-spin text-[#22C55E]" />
                   ) : (
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-semibold
-                        group-hover:bg-[#22C55E]/20 transition-colors"
-                    >
-                      <Send size={11} />
-                      Message
-                    </motion.div>
+                    <>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={(e) => { e.stopPropagation(); dmArtist(artist); }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-semibold
+                          hover:bg-[#22C55E]/20 transition-colors"
+                      >
+                        <Send size={11} />
+                        Message
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const lk = `log-${artist.id}`;
+                          setActionLoading(lk);
+                          try {
+                            await fetch('/api/admin/outreach', {
+                              method: 'POST', credentials: 'include',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ action: 'log_outreach', artistId: artist.id, channel: 'instagram_dm', status: 'sent' }),
+                            });
+                            addToast('success', `✓ DM logged for ${artist.artist_name}`, 'Moved to outreach_sent.');
+                            fetchPipeline();
+                          } catch (e: any) {
+                            addToast('error', 'Failed', e.message);
+                          }
+                          setActionLoading('');
+                        }}
+                        disabled={isBusy}
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-muted-foreground text-[10px] font-medium
+                          hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20 transition-all"
+                        title="Mark as sent"
+                      >
+                        <Check size={11} />
+                      </motion.button>
+                    </>
                   )}
                 </div>
               </motion.div>
@@ -425,13 +456,24 @@ function ArtistCard({ artist, instagram_handle, tiktok_handle, actionLoading, on
                 color="green"
                 label="Message"
               />
-              <ActionButton
+              <motion.button
+                whileHover={!isBusy ? { scale: 1.05 } : {}}
+                whileTap={!isBusy ? { scale: 0.93 } : {}}
                 onClick={() => onLogOutreach(artist.id)}
-                loading={actionLoading === `log-${artist.id}`}
                 disabled={isBusy}
-                color="blue"
-                label="Mark sent"
-              />
+                title="✓ Mark DM as sent"
+                className={`relative inline-flex items-center justify-center w-8 h-8 rounded-lg
+                  border border-white/[0.06] text-muted-foreground
+                  hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20
+                  transition-all duration-150
+                  disabled:opacity-30 disabled:cursor-not-allowed`}
+              >
+                {actionLoading === `log-${artist.id}` ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Check size={14} />
+                )}
+              </motion.button>
             </>
           )}
           {artist.status === 'outreach_sent' && (
