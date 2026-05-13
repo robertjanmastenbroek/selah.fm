@@ -1,28 +1,36 @@
 import { Metadata } from 'next';
 import CampaignDetailClient from './CampaignDetailClient';
+import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60; // ISR: regenerate page every 60 seconds
 
 interface Props { params: { id: string } }
 
+/** Direct DB query — no HTTP fetch, no network failure risk for metadata */
 async function getCampaign(id: string) {
   try {
-    // Use internal URL during SSR to avoid self-request DNS issues on Railway/Vercel.
-    // Railway provides RAILWAY_INTERNAL_URL or falls back to localhost.
-    // NEXT_PUBLIC_URL is for client-side and canonical links only.
-    const internalBase = process.env.RAILWAY_INTERNAL_URL
-      || process.env.VERCEL_URL
-      || process.env.NEXT_PUBLIC_URL
-      || 'https://selah.fm';
-    
-    // Ensure URL has protocol (Railway internal URL might not)
-    const baseUrl = internalBase.startsWith('http') ? internalBase : `https://${internalBase}`;
-    
-    // Support both UUID and slug
-    const res = await fetch(`${baseUrl}/api/campaigns/${encodeURIComponent(id)}`, { next: { revalidate: 5 } });
-    if (!res.ok) return null;
-    return res.json();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    const campaigns = isUuid
+      ? await sql`
+          SELECT c.*, COALESCE(c.title, c.track_title) as title,
+            COALESCE(u.display_name, da.artist_name) as artist_name
+          FROM campaigns c
+          LEFT JOIN users u ON u.id = c.artist_id
+          LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+          LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+          WHERE c.id = ${id}::uuid
+        `
+      : await sql`
+          SELECT c.*, COALESCE(c.title, c.track_title) as title,
+            COALESCE(u.display_name, da.artist_name) as artist_name
+          FROM campaigns c
+          LEFT JOIN users u ON u.id = c.artist_id
+          LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+          LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+          WHERE c.slug = ${id}
+        `;
+    return campaigns[0] || null;
   } catch {
     return null;
   }
