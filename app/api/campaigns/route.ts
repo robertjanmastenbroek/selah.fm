@@ -43,7 +43,16 @@ export async function GET(request: Request) {
         LIMIT ${limit}
       `;
     } else {
-      const orderClause2 = sort === 'popular' ? sql`COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC` : sql`c.created_at DESC`;
+      // Public browse: sort by pinned → budget utilization % → total budget → date
+      const orderClause2 = sql`
+        c.is_pinned DESC NULLS LAST,
+        CASE WHEN c.total_budget_cents > 0 
+          THEN (c.total_budget_cents - c.budget_remaining_cents)::float / c.total_budget_cents 
+          ELSE 0 
+        END DESC,
+        c.total_budget_cents DESC,
+        c.created_at DESC
+      `;
       campaigns = await sql`
         SELECT c.*, 
           COALESCE(c.title, c.track_title) as title,

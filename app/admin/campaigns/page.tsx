@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, X, Check, Pencil, Trash2, Play, Pause } from 'lucide-react';
+import { Search, X, Check, Pencil, Trash2, Play, Pause, Pin, PinOff } from 'lucide-react';
 
 const STATUSES = ['active', 'paused', 'completed', 'cancelled'];
 
@@ -72,6 +72,15 @@ export default function AdminCampaignsPage() {
     else { const e = await res.json(); showToast(e.error || 'Failed', 'error'); }
   };
 
+  const togglePin = async (id: string, current: boolean) => {
+    const res = await fetch(`/api/admin/manage?type=campaigns&id=${id}`, {
+      method: 'PATCH', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_pinned: !current }),
+    });
+    if (res.ok) { fetchCampaigns(search); showToast(current ? 'Unpinned' : 'Pinned to top'); }
+    else { const e = await res.json(); showToast(e.error || 'Failed', 'error'); }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -127,6 +136,9 @@ export default function AdminCampaignsPage() {
                           </>
                         ) : (
                           <>
+                            <button onClick={() => togglePin(c.id, c.is_pinned)} className={`p-1.5 rounded-lg hover:bg-white/[0.06] active:scale-[0.95] ${c.is_pinned ? 'text-amber-400' : 'text-muted-foreground hover:text-foreground'}`} title={c.is_pinned ? 'Unpin' : 'Pin to top'}>
+                              {c.is_pinned ? <Pin size={14} fill="currentColor" /> : <Pin size={14} />}
+                            </button>
                             <button onClick={() => toggleStatus(c.id, c.status)} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground active:scale-[0.95]" title={c.status === 'active' ? 'Pause' : 'Activate'}>{c.status === 'active' ? <Pause size={14} /> : <Play size={14} />}</button>
                             <button onClick={() => handleEdit(c)} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground active:scale-[0.95]"><Pencil size={14} /></button>
                             <button onClick={() => handleDelete(c.id, c.track_title)} className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive active:scale-[0.95]"><Trash2 size={14} /></button>

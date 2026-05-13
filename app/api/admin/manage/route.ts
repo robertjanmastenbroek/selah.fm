@@ -44,6 +44,7 @@ export async function PATCH(request: Request) {
         if (body.status !== undefined) await sql`UPDATE campaigns SET status = ${body.status}, updated_at = NOW() WHERE id = ${id}`;
         if (body.requirements !== undefined) await sql`UPDATE campaigns SET requirements = ${body.requirements}, updated_at = NOW() WHERE id = ${id}`;
         if (body.recommended_hashtags !== undefined) await sql`UPDATE campaigns SET recommended_hashtags = ${body.recommended_hashtags}, updated_at = NOW() WHERE id = ${id}`;
+        if (body.is_pinned !== undefined) await sql`UPDATE campaigns SET is_pinned = ${body.is_pinned}, updated_at = NOW() WHERE id = ${id}`;
         return NextResponse.json({ ok: true });
       }
 

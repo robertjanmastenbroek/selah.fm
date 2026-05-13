@@ -612,6 +612,25 @@ export default function OutreachDashboard() {
         ))}
       </div>
 
+      {/* ── Ready for Outreach (campaigns created, not yet messaged) ── */}
+      {p.campaigns_created > 0 && (
+        <div className="rounded-2xl border border-[#22C55E]/10 p-5" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.04) 0%, transparent 100%)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Send size={14} className="text-[#22C55E]" />
+              Ready for Outreach
+              <span className="text-[10px] text-muted-foreground font-normal">
+                {p.campaigns_created - p.outreach_sent} waiting
+              </span>
+            </h2>
+            <span className="text-[10px] text-muted-foreground">Click any artist → message copies + IG DM opens</span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mb-3">
+            These artists have campaigns ready. Click to copy their message and open Instagram DM in one click.
+          </p>
+        </div>
+      )}
+
       {/* ── Artist list ── */}
       <div>
         <div className="flex items-center justify-between mb-4">
