@@ -466,18 +466,28 @@ export default function OutreachDashboard() {
       } else {
         await navigator.clipboard.writeText(data.message);
         const igHandle = data.instagram_handle;
+        const ttHandle = data.tiktok_handle;
         const igLink = igHandle ? `https://ig.me/m/${igHandle}` : null;
+        const ttLink = ttHandle ? `https://www.tiktok.com/@${ttHandle}` : null;
         
-        // Show toast with DM link
+        const channels: string[] = [];
+        if (igLink) channels.push(`📸 IG: ${igLink}`);
+        if (ttLink) channels.push(`🎵 TikTok: ${ttLink}`);
+        const channelText = channels.join(' · ');
+        
+        // Show toast with DM links
         addToast('success', 'Message copied', 
-          igLink 
-            ? `📋 Copied · 📸 DM ${data.artist_name}: ${igLink}`
-            : `Ready to send to ${data.artist_name} via Instagram DM.`
+          channelText
+            ? `📋 Copied · ${channelText}`
+            : `Ready to send to ${data.artist_name}.`
         );
         
-        // Open Instagram DM in new tab if handle found
+        // Open Instagram DM first (if available), then TikTok
         if (igLink) {
-          setTimeout(() => window.open(igLink, '_blank'), 500);
+          setTimeout(() => window.open(igLink, '_blank'), 300);
+        }
+        if (ttLink) {
+          setTimeout(() => window.open(ttLink, '_blank'), 800);
         }
       }
     } catch (e: any) {

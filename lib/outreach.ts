@@ -61,26 +61,30 @@ export interface ArtistAudit {
 /**
  * Scrape Bandcamp artist page for social links (Instagram, Twitter, website, etc.)
  */
-async function discoverSocialLinks(bandcampUrl: string): Promise<{ instagram_handle: string | null; website_url: string | null }> {
-  if (!bandcampUrl) return { instagram_handle: null, website_url: null };
+async function discoverSocialLinks(bandcampUrl: string): Promise<{ instagram_handle: string | null; tiktok_handle: string | null; website_url: string | null }> {
+  if (!bandcampUrl) return { instagram_handle: null, tiktok_handle: null, website_url: null };
   try {
     const res = await fetch(bandcampUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
     });
-    if (!res.ok) return { instagram_handle: null, website_url: null };
+    if (!res.ok) return { instagram_handle: null, tiktok_handle: null, website_url: null };
     const html = await res.text();
 
     // Extract Instagram: instagram.com/username
     const igMatch = html.match(/instagram\.com\/([a-zA-Z0-9._]+)/);
     const instagram_handle = igMatch ? igMatch[1] : null;
 
+    // Extract TikTok: tiktok.com/@username
+    const ttMatch = html.match(/tiktok\.com\/@([a-zA-Z0-9._]+)/);
+    const tiktok_handle = ttMatch ? ttMatch[1] : null;
+
     // Extract website from bio links (exclude CDN, favicon, and bandcamp subdomains)
     const webMatch = html.match(/href="(https?:\/\/(?!.*(?:bandcamp\.com|bcbits\.com|favicon))[^"]+)"/);
     const website_url = webMatch ? webMatch[1] : null;
 
-    return { instagram_handle, website_url };
+    return { instagram_handle, tiktok_handle, website_url };
   } catch {
-    return { instagram_handle: null, website_url: null };
+    return { instagram_handle: null, tiktok_handle: null, website_url: null };
   }
 }
 
@@ -116,10 +120,12 @@ export async function auditArtist(
 
     // Social links from Bandcamp page
     let instagram_handle: string | null = null;
+    let tiktok_handle: string | null = null;
     let website_url: string | null = null;
     if (bandcampUrl) {
       const social = await discoverSocialLinks(bandcampUrl);
       instagram_handle = social.instagram_handle;
+      tiktok_handle = social.tiktok_handle;
       website_url = social.website_url;
     }
 
@@ -139,7 +145,7 @@ export async function auditArtist(
       recommended_budget_cents: 0,
       instagram_handle,
       instagram_followers: 0,
-      tiktok_handle: null,
+      tiktok_handle,
       tiktok_followers: 0,
       email_address: null,
       website_url,
@@ -264,9 +270,13 @@ function renderOutreachTemplate(
   campaignUrl: string,
   instagramHandle?: string,
   youtubeUrl?: string,
+  tiktokHandle?: string,
 ): string {
   const videoLine = youtubeUrl ? `\nI even found a music video on YouTube and added it.` : '';
-  const igLine = instagramHandle ? `\nP.S. — I'll DM you on Instagram too (@${instagramHandle}).` : '';
+  const handleLines: string[] = [];
+  if (instagramHandle) handleLines.push(`Instagram (@${instagramHandle})`);
+  if (tiktokHandle) handleLines.push(`TikTok (@${tiktokHandle})`);
+  const handleLine = handleLines.length > 0 ? `\nP.S. — I'll DM you on ${handleLines.join(' and ')} too.` : '';
 
   const genreAngles: Record<string, string> = {
     electronic: `I've been digging through new electronic music and "${trackName}" stopped me mid-scroll.`,
@@ -293,7 +303,7 @@ I already built a campaign page for "${trackName}" with your cover art and every
 
 Your friends and fans can chip in a few bucks to fund it. Anyone can submit a video — even someone with 300 followers. You're in control the whole time.
 
-Claim it when you want. Or don't. No pressure. No rush. The page just sits there working in the background.${igLine}
+Claim it when you want. Or don't. No pressure. No rush. The page just sits there working in the background.${handleLine}
 
 — Robert-Jan
   Founder, Selah.fm
@@ -305,10 +315,8 @@ Claim it when you want. Or don't. No pressure. No rush. The page just sits there
  * otherwise falls back to the template. Maintains backward compat.
  */
 export function renderOutreachMessage(artistName: string, trackName: string, audit: ArtistAudit, campaignUrl: string): string {
-  // This is synchronous for backward compat — the admin dashboard calls it directly
-  // The AI version is async (generateOutreachMessage). For now, use the template.
   const genre = audit.hashtags?.[0]?.replace('#', '') || 'music';
-  return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, audit.instagram_handle || undefined, audit.youtube_video_url || undefined);
+  return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, audit.instagram_handle || undefined, audit.youtube_video_url || undefined, audit.tiktok_handle || undefined);
 }
 
 /**

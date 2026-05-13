@@ -266,6 +266,7 @@ async function runRenderOutreach(artistId: string) {
     track_name: artist.latest_track_name,
     campaign_url: campaignUrl,
     instagram_handle: audit.instagram_handle,
+    tiktok_handle: audit.tiktok_handle,
     email_address: audit.email_address,
   });
 }
