@@ -256,187 +256,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
   const stickyBarVisible = scrollY > heroBottom - 80;
 
-  // ── Unclaimed campaign: premium gift UX with glassmorphism ──
-  if (isUnclaimed) {
-    return (
-      <div className="min-h-screen" style={{ background: bg }}>
-        <Header />
-
-        {/* ── Hero: Animated gradient orb + glassmorphism ── */}
-        <div ref={heroRef} className="relative overflow-hidden" style={{ minHeight: '60vh' }}>
-          {/* Animated orbs */}
-          <div className="absolute inset-0 pointer-events-none">
-            <motion.div className="absolute -top-20 -right-20 w-[500px] h-[500px] rounded-full opacity-[0.07]" animate={{ scale: [1, 1.05, 1], x: [0, 20, 0] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} style={{ background: 'radial-gradient(circle, rgba(67,56,202,0.5) 0%, transparent 70%)' }} />
-            <motion.div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full opacity-[0.05]" animate={{ scale: [1.05, 1, 1.05], x: [0, -20, 0] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }} style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.4) 0%, transparent 70%)' }} />
-          </div>
-
-          <div className="relative z-10 max-w-2xl mx-auto px-4 py-16 md:py-24 text-center">
-            {/* Gift icon — Lucide, not emoji */}
-            <motion.div initial={{ scale: 0, rotate: -10 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 20 }} className="mb-8">
-              <div className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(67,56,202,0.12), rgba(67,56,202,0.04))', border: '1px solid rgba(67,56,202,0.15)' }}>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary/80"><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-              </div>
-            </motion.div>
-
-            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-3xl md:text-5xl font-heading tracking-tight mb-4">
-              A campaign for{' '}
-              <span className="bg-gradient-to-r from-primary via-primary to-[#22C55E] bg-clip-text text-transparent">{artistName}</span>
-            </motion.h1>
-
-            <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="text-base md:text-lg text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed">
-              Someone built a promotion page for <strong className="text-foreground">"{trackTitle}"</strong>. Creators can make TikToks and Reels with this track and earn per verified view. The artist only pays when views happen.
-            </motion.p>
-
-            {/* Album art with glow */}
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="relative inline-block mb-8">
-              <div className="absolute -inset-4 rounded-3xl opacity-20 blur-xl" style={{ background: 'linear-gradient(135deg, rgba(67,56,202,0.3), rgba(34,197,94,0.2))' }} />
-              <div className="relative w-52 h-52 md:w-72 md:h-72 rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl" style={{ boxShadow: '0 0 80px rgba(67,56,202,0.15)' }}>
-                {campaign.cover_art_url ? (
-                  <img src={campaign.cover_art_url} alt={displayTitle} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-white/[0.02] flex items-center justify-center">
-                    <Music2 size={56} className="text-muted-foreground/15" />
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            {/* Listen link */}
-            {campaign.track_url && (
-              <motion.a initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }} href={campaign.track_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-sm text-muted-foreground hover:text-foreground hover:border-white/[0.12] transition-all mb-8">
-                <Play size={14} className="text-primary" />
-                Listen to "{trackTitle}"
-              </motion.a>
-            )}
-
-            {/* Unclaimed badge */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/[0.06] border border-amber-500/10 text-amber-400/70 text-xs mb-4">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              Unclaimed
-            </motion.div>
-            <p className="text-[11px] text-muted-foreground/50 max-w-sm mx-auto">
-              {artistName} hasn't claimed this page yet. Donations and submissions still work.
-            </p>
-          </div>
-        </div>
-
-        {/* ── Stats strip ── */}
-        {(submissions > 0 || views > 0 || totalRaised > 0) && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl mx-auto px-4 -mt-8 mb-12">
-            <div className="rounded-2xl border border-white/[0.06] p-5 backdrop-blur-xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
-              <div className="grid grid-cols-4 gap-4">
-                {[
-                  { label: 'Creators', value: submissions },
-                  { label: 'Views', value: views >= 1000 ? `${(views/1000).toFixed(1)}K` : views },
-                  { label: 'Earned', value: `$${spent.toFixed(0)}` },
-                  { label: 'Remaining', value: `$${remaining.toFixed(0)}` },
-                ].map(s => (
-                  <div key={s.label} className="text-center">
-                    <div className="text-lg md:text-xl font-bold text-foreground">{s.value}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── Two cards: Support + Create ── */}
-        <div className="max-w-2xl mx-auto px-4 mb-10">
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* Support card */}
-            <motion.div initial={{ opacity: 0, x: -16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="rounded-2xl border border-primary/10 p-6 backdrop-blur-sm" style={{ background: 'linear-gradient(180deg, rgba(67,56,202,0.04) 0%, rgba(67,56,202,0.01) 100%)' }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(67,56,202,0.15), rgba(67,56,202,0.05))' }}>
-                  <Heart size={18} className="text-primary" />
-                </div>
-                <h2 className="font-heading text-lg">Support</h2>
-              </div>
-              <p className="text-sm text-muted-foreground mb-5">Chip in any amount to fund the promotion campaign.</p>
-              <div className="grid grid-cols-4 gap-2 mb-4">
-                {[5, 10, 25, null].map((amount) => {
-                  const href = amount ? `/checkout?type=donation&campaignId=${id}&amount=${amount * 100}` : `/checkout?type=donation&campaignId=${id}`;
-                  return (
-                    <Link key={amount || 'custom'} href={href} className="py-2.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-center text-sm font-semibold hover:border-primary/20 hover:bg-primary/[0.04] transition-all active:scale-[0.97]">
-                      {amount ? `$${amount}` : '···'}
-                    </Link>
-                  );
-                })}
-              </div>
-              {donations.count > 0 ? (
-                <p className="text-xs text-muted-foreground text-center">
-                  <strong className="text-foreground">{donations.count}</strong> {donations.count === 1 ? 'person donated' : 'people donated'} <strong className="text-primary">${totalRaised.toFixed(0)}</strong>
-                </p>
-              ) : (
-                <p className="text-xs text-muted-foreground/50 text-center">Be the first to support</p>
-              )}
-            </motion.div>
-
-            {/* Create card */}
-            <motion.div initial={{ opacity: 0, x: 16 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="rounded-2xl border border-[#22C55E]/10 p-6 backdrop-blur-sm" style={{ background: 'linear-gradient(180deg, rgba(34,197,94,0.04) 0%, rgba(34,197,94,0.01) 100%)' }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))' }}>
-                  <Camera size={18} className="text-[#22C55E]" />
-                </div>
-                <h2 className="font-heading text-lg">Create</h2>
-              </div>
-              <p className="text-sm text-muted-foreground mb-5">Make a TikTok or Reel with this track and earn per verified view.</p>
-              <button onClick={() => setJoinOpen(true)} className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all active:scale-[0.98] hover:shadow-[0_0_30px_rgba(34,197,94,0.2)]" style={{ background: 'linear-gradient(135deg, #22C55E, #16A34A)' }}>
-                Submit a video
-              </button>
-              <p className="text-[10px] text-muted-foreground/50 text-center mt-3">No minimum followers · Phone only</p>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* ── Claim CTA ── */}
-        {claimCode && (
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-xl mx-auto px-4 mb-12">
-            <div className="rounded-2xl border border-amber-500/10 p-6 text-center backdrop-blur-sm" style={{ background: 'linear-gradient(180deg, rgba(245,158,11,0.04) 0%, transparent 100%)' }}>
-              <h3 className="font-heading text-lg mb-2">This yours?</h3>
-              <p className="text-sm text-muted-foreground mb-5">Claim this campaign to manage submissions and withdraw funds.</p>
-              <Link href={`/claim/${claimCode}`} className="inline-flex items-center gap-2 px-8 py-3 rounded-xl bg-amber-500 text-black font-bold text-sm hover:bg-amber-400 transition-all active:scale-[0.97]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
-                Claim campaign
-              </Link>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── Share + Browse ── */}
-        <div className="max-w-xl mx-auto px-4 mb-16">
-          <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => setShareOpen(true)} className="py-4 rounded-xl bg-white/[0.03] border border-white/[0.06] font-semibold text-sm hover:border-white/[0.12] hover:bg-white/[0.05] transition-all active:scale-[0.97] flex items-center justify-center gap-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-              Share
-            </button>
-            <Link href="/browse" className="py-4 rounded-xl text-center font-semibold text-sm active:scale-[0.97] transition-all flex items-center justify-center gap-2" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>
-              Browse campaigns
-            </Link>
-          </div>
-        </div>
-
-        {/* ── More campaigns + footer ── */}
-        <div className="px-4 max-w-2xl mx-auto">
-          <h3 className="font-heading text-sm mb-4 text-muted-foreground">More campaigns</h3>
-          <InfiniteCampaigns currentId={id} />
-          <footer className="text-center pb-10 pt-6 space-y-3">
-            <div className="flex items-center justify-center gap-4">
-              <a href="https://instagram.com/selahfm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-              <a href="https://x.com/selah_fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
-              <a href="https://www.tiktok.com/@selah.fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/25 hover:text-muted-foreground/50 transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
-            </div>
-            <p className="text-[11px] text-muted-foreground/30">Selah.fm — The marketplace for music promotion</p>
-          </footer>
-        </div>
-
-        <ShareModal open={shareOpen} onClose={() => setShareOpen(false)} url={`https://selah.fm/c/${id}`} title={displayTitle} imageUrl={campaign.cover_art_url} artistName={artistName} cpmDollars={cpm} trackTitle={trackTitle} />
-        <EarnModal open={joinOpen} onClose={() => setJoinOpen(false)} campaignId={id} trackTitle={displayTitle} cpmCents={campaign.cpm_rate_cents} coverArtUrl={campaign.cover_art_url} contentAssetsUrl={campaign.content_assets_url} />
-      </div>
-    );
-  }
-
-  // ── Claimed campaign: professional creator marketplace UX ──
+  // ── UNIFIED LAYOUT — same for claimed and unclaimed, only claim button differs ──
   return (
     <div className="min-h-screen" style={{ background: bg }}>
       <Header />
@@ -452,6 +272,12 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20 pointer-events-none" />
             <div className="absolute top-3 left-4 flex items-center gap-2">
+              {isUnclaimed && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/20 backdrop-blur-sm border border-amber-500/30 text-amber-400 text-[10px] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Unclaimed
+                </span>
+              )}
               <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center text-xs font-bold text-white border border-white/20 shrink-0 overflow-hidden">
                 {campaign.artist_avatar ? <img src={campaign.artist_avatar} alt={artistName} className="w-full h-full object-cover" /> : artistName[0]?.toUpperCase() || '?'}
               </div>
@@ -486,6 +312,18 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               <Link href={`/checkout?type=donation&campaignId=${id}`} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</Link>
             </div>
 
+            {/* ── Claim CTA — only on unclaimed campaigns ── */}
+            {isUnclaimed && claimCode && (
+              <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                <Link href={`/claim/${claimCode}`} className="block w-full py-3 rounded-xl text-center font-bold text-sm bg-amber-500 text-black hover:bg-amber-400 transition-all active:scale-[0.98]">
+                  Claim this campaign
+                </Link>
+                <p className="text-[10px] text-muted-foreground/50 text-center mt-2">
+                  {artistName} hasn't claimed this page yet. Donations and submissions still work.
+                </p>
+              </div>
+            )}
+
             <div className="hidden md:block mt-6 space-y-4">
               <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -506,7 +344,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                     <div className="text-[9px] text-muted-foreground">Views</div>
                   </div>
                 </div>
-                {donations.supporters.length > 0 && (
+                {donations.supporters.length > 0 ? (
                   <div className="space-y-1.5">
                     {donations.supporters.slice(0, 3).map((s: any, i: number) => (
                       <div key={i} className="flex items-center gap-3 py-2 px-1 text-xs">
@@ -518,8 +356,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                       </div>
                     ))}
                   </div>
-                )}
-                {donations.supporters.length === 0 && (
+                ) : (
                   <div className="text-center py-3">
                     <p className="text-[11px] text-muted-foreground">No donations yet</p>
                   </div>
@@ -533,10 +370,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
       <main className="pb-32 md:pb-20">
         <div className="px-4 space-y-6">
-          {/* ── Media Carousel (gallery images + YouTube video) ── */}
-          {carouselItems.length > 0 && (
-            <MediaCarousel items={carouselItems} />
-          )}
+          {carouselItems.length > 0 && <MediaCarousel items={carouselItems} />}
 
           <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
@@ -558,9 +392,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer" className="block rounded-2xl bg-gradient-to-r from-primary/[0.08] to-primary/[0.02] border-2 border-primary/20 p-5 hover:border-primary/30 transition-all group active:scale-[0.99]">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-sm text-primary group-hover:underline">📦 Download official audio & assets</h4>
@@ -573,10 +405,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
           ) : (
             <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="rounded-2xl bg-amber-500/[0.04] border border-amber-500/10 p-5 flex items-start gap-3">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-amber-400/60 shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <div>
-                <p className="text-xs font-semibold text-amber-400/80">No resource pack provided</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">The artist hasn&apos;t shared a Google Drive with audio files yet. Creators can still find the official audio by searching &quot;{campaign.track_title}&quot; on their platform.</p>
-              </div>
+              <div><p className="text-xs font-semibold text-amber-400/80">No resource pack provided</p><p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">The artist hasn&apos;t shared a Google Drive with audio files yet. Creators can still find the official audio by searching &quot;{campaign.track_title}&quot; on their platform.</p></div>
             </motion.div>
           )}
 
@@ -598,36 +427,19 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   <span className="text-xl font-bold text-primary">${totalRaised.toFixed(0)}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
-                    <div className="text-sm font-bold">{donations.count}</div>
-                    <div className="text-[9px] text-muted-foreground">Donors</div>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
-                    <div className="text-sm font-bold">{submissions}</div>
-                    <div className="text-[9px] text-muted-foreground">Videos</div>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
-                    <div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div>
-                    <div className="text-[9px] text-muted-foreground">Views</div>
-                  </div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center"><div className="text-sm font-bold">{donations.count}</div><div className="text-[9px] text-muted-foreground">Donors</div></div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center"><div className="text-sm font-bold">{submissions}</div><div className="text-[9px] text-muted-foreground">Videos</div></div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center"><div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div><div className="text-[9px] text-muted-foreground">Views</div></div>
                 </div>
                 {donations.supporters.length > 0 ? (
-                  <div className="space-y-1">
-                    {donations.supporters.map((s: any, i: number) => (
-                      <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 py-2.5 px-1">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2"><span className="text-sm font-medium truncate">{s.donor_name || 'Anonymous'}</span><span className="text-sm font-bold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span></div>
-                          {s.message && <p className="text-[11px] text-muted-foreground italic mt-0.5 leading-relaxed break-words">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                  <div className="space-y-1">{donations.supporters.map((s: any, i: number) => (
+                    <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 py-2.5 px-1">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
+                      <div className="flex-1 min-w-0"><div className="flex items-center justify-between gap-2"><span className="text-sm font-medium truncate">{s.donor_name || 'Anonymous'}</span><span className="text-sm font-bold text-primary shrink-0">${(s.amount_cents / 100).toFixed(0)}</span></div>{s.message && <p className="text-[11px] text-muted-foreground italic mt-0.5 leading-relaxed break-words">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}</div>
+                    </motion.div>
+                  ))}</div>
                 ) : (
-                  <div className="text-center py-4">
-                    <p className="text-[11px] text-muted-foreground">No donations yet</p>
-                    <Link href={`/checkout?type=donation&campaignId=${id}`} className="mt-2 inline-block text-xs font-semibold text-primary hover:underline">Be the first to donate</Link>
-                  </div>
+                  <div className="text-center py-4"><p className="text-[11px] text-muted-foreground">No donations yet</p><Link href={`/checkout?type=donation&campaignId=${id}`} className="mt-2 inline-block text-xs font-semibold text-primary hover:underline">Be the first to donate</Link></div>
                 )}
               </div>
             </motion.div>
@@ -635,11 +447,19 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
           <div className="md:hidden">{(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />}</div>
 
+          {isUnclaimed && claimCode && (
+            <div className="md:hidden">
+              <Link href={`/claim/${claimCode}`} className="block w-full py-4 rounded-xl text-center font-bold text-base bg-amber-500 text-black hover:bg-amber-400 transition-all active:scale-[0.98]">
+                Claim this campaign
+              </Link>
+            </div>
+          )}
+
           <div ref={moreRef}><h3 className="font-semibold text-sm mb-3">More campaigns</h3><InfiniteCampaigns currentId={id} /></div>
 
           <footer className="text-center pb-8 pt-2 space-y-3">
             <div className="flex items-center justify-center gap-4">
-              <a href="https://instagram.com/selahfm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+              <a href="https://instagram.com/selahfm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
               <a href="https://x.com/selah_fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
               <a href="https://www.tiktok.com/@selah.fm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-muted-foreground transition-colors"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
             </div>
@@ -658,12 +478,17 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   <div className="text-xs"><span className="font-bold text-sm">${spent.toFixed(0)}</span><span className="text-muted-foreground ml-1">of ${budget.toFixed(0)}</span></div>
                   <div className="mt-0.5"><LiveTicker campaignId={id} /></div>
                 </div>
-                <button onClick={() => setShareOpen(true)} className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.04] transition-colors active:scale-[0.95]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg><span className="text-[8px] font-medium text-muted-foreground">Share</span></button>
+                <button onClick={() => setShareOpen(true)} className="absolute top-0 right-0 flex flex-col items-center gap-0.5 py-1.5 px-2 rounded-lg hover:bg-white/[0.04] transition-colors active:scale-[0.95]"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17l9.2-9.2M17 17V7H7" /></svg><span className="text-[8px] font-medium text-muted-foreground">Share</span></button>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => setJoinOpen(true)} className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground active:scale-[0.97] transition-transform">JOIN</button>
                 <Link href={`/checkout?type=donation&campaignId=${id}`} className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.97] transition-transform flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT}CC)`, color: '#FFFFFF' }}>DONATE</Link>
               </div>
+              {isUnclaimed && claimCode && (
+                <Link href={`/claim/${claimCode}`} className="block w-full py-3 rounded-xl text-center font-bold text-sm bg-amber-500 text-black hover:bg-amber-400 transition-all active:scale-[0.98]">
+                  Claim this campaign
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
@@ -674,6 +499,8 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
     </div>
   );
 }
+
+
 
 function InfiniteCampaigns({ currentId }: { currentId: string }) {
   const [campaigns, setCampaigns] = useState<any[]>([]);
