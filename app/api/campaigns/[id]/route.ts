@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
@@ -160,21 +158,20 @@ export async function PATCH(
     const hasCaptionReq = body.captionRequirements !== undefined;
     const hasMinVideoLength = body.minVideoLength !== undefined;
 
-    // Convert base64 cover art to a real file for OG sharing
+    // Convert base64 cover art to DB-stored image (survives deploys)
     let finalCoverArt = coverArtUrl;
+    let patchImageBuffer: Buffer | null = null;
+    let patchImageMime = 'image/jpeg';
     if (coverArtUrl && coverArtUrl.startsWith("data:")) {
       try {
         const matches = coverArtUrl.match(/^data:image\/(\w+);base64,(.+)$/);
         if (matches) {
           const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
-          const buffer = Buffer.from(matches[2], "base64");
-          const dir = path.join(process.cwd(), "public/images/campaigns");
-          fs.mkdirSync(dir, { recursive: true });
-          const filename = "campaign-" + campaignId.slice(0, 8) + "." + ext;
-          fs.writeFileSync(path.join(dir, filename), buffer);
-          finalCoverArt = "/images/campaigns/" + filename;
+          patchImageMime = `image/${matches[1]}`;
+          patchImageBuffer = Buffer.from(matches[2], "base64");
+          finalCoverArt = `/images/campaigns/campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
         }
-      } catch (e: any) { console.error("Failed to save cover art:", e.message); }
+      } catch (e: any) { console.error("Failed to decode cover art:", e.message); }
     }
 
     const result = await sql`
@@ -199,6 +196,15 @@ export async function PATCH(
       WHERE id = ${campaignId}
       RETURNING *
     `;
+
+    // Store/update image in campaign_images table
+    if (patchImageBuffer) {
+      await sql`
+        INSERT INTO campaign_images (campaign_id, data, mime)
+        VALUES (${campaignId}::uuid, ${patchImageBuffer}, ${patchImageMime})
+        ON CONFLICT (campaign_id) DO UPDATE SET data = EXCLUDED.data, mime = EXCLUDED.mime
+      `;
+    }
 
     return NextResponse.json(result[0]);
   } catch (e: any) {

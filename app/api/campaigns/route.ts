@@ -163,6 +163,22 @@ export async function POST(request: Request) {
     const slugSource = `${artistName}-${trackTitle}`.toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 100);
     const uniqueSlug = slugSource + '-' + crypto.randomUUID().slice(0, 4);
 
+    // Handle cover art: if it's a data URL, store binary in campaign_images
+    let finalCoverArt = coverArtUrl || null;
+    let imageBuffer: Buffer | null = null;
+    let imageMime = 'image/jpeg';
+    if (coverArtUrl && coverArtUrl.startsWith('data:')) {
+      const match = coverArtUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (match) {
+        try {
+          imageMime = `image/${match[1] === 'jpeg' ? 'jpeg' : match[1]}`;
+          imageBuffer = Buffer.from(match[2], 'base64');
+          const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+          finalCoverArt = `/images/campaigns/campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+        } catch {}
+      }
+    }
+
     const result = await sql`
       INSERT INTO campaigns (
         artist_id, track_title, title, slug, track_url, 
@@ -173,11 +189,17 @@ export async function POST(request: Request) {
       VALUES (
         ${userId}, ${trackTitle}, ${body.title || null}, ${uniqueSlug}, ${trackUrl}, 
         ${cpmRate * 100}, ${budget * 100}, ${maxPayout * 100}, ${budget * 100},
-        'active', ${driveUrl || ''}, ${finalHashtags}, ${finalRequirements}, ${coverArtUrl || null},
+        'active', ${driveUrl || ''}, ${finalHashtags}, ${finalRequirements}, ${finalCoverArt},
         ${requiredHashtags || null}, ${requireFtc || false}, ${finalMinLength}, ${finalCaption}
       )
       RETURNING *
     `;
+
+    // Store image in campaign_images table
+    if (imageBuffer) {
+      await sql`INSERT INTO campaign_images (campaign_id, data, mime) VALUES (${result[0].id}, ${imageBuffer}, ${imageMime})`;
+    }
+
     // Server-side GA tracking
     trackCreateCampaign(trackTitle, budget || 0, userId).catch(() => {});
     return NextResponse.json(result[0]);
