@@ -173,8 +173,6 @@ export async function GET(request: Request) {
         const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
         const trackUrl = socialLinks.bandcamp || artist.latest_track_spotify_url || 'https://selah.fm';
 
-        const budgetCents = artist.recommended_budget_cents || 0; // $0 for auto-generated
-
         const [campaign] = await sql`
           INSERT INTO campaigns (
             artist_id, track_title, track_url, title, slug, cover_art_url,
@@ -190,8 +188,8 @@ export async function GET(request: Request) {
             ${slug},
             ${coverArtUrl},
             ${artist.recommended_cpm_cents || 10},
-            ${budgetCents},
-            ${budgetCents},
+            0,  /* total_budget_cents — always $0 for auto-generated */
+            0,  /* budget_remaining_cents — always $0 */
             ${artist.recommended_budget_cents || 10000},
             ${'Make a video featuring this track. Any style. Any length. No minimum followers. Just good content.'},
             ${artist.hashtags || []},

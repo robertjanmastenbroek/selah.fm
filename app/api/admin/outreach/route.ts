@@ -178,7 +178,8 @@ async function runCreateCampaign(artistId: string) {
   const [campaign] = await sql`
     INSERT INTO campaigns (
       artist_id, track_title, title, slug, cover_art_url, track_url,
-      cpm_rate_cents, max_payout_per_submission_cents,
+      cpm_rate_cents, total_budget_cents, budget_remaining_cents,
+      max_payout_per_submission_cents,
       requirements, recommended_hashtags, platforms,
       youtube_video_url, is_unclaimed, status
     ) VALUES (
@@ -189,6 +190,8 @@ async function runCreateCampaign(artistId: string) {
       ${coverArtUrl},
       ${artist.latest_track_spotify_url || ''},
       ${audit.recommended_cpm_cents || 10},
+      0,  /* total_budget_cents — always $0 for auto-generated */
+      0,  /* budget_remaining_cents — always $0 */
       ${audit.recommended_budget_cents || 10000},
       ${'Make a video featuring this track. Any style. Any length. No minimum followers. Just good content.'},
       ${audit.hashtags || []},
