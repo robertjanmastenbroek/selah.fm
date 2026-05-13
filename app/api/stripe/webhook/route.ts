@@ -44,6 +44,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
+    // Resolve campaignId if it's a slug (not a UUID)
+    let resolvedCampaignId = campaignId;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(campaignId);
+    if (!isUuid) {
+      const resolved = await sql`SELECT id FROM campaigns WHERE slug = ${campaignId}`;
+      if (resolved.length > 0) resolvedCampaignId = resolved[0].id;
+    }
+
     // Idempotency: prevent duplicate processing
     const intentId = paymentIntent?.id || session?.id || '';
     if (intentId) {
@@ -58,7 +66,7 @@ export async function POST(request: Request) {
           budget_remaining_cents = budget_remaining_cents + ${grossCents},
           status = CASE WHEN status = 'draft' THEN 'active' ELSE status END,
           updated_at = NOW()
-      WHERE id = ${campaignId}
+      WHERE id = ${resolvedCampaignId}
     `;
 
     // ── Fan donation: record + notify ───────────────────────
@@ -71,14 +79,14 @@ export async function POST(request: Request) {
 
         await sql`
           INSERT INTO campaign_donations (campaign_id, donor_id, amount_cents, donor_name, message, anonymous, stripe_payment_intent_id)
-          VALUES (${campaignId}, ${donorId || null}, ${grossCents}, ${displayName}, ${message || null}, false, ${intentId})
+          VALUES (${resolvedCampaignId}, ${donorId || null}, ${grossCents}, ${displayName}, ${message || null}, false, ${intentId})
         `;
 
         // Store donor email if not already captured via user account
         if (donorEmail && !donorId) {
           await sql`
             UPDATE campaign_donations SET donor_email = ${donorEmail}
-            WHERE campaign_id = ${campaignId} AND donor_name = ${displayName}
+            WHERE campaign_id = ${resolvedCampaignId} AND donor_name = ${displayName}
             AND created_at > NOW() - INTERVAL '10 seconds'
             ORDER BY created_at DESC LIMIT 1
           `.catch(() => {});
@@ -89,7 +97,7 @@ export async function POST(request: Request) {
         const donorLastInitial = (displayName || ' ').split(' ').slice(1).join(' ')[0] || '';
         await sql`
           INSERT INTO live_ticker_events (campaign_id, event_type, payload)
-          VALUES (${campaignId}, 'donation_received', ${JSON.stringify({
+          VALUES (${resolvedCampaignId}, 'donation_received', ${JSON.stringify({
             first_name: donorFirst,
             last_initial: donorLastInitial ? donorLastInitial + '.' : '',
             amount: Math.round(grossCents / 100),
@@ -100,7 +108,7 @@ export async function POST(request: Request) {
         const campaignRows = await sql`
           SELECT c.artist_id, c.track_title, u.email
           FROM campaigns c JOIN users u ON u.id = c.artist_id
-          WHERE c.id = ${campaignId}
+          WHERE c.id = ${resolvedCampaignId}
         `;
         if (campaignRows.length > 0) {
           const artist = campaignRows[0];
@@ -110,7 +118,7 @@ export async function POST(request: Request) {
             INSERT INTO notifications (user_id, type, message, link)
             VALUES (${artist.artist_id}, 'earning',
               ${`${displayName} donated $${donationDollars} to "${artist.track_title}"!`},
-              ${`/c/${campaignId}`})
+              ${`/c/${resolvedCampaignId}`})
           `;
 
           // Email notification
@@ -126,7 +134,7 @@ export async function POST(request: Request) {
                 html: emailWrapper({
                   title: 'Someone supported your campaign!',
                   body: `<strong style="font-size:24px;color:#1A1A2E">$${donationDollars}</strong><br><br>${displayName} donated to your campaign <strong>"${artist.track_title}"</strong>${message ? ` with a message: "${message}"` : '.'}<br><br>The amount has been added to your campaign budget.`,
-                  cta: { text: 'View campaign', url: `https://selah.fm/c/${campaignId}` },
+                  cta: { text: 'View campaign', url: `https://selah.fm/c/${resolvedCampaignId}` },
                 }),
               }),
             }).catch(() => {});
@@ -145,14 +153,14 @@ export async function POST(request: Request) {
         const campaignRows = await sql`
           SELECT c.artist_id, c.track_title, u.display_name
           FROM campaigns c JOIN users u ON u.id = c.artist_id
-          WHERE c.id = ${campaignId}
+          WHERE c.id = ${resolvedCampaignId}
         `;
         if (campaignRows.length > 0) {
           const artist = campaignRows[0];
           const artistFirst = (artist.display_name || 'Artist').split(' ')[0];
           await sql`
             INSERT INTO live_ticker_events (campaign_id, event_type, payload)
-            VALUES (${campaignId}, 'deposit_received', ${JSON.stringify({
+            VALUES (${resolvedCampaignId}, 'deposit_received', ${JSON.stringify({
               first_name: artistFirst,
               amount: Math.round(grossCents / 100),
             })})
@@ -166,7 +174,7 @@ export async function POST(request: Request) {
       try {
         const campaignRows = await sql`
           SELECT c.artist_id, u.email FROM campaigns c JOIN users u ON u.id = c.artist_id
-          WHERE c.id = ${campaignId}
+          WHERE c.id = ${resolvedCampaignId}
         `;
         if (campaignRows.length > 0) {
           const artistEmail = campaignRows[0].email;
@@ -182,7 +190,7 @@ export async function POST(request: Request) {
 
             if (bonusEach > 0) {
               await sql`UPDATE campaigns SET total_budget_cents = total_budget_cents + ${bonusEach}, budget_remaining_cents = budget_remaining_cents + ${bonusEach}, updated_at = NOW() WHERE artist_id = ${referrerId} AND status = 'active' LIMIT 1`;
-              await sql`UPDATE campaigns SET total_budget_cents = total_budget_cents + ${bonusEach}, budget_remaining_cents = budget_remaining_cents + ${bonusEach}, updated_at = NOW() WHERE id = ${campaignId}`;
+              await sql`UPDATE campaigns SET total_budget_cents = total_budget_cents + ${bonusEach}, budget_remaining_cents = budget_remaining_cents + ${bonusEach}, updated_at = NOW() WHERE id = ${resolvedCampaignId}`;
               await sql`UPDATE referrals SET status = 'completed', completed_at = NOW() WHERE referred_email = ${artistEmail} AND status = 'pending'`;
               const bonusDollars = (bonusEach / 100).toFixed(2);
               await sql`INSERT INTO notifications (user_id, type, message, link) VALUES (${referrerId}, 'earning', ${`You earned $${bonusDollars} referral bonus!`}, '/dashboard'), (${artistId}, 'earning', ${`You received a $${bonusDollars} referral welcome bonus!`}, '/dashboard')`;

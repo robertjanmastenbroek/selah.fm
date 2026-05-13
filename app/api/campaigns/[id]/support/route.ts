@@ -20,13 +20,15 @@ export async function POST(
     const donationAmount = parseFloat(amount);
     if (!donationAmount || donationAmount < 1) return NextResponse.json({ error: 'Minimum donation is $1' }, { status: 400 });
 
-    const campaigns = await sql`
-      SELECT id, track_title, artist_id, cover_art_url FROM campaigns 
-      WHERE id = ${params.id} AND status IN ('active', 'draft')
-    `;
+    // Resolve id to UUID — the URL param can be either slug or UUID
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.id);
+    const campaigns = isUuid
+      ? await sql`SELECT id, track_title, artist_id, cover_art_url FROM campaigns WHERE id = ${params.id}::uuid AND status IN ('active', 'draft')`
+      : await sql`SELECT id, track_title, artist_id, cover_art_url FROM campaigns WHERE slug = ${params.id} AND status IN ('active', 'draft')`;
     if (campaigns.length === 0) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
 
     const campaign = campaigns[0];
+    const campaignId = campaign.id; // always UUID — never slug
     const amountCents = Math.round(donationAmount * 100);
     const session = getSession(request);
 
@@ -38,7 +40,7 @@ export async function POST(
       automatic_payment_methods: { enabled: true },
       metadata: {
         type: 'campaign_donation',
-        campaignId: params.id,
+        campaignId,  // always UUID
         donorId: session?.id || '',
         donorName: (donorName || 'Anonymous fan').slice(0, 100),
         donorEmail: email || '',
