@@ -16,7 +16,7 @@ export default function BottomNav() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur border-t border-border/40">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-white/[0.04]" style={{ background: 'rgba(15,15,35,0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
       <div className="flex items-center justify-around h-16 pt-1 pb-2">
         {TABS.map(({ href, label, icon: IconComponent }) => {
           const active = isActive(href);
