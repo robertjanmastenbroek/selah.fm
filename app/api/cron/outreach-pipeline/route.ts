@@ -153,8 +153,7 @@ export async function GET(request: Request) {
         `;
         const audit = auditCheck[0];
         if (!audit?.instagram_handle && !audit?.tiktok_handle) {
-          log.push(`  ⏭️  Skipping ${artist.artist_name} — no Instagram or TikTok handle`);
-          continue;
+          log.push(`  ⚠️  No social handles for ${artist.artist_name} — creating campaign anyway (can DM from Bandcamp profile)`);
         }
 
         log.push(`Creating campaign: ${artist.artist_name}`);
