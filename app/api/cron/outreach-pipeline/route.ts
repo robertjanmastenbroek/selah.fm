@@ -160,10 +160,9 @@ export async function GET(request: Request) {
         const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const slug = `${artistSlug}-${trackSlug}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100).replace(/--+/g, '-');
 
-        // Cover art — use Bandcamp CDN URL directly (no download needed)
+        // Download cover art and host locally — never depend on external CDNs
         let coverArtUrl = artist.latest_track_cover_url || '/images/og-image.jpg';
-        // Download only Spotify CDN images (legacy — shouldn't happen anymore)
-        if (coverArtUrl.startsWith('https://i.scdn.co/')) {
+        if (coverArtUrl.startsWith('http')) {
           try {
             const imgRes = await fetch(coverArtUrl);
             if (imgRes.ok) {
@@ -171,7 +170,7 @@ export async function GET(request: Request) {
               const fs = await import('fs'); const path = await import('path');
               const dir = path.join(process.cwd(), 'public/images/campaigns');
               fs.mkdirSync(dir, { recursive: true });
-              const filename = `campaign-${Date.now().toString(36)}.jpg`;
+              const filename = `campaign-${artist.artist_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 20)}-${Date.now().toString(36)}.jpg`;
               fs.writeFileSync(path.join(dir, filename), buffer);
               coverArtUrl = `/images/campaigns/${filename}`;
             }
