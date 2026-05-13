@@ -283,7 +283,7 @@ function EmptyState({ onDiscover }: { onDiscover: () => void }) {
       </motion.div>
       <h2 className="text-xl font-bold mb-2">No artists discovered yet</h2>
       <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8 leading-relaxed">
-        The pipeline finds independent artists on Spotify, audits their presence, builds promotion campaigns, and generates personalized outreach messages — all automatically.
+        The pipeline discovers independent artists across Bandcamp, Reddit, and YouTube, audits their social presence, builds promotion campaigns, and generates personalized outreach messages — all automatically.
       </p>
       <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/60 mb-8 font-medium">
         <span className="flex items-center gap-1.5"><Search size={12} /> Discover</span>
@@ -311,12 +311,14 @@ function EmptyState({ onDiscover }: { onDiscover: () => void }) {
 }
 
 // ── Artist card component ─────────────────────────────────────────
-function ArtistCard({ artist, actionLoading, onAudit, onCreateCampaign, onRenderOutreach, onRenderFollowUp, onLogOutreach }: {
+function ArtistCard({ artist, instagram_handle, tiktok_handle, actionLoading, onAudit, onCreateCampaign, onRenderOutreach, onRenderFollowUp, onLogOutreach }: {
   artist: Artist;
+  instagram_handle?: string;
+  tiktok_handle?: string;
   actionLoading: string;
   onAudit: (id: string) => void;
   onCreateCampaign: (id: string) => void;
-  onRenderOutreach: (id: string) => void;
+  onRenderOutreach: (id: string, ig?: string, tt?: string) => void;
   onRenderFollowUp: (id: string) => void;
   onLogOutreach: (id: string) => void;
 }) {
@@ -381,6 +383,12 @@ function ArtistCard({ artist, actionLoading, onAudit, onCreateCampaign, onRender
             {artist.latest_track_name && (
               <span className="truncate max-w-[200px]">🎵 {artist.latest_track_name}</span>
             )}
+            {instagram_handle && (
+              <span className="text-pink-400 font-medium">📸 @{instagram_handle}</span>
+            )}
+            {tiktok_handle && (
+              <span className="text-blue-400 font-medium">🎵 @{tiktok_handle}</span>
+            )}
           </div>
         </div>
 
@@ -407,7 +415,7 @@ function ArtistCard({ artist, actionLoading, onAudit, onCreateCampaign, onRender
           {artist.status === 'campaign_created' && (
             <>
               <ActionButton
-                onClick={() => onRenderOutreach(artist.id)}
+                onClick={() => onRenderOutreach(artist.id, instagram_handle, tiktok_handle)}
                 loading={actionLoading === `outreach-${artist.id}`}
                 disabled={isBusy}
                 color="green"
@@ -425,7 +433,7 @@ function ArtistCard({ artist, actionLoading, onAudit, onCreateCampaign, onRender
           {artist.status === 'outreach_sent' && (
             <>
               <ActionButton
-                onClick={() => onRenderOutreach(artist.id)}
+                onClick={() => onRenderOutreach(artist.id, instagram_handle, tiktok_handle)}
                 loading={actionLoading === `outreach-${artist.id}`}
                 disabled={isBusy}
                 color="green"
@@ -601,38 +609,31 @@ export default function OutreachDashboard() {
   };
 
   // ── Render outreach ─────────────────────────────────────────
-  const renderOutreach = async (artistId: string) => {
+  const renderOutreach = async (artistId: string, igHandle?: string, ttHandle?: string) => {
     setActionLoading(`outreach-${artistId}`);
+    
+    // Open DM tabs immediately (within click handler, before await — avoids popup blocker)
+    const igLink = igHandle ? `https://ig.me/m/${igHandle}` : null;
+    const ttLink = ttHandle ? `https://www.tiktok.com/@${ttHandle}` : null;
+    if (igLink) window.open(igLink, '_blank');
+    if (ttLink) window.open(ttLink, '_blank');
+    
     try {
       const data = await api('render_outreach', { artistId });
       if (data.error) {
         addToast('error', 'Could not render message', data.error);
       } else {
         await navigator.clipboard.writeText(data.message);
-        const igHandle = data.instagram_handle;
-        const ttHandle = data.tiktok_handle;
-        const igLink = igHandle ? `https://ig.me/m/${igHandle}` : null;
-        const ttLink = ttHandle ? `https://www.tiktok.com/@${ttHandle}` : null;
+        const resolvedIg = data.instagram_handle || igHandle;
+        const resolvedTt = data.tiktok_handle || ttHandle;
         
         const channels: string[] = [];
-        if (igLink) channels.push(`📸 IG: ${igLink}`);
-        if (ttLink) channels.push(`🎵 TikTok: ${ttLink}`);
+        if (resolvedIg) channels.push(`📸 IG: https://ig.me/m/${resolvedIg}`);
+        if (resolvedTt) channels.push(`🎵 TikTok: https://www.tiktok.com/@${resolvedTt}`);
         const channelText = channels.join(' · ');
         
-        // Show toast with DM links
-        addToast('success', 'Message copied', 
-          channelText
-            ? `📋 Copied · ${channelText}`
-            : `Ready to send to ${data.artist_name}.`
-        );
-        
-        // Open Instagram DM first (if available), then TikTok
-        if (igLink) {
-          setTimeout(() => window.open(igLink, '_blank'), 300);
-        }
-        if (ttLink) {
-          setTimeout(() => window.open(ttLink, '_blank'), 800);
-        }
+        addToast('success', `Message copied — ${data.artist_name}`,
+          channelText || 'Paste into DM and send.');
       }
     } catch (e: any) {
       addToast('error', 'Could not render message', e.message);
@@ -807,10 +808,12 @@ export default function OutreachDashboard() {
         ) : (
           <motion.div layout className="space-y-2">
             <AnimatePresence mode="popLayout">
-              {artists.map((a: Artist) => (
+              {artists.map((a: any) => (
                 <ArtistCard
                   key={a.id}
                   artist={a}
+                  instagram_handle={a.instagram_handle}
+                  tiktok_handle={a.tiktok_handle}
                   actionLoading={actionLoading}
                   onAudit={runAudit}
                   onCreateCampaign={createCampaign}

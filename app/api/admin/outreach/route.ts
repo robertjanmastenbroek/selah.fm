@@ -58,7 +58,8 @@ export async function GET(request: Request) {
 
 async function runDiscovery(query: string = 'year:2025-2026', limit: number = 10) {
   try {
-  const result = await discoverArtists(query, limit || 10);
+  // Multi-channel discovery: Reddit + Bandcamp + YouTube → Spotify cross-reference
+  const result = await discoverArtists(limit || 10);
   const { artists, diagnostics, channels } = result;
   
   // Store in database
@@ -396,9 +397,13 @@ async function getPipelineOverview() {
   const [totalOutreach] = await sql`SELECT COUNT(*)::int FROM outreach_log`;
   const [repliesReceived] = await sql`SELECT COUNT(*)::int FROM outreach_log WHERE status = 'replied'`;
 
-  // Recent discoveries
+  // Recent discoveries — join with audits for Instagram/TikTok handles
   const recent = await sql`
-    SELECT * FROM discovered_artists ORDER BY discovered_at DESC LIMIT 10
+    SELECT da.*, aa.instagram_handle, aa.tiktok_handle
+    FROM discovered_artists da
+    LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+    ORDER BY da.discovered_at DESC
+    LIMIT 10
   `;
 
   return NextResponse.json({

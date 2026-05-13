@@ -1,0 +1,58 @@
+#!/bin/sh
+# Pre-commit hook: scan for exposed secrets before allowing commits.
+# Patterns: high-entropy strings, common secret formats, hardcoded keys.
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+if [ -z "$STAGED_FILES" ]; then
+  exit 0
+fi
+
+RED='\033[0;31m'
+NC='\033[0m'
+BLOCKED=0
+
+# ── Check each staged file ──────────────────────────────────────────
+for FILE in $STAGED_FILES; do
+  # Skip binary files
+  if file -b "$FILE" 2>/dev/null | grep -q "binary"; then
+    continue
+  fi
+
+  DIFF=$(git diff --cached "$FILE")
+
+  # ── Pattern 1: Common secret formats ──
+  if echo "$DIFF" | grep -qP '([A-Za-z0-9+/]{40,})'; then
+    echo "${RED}⚠  SECURITY: High-entropy string found in $FILE${NC}"
+    echo "   This looks like a secret key/token. Use environment variables instead."
+    BLOCKED=1
+  fi
+
+  # ── Pattern 2: Hardcoded credentials ──
+  if echo "$DIFF" | grep -qP '(secret|token|key|password|passwd)\s*[=:]\s*["'\'']?[A-Za-z0-9_\-]{16,}["'\'']?'; then
+    echo "${RED}⚠  SECURITY: Possible hardcoded credential in $FILE${NC}"
+    BLOCKED=1
+  fi
+
+  # ── Pattern 3: AWS-style keys ──
+  if echo "$DIFF" | grep -qP '(AKIA|ASIA)[A-Z0-9]{16}'; then
+    echo "${RED}⚠  SECURITY: AWS access key detected in $FILE${NC}"
+    BLOCKED=1
+  fi
+
+  # ── Pattern 4: Stripe/Evervault keys ──
+  if echo "$DIFF" | grep -qP '(sk_live|pk_live|rk_live|whsec)_[A-Za-z0-9]{24,}'; then
+    echo "${RED}⚠  SECURITY: Live API key detected in $FILE${NC}"
+    BLOCKED=1
+  fi
+done
+
+if [ $BLOCKED -eq 1 ]; then
+  echo ""
+  echo "${RED}Commit blocked: potential secrets detected.${NC}"
+  echo "Use environment variables (process.env.X) or Railway secrets instead."
+  echo "If this is a false positive, use: git commit --no-verify"
+  exit 1
+fi
+
+exit 0

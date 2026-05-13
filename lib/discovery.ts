@@ -282,7 +282,7 @@ export interface DiscoveryResult {
   };
 }
 
-export async function discoverArtists(_query?: string, limit: number = 15): Promise<DiscoveryResult> {
+export async function discoverArtists(limit: number = 15): Promise<DiscoveryResult> {
   const diagnostics: string[] = [];
   diagnostics.push('═══ Multi-channel discovery (Spotify-free) ═══');
 

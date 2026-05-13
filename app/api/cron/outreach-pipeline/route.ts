@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
     log.push(`Pipeline config: discover=${discoveryLimit}, audit=${auditBatchSize}, campaigns=${campaignBatchSize}`);
 
-    const discoveryResult = await discoverArtists('year:2025-2026', discoveryLimit);
+    const discoveryResult = await discoverArtists(discoveryLimit);
     const discovered = discoveryResult.artists;
     log.push(...discoveryResult.diagnostics);
     if (discoveryResult.channels) {
