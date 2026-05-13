@@ -31,6 +31,7 @@ export default function OutreachDashboard() {
   const [actionLoading, setActionLoading] = useState('');
   const { toasts, addToast, dismissToast } = useToasts();
   const [artists, setArtists] = useState<any[]>([]);
+  const [readyForCampaign, setReadyForCampaign] = useState<any[]>([]);
 
   const api = useCallback(async (action: string, body: any = {}) => {
     const res = await fetch('/api/admin/outreach', {
@@ -47,9 +48,13 @@ export default function OutreachDashboard() {
 
   const fetchPipeline = useCallback(async () => {
     try {
-      const data = await fetch('/api/admin/outreach', { credentials: 'include' }).then(r => r.json());
+      const [data, rfc] = await Promise.all([
+        fetch('/api/admin/outreach', { credentials: 'include' }).then(r => r.json()),
+        fetch('/api/admin/outreach', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_ready_for_campaign' }) }).then(r => r.json()),
+      ]);
       if (data.error) { addToast('error', 'Could not load pipeline', data.error); }
       else { setPipeline(data); setArtists(data.recent || []); }
+      if (!rfc.error) setReadyForCampaign(Array.isArray(rfc) ? rfc : []);
     } catch {
       addToast('error', 'Could not load pipeline', 'Check your connection.');
     }
@@ -195,20 +200,20 @@ export default function OutreachDashboard() {
         fetchPipeline={fetchPipeline} onLogOutreach={logOutreach} />
 
       {/* Ready for Campaign Creation — audited artists with social handles */}
-      {artists.filter((a: any) => a.status === 'audited').length > 0 && (
+      {readyForCampaign.length > 0 && (
         <div>
           <div className="mb-3">
             <h2 className="text-sm font-semibold flex items-center gap-2">
               <Megaphone size={14} className="text-amber-400" />
               Ready for Campaign
               <span className="text-[10px] text-muted-foreground font-normal">
-                {artists.filter((a: any) => a.status === 'audited').length} audited
+                {readyForCampaign.length} audited
               </span>
             </h2>
           </div>
           <motion.div layout className="space-y-2">
             <AnimatePresence mode="popLayout">
-              {artists.filter((a: any) => a.status === 'audited').map((a: any) => (
+              {readyForCampaign.map((a: any) => (
                 <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
                   onAudit={runAudit} onCreateCampaign={createCampaign}
                   onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
@@ -273,7 +278,7 @@ export default function OutreachDashboard() {
             </div>
           )}
         </div>
-        {artists.filter((a: any) => a.status !== 'audited').length === 0 && artists.filter((a: any) => a.status === 'audited').length === 0 ? <EmptyState onDiscover={runDiscovery} /> : (
+        {artists.length === 0 ? <EmptyState onDiscover={runDiscovery} /> : (
           <motion.div layout className="space-y-2">
             <AnimatePresence mode="popLayout">
               {artists.filter((a: any) => a.status !== 'audited').map((a: any) => (

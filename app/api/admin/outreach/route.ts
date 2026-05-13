@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       case 'get_artist':             return getArtistById(body.artistId);
       case 'get_outreach_queue':     return getOutreachQueue();
       case 'repair_campaign_images': return repairCampaignImages();
+      case 'get_ready_for_campaign': return getReadyForCampaign();
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -688,6 +689,20 @@ async function repairCampaignImages() {
       empty: other?.count || 0,
     },
   });
+}
+
+/** Returns audited artists with social handles — ready for campaign creation */
+async function getReadyForCampaign() {
+  const artists = await sql`
+    SELECT DISTINCT ON (da.id) da.*, aa.instagram_handle, aa.tiktok_handle
+    FROM discovered_artists da
+    LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+    WHERE da.status = 'audited'
+      AND (aa.instagram_handle IS NOT NULL OR aa.tiktok_handle IS NOT NULL)
+    ORDER BY da.id, aa.audited_at DESC
+    LIMIT 50
+  `;
+  return NextResponse.json(artists);
 }
 
 /** Returns all artists with campaign_created status (ready for outreach) + their audit data */
