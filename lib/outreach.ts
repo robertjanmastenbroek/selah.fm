@@ -59,12 +59,43 @@ export interface ArtistAudit {
 }
 
 /**
- * Audit an artist — enrich with YouTube video search + generate personal angle.
- * No Spotify needed. Uses YouTube Data API if YOUTUBE_API_KEY is set.
+ * Scrape Bandcamp artist page for social links (Instagram, Twitter, website, etc.)
  */
-export async function auditArtist(artistName: string, trackName: string, genres: string[] = []): Promise<ArtistAudit | null> {
+async function discoverSocialLinks(bandcampUrl: string): Promise<{ instagram_handle: string | null; website_url: string | null }> {
+  if (!bandcampUrl) return { instagram_handle: null, website_url: null };
   try {
-    // Try YouTube for music video
+    const res = await fetch(bandcampUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
+    });
+    if (!res.ok) return { instagram_handle: null, website_url: null };
+    const html = await res.text();
+
+    // Extract Instagram: instagram.com/username
+    const igMatch = html.match(/instagram\.com\/([a-zA-Z0-9._]+)/);
+    const instagram_handle = igMatch ? igMatch[1] : null;
+
+    // Extract website from bio links (exclude CDN, favicon, and bandcamp subdomains)
+    const webMatch = html.match(/href="(https?:\/\/(?!.*(?:bandcamp\.com|bcbits\.com|favicon))[^"]+)"/);
+    const website_url = webMatch ? webMatch[1] : null;
+
+    return { instagram_handle, website_url };
+  } catch {
+    return { instagram_handle: null, website_url: null };
+  }
+}
+
+/**
+ * Audit an artist — enrich with YouTube video search, social links + personal angle.
+ * No Spotify needed. Uses YouTube Data API + Bandcamp page scraping.
+ */
+export async function auditArtist(
+  artistName: string,
+  trackName: string,
+  genres: string[] = [],
+  bandcampUrl?: string,
+): Promise<ArtistAudit | null> {
+  try {
+    // YouTube video search
     let youtubeUrl: string | null = null;
     let youtubeViews = 0;
     const ytKey = process.env.YOUTUBE_API_KEY;
@@ -83,8 +114,16 @@ export async function auditArtist(artistName: string, trackName: string, genres:
       } catch {}
     }
 
-    // Generate personal angle from genre + track name
-    const genreText = genres.length > 0 ? genres[0] : 'music';
+    // Social links from Bandcamp page
+    let instagram_handle: string | null = null;
+    let website_url: string | null = null;
+    if (bandcampUrl) {
+      const social = await discoverSocialLinks(bandcampUrl);
+      instagram_handle = social.instagram_handle;
+      website_url = social.website_url;
+    }
+
+    // Personal angle
     const personalAngle = trackName
       ? `The way "${trackName}" hits — that's the moment I knew ${artistName} deserves way more ears.`
       : `"${artistName}" caught my attention on Bandcamp. This artist deserves way more ears.`;
@@ -97,13 +136,13 @@ export async function auditArtist(artistName: string, trackName: string, genres:
       spotify_embed_url: '',
       artist_bio: artistName,
       recommended_cpm_cents: 10,
-      recommended_budget_cents: 0, // $0 — auto-generated campaigns start unfunded
-      instagram_handle: null,
+      recommended_budget_cents: 0,
+      instagram_handle,
       instagram_followers: 0,
       tiktok_handle: null,
       tiktok_followers: 0,
       email_address: null,
-      website_url: null,
+      website_url,
       hashtags: genres.map((g: string) => `#${g.replace(/\s+/g, '')}`).slice(0, 5),
       personal_angle: personalAngle,
     };
@@ -119,6 +158,9 @@ export function renderOutreachMessage(artistName: string, trackName: string, aud
   const videoLine = audit.youtube_video_url
     ? `\nI even found your music video on YouTube. Added that too.`
     : '';
+  const instagramLine = audit.instagram_handle
+    ? `\nP.S. — Found your Instagram (@${audit.instagram_handle}). I'll DM you there too.`
+    : '';
 
   return `Hey ${artistName},
 
@@ -132,7 +174,7 @@ Here's the thing: I already made a campaign page for "${trackName || 'your music
 
 It's ready to share with your people. Friends and family can chip in a few dollars to fund it. Anyone can submit a TikTok — even your cousin with 300 followers. You only pay if their video actually gets views.
 
-Claim it whenever you want (takes 30 seconds). Or don't. The page just sits there until you're ready.
+Claim it whenever you want (takes 30 seconds). Or don't. The page just sits there until you're ready.${instagramLine}
 
 — Robert-Jan
   Founder, Selah.fm

@@ -24,17 +24,30 @@ export async function GET() {
     const [totalPaid] = await sql`
       SELECT COALESCE(SUM(payout_amount_cents)::bigint, 0) as total FROM submissions WHERE payout_status = 'paid'
     `;
-    // Count unique fans who donated or supported
+    // Count unique fans who donated + total donation amount
     let donorCount = 0;
+    let totalDonatedCents = 0;
     try {
       const [donors] = await sql`
-        SELECT COUNT(DISTINCT COALESCE(donor_name, 'anonymous'))::int as count
+        SELECT COUNT(DISTINCT COALESCE(donor_name, 'anonymous'))::int as count,
+               COALESCE(SUM(amount_cents)::bigint, 0) as total
         FROM campaign_donations
       `;
       donorCount = donors?.count || 0;
+      totalDonatedCents = Number(donors?.total || 0);
     } catch {
       // Table may not exist yet
     }
+
+    // Count total deposited (funded) across all campaigns
+    let totalDepositedCents = 0;
+    try {
+      const [deposits] = await sql`
+        SELECT COALESCE(SUM(total_budget_cents)::bigint, 0) as total
+        FROM campaigns WHERE total_budget_cents > 0
+      `;
+      totalDepositedCents = Number(deposits?.total || 0);
+    } catch {}
 
     return NextResponse.json({
       artists: artistCount?.count || 0,
@@ -44,6 +57,8 @@ export async function GET() {
       totalViews: Number(totalViews?.total || 0),
       totalPaidCents: Number(totalPaid?.total || 0),
       donors: donorCount,
+      totalDonatedCents,
+      totalDepositedCents,
     });
   } catch {
     return NextResponse.json({

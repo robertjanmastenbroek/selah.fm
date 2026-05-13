@@ -113,8 +113,10 @@ async function runAudit(artistId: string) {
   const [artist] = await sql`SELECT * FROM discovered_artists WHERE id = ${artistId}`;
   if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
 
-  // Run audit via YouTube
-  const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || []);
+  // Run audit via YouTube + Bandcamp social discovery
+  const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
+  const bandcampUrl = socialLinks.bandcamp || '';
+  const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl);
   if (!audit) return NextResponse.json({ error: 'Audit failed' }, { status: 500 });
 
   // Store audit

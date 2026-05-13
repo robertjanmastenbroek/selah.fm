@@ -80,17 +80,22 @@ export async function GET(request: Request) {
     log.push(`Stored ${stored} new artists`);
 
     // ── Phase 2: Audit ─────────────────────────────────────
+    const auditBatchSize = parseInt(searchParams.get('audit') || '10');
     const toAudit = await sql`
       SELECT * FROM discovered_artists
       WHERE status = 'discovered' AND is_ai_artist = false
       ORDER BY discovered_at ASC
-      LIMIT 5
+      LIMIT ${auditBatchSize}
     `;
 
+    log.push(`Auditing ${toAudit.length} artists...`);
     for (const artist of toAudit) {
       try {
         log.push(`Auditing: ${artist.artist_name}`);
-        const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || []);
+        // Extract Bandcamp URL from social_links if available
+        const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
+        const bandcampUrl = socialLinks.bandcamp || '';
+        const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl);
 
         if (!audit) {
           log.push(`  ❌ Audit failed for ${artist.artist_name}`);
