@@ -2,7 +2,7 @@
 
 **Goal:** 100 artists/day claiming their auto-generated campaign
 **Strategy:** Find artists → audit their presence → build a rich campaign → send one detailed outreach message → they claim and share
-**Budget:** $0 (Spotify API free tier, manual Instagram DMs, existing infra)
+**Budget:** $0 (Bandcamp API free, YouTube Data API free tier, Reddit JSON API free, manual Instagram DMs, existing infra)
 **Updated:** 2026-05-13 — Replaced Spotify search discovery with multi-channel (Reddit/Bandcamp/YouTube → Spotify cross-reference). Spotify search was unreliable for finding unsigned artists; direct artist lookup by name works well for the audit phase.
 
 ---
@@ -90,14 +90,11 @@ Skip if 2+ signals. More signals checked at Spotify cross-reference stage (no pr
 
 For each discovered artist, we pull:
 
-### From Spotify API
-- **Monthly listeners** — key metric for the outreach message
-- **Total streams on latest track** — shows we did our homework
-- **High-res cover art (640×640)** — campaign image
-- **Artist bio** — campaign description
-- **Genre tags** — determines CPM rate
-- **Related artists** — CPM rate benchmarking
-- **Spotify URI/URL** — embed in campaign
+### From Bandcamp API
+- **Artist name + track/album title** — campaign content
+- **Genre tags** — campaign targeting
+- **Cover art (from Bandcamp CDN)** — campaign image
+- **Band URL** — link in outreach
 
 ### From YouTube Data API
 - **Official music video** — search `"{artist_name} {track_title} official music video"`
@@ -123,15 +120,12 @@ For each discovered artist, we pull:
 ```
 ARTIST AUDIT: Luna Waves
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Monthly Spotify listeners: 3,247
-Streams on "Neon Summer": 12,843
-Instagram: @lunawavesmusic · 2,401 followers · Last post: 3 days ago
-TikTok: @lunawavesmusic · 5,100 followers · 3 videos this month
+Source: Bandcamp (electronic)
 YouTube: Official video · 847 views
 
 Personal angle for outreach:
-"The way the synth line drops at 1:23 in Neon Summer — 
-that's the moment that made me stop scrolling."
+"The way 'Neon Summer' hits — that's the moment 
+I knew Luna Waves deserves way more ears."
 ```
 
 ---

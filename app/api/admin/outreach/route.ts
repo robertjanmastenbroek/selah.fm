@@ -113,8 +113,8 @@ async function runAudit(artistId: string) {
   const [artist] = await sql`SELECT * FROM discovered_artists WHERE id = ${artistId}`;
   if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
 
-  // Run audit via Spotify + YouTube
-  const audit = await auditArtist(artist.spotify_id, artist.latest_track_name);
+  // Run audit via YouTube
+  const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || []);
   if (!audit) return NextResponse.json({ error: 'Audit failed' }, { status: 500 });
 
   // Store audit

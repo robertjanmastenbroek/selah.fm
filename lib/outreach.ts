@@ -7,53 +7,6 @@
  * Optional: YOUTUBE_API_KEY for music video search.
  */
 
-// ── Spotify API ───────────────────────────────────────────────────
-
-let spotifyToken: { access_token: string; expires_at: number } | null = null;
-
-async function getSpotifyToken(): Promise<string> {
-  if (spotifyToken && Date.now() < spotifyToken.expires_at) {
-    return spotifyToken.access_token;
-  }
-
-  const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-  if (!clientId || !clientSecret) throw new Error('SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET required');
-
-  const res = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64'),
-    },
-    body: 'grant_type=client_credentials',
-  });
-
-  if (!res.ok) throw new Error(`Spotify auth failed: ${res.status}`);
-  const data = await res.json();
-  spotifyToken = {
-    access_token: data.access_token,
-    expires_at: Date.now() + (data.expires_in - 60) * 1000,
-  };
-  return spotifyToken.access_token;
-}
-
-async function spotifyGet(path: string) {
-  const token = await getSpotifyToken();
-  const res = await fetch(`https://api.spotify.com/v1${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) {
-    if (res.status === 429) {
-      const retryAfter = parseInt(res.headers.get('Retry-After') || '5');
-      await new Promise(r => setTimeout(r, retryAfter * 1000));
-      return spotifyGet(path);
-    }
-    throw new Error(`Spotify API ${res.status}: ${path}`);
-  }
-  return res.json();
-}
-
 // ── AI Artist Detection ───────────────────────────────────────────
 
 const AI_DISTRIBUTORS = ['boomy', 'mubert', 'soundful', 'aiva', 'beatoven', 'soundraw', 'loudly', 'evoke'];
@@ -105,23 +58,19 @@ export interface ArtistAudit {
   personal_angle: string;
 }
 
-export async function auditArtist(spotifyId: string, trackName: string): Promise<ArtistAudit | null> {
+/**
+ * Audit an artist — enrich with YouTube video search + generate personal angle.
+ * No Spotify needed. Uses YouTube Data API if YOUTUBE_API_KEY is set.
+ */
+export async function auditArtist(artistName: string, trackName: string, genres: string[] = []): Promise<ArtistAudit | null> {
   try {
-    const artistData = await spotifyGet(`/artists/${spotifyId}`);
-    const topTracks = await spotifyGet(`/artists/${spotifyId}/top-tracks?market=US`);
-
-    const latestTrack = topTracks.tracks?.[0];
-    const followers = artistData.followers?.total || 0;
-    const genres = artistData.genres || [];
-    const bio = artistData.name || '';
-
     // Try YouTube for music video
     let youtubeUrl: string | null = null;
     let youtubeViews = 0;
     const ytKey = process.env.YOUTUBE_API_KEY;
-    if (ytKey && latestTrack) {
+    if (ytKey) {
       try {
-        const query = `${artistData.name} ${latestTrack.name} official music video`;
+        const query = `${artistName} ${trackName || ''} official music video`;
         const ytRes = await fetch(
           `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=1&key=${ytKey}`
         );
@@ -134,20 +83,21 @@ export async function auditArtist(spotifyId: string, trackName: string): Promise
       } catch {}
     }
 
-    // Simple personal angle generation from genres + track name
-    const personalAngle = genres.length > 0
-      ? `The way the ${genres[0]} production hits in "${latestTrack?.name || trackName}" — that's the moment I knew this deserved more ears.`
-      : `"${latestTrack?.name || trackName}" stopped me mid-scroll. This track deserves way more than ${followers.toLocaleString()} listeners.`;
+    // Generate personal angle from genre + track name
+    const genreText = genres.length > 0 ? genres[0] : 'music';
+    const personalAngle = trackName
+      ? `The way "${trackName}" hits — that's the moment I knew ${artistName} deserves way more ears.`
+      : `"${artistName}" caught my attention on Bandcamp. This artist deserves way more ears.`;
 
     return {
-      spotify_monthly_listeners: followers,
-      spotify_track_streams: 0, // Not exposed via public API
+      spotify_monthly_listeners: 0,
+      spotify_track_streams: 0,
       youtube_video_url: youtubeUrl,
       youtube_video_views: youtubeViews,
-      spotify_embed_url: latestTrack?.external_urls?.spotify || artistData.external_urls?.spotify || '',
-      artist_bio: bio,
-      recommended_cpm_cents: 10, // $0.10 default
-      recommended_budget_cents: 10000, // $100 default
+      spotify_embed_url: '',
+      artist_bio: artistName,
+      recommended_cpm_cents: 10,
+      recommended_budget_cents: 10000,
       instagram_handle: null,
       instagram_followers: 0,
       tiktok_handle: null,
@@ -166,13 +116,17 @@ export async function auditArtist(spotifyId: string, trackName: string): Promise
 // ── Outreach Templates ────────────────────────────────────────────
 
 export function renderOutreachMessage(artistName: string, trackName: string, audit: ArtistAudit, campaignUrl: string): string {
+  const videoLine = audit.youtube_video_url
+    ? `\nI even found your music video on YouTube. Added that too.`
+    : '';
+
   return `Hey ${artistName},
 
-I've been listening to "${trackName}" — ${audit.personal_angle}
+${audit.personal_angle}
 
 I run Selah.fm — a platform where people make TikToks and Reels with your music. You only pay when their videos get verified views. No upfront cost.
 
-Here's the thing: I already made a campaign page for "${trackName}" with your cover art, the music video, and everything:
+Here's the thing: I already made a campaign page for "${trackName || 'your music'}" with your cover art and everything:${videoLine}
 
 👉 ${campaignUrl}
 
@@ -199,7 +153,7 @@ export function renderFollowUpMessage(
 ): string {
   const socialProof: string[] = [];
   if (donationCount > 0) {
-    socialProof.push(`${donationCount} ${donationCount === 1 ? 'person has' : 'people have'} chipped in $${donationTotal.toFixed(0)} to support "${trackName}"`);
+    socialProof.push(`${donationCount} ${donationCount === 1 ? 'person has' : 'people have'} chipped in $${donationTotal.toFixed(0)}`);
   }
   if (submissionCount > 0) {
     socialProof.push(`${submissionCount} ${submissionCount === 1 ? 'creator has' : 'creators have'} submitted videos`);
@@ -210,7 +164,7 @@ export function renderFollowUpMessage(
 
   return `Hey ${artistName} — just a quick follow-up.${proofLine}
 
-Your campaign page for "${trackName}" is still live at:
+Your campaign page for "${trackName || 'your music'}" is still live at:
 👉 ${campaignUrl}
 
 No pressure at all. The page just keeps working — people can donate, creators can submit videos, and everything runs automatically. You can claim it whenever you want, or not at all.

@@ -32,26 +32,6 @@ export async function GET(request: Request) {
     
     const discoveryLimit = parseInt(searchParams.get('limit') || '5');
 
-    // Quick Spotify credential check before full run
-    try {
-      const spotifyAuth = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: 'Basic ' + Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64'),
-        },
-        body: 'grant_type=client_credentials',
-      });
-      if (!spotifyAuth.ok) {
-        log.push(`❌ Spotify auth failed: HTTP ${spotifyAuth.status} — check SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET`);
-        return NextResponse.json({ results: { discovered: 0, audited: 0, campaigns_created: 0, errors: 1 }, log });
-      }
-      log.push('✅ Spotify credentials valid');
-    } catch (e: any) {
-      log.push(`❌ Spotify auth error: ${e.message}`);
-      return NextResponse.json({ results: { discovered: 0, audited: 0, campaigns_created: 0, errors: 1 }, log });
-    }
-
     log.push(`Starting multi-channel discovery (Reddit + Bandcamp + YouTube) [limit=${discoveryLimit}]`);
 
     const discoveryResult = await discoverArtists('year:2025-2026', discoveryLimit);
@@ -110,7 +90,7 @@ export async function GET(request: Request) {
     for (const artist of toAudit) {
       try {
         log.push(`Auditing: ${artist.artist_name}`);
-        const audit = await auditArtist(artist.spotify_id, artist.latest_track_name);
+        const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || []);
 
         if (!audit) {
           log.push(`  ❌ Audit failed for ${artist.artist_name}`);
