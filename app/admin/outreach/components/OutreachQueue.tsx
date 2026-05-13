@@ -27,7 +27,7 @@ interface OutreachQueueProps {
 export default function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetchPipeline, onLogOutreach }: OutreachQueueProps) {
   const [queue, setQueue] = useState<QueueArtist[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const isGlobalBusy = actionLoading === 'discover' || actionLoading === 'batch-audit';
+  const isGlobalBusy = actionLoading === 'discover' || actionLoading === 'batch-audit' || actionLoading === 'repair-images';
 
   useEffect(() => {
     if (count > 0 && !loaded) {

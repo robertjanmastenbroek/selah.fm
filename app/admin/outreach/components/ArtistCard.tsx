@@ -71,7 +71,7 @@ export default function ArtistCard({
   const status = STATUS_MAP[artist.status] || STATUS_MAP.discovered;
   const StatusIcon = status.icon;
   // Lock during any action for this artist OR any global action
-  const isGlobalAction = actionLoading === 'discover' || actionLoading === 'batch-audit';
+  const isGlobalAction = actionLoading === 'discover' || actionLoading === 'batch-audit' || actionLoading === 'repair-images';
   const isBusy = isGlobalAction
     || actionLoading.startsWith(`audit-${artist.id}`)
     || actionLoading.startsWith(`campaign-${artist.id}`)

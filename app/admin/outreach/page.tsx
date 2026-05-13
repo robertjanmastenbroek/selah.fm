@@ -216,6 +216,27 @@ export default function OutreachDashboard() {
                            hover:text-foreground hover:border-white/[0.12] transition-all">
                 <RefreshCw size={11} />Refresh
               </motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={async () => {
+                  setActionLoading('repair-images');
+                  try {
+                    const res = await fetch('/api/admin/outreach', {
+                      method: 'POST', credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'repair_campaign_images' }),
+                    });
+                    const data = await res.json();
+                    if (data.error) { addToast('error', 'Repair failed', data.error); }
+                    else { addToast('success', `Images repaired`, `${data.repaired} downloaded · ${data.skipped} skipped · ${data.total} total`); fetchPipeline(); }
+                  } catch (e: any) { addToast('error', 'Repair failed', e.message); }
+                  setActionLoading('');
+                }}
+                disabled={actionLoading === 'repair-images'}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
+                           bg-amber-500/10 text-amber-400 border border-amber-500/20
+                           hover:bg-amber-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                {actionLoading === 'repair-images' ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}Repair Images
+              </motion.button>
             </div>
           )}
         </div>
