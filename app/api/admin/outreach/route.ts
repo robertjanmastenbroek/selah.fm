@@ -540,23 +540,62 @@ async function getArtistById(artistId: string) {
   return NextResponse.json({ artist, audit, outreach, claim, campaign });
 }
 
+/** Download image from URL with browser-like headers to bypass CDN blocking */
+async function downloadImage(url: string): Promise<Buffer | null> {
+  const urlsToTry = [url];
+  // If it's a Bandcamp CDN URL, also try the _10 (1200px) variant
+  const bcMatch = url.match(/(https:\/\/f\d+\.bcbits\.com\/img\/a\d+)_\d+\.(jpg|png)/);
+  if (bcMatch) {
+    urlsToTry.push(`${bcMatch[1]}_10.${bcMatch[2]}`);
+    urlsToTry.push(`${bcMatch[1]}_2.${bcMatch[2]}`);
+  }
+  for (const u of urlsToTry) {
+    try {
+      const res = await fetch(u, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Referer': 'https://bandcamp.com/',
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('image/') || contentType.includes('application/octet-stream')) {
+          const buffer = Buffer.from(await res.arrayBuffer());
+          // Valid JPEG starts with FF D8, PNG with 89 50 4E 47, WebP with 52 49 46 46
+          if (buffer.length > 2000) {
+            const isValidImage = 
+              (buffer[0] === 0xFF && buffer[1] === 0xD8) || // JPEG
+              (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) || // PNG
+              (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46); // WebP
+            if (isValidImage) return buffer;
+          }
+        }
+      }
+    } catch {}
+  }
+  return null;
+}
+
 /** Repair campaign images — restore from discovered_artists or download + re-host */
 async function repairCampaignImages() {
-  // First, get a diagnostic count of what's in the DB
   const [totalCampaigns] = await sql`SELECT COUNT(*)::int FROM campaigns`;
   const [localImages] = await sql`SELECT COUNT(*)::int FROM campaigns WHERE cover_art_url LIKE '/images/campaigns/%'`;
   const [externalUrls] = await sql`SELECT COUNT(*)::int FROM campaigns WHERE cover_art_url LIKE 'http%'`;
   const [ogFallbacks] = await sql`SELECT COUNT(*)::int FROM campaigns WHERE cover_art_url = '/images/og-image.jpg'`;
   const [other] = await sql`SELECT COUNT(*)::int FROM campaigns WHERE cover_art_url IS NULL OR cover_art_url = ''`;
 
-  // Find campaigns without local images (external URLs or og-image fallback)
+  // Include ALL campaigns that could benefit from image repair
   const campaigns = await sql`
     SELECT c.id, c.slug, c.cover_art_url, da.latest_track_cover_url
     FROM campaigns c
     LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
     LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-    WHERE c.cover_art_url IS NOT NULL AND c.cover_art_url != ''
-      AND c.cover_art_url NOT LIKE '/images/campaigns/%'
+    WHERE (c.cover_art_url NOT LIKE '/images/campaigns/%'
+           OR da.latest_track_cover_url IS NOT NULL)
+      AND c.cover_art_url IS NOT NULL AND c.cover_art_url != ''
     ORDER BY c.created_at DESC
     LIMIT 200
   `;
@@ -567,34 +606,25 @@ async function repairCampaignImages() {
     const originalUrl = c.latest_track_cover_url;
     const currentUrl = c.cover_art_url;
 
-    // If current is og-image but we have an original URL, restore it
-    if (currentUrl === '/images/og-image.jpg' && originalUrl && originalUrl.startsWith('http')) {
-      await sql`UPDATE campaigns SET cover_art_url = ${originalUrl} WHERE id = ${c.id}`;
-      restored++;
-      continue;
-    }
-
-    // If current is an external URL, try to download and re-host
-    if (currentUrl?.startsWith('http')) {
-      try {
-        const res = await fetch(currentUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
-          signal: AbortSignal.timeout(10000),
-        });
-        if (res.ok && res.headers.get('content-type')?.includes('image')) {
-          const buffer = Buffer.from(await res.arrayBuffer());
-          if (buffer.length > 1000) {
-            const ext = currentUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-            const dir = path.join(process.cwd(), 'public/images/campaigns');
-            fs.mkdirSync(dir, { recursive: true });
-            const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-            fs.writeFileSync(path.join(dir, filename), buffer);
-            await sql`UPDATE campaigns SET cover_art_url = ${'/images/campaigns/' + filename} WHERE id = ${c.id}`;
-            downloaded++;
-            continue;
-          }
+    // If we have an original URL in discovered_artists, try downloading from there
+    const sourceUrl = originalUrl?.startsWith('http') ? originalUrl : currentUrl?.startsWith('http') ? currentUrl : null;
+    
+    if (sourceUrl) {
+      const buffer = await downloadImage(sourceUrl);
+      if (buffer) {
+        const ext = sourceUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+        const dir = path.join(process.cwd(), 'public/images/campaigns');
+        fs.mkdirSync(dir, { recursive: true });
+        const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+        fs.writeFileSync(path.join(dir, filename), buffer);
+        await sql`UPDATE campaigns SET cover_art_url = ${'/images/campaigns/' + filename} WHERE id = ${c.id}`;
+        if (originalUrl?.startsWith('http') && currentUrl !== originalUrl) {
+          restored++;
+        } else {
+          downloaded++;
         }
-      } catch {}
+        continue;
+      }
     }
 
     skipped++;
