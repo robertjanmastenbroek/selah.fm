@@ -240,6 +240,15 @@ export async function GET(request: Request) {
   } catch (e: any) { results.push(`campaign_claims: ${e.message}`); }
 
   try {
+    await sql`CREATE TABLE IF NOT EXISTS campaign_images (
+      campaign_id UUID PRIMARY KEY REFERENCES campaigns(id) ON DELETE CASCADE,
+      data BYTEA NOT NULL,
+      mime TEXT NOT NULL DEFAULT 'image/jpeg'
+    )`;
+    results.push('campaign_images table OK');
+  } catch (e: any) { results.push(`campaign_images: ${e.message}`); }
+
+  try {
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS is_unclaimed BOOLEAN DEFAULT false`;
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS claimed_by_user_id UUID REFERENCES users(id)`;
     await sql`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`;

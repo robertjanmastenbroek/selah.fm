@@ -202,26 +202,21 @@ async function runCreateCampaign(artistId: string) {
     ? `${artist.artist_name} — ${artist.latest_track_name}`
     : `${artist.artist_name} — Latest Release`;
 
-  // Cover art: 1) Download & re-host locally  2) Keep external URL  3) Fallback
+  // Cover art: 1) Download & store in DB  2) Keep external URL  3) Fallback
   let coverArtUrl = artist.latest_track_cover_url || '';
+  let imageData: Buffer | null = null;
+  let imageMime = 'image/jpeg';
   if (coverArtUrl && coverArtUrl.startsWith('http')) {
-    try {
-      const res = await fetch(coverArtUrl, { headers: { 'User-Agent': 'SelahFM/1.0' } });
-      if (res.ok && res.headers.get('content-type')?.includes('image')) {
-        const buffer = Buffer.from(await res.arrayBuffer());
-        if (buffer.length > 1000) {
-          const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-          const dir = path.join(process.cwd(), 'public/images/campaigns');
-          fs.mkdirSync(dir, { recursive: true });
-          const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-          fs.writeFileSync(path.join(dir, filename), buffer);
-          coverArtUrl = `/images/campaigns/${filename}`;
-        }
-      }
-      // If download failed or image too small, keep the external URL as fallback
-    } catch { /* keep external URL if fetch fails */ }
+    const result = await downloadImage(coverArtUrl);
+    if (result) {
+      imageData = result.buffer;
+      imageMime = result.mime;
+      const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+      const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      coverArtUrl = `/images/campaigns/${filename}`;
+    }
+    // If download failed, keep the external URL as fallback
   }
-  // Final fallback: if nothing worked, use og-image
   if (!coverArtUrl) coverArtUrl = '/images/og-image.jpg';
 
   const [campaign] = await sql`
@@ -251,6 +246,14 @@ async function runCreateCampaign(artistId: string) {
     )
     RETURNING *
   `;
+
+  // Store image in campaign_images table (persistent, survives deploys)
+  if (imageData) {
+    await sql`
+      INSERT INTO campaign_images (campaign_id, data, mime)
+      VALUES (${campaign.id}, ${imageData}, ${imageMime})
+    `;
+  }
 
   // Generate claim code
   const claimCode = crypto.randomUUID();
@@ -540,8 +543,8 @@ async function getArtistById(artistId: string) {
   return NextResponse.json({ artist, audit, outreach, claim, campaign });
 }
 
-/** Download image from URL with browser-like headers to bypass CDN blocking */
-async function downloadImage(url: string): Promise<Buffer | null> {
+/** Download image from URL and return { buffer, mime } or null */
+async function downloadImage(url: string): Promise<{ buffer: Buffer; mime: string } | null> {
   const urlsToTry = [url];
   // If it's a Bandcamp CDN URL, also try the _10 (1200px) variant
   const bcMatch = url.match(/(https:\/\/f\d+\.bcbits\.com\/img\/a\d+)_\d+\.(jpg|png)/);
@@ -570,7 +573,12 @@ async function downloadImage(url: string): Promise<Buffer | null> {
               (buffer[0] === 0xFF && buffer[1] === 0xD8) || // JPEG
               (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) || // PNG
               (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46); // WebP
-            if (isValidImage) return buffer;
+            if (isValidImage) {
+              let mime = 'image/jpeg';
+              if (buffer[0] === 0x89) mime = 'image/png';
+              else if (buffer[0] === 0x52) mime = 'image/webp';
+              return { buffer, mime };
+            }
           }
         }
       }
@@ -610,14 +618,20 @@ async function repairCampaignImages() {
     const sourceUrl = originalUrl?.startsWith('http') ? originalUrl : currentUrl?.startsWith('http') ? currentUrl : null;
     
     if (sourceUrl) {
-      const buffer = await downloadImage(sourceUrl);
-      if (buffer) {
+      const result = await downloadImage(sourceUrl);
+      if (result) {
         const ext = sourceUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-        const dir = path.join(process.cwd(), 'public/images/campaigns');
-        fs.mkdirSync(dir, { recursive: true });
         const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-        fs.writeFileSync(path.join(dir, filename), buffer);
-        await sql`UPDATE campaigns SET cover_art_url = ${'/images/campaigns/' + filename} WHERE id = ${c.id}`;
+        const imagePath = `/images/campaigns/${filename}`;
+
+        // Store image binary in campaign_images table (survives redeploys)
+        await sql`
+          INSERT INTO campaign_images (campaign_id, data, mime)
+          VALUES (${c.id}::uuid, ${result.buffer}, ${result.mime})
+          ON CONFLICT (campaign_id) DO UPDATE SET data = EXCLUDED.data, mime = EXCLUDED.mime
+        `;
+
+        await sql`UPDATE campaigns SET cover_art_url = ${imagePath} WHERE id = ${c.id}`;
         if (originalUrl?.startsWith('http') && currentUrl !== originalUrl) {
           restored++;
         } else {

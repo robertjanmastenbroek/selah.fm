@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { discoverArtists, auditArtist } from '@/lib/outreach';
@@ -173,23 +171,35 @@ export async function GET(request: Request) {
         const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const slug = `${artistSlug}-${trackSlug}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100).replace(/--+/g, '-');
 
-        // Cover art: 1) Download & re-host locally  2) Keep external URL  3) Fallback
+        // Cover art: download & store in DB (persistent)
         let coverArtUrl = artist.latest_track_cover_url || '';
+        let imageData: Buffer | null = null;
+        let imageMime = 'image/jpeg';
         if (coverArtUrl && coverArtUrl.startsWith('http')) {
-          try {
-            const imgRes = await fetch(coverArtUrl, { headers: { 'User-Agent': 'SelahFM/1.0' } });
-            if (imgRes.ok && imgRes.headers.get('content-type')?.includes('image')) {
-              const buffer = Buffer.from(await imgRes.arrayBuffer());
-              if (buffer.length > 1000) {
-                const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-                const dir = path.join(process.cwd(), 'public/images/campaigns');
-                fs.mkdirSync(dir, { recursive: true });
-                const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-                fs.writeFileSync(path.join(dir, filename), buffer);
-                coverArtUrl = `/images/campaigns/${filename}`;
+          const urls = [coverArtUrl];
+          const bcMatch = coverArtUrl.match(/(https:\/\/f\d+\.bcbits\.com\/img\/a\d+)_\d+\.(jpg|png)/);
+          if (bcMatch) { urls.push(`${bcMatch[1]}_10.${bcMatch[2]}`, `${bcMatch[1]}_2.${bcMatch[2]}`); }
+          for (const u of urls) {
+            try {
+              const res = await fetch(u, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36', 'Accept': 'image/*' },
+                signal: AbortSignal.timeout(15000),
+              });
+              if (res.ok) {
+                const buf = Buffer.from(await res.arrayBuffer());
+                if (buf.length > 2000 && ((buf[0] === 0xFF && buf[1] === 0xD8) || (buf[0] === 0x89 && buf[1] === 0x50) || (buf[0] === 0x52 && buf[1] === 0x49))) {
+                  imageData = buf;
+                  if (buf[0] === 0x89) imageMime = 'image/png';
+                  else if (buf[0] === 0x52) imageMime = 'image/webp';
+                  break;
+                }
               }
-            }
-          } catch { /* keep external URL if fetch fails */ }
+            } catch {}
+          }
+          if (imageData) {
+            const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+            coverArtUrl = `/images/campaigns/campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+          }
         }
         if (!coverArtUrl) coverArtUrl = '/images/og-image.jpg';
 
@@ -224,6 +234,11 @@ export async function GET(request: Request) {
           )
           RETURNING *
         `;
+
+        // Store image in campaign_images table
+        if (imageData) {
+          await sql`INSERT INTO campaign_images (campaign_id, data, mime) VALUES (${campaign.id}, ${imageData}, ${imageMime})`;
+        }
 
         // Create claim code
         const claimCode = crypto.randomUUID();
