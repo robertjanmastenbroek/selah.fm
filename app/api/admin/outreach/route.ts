@@ -50,8 +50,10 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const artistId = searchParams.get('artistId');
+  const action = searchParams.get('action');
 
   try {
+    if (action === 'repair_campaign_images') return repairCampaignImages();
     if (artistId) return getArtistById(artistId);
     return getPipelineOverview();
   } catch (e: any) {
@@ -537,36 +539,70 @@ async function getArtistById(artistId: string) {
 /** Repair campaign images — re-download external URLs and re-host locally */
 async function repairCampaignImages() {
   const campaigns = await sql`
-    SELECT id, slug, cover_art_url FROM campaigns
-    WHERE cover_art_url IS NOT NULL AND cover_art_url != ''
-      AND cover_art_url NOT LIKE '/images/%'
+    SELECT c.id, c.slug, c.cover_art_url, da.latest_track_cover_url
+    FROM campaigns c
+    LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+    LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+    WHERE c.cover_art_url IS NOT NULL AND c.cover_art_url != ''
+      AND c.cover_art_url NOT LIKE '/images/%'
     LIMIT 100
   `;
 
   let repaired = 0, skipped = 0, failed = 0;
-  for (const c of campaigns) {
-    const url = c.cover_art_url;
-    if (!url || !url.startsWith('http')) { skipped++; continue; }
 
+  async function tryDownload(url: string): Promise<Buffer | null> {
     try {
       const res = await fetch(url, { headers: { 'User-Agent': 'SelahFM/1.0' } });
       if (res.ok && res.headers.get('content-type')?.includes('image')) {
         const buffer = Buffer.from(await res.arrayBuffer());
-        if (buffer.length > 1000) {
-          const ext = url.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-          const dir = path.join(process.cwd(), 'public/images/campaigns');
-          fs.mkdirSync(dir, { recursive: true });
-          const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-          fs.writeFileSync(path.join(dir, filename), buffer);
-          await sql`UPDATE campaigns SET cover_art_url = ${'/images/campaigns/' + filename} WHERE id = ${c.id}`;
-          repaired++;
-          continue;
-        }
+        if (buffer.length > 1000) return buffer;
       }
-      // Download failed or not an image — fall back to og-image
-      await sql`UPDATE campaigns SET cover_art_url = ${'/images/og-image.jpg'} WHERE id = ${c.id}`;
-      failed++;
-    } catch {
+    } catch {}
+    return null;
+  }
+
+  async function tryBandcampVariants(artId: string): Promise<Buffer | null> {
+    const sizes = ['_10', '_16', '_2', '_0'];
+    for (const size of sizes) {
+      const url = `https://f4.bcbits.com/img/a${artId}${size}.jpg`;
+      const buf = await tryDownload(url);
+      if (buf) return buf;
+    }
+    return null;
+  }
+
+  for (const c of campaigns) {
+    let buffer: Buffer | null = null;
+    let bestUrl = c.cover_art_url;
+
+    // Try the stored URL first
+    if (bestUrl && bestUrl.startsWith('http')) {
+      buffer = await tryDownload(bestUrl);
+    }
+
+    // Try Bandcamp art_id variants if the URL looks like a Bandcamp CDN URL
+    if (!buffer) {
+      const artMatch = bestUrl?.match(/\/a(\d+)_\d+\.jpg/);
+      if (artMatch) {
+        buffer = await tryBandcampVariants(artMatch[1]);
+      }
+    }
+
+    // Try the original discovered_artists URL (might be a fresher CDN URL)
+    if (!buffer && c.latest_track_cover_url && c.latest_track_cover_url.startsWith('http') && c.latest_track_cover_url !== bestUrl) {
+      buffer = await tryDownload(c.latest_track_cover_url);
+      if (buffer) bestUrl = c.latest_track_cover_url;
+    }
+
+    if (buffer) {
+      const ext = bestUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+      const dir = path.join(process.cwd(), 'public/images/campaigns');
+      fs.mkdirSync(dir, { recursive: true });
+      const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+      fs.writeFileSync(path.join(dir, filename), buffer);
+      await sql`UPDATE campaigns SET cover_art_url = ${'/images/campaigns/' + filename} WHERE id = ${c.id}`;
+      repaired++;
+    } else {
       await sql`UPDATE campaigns SET cover_art_url = ${'/images/og-image.jpg'} WHERE id = ${c.id}`;
       failed++;
     }
