@@ -16,9 +16,12 @@ export default function AdminCampaignsPage() {
   const showToast = (msg: string, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 2500); };
 
   const fetchCampaigns = (s = '') => {
-    const url = s ? `/api/admin/manage?type=campaigns&search=${encodeURIComponent(s)}` : '/api/campaigns';
+    // Use admin manage endpoint to see ALL campaigns (not just user's own)
+    const url = s
+      ? `/api/admin/manage?type=campaigns&search=${encodeURIComponent(s)}`
+      : '/api/admin/manage?type=campaigns';
     fetch(url).then(r => r.json()).then(d => {
-      const list = s ? (Array.isArray(d) ? d : []) : (d.campaigns || []);
+      const list = Array.isArray(d) ? d : (d.campaigns || []);
       setCampaigns(list);
     });
   };

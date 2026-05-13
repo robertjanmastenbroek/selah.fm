@@ -143,18 +143,25 @@ export async function GET(request: Request) {
       return NextResponse.json(rows);
     }
 
-    if (type === 'campaigns' && search) {
-      const rows = await sql`
-        SELECT c.*, u.display_name as artist_name, u.email as artist_email
-        FROM campaigns c
-        LEFT JOIN users u ON u.id = c.artist_id
-        WHERE c.track_title ILIKE ${'%' + search + '%'} OR u.display_name ILIKE ${'%' + search + '%'}
-        ORDER BY c.created_at DESC LIMIT 200
-      `;
+    if (type === 'campaigns') {
+      const rows = search
+        ? await sql`
+          SELECT c.*, u.display_name as artist_name, u.email as artist_email
+          FROM campaigns c
+          LEFT JOIN users u ON u.id = c.artist_id
+          WHERE c.track_title ILIKE ${'%' + search + '%'} OR u.display_name ILIKE ${'%' + search + '%'}
+          ORDER BY c.created_at DESC LIMIT 200
+        `
+        : await sql`
+          SELECT c.*, u.display_name as artist_name, u.email as artist_email
+          FROM campaigns c
+          LEFT JOIN users u ON u.id = c.artist_id
+          ORDER BY c.created_at DESC LIMIT 200
+        `;
       return NextResponse.json(rows);
     }
 
-    return NextResponse.json({ error: 'Invalid type or missing search' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
