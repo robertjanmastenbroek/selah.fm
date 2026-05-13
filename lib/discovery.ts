@@ -580,10 +580,10 @@ export async function discoverArtists(_query?: string, limit: number = 15): Prom
   const diagnostics: string[] = [];
   diagnostics.push('═══ Multi-channel discovery ═══');
 
-  // Check prerequisites
-  if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
-    diagnostics.push('❌ SPOTIFY_CLIENT_ID and/or SPOTIFY_CLIENT_SECRET not set');
-    return { artists: [], diagnostics, channels: { reddit: { candidates: 0, searched: 0 }, bandcamp: { candidates: 0, genres: [] }, youtube: { candidates: 0, terms: [] } } };
+  // Spotify is optional — we can store candidates directly without cross-reference
+  const hasSpotify = !!(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET);
+  if (!hasSpotify) {
+    diagnostics.push('⚠️  Spotify credentials not set — storing candidates directly without enrichment');
   }
 
   // ── Run all channels in parallel ──
@@ -610,35 +610,55 @@ export async function discoverArtists(_query?: string, limit: number = 15): Prom
 
   diagnostics.push(`\nTotal unique candidates: ${unique.length}`);
 
-  // ── Cross-reference with Spotify (serial — rate limited) ──
+  // ── Cross-reference with Spotify (if available), or store candidates directly ──
   const artists: DiscoveredArtist[] = [];
   let spotifyLookups = 0;
   let spotifyMatches = 0;
   spotifyResolveErrors = [];
   spotifyResolveErrorCount = 0;
 
-  for (const candidate of unique) {
-    if (artists.length >= limit) break;
-
-    try {
-      spotifyLookups++;
-      const resolved = await resolveOnSpotify(candidate);
-      if (resolved) {
-        artists.push(resolved);
-        spotifyMatches++;
-        diagnostics.push(`  ✅ ${resolved.artist_name} — ${resolved.followers.toLocaleString()} followers (${candidate.source})`);
+  if (hasSpotify) {
+    for (const candidate of unique) {
+      if (artists.length >= limit) break;
+      try {
+        spotifyLookups++;
+        const resolved = await resolveOnSpotify(candidate);
+        if (resolved) {
+          artists.push(resolved);
+          spotifyMatches++;
+          diagnostics.push(`  ✅ ${resolved.artist_name} — ${resolved.followers.toLocaleString()} followers (${candidate.source})`);
+        }
+      } catch (e: any) {
+        diagnostics.push(`  ⚠️  Spotify lookup failed for ${candidate.artist_name}: ${e.message}`);
       }
-    } catch (e: any) {
-      diagnostics.push(`  ⚠️  Spotify lookup failed for ${candidate.artist_name}: ${e.message}`);
+      await sleep(1000);
     }
-
-    // Rate limit: Spotify free tier is ~30 req/30s. Delay between every call.
-    await sleep(1000); // 1 second between Spotify lookups = 60/min, safe margin
-  }
-
-  diagnostics.push(`\nSpotify: ${spotifyMatches} matches from ${spotifyLookups} lookups`);
-  if (spotifyResolveErrors.length > 0) {
-    diagnostics.push(`Spotify diagnostics: ${spotifyResolveErrors.join(' | ')}`);
+    diagnostics.push(`\nSpotify: ${spotifyMatches} matches from ${spotifyLookups} lookups`);
+    if (spotifyResolveErrors.length > 0) {
+      diagnostics.push(`Spotify diagnostics: ${spotifyResolveErrors.join(' | ')}`);
+    }
+  } else {
+    // No Spotify — store candidates directly with placeholder data
+    for (const candidate of unique) {
+      if (artists.length >= limit) break;
+      artists.push({
+        artist_name: candidate.artist_name,
+        spotify_id: '', // Will be enriched later
+        genres: candidate.genres_hint,
+        monthly_listeners: 0,
+        followers: 0,
+        social_links: candidate.social_links,
+        latest_track_name: candidate.track_name || '',
+        latest_track_spotify_url: candidate.spotify_url || '',
+        latest_track_cover_url: candidate.cover_url || '',
+        latest_release_date: '',
+        discovery_source: `${candidate.source} (${candidate.source_detail})`,
+        ai_signals_detected: 0,
+        is_ai_artist: false,
+      });
+      diagnostics.push(`  📋 ${candidate.artist_name} (${candidate.source})`);
+    }
+    diagnostics.push(`\nStored ${artists.length} artists directly (no Spotify enrichment)`);
   }
   diagnostics.push(`✅ Discovered ${artists.length} artists`);
 

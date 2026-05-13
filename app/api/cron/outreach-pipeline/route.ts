@@ -71,8 +71,14 @@ export async function GET(request: Request) {
     // Store discovered artists
     let stored = 0;
     for (const a of discovered) {
-      const existing = await sql`SELECT id FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;
-      if (existing.length > 0) continue;
+      // Use spotify_id if available, otherwise check by artist_name
+      if (a.spotify_id) {
+        const existing = await sql`SELECT id FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;
+        if (existing.length > 0) continue;
+      } else {
+        const existing = await sql`SELECT id FROM discovered_artists WHERE artist_name = ${a.artist_name}`;
+        if (existing.length > 0) continue;
+      }
 
       await sql`
         INSERT INTO discovered_artists (
@@ -81,9 +87,9 @@ export async function GET(request: Request) {
           latest_track_cover_url, latest_release_date, discovery_source,
           ai_signals_detected, is_ai_artist, status
         ) VALUES (
-          ${a.artist_name}, ${a.spotify_id}, ${a.genres}, ${a.monthly_listeners}, ${a.followers},
+          ${a.artist_name}, ${a.spotify_id || null}, ${a.genres}, ${a.monthly_listeners}, ${a.followers},
           ${JSON.stringify(a.social_links)}, ${a.latest_track_name}, ${a.latest_track_spotify_url},
-          ${a.latest_track_cover_url}, ${a.latest_release_date || null}, ${a.discovery_source || 'spotify_search'},
+          ${a.latest_track_cover_url}, ${a.latest_release_date || null}, ${a.discovery_source || 'multi_channel'},
           ${a.ai_signals_detected}, ${a.is_ai_artist}, 'discovered'
         )
       `;
