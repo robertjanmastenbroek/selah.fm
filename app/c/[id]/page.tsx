@@ -8,7 +8,17 @@ interface Props { params: { id: string } }
 
 async function getCampaign(id: string) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
+    // Use internal URL during SSR to avoid self-request DNS issues on Railway/Vercel.
+    // Railway provides RAILWAY_INTERNAL_URL or falls back to localhost.
+    // NEXT_PUBLIC_URL is for client-side and canonical links only.
+    const internalBase = process.env.RAILWAY_INTERNAL_URL
+      || process.env.VERCEL_URL
+      || process.env.NEXT_PUBLIC_URL
+      || 'https://selah.fm';
+    
+    // Ensure URL has protocol (Railway internal URL might not)
+    const baseUrl = internalBase.startsWith('http') ? internalBase : `https://${internalBase}`;
+    
     // Support both UUID and slug
     const res = await fetch(`${baseUrl}/api/campaigns/${encodeURIComponent(id)}`, { next: { revalidate: 5 } });
     if (!res.ok) return null;
@@ -39,7 +49,13 @@ function absoluteUrl(path: string): string {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const campaign = await getCampaign(params.id);
-  if (!campaign) return { title: 'Campaign not found — Selah.fm' };
+  if (!campaign) {
+    return {
+      title: 'Campaign not found — Selah.fm',
+      openGraph: { images: [{ url: 'https://selah.fm/images/og-image.jpg', width: 1200, height: 630 }] },
+      twitter: { card: 'summary_large_image', images: ['https://selah.fm/images/og-image.jpg'] },
+    };
+  }
 
   const displayTitle = campaign.title || campaign.track_title;
   const artistName = campaign.artist_name || 'the artist';
