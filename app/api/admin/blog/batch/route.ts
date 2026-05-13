@@ -393,10 +393,12 @@ async function previewPost(interviewId: string) {
 
   const imageQuery = article.image_suggestions?.[0]?.description || article.tags?.[0] || 'music promotion';
   const featuredImage = await fetchBlogImage(imageQuery);
+  const pexelsUrl = getAttribution(featuredImage);
 
   const [post] = await sql`
     INSERT INTO blog_posts (
       interview_id, title, slug, content_html, excerpt, featured_image,
+      pexels_source_url,
       meta_title, meta_description, tags, image_suggestions,
       primary_keyword, internal_links, faq_schema, word_count, cta_positions,
       status, author_id
