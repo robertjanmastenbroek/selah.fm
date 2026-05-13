@@ -346,7 +346,7 @@ function EmptyState({ onDiscover }: { onDiscover: () => void }) {
 }
 
 // ── Artist card component ─────────────────────────────────────────
-function ArtistCard({ artist, instagram_handle, tiktok_handle, actionLoading, onAudit, onCreateCampaign, onRenderOutreach, onRenderFollowUp, onLogOutreach }: {
+function ArtistCard({ artist, instagram_handle, tiktok_handle, actionLoading, onAudit, onCreateCampaign, onRenderOutreach, onRenderFollowUp, onLogOutreach, onSkip }: {
   artist: Artist;
   instagram_handle?: string;
   tiktok_handle?: string;
@@ -356,6 +356,7 @@ function ArtistCard({ artist, instagram_handle, tiktok_handle, actionLoading, on
   onRenderOutreach: (id: string, ig?: string, tt?: string) => void;
   onRenderFollowUp: (id: string) => void;
   onLogOutreach: (id: string) => void;
+  onSkip: (id: string) => void;
 }) {
   const statusConfig: Record<string, { label: string; icon: any; color: string; bg: string }> = {
     discovered: { label: 'New', icon: Search, color: 'text-blue-400', bg: 'bg-blue-500/10' },
@@ -439,13 +440,33 @@ function ArtistCard({ artist, instagram_handle, tiktok_handle, actionLoading, on
             />
           )}
           {artist.status === 'audited' && (
-            <ActionButton
-              onClick={() => onCreateCampaign(artist.id)}
-              loading={actionLoading === `campaign-${artist.id}`}
-              disabled={isBusy}
-              color="amber"
-              label="Create"
-            />
+            <>
+              <ActionButton
+                onClick={() => onCreateCampaign(artist.id)}
+                loading={actionLoading === `campaign-${artist.id}`}
+                disabled={isBusy}
+                color="amber"
+                label="Create"
+              />
+              <motion.button
+                whileHover={!isBusy ? { scale: 1.05 } : {}}
+                whileTap={!isBusy ? { scale: 0.93 } : {}}
+                onClick={() => onSkip(artist.id)}
+                disabled={isBusy}
+                title="Skip — no social handles"
+                className="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                  border border-white/[0.06] text-muted-foreground/40
+                  hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20
+                  transition-all duration-150
+                  disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {actionLoading === `skip-${artist.id}` ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <X size={13} />
+                )}
+              </motion.button>
+            </>
           )}
           {artist.status === 'campaign_created' && (
             <>
@@ -706,6 +727,36 @@ export default function OutreachDashboard() {
     setActionLoading('');
   };
 
+  // ── Skip artist (mark as declined — no social handles) ────
+  const skipArtist = async (artistId: string) => {
+    setActionLoading(`skip-${artistId}`);
+    try {
+      await api('decline', { artistId });
+      addToast('success', 'Artist skipped', 'Marked as declined. Will not create campaign.');
+      fetchPipeline();
+    } catch (e: any) {
+      addToast('error', 'Could not skip', e.message);
+    }
+    setActionLoading('');
+  };
+
+  // ── Batch audit 5 ──────────────────────────────────────────
+  const batchAudit = async () => {
+    setActionLoading('batch-audit');
+    try {
+      const data = await api('batch_audit', { limit: 5 });
+      if (data.error) {
+        addToast('error', 'Batch audit failed', data.error);
+      } else {
+        addToast('success', `Audited ${data.audited || 0} artists`, `${data.skipped || 0} skipped (no social handles)`);
+        fetchPipeline();
+      }
+    } catch (e: any) {
+      addToast('error', 'Batch audit failed', e.message);
+    }
+    setActionLoading('');
+  };
+
   // ── Log outreach ────────────────────────────────────────────
   const logOutreach = async (artistId: string) => {
     setActionLoading(`log-${artistId}`);
@@ -834,17 +885,36 @@ export default function OutreachDashboard() {
             )}
           </h2>
           {artists.length > 0 && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={fetchPipeline}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
-                         bg-white/[0.03] border border-white/[0.06] text-muted-foreground
-                         hover:text-foreground hover:border-white/[0.12] transition-all"
-            >
-              <RefreshCw size={11} />
-              Refresh
-            </motion.button>
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={batchAudit}
+                disabled={actionLoading === 'batch-audit'}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
+                           bg-purple-500/10 text-purple-400 border border-purple-500/20
+                           hover:bg-purple-500/20 transition-all
+                           disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {actionLoading === 'batch-audit' ? (
+                  <Loader2 size={11} className="animate-spin" />
+                ) : (
+                  <Zap size={11} />
+                )}
+                Audit 5
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={fetchPipeline}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
+                           bg-white/[0.03] border border-white/[0.06] text-muted-foreground
+                           hover:text-foreground hover:border-white/[0.12] transition-all"
+              >
+                <RefreshCw size={11} />
+                Refresh
+              </motion.button>
+            </div>
           )}
         </div>
 
@@ -865,6 +935,7 @@ export default function OutreachDashboard() {
                   onRenderOutreach={renderOutreach}
                   onRenderFollowUp={renderFollowUp}
                   onLogOutreach={logOutreach}
+                  onSkip={skipArtist}
                 />
               ))}
             </AnimatePresence>

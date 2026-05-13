@@ -25,6 +25,8 @@ export async function POST(request: Request) {
       case 'render_outreach':        return runRenderOutreach(body.artistId);
       case 'render_follow_up':       return runRenderFollowUp(body.artistId);
       case 'log_outreach':           return runLogOutreach(body.artistId, body.channel, body.status);
+      case 'decline':                return runDecline(body.artistId);
+      case 'batch_audit':           return runBatchAudit(body.limit || 5);
       case 'get_pipeline':           return getPipelineOverview();
       case 'get_artist':             return getArtistById(body.artistId);
       case 'get_outreach_queue':     return getOutreachQueue();
@@ -421,8 +423,57 @@ async function getPipelineOverview() {
       total_sent: totalOutreach?.count || 0,
       replies: repliesReceived?.count || 0,
     },
-    recent: recent.slice(0, 5),
+    recent: recent.slice(0, 20),
   });
+}
+
+/** Mark an artist as declined — no social handles, can't reach them */
+async function runDecline(artistId: string) {
+  await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artistId}`;
+  return NextResponse.json({ declined: true });
+}
+
+/** Batch audit: audit N discovered artists, auto-skip those without social handles */
+async function runBatchAudit(limit: number = 5) {
+  const artists = await sql`
+    SELECT * FROM discovered_artists
+    WHERE status = 'discovered' AND is_ai_artist = false
+    ORDER BY discovered_at ASC
+    LIMIT ${limit}
+  `;
+
+  let audited = 0, skipped = 0;
+  for (const artist of artists) {
+    try {
+      const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
+      const bandcampUrl = socialLinks.bandcamp || '';
+      const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl);
+
+      if (!audit) {
+        await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
+        skipped++;
+        continue;
+      }
+
+      // If no social handles found, auto-decline
+      if (!audit.instagram_handle && !audit.tiktok_handle) {
+        await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
+        skipped++;
+        continue;
+      }
+
+      await sql`
+        INSERT INTO artist_audits (discovered_artist_id, spotify_monthly_listeners, spotify_track_streams, youtube_video_url, youtube_video_views, spotify_embed_url, artist_bio, recommended_cpm_cents, recommended_budget_cents, instagram_handle, instagram_followers, tiktok_handle, tiktok_followers, email_address, website_url, hashtags, personal_angle)
+        VALUES (${artist.id}, ${audit.spotify_monthly_listeners}, ${audit.spotify_track_streams}, ${audit.youtube_video_url}, ${audit.youtube_video_views}, ${audit.spotify_embed_url}, ${audit.artist_bio}, ${audit.recommended_cpm_cents}, ${audit.recommended_budget_cents}, ${audit.instagram_handle}, ${audit.instagram_followers}, ${audit.tiktok_handle}, ${audit.tiktok_followers}, ${audit.email_address}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle})
+      `;
+      await sql`UPDATE discovered_artists SET status = 'audited', updated_at = NOW() WHERE id = ${artist.id}`;
+      audited++;
+    } catch {
+      skipped++;
+    }
+  }
+
+  return NextResponse.json({ audited, skipped });
 }
 
 async function getArtistById(artistId: string) {
