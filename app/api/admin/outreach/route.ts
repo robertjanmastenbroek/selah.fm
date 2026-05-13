@@ -151,6 +151,11 @@ async function runCreateCampaign(artistId: string) {
   const [audit] = await sql`SELECT * FROM artist_audits WHERE discovered_artist_id = ${artist.id} ORDER BY audited_at DESC LIMIT 1`;
   if (!audit) return NextResponse.json({ error: 'No audit found — run audit first' }, { status: 400 });
 
+  // Require Instagram or TikTok handle to create a campaign
+  if (!audit.instagram_handle && !audit.tiktok_handle) {
+    return NextResponse.json({ error: 'No Instagram or TikTok handle found — cannot reach this artist. Re-run Audit to try finding social links.' }, { status: 400 });
+  }
+
   // Clean slug: artist-name-track-name-random4 (ASCII only, max 100 chars)
   const artistSlug = (artist.artist_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
   const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);

@@ -141,6 +141,18 @@ export async function GET(request: Request) {
 
     for (const artist of toCreate) {
       try {
+        // Skip artists without Instagram or TikTok — we can't reach them
+        const auditCheck = await sql`
+          SELECT instagram_handle, tiktok_handle FROM artist_audits
+          WHERE discovered_artist_id = ${artist.id}
+          ORDER BY audited_at DESC LIMIT 1
+        `;
+        const audit = auditCheck[0];
+        if (!audit?.instagram_handle && !audit?.tiktok_handle) {
+          log.push(`  ⏭️  Skipping ${artist.artist_name} — no Instagram or TikTok handle`);
+          continue;
+        }
+
         log.push(`Creating campaign: ${artist.artist_name}`);
 
         // Format slug: artist-name-track-name-random4

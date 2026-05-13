@@ -152,22 +152,19 @@ function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetch
 
   const dmArtist = async (artist: any) => {
     const id = `dm-${artist.id}`;
-    setActionLoading(id);
-    
-    // Open DM tabs IMMEDIATELY — must happen before any await (popup blocker)
     const ig = artist.instagram_handle;
     const tt = artist.tiktok_handle;
-    if (ig) window.open(`https://ig.me/m/${ig}`, '_blank');
-    if (tt) window.open(`https://www.tiktok.com/@${tt}`, '_blank');
     
     if (!ig && !tt) {
       addToast('info', `No social handles found for ${artist.artist_name}`,
         'Run Audit first to scrape Bandcamp for Instagram/TikTok links.');
-      setActionLoading('');
       return;
     }
     
+    setActionLoading(id);
+    
     try {
+      // Step 1: Copy message FIRST (clipboard needs page focus)
       const res = await fetch('/api/admin/outreach', {
         method: 'POST',
         credentials: 'include',
@@ -177,11 +174,17 @@ function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetch
       const data = await res.json();
       if (data.error) {
         addToast('error', 'Failed', data.error);
-      } else {
-        await navigator.clipboard.writeText(data.message);
-        addToast('success', `Message copied — ${artist.artist_name}`,
-          `📋 Copied · 📸 IG: https://ig.me/m/${ig}${tt ? ` · 🎵 TikTok: https://www.tiktok.com/@${tt}` : ''}`);
+        setActionLoading('');
+        return;
       }
+      await navigator.clipboard.writeText(data.message);
+      
+      // Step 2: Open DM tabs (now clipboard has the message)
+      if (ig) window.open(`https://ig.me/m/${ig}`, '_blank');
+      if (tt) window.open(`https://www.tiktok.com/@${tt}`, '_blank');
+      
+      addToast('success', `Message copied — ${artist.artist_name}`,
+        `📋 Copied · 📸 IG: https://ig.me/m/${ig}${tt ? ` · 🎵 TikTok: https://www.tiktok.com/@${tt}` : ''}`);
     } catch (e: any) {
       addToast('error', 'Failed', e.message);
     }
@@ -613,29 +616,28 @@ export default function OutreachDashboard() {
   const renderOutreach = async (artistId: string, igHandle?: string, ttHandle?: string) => {
     setActionLoading(`outreach-${artistId}`);
     
-    // Open DM tabs immediately (within click handler, before await — avoids popup blocker)
-    const igLink = igHandle ? `https://ig.me/m/${igHandle}` : null;
-    const ttLink = ttHandle ? `https://www.tiktok.com/@${ttHandle}` : null;
-    if (igLink) window.open(igLink, '_blank');
-    if (ttLink) window.open(ttLink, '_blank');
-    
     try {
+      // Step 1: Copy message FIRST (before opening tabs — tabs steal focus from clipboard API)
       const data = await api('render_outreach', { artistId });
       if (data.error) {
         addToast('error', 'Could not render message', data.error);
-      } else {
-        await navigator.clipboard.writeText(data.message);
-        const resolvedIg = data.instagram_handle || igHandle;
-        const resolvedTt = data.tiktok_handle || ttHandle;
-        
-        const channels: string[] = [];
-        if (resolvedIg) channels.push(`📸 IG: https://ig.me/m/${resolvedIg}`);
-        if (resolvedTt) channels.push(`🎵 TikTok: https://www.tiktok.com/@${resolvedTt}`);
-        const channelText = channels.join(' · ');
-        
-        addToast('success', `Message copied — ${data.artist_name}`,
-          channelText || 'Paste into DM and send.');
+        setActionLoading('');
+        return;
       }
+      await navigator.clipboard.writeText(data.message);
+      
+      // Step 2: Open DM tabs (now clipboard has the message)
+      const resolvedIg = data.instagram_handle || igHandle;
+      const resolvedTt = data.tiktok_handle || ttHandle;
+      if (resolvedIg) window.open(`https://ig.me/m/${resolvedIg}`, '_blank');
+      if (resolvedTt) window.open(`https://www.tiktok.com/@${resolvedTt}`, '_blank');
+      
+      const channels: string[] = [];
+      if (resolvedIg) channels.push(`📸 IG: https://ig.me/m/${resolvedIg}`);
+      if (resolvedTt) channels.push(`🎵 TikTok: https://www.tiktok.com/@${resolvedTt}`);
+      
+      addToast('success', `Message copied — ${data.artist_name}`,
+        channels.length ? channels.join(' · ') : 'Paste into DM and send.');
     } catch (e: any) {
       addToast('error', 'Could not render message', e.message);
     }
