@@ -170,7 +170,10 @@ async function fetchRedditSubreddit(sub: string): Promise<RedditPost[]> {
       `https://www.reddit.com/r/${sub}/hot.json?limit=25&t=week`,
       { headers: { 'User-Agent': 'SelahFM/1.0 (music discovery bot)' } }
     );
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error(`Reddit r/${sub}: HTTP ${res.status} ${res.statusText}`);
+      return [];
+    }
     const data = await res.json();
     return (data.data?.children || []).map((c: any) => ({
       title: c.data.title,
@@ -182,7 +185,8 @@ async function fetchRedditSubreddit(sub: string): Promise<RedditPost[]> {
       domain: c.data.domain,
       created_utc: c.data.created_utc,
     }));
-  } catch {
+  } catch (e: any) {
+    console.error(`Reddit r/${sub}: ${e.message}`);
     return [];
   }
 }
@@ -237,7 +241,7 @@ async function discoverFromReddit(): Promise<{ candidates: RawArtistCandidate[];
         });
       }
     } catch (e: any) {
-      diagnostics.push(`  ❌ r/${sub}: ${e.message}`);
+      diagnostics.push(`  ❌ r/${sub}: ${e.message || 'fetch failed'}`);
     }
     // Be nice to Reddit
     await sleep(500);
@@ -474,6 +478,9 @@ async function discoverFromYoutube(): Promise<{ candidates: RawArtistCandidate[]
 // CROSS-REFERENCE: Resolve candidates against Spotify
 // ══════════════════════════════════════════════════════════════════
 
+let spotifyResolveErrors: string[] = []; // diagnostic log for first few failures
+let spotifyResolveErrorCount = 0;
+
 async function resolveOnSpotify(candidate: RawArtistCandidate): Promise<DiscoveredArtist | null> {
   try {
     // Search Spotify for the artist by name
@@ -482,7 +489,13 @@ async function resolveOnSpotify(candidate: RawArtistCandidate): Promise<Discover
     );
 
     const artists = searchRes.artists?.items || [];
-    if (!artists.length) return null;
+    if (!artists.length) {
+      if (spotifyResolveErrorCount < 3) {
+        spotifyResolveErrors.push(`No Spotify results for "${candidate.artist_name}"`);
+        spotifyResolveErrorCount++;
+      }
+      return null;
+    }
 
     // Pick the best match (first result usually)
     // Cross-check: if we have a Spotify URL from Reddit, match on ID
@@ -497,12 +510,18 @@ async function resolveOnSpotify(candidate: RawArtistCandidate): Promise<Discover
 
     const followers = spotifyArtist.followers?.total || 0;
 
-    // Filter: 50–500K followers (indie/emerging range)
-    if (followers < 50 || followers > 500000) return null;
+    // Filter: 10–1M followers (wider for Bandcamp — many have <100 followers)
+    const followerMax = candidate.source === 'bandcamp' ? 1000000 : 500000;
+    if (followers < 10 || followers > followerMax) {
+      if (spotifyResolveErrorCount < 5) {
+        spotifyResolveErrors.push(`"${candidate.artist_name}" → ${followers} followers (outside 50–500K range)`);
+        spotifyResolveErrorCount++;
+      }
+      return null;
+    }
 
     // AI detection on Spotify data
     const aiSignals = detectAiSignals(spotifyArtist.name);
-    if (!spotifyArtist.images?.length) aiSignals; // no images is a signal but not disqualifying alone
     if (aiSignals >= 3) return null;
 
     // Get top tracks
@@ -532,7 +551,11 @@ async function resolveOnSpotify(candidate: RawArtistCandidate): Promise<Discover
       ai_signals_detected: aiSignals,
       is_ai_artist: false,
     };
-  } catch {
+  } catch (e: any) {
+    if (spotifyResolveErrorCount < 3) {
+      spotifyResolveErrors.push(`Spotify API error for "${candidate.artist_name}": ${e.message}`);
+      spotifyResolveErrorCount++;
+    }
     return null;
   }
 }
@@ -591,6 +614,8 @@ export async function discoverArtists(_query?: string, limit: number = 15): Prom
   const artists: DiscoveredArtist[] = [];
   let spotifyLookups = 0;
   let spotifyMatches = 0;
+  spotifyResolveErrors = [];
+  spotifyResolveErrorCount = 0;
 
   for (const candidate of unique) {
     if (artists.length >= limit) break;
@@ -612,6 +637,9 @@ export async function discoverArtists(_query?: string, limit: number = 15): Prom
   }
 
   diagnostics.push(`\nSpotify: ${spotifyMatches} matches from ${spotifyLookups} lookups`);
+  if (spotifyResolveErrors.length > 0) {
+    diagnostics.push(`Spotify diagnostics: ${spotifyResolveErrors.join(' | ')}`);
+  }
   diagnostics.push(`✅ Discovered ${artists.length} artists`);
 
   return {
