@@ -24,37 +24,40 @@ export async function GET(request: Request) {
     const isOwnerView = !!session;
 
     let campaigns;
+    // ORDER BY must be raw SQL — cannot use sql`` helper (returns object, not string)
+    const pinSort = `c.is_pinned DESC NULLS LAST`;
+    
     if (isOwnerView) {
       const userId = session.id || await resolveUserId(session);
       const orderClause = sort === 'popular'
-        ? sql`c.is_pinned DESC NULLS LAST, COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC`
-        : sql`c.is_pinned DESC NULLS LAST, c.created_at DESC`;
+        ? `${pinSort}, COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC`
+        : `${pinSort}, c.created_at DESC`;
       campaigns = await sql`
         SELECT c.*, 
           COALESCE(c.title, c.track_title) as title,
           COALESCE(v.approved_submissions, '0') as approved_submissions,
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
-          u.display_name as artist_name,
+          COALESCE(u.display_name, da.artist_name) as artist_name,
           u.profile_image_url as artist_avatar
         FROM campaigns c
         LEFT JOIN campaign_stats v ON v.id = c.id
         LEFT JOIN users u ON u.id = c.artist_id
+        LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+        LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
         WHERE c.artist_id = ${userId}
         ORDER BY ${orderClause}
         LIMIT ${limit}
       `;
     } else {
       // Public browse: sort by pinned → budget utilization % → total budget → date
-      const orderClause2 = sql`
-        c.is_pinned DESC NULLS LAST,
+      const orderClause2 = `${pinSort},
         CASE WHEN c.total_budget_cents > 0 
           THEN (c.total_budget_cents - c.budget_remaining_cents)::float / c.total_budget_cents 
           ELSE 0 
         END DESC,
         c.total_budget_cents DESC,
-        c.created_at DESC
-      `;
+        c.created_at DESC`;
       campaigns = await sql`
         SELECT c.*, 
           COALESCE(c.title, c.track_title) as title,
