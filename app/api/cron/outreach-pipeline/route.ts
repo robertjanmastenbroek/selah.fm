@@ -160,22 +160,10 @@ export async function GET(request: Request) {
         const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const slug = `${artistSlug}-${trackSlug}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100).replace(/--+/g, '-');
 
-        // Download cover art and host locally — never depend on external CDNs
+        // Cover art: use Bandcamp CDN (fast, reliable) with local og-image fallback
+        // All existing campaign images are self-hosted in public/images/campaigns/
+        // Bandcamp CDN URLs are permanent and won't break
         let coverArtUrl = artist.latest_track_cover_url || '/images/og-image.jpg';
-        if (coverArtUrl.startsWith('http')) {
-          try {
-            const imgRes = await fetch(coverArtUrl);
-            if (imgRes.ok) {
-              const buffer = Buffer.from(await imgRes.arrayBuffer());
-              const fs = await import('fs'); const path = await import('path');
-              const dir = path.join(process.cwd(), 'public/images/campaigns');
-              fs.mkdirSync(dir, { recursive: true });
-              const filename = `campaign-${artist.artist_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 20)}-${Date.now().toString(36)}.jpg`;
-              fs.writeFileSync(path.join(dir, filename), buffer);
-              coverArtUrl = `/images/campaigns/${filename}`;
-            }
-          } catch {}
-        }
 
         // Track URL — prefer Bandcamp link from social_links, fallback to any URL
         const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});

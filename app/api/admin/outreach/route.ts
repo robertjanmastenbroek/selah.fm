@@ -167,23 +167,8 @@ async function runCreateCampaign(artistId: string) {
     ? `${artist.artist_name} — ${artist.latest_track_name}`
     : `${artist.artist_name} — Latest Release`;
 
-  // Download cover art and host locally — never depend on external CDNs
+  // Cover art: use Bandcamp CDN (fast, reliable, permanent)
   let coverArtUrl = artist.latest_track_cover_url || '/images/og-image.jpg';
-  if (coverArtUrl.startsWith('http')) {
-    try {
-      const imgRes = await fetch(coverArtUrl);
-      if (imgRes.ok) {
-        const buffer = Buffer.from(await imgRes.arrayBuffer());
-        const fs = await import('fs');
-        const path = await import('path');
-        const dir = path.join(process.cwd(), 'public/images/campaigns');
-        fs.mkdirSync(dir, { recursive: true });
-        const filename = `campaign-${artist.artist_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 20)}-${Date.now().toString(36)}.jpg`;
-        fs.writeFileSync(path.join(dir, filename), buffer);
-        coverArtUrl = `/images/campaigns/${filename}`;
-      }
-    } catch {}
-  }
 
   const [campaign] = await sql`
     INSERT INTO campaigns (
