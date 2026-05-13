@@ -89,7 +89,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
             <p className="text-muted-foreground text-sm">{total} campaigns available</p>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-sm transition-all duration-200 hover:shadow-[0_0_24px_rgba(67,56,202,0.35)] active:scale-[0.97]" style={{ background: 'linear-gradient(135deg, #4338CA, #5B7FFF)' }}>
+            <Link href="/dashboard" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-semibold text-sm transition-all duration-200 hover:shadow-[0_0_24px_rgba(67,56,202,0.35)] active:scale-[0.97]" style={{ background: 'linear-gradient(135deg, #4338CA, #4338CA)' }}>
               <Megaphone size={16} />
               Create campaign
             </Link>

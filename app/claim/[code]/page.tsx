@@ -34,7 +34,7 @@ export default async function ClaimPage({ params }: Props) {
 
   if (!claim) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.15) 0%, #0A0A0A 60%), #0A0A0A' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.15) 0%, #0F0F23 60%), #0F0F23' }}>
         <div className="text-center space-y-6 max-w-md px-4">
           <div className="text-5xl">🔗</div>
           <h1 className="text-2xl font-bold">Invalid claim link</h1>
@@ -51,7 +51,7 @@ export default async function ClaimPage({ params }: Props) {
 
   if (claim.claimed_at) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.15) 0%, #0A0A0A 60%), #0A0A0A' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.15) 0%, #0F0F23 60%), #0F0F23' }}>
         <div className="text-center space-y-6 max-w-md px-4">
           <div className="text-5xl">✅</div>
           <h1 className="text-2xl font-bold">Already claimed</h1>
@@ -71,7 +71,7 @@ export default async function ClaimPage({ params }: Props) {
     : claim.cover_art_url || 'https://selah.fm/images/og-image.jpg';
 
   return (
-    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.15) 0%, #0A0A0A 60%), #0A0A0A' }}>
+    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.15) 0%, #0F0F23 60%), #0F0F23' }}>
       <div className="max-w-2xl mx-auto px-4 py-16 md:py-24">
         
         {/* Gift unwrapping feel */}

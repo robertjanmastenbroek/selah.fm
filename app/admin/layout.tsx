@@ -45,7 +45,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0A0A0A' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F0F23' }}>
         <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5 }} className="text-muted-foreground text-sm">
           Verifying access...
         </motion.div>
@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!email || !ADMIN_EMAILS.includes(email)) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0A0A0A' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F0F23' }}>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
           <Shield size={48} className="mx-auto text-destructive/40" strokeWidth={1} />
           <h2 className="text-xl font-bold">Admin access required</h2>
@@ -67,7 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: '#0A0A0A' }}>
+    <div className="min-h-screen flex" style={{ background: '#0F0F23' }}>
       {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-56 border-r border-white/[0.06] bg-white/[0.02] backdrop-blur-xl p-4 gap-1">
         <div className="mb-6 px-3 py-2">

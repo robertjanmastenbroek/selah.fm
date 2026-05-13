@@ -62,7 +62,7 @@ export default async function BlogPostPage({ params }: Props) {
     : 5;
 
   return (
-    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A' }}>
+    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23' }}>
       {/* JSON-LD Schema */}
       {post.schema_markup && (
         <script
@@ -111,14 +111,14 @@ export default async function BlogPostPage({ params }: Props) {
           .blog-content h3 { font-size: 1.15rem; font-weight: 600; color: #e8e8e8; margin-top: 2rem; margin-bottom: 0.5rem; line-height: 1.4; }
           .blog-content p { color: #b0b0b0; line-height: 1.85; margin-top: 1rem; margin-bottom: 1rem; font-size: 1.05rem; }
           .blog-content p:first-child { font-size: 1.15rem; color: #c8c8c8; }
-          .blog-content a { color: #5B7FFF; text-decoration: none; border-bottom: 1px solid rgba(91,127,255,0.3); }
-          .blog-content a:hover { border-bottom-color: #5B7FFF; }
+          .blog-content a { color: #4338CA; text-decoration: none; border-bottom: 1px solid rgba(67,56,202,0.3); }
+          .blog-content a:hover { border-bottom-color: #4338CA; }
           .blog-content strong { color: #e0e0e0; font-weight: 600; }
           .blog-content em { color: #c0c0c0; font-style: italic; }
           .blog-content ul, .blog-content ol { padding-left: 1.5rem; margin: 1.25rem 0; }
           .blog-content li { color: #b0b0b0; margin: 0.4rem 0; line-height: 1.75; padding-left: 0.25rem; }
           .blog-content img { border-radius: 0.75rem; margin: 2rem 0; max-width: 100%; }
-          .blog-content blockquote { border-left: 3px solid rgba(91,127,255,0.4); padding: 0.5rem 0 0.5rem 1.5rem; margin: 1.5rem 0; color: #999; font-style: italic; }
+          .blog-content blockquote { border-left: 3px solid rgba(67,56,202,0.4); padding: 0.5rem 0 0.5rem 1.5rem; margin: 1.5rem 0; color: #999; font-style: italic; }
           .blog-content hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 2.5rem 0; }
         `}} />
 

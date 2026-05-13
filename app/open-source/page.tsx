@@ -14,7 +14,7 @@ function GithubIcon({ size = 18 }: { size?: number }) {
 }
 
 export default function OpenSourcePage() {
-  const bg = 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A';
+  const bg = 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23';
 
   return (
     <div className="min-h-screen" style={{ background: bg }}>
@@ -177,7 +177,7 @@ export default function OpenSourcePage() {
             href="https://github.com/robertjanmastenbroek/selah.fm"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-opacity hover:shadow-[0_0_30px_rgba(91,127,255,0.3)]"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:opacity-90 transition-opacity hover:shadow-[0_0_30px_rgba(67,56,202,0.3)]"
           >
             <GithubIcon size={22} />
             Star us on GitHub

@@ -57,15 +57,15 @@ export default function CreatorProfilePage() {
     fetch(`/api/creators/${id}`).then(r=>r.json()).then(d=>{if(d.error){setCreator(null)}else{setCreator(d)};setLoading(false);}).catch(()=>setLoading(false));
   }, [id]);
 
-  if (loading) return (<div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A'}}><Header /><main className="page-container max-w-2xl"><Skeleton className="h-48 w-full rounded-2xl mb-4"/><Skeleton className="h-8 w-1/3 mb-2"/><Skeleton className="h-4 w-2/3"/></main><BottomNav/></div>);
-  if (!creator) return (<div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A'}}><Header /><main className="page-container max-w-2xl text-center py-20"><h2 className="text-xl font-bold mb-2">Creator not found</h2></main><BottomNav/></div>);
+  if (loading) return (<div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23'}}><Header /><main className="page-container max-w-2xl"><Skeleton className="h-48 w-full rounded-2xl mb-4"/><Skeleton className="h-8 w-1/3 mb-2"/><Skeleton className="h-4 w-2/3"/></main><BottomNav/></div>);
+  if (!creator) return (<div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23'}}><Header /><main className="page-container max-w-2xl text-center py-20"><h2 className="text-xl font-bold mb-2">Creator not found</h2></main><BottomNav/></div>);
 
   const earned = (creator.total_earned_cents||0)/100;
   const views = creator.total_verified_views||0;
   const acceptance = Math.round((creator.acceptance_rate||0)*100);
 
   return (
-    <div className="min-h-screen pb-20" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A'}}>
+    <div className="min-h-screen pb-20" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23'}}>
       <Header />
       <main className="page-container max-w-2xl">
         {/* Profile header */}

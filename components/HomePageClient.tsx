@@ -59,7 +59,7 @@ export default function RootPage() {
             <img src="/images/Selah Logo transparant no text.png" alt="Selah.fm" className="mx-auto h-14 w-auto mb-4" />
             <h1 className="text-4xl md:text-6xl font-heading tracking-tight">
               Music promotion,{' '}
-              <span className="bg-gradient-to-r from-[#4338CA] via-[#5B7FFF] to-[#22C55E] bg-clip-text text-transparent">done right</span>
+              <span className="bg-gradient-to-r from-[#4338CA] via-[#4338CA] to-[#22C55E] bg-clip-text text-transparent">done right</span>
             </h1>
             <p className="text-muted-foreground text-lg mt-4 max-w-lg mx-auto leading-relaxed">
               Real creators make TikToks, Reels, and Shorts with your music. You approve every video before paying a cent.
@@ -79,7 +79,7 @@ export default function RootPage() {
 
           {/* CTA buttons */}
           <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-3" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-            <Link href="/welcome-artists" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-base text-white transition-all active:scale-[0.97] hover:shadow-[0_0_32px_rgba(67,56,202,0.35)]" style={{ background: 'linear-gradient(135deg, #4338CA, #5B7FFF)' }}>
+            <Link href="/welcome-artists" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold text-base text-white transition-all active:scale-[0.97] hover:shadow-[0_0_32px_rgba(67,56,202,0.35)]" style={{ background: 'linear-gradient(135deg, #4338CA, #4338CA)' }}>
               <Music4 size={20} />
               Promote your music
             </Link>
@@ -160,7 +160,7 @@ export default function RootPage() {
           {/* Artist path */}
           <motion.div className="space-y-6" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #4338CA, #5B7FFF)' }}><Music4 size={20} /></div>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #4338CA, #4338CA)' }}><Music4 size={20} /></div>
               <h3 className="text-xl font-heading">For artists</h3>
             </div>
             {[
@@ -240,7 +240,7 @@ export default function RootPage() {
           <h2 className="text-3xl font-heading tracking-tight">Ready to get started?</h2>
           <p className="text-muted-foreground">Join the marketplace connecting artists and creators.</p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/welcome-artists" className="px-8 py-4 rounded-xl font-semibold text-white transition-all active:scale-[0.97] hover:shadow-[0_0_32px_rgba(67,56,202,0.35)]" style={{ background: 'linear-gradient(135deg, #4338CA, #5B7FFF)' }}>
+            <Link href="/welcome-artists" className="px-8 py-4 rounded-xl font-semibold text-white transition-all active:scale-[0.97] hover:shadow-[0_0_32px_rgba(67,56,202,0.35)]" style={{ background: 'linear-gradient(135deg, #4338CA, #4338CA)' }}>
               Artist sign up
             </Link>
             <Link href="/welcome-creators" className="px-8 py-4 rounded-xl font-semibold transition-all active:scale-[0.97] border border-white/[0.08] hover:bg-white/[0.06]" style={{ color: '#22C55E' }}>

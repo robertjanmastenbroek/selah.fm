@@ -25,7 +25,7 @@ function Confetti() {
       delay: Math.random() * 1.5,
       duration: 1.5 + Math.random() * 2.5,
       size: 5 + Math.random() * 10,
-      color: ['#5B7FFF', '#81C784', '#FFD54F', '#EF9A9A', '#CE93D8', '#4FC3F7'][Math.floor(Math.random() * 6)],
+      color: ['#4338CA', '#81C784', '#FFD54F', '#EF9A9A', '#CE93D8', '#4FC3F7'][Math.floor(Math.random() * 6)],
       rotation: Math.random() * 360,
       drift: (Math.random() - 0.5) * 80,
     }))
@@ -123,7 +123,7 @@ export default function PaymentSuccess({
     {
       name: 'Copy Link',
       action: handleCopy,
-      color: copied ? '#81C784' : '#5B7FFF',
+      color: copied ? '#81C784' : '#4338CA',
       bg: copied ? 'bg-emerald-500/10' : 'bg-primary/10',
       icon: copied ? <CheckCircle size={18} /> : <Copy size={16} />,
     },
@@ -157,9 +157,9 @@ export default function PaymentSuccess({
               className="absolute -inset-4 rounded-3xl opacity-20 pointer-events-none"
               animate={{
                 boxShadow: [
-                  '0 0 60px rgba(91,127,255,0.2), 0 0 120px rgba(91,127,255,0.1)',
-                  '0 0 80px rgba(91,127,255,0.3), 0 0 160px rgba(91,127,255,0.15)',
-                  '0 0 60px rgba(91,127,255,0.2), 0 0 120px rgba(91,127,255,0.1)',
+                  '0 0 60px rgba(67,56,202,0.2), 0 0 120px rgba(67,56,202,0.1)',
+                  '0 0 80px rgba(67,56,202,0.3), 0 0 160px rgba(67,56,202,0.15)',
+                  '0 0 60px rgba(67,56,202,0.2), 0 0 120px rgba(67,56,202,0.1)',
                 ],
               }}
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}

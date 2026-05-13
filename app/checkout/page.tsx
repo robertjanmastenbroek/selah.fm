@@ -70,7 +70,7 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
     <form onSubmit={handlePay} className="space-y-5">
       {/* Card input — clearly delineated with premium styling */}
       <div className="rounded-2xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] border-2 border-primary/20 p-1">
-        <div className="rounded-xl bg-[#0A0A0A] p-4">
+        <div className="rounded-xl bg-[#0F0F23] p-4">
           <PaymentElement />
         </div>
       </div>
@@ -88,7 +88,7 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
       </div>
 
       <Button type="submit" disabled={processing}
-        className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary hover:shadow-[0_0_40px_rgba(91,127,255,0.3)] disabled:opacity-50 transition-all active:scale-[0.98]">
+        className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary hover:shadow-[0_0_40px_rgba(67,56,202,0.3)] disabled:opacity-50 transition-all active:scale-[0.98]">
         {processing ? (
           <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing...</span>
         ) : type === 'donation' ? (
@@ -167,7 +167,7 @@ export default function CheckoutPage() {
     setActivePreset(null);
   };
 
-  const bg = '#0A0A0A';
+  const bg = '#0F0F23';
 
   if (loading) {
     return (
@@ -197,7 +197,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: bg }}>
       {/* Top nav */}
-      <div className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0A0A0A]/95 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0F0F23]/95 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
         <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft size={18} /> Back
         </button>
@@ -323,7 +323,7 @@ export default function CheckoutPage() {
                   <Elements stripe={stripePromise} options={{
                     clientSecret,
                     paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
-                    appearance: { theme: 'night', variables: { colorPrimary: '#5B7FFF', colorBackground: '#0A0A0A', colorText: '#F0F0F0', colorTextSecondary: '#8C8C8C', borderRadius: '12px', spacingUnit: '4px' } },
+                    appearance: { theme: 'night', variables: { colorPrimary: '#4338CA', colorBackground: '#0F0F23', colorText: '#F0F0F0', colorTextSecondary: '#8C8C8C', borderRadius: '12px', spacingUnit: '4px' } },
                   } as any}>
                     <CheckoutForm clientSecret={clientSecret} amount={effectiveAmount} type={type}
                       onSuccess={() => setSuccessOpen(true)} onError={setPaymentError} />

@@ -110,7 +110,7 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
       <Button
         type="submit"
         disabled={!stripe || processing}
-        className="w-full py-5 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_24px_rgba(91,127,255,0.25)] disabled:opacity-50"
+        className="w-full py-5 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.25)] disabled:opacity-50"
       >
         {processing ? (
           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -138,7 +138,7 @@ export default function StripePaymentModal({
 }: PaymentModalProps) {
   if (!open || !clientSecret) return null;
 
-  const bg = '#0A0A0A';
+  const bg = '#0F0F23';
 
   // Stripe not configured
   if (!PUBLISHABLE_KEY || !stripePromise) {
@@ -177,8 +177,8 @@ export default function StripePaymentModal({
     appearance: {
       theme: 'night',
       variables: {
-        colorPrimary: '#5B7FFF',
-        colorBackground: '#0A0A0A',
+        colorPrimary: '#4338CA',
+        colorBackground: '#0F0F23',
         colorText: '#F0F0F0',
         colorTextSecondary: '#8C8C8C',
         colorDanger: '#EF4444',

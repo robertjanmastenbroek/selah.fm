@@ -75,10 +75,10 @@ export default function OnboardingPage() {
   };
 
   // Confetti
-  const particles = done ? Array.from({length:30},(_,i)=>({id:i,x:Math.random()*100,delay:Math.random()*1.5,size:Math.random()*6+4,color:['#5B7FFF','#8B9FFF','#81C784','#FFD54F'][i%4]})):[];
+  const particles = done ? Array.from({length:30},(_,i)=>({id:i,x:Math.random()*100,delay:Math.random()*1.5,size:Math.random()*6+4,color:['#4338CA','#8B9FFF','#81C784','#FFD54F'][i%4]})):[];
 
   if (done) return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.35) 0%, #0A0A0A 60%), #0A0A0A'}}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.35) 0%, #0F0F23 60%), #0F0F23'}}>
       <div className="absolute inset-0 z-0">
         <img src="/images/success.png" alt="" className="w-full h-full object-cover opacity-10" />
       </div>
@@ -93,7 +93,7 @@ export default function OnboardingPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.35) 0%, #0A0A0A 60%), #0A0A0A'}}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.35) 0%, #0F0F23 60%), #0F0F23'}}>
       <div className="w-full max-w-md">
         {/* Progress */}
         <div className="mb-10">

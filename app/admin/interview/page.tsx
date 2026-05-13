@@ -239,7 +239,7 @@ export default function InterviewStudio() {
     (voice.listening ? (voice.transcript ? ' ' + voice.transcript : '') : '');
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-6">
+    <div className="min-h-screen bg-[#0F0F23] text-white p-6">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>

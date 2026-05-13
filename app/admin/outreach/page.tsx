@@ -157,7 +157,7 @@ function EmptyState({ onDiscover }: { onDiscover: () => void }) {
         whileTap={{ scale: 0.97 }}
         onClick={onDiscover}
         className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base
-                   hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] transition-shadow duration-300"
+                   hover:shadow-[0_0_30px_rgba(67,56,202,0.25)] transition-shadow duration-300"
       >
         <Zap size={18} />
         Start discovering artists
@@ -563,7 +563,7 @@ export default function OutreachDashboard() {
           onClick={runDiscovery}
           disabled={actionLoading === 'discover'}
           className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm
-                     hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] disabled:opacity-50 disabled:cursor-not-allowed
+                     hover:shadow-[0_0_30px_rgba(67,56,202,0.25)] disabled:opacity-50 disabled:cursor-not-allowed
                      transition-shadow duration-300"
         >
           {actionLoading === 'discover' ? (

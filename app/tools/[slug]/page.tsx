@@ -101,7 +101,7 @@ export default async function ToolPage({ params }: Props) {
   const meta = TOOL_META[params.slug];
 
   return (
-    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.15) 0%, #0A0A0A 60%), #0A0A0A' }}>
+    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.15) 0%, #0F0F23 60%), #0F0F23' }}>
       <article className="max-w-3xl mx-auto px-4 py-16 md:py-24">
         {/* Breadcrumb */}
         <nav className="text-sm text-muted-foreground mb-8" aria-label="Breadcrumb">

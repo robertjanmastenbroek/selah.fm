@@ -69,7 +69,7 @@ export default function Header() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#0A0A0A]/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-white/[0.06] bg-[#0F0F23]/90 backdrop-blur-xl">
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4">
         {/* Left: search → /browse */}
         <Link href="/browse" className="p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors" aria-label="Browse campaigns">

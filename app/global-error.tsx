@@ -9,10 +9,10 @@ export default function GlobalError({
 }) {
   return (
     <html>
-      <body style={{ margin: 0, background: '#0A0A0A', color: '#F0F0F0', fontFamily: 'system-ui, sans-serif' }}>
+      <body style={{ margin: 0, background: '#0F0F23', color: '#F0F0F0', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{
           minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.25) 0%, #0A0A0A 60%), #0A0A0A',
+          background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.25) 0%, #0F0F23 60%), #0F0F23',
           padding: '1rem',
         }}>
           <div style={{ textAlign: 'center', maxWidth: '320px' }}>
@@ -36,7 +36,7 @@ export default function GlobalError({
                 onClick={() => reset()}
                 style={{
                   padding: '0.5rem 1.25rem', borderRadius: '0.75rem', border: 'none',
-                  background: '#5B7FFF', color: '#fff', fontSize: '0.8125rem', cursor: 'pointer',
+                  background: '#4338CA', color: '#fff', fontSize: '0.8125rem', cursor: 'pointer',
                   fontWeight: 600,
                 }}
               >

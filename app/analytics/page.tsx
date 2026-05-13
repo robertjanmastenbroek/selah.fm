@@ -81,7 +81,7 @@ function platformColor(platform: string): string {
     case 'tiktok': return '#ff0050';
     case 'instagram': return '#E1306C';
     case 'youtube': return '#FF0000';
-    default: return '#5B7FFF';
+    default: return '#4338CA';
   }
 }
 
@@ -193,7 +193,7 @@ export default function AnalyticsPage() {
                     <BarChart
                       data={data!.byPlatform.map((p: any) => ({ label: p.platform, value: p.total_views }))}
                       maxValue={Math.max(...data!.byPlatform.map((p: any) => p.total_views))}
-                      color="linear-gradient(90deg, #5B7FFF, #8B9FFF)"
+                      color="linear-gradient(90deg, #4338CA, #8B9FFF)"
                     />
                     <div className="mt-6 grid grid-cols-3 gap-3">
                       {data!.byPlatform.map((p: any) => (

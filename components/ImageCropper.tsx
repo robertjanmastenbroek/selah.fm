@@ -187,7 +187,7 @@ export default function ImageCropper({
         </p>
         <div
           ref={containerRef}
-          className="relative rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing select-none touch-none bg-[#0A0A0A] border border-white/[0.08]"
+          className="relative rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing select-none touch-none bg-[#0F0F23] border border-white/[0.08]"
           style={{ aspectRatio: `${aspectRatio}`, minHeight: 200 }}
           onMouseDown={handlePointerDown}
           onMouseMove={handlePointerMove}
@@ -244,7 +244,7 @@ export default function ImageCropper({
           <X size={16} /> Cancel
         </button>
         <button onClick={handleCrop}
-          className="flex-[2] py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 hover:shadow-[0_0_24px_rgba(91,127,255,0.25)]">
+          className="flex-[2] py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 hover:shadow-[0_0_24px_rgba(67,56,202,0.25)]">
           <Check size={16} /> Apply crop
         </button>
       </div>

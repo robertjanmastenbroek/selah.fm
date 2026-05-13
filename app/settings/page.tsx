@@ -78,13 +78,13 @@ export default function SettingsPage() {
   const connectedCount = socials.filter(s=>s.value).length;
 
   if (profileLoading) return (
-    <div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A'}}>
+    <div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23'}}>
       <Header /><main className="page-container max-w-lg"><Skeleton className="h-10 w-1/3 mb-8"/><Skeleton className="h-48 w-full mb-6 rounded-2xl"/><Skeleton className="h-40 w-full mb-6 rounded-2xl"/><Skeleton className="h-12 w-full rounded-xl"/></main>
     </div>
   );
 
   return (
-    <div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A'}}>
+    <div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23'}}>
       <Header />
       <main className="page-container max-w-lg">
         <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
@@ -238,7 +238,7 @@ export default function SettingsPage() {
           {/* ── Actions ────────────────────────────────────────── */}
           <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.3,duration:0.4}} className="space-y-3">
             <button onClick={save} disabled={saving}
-              className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_20px_rgba(91,127,255,0.2)] active:scale-[0.98]">
+              className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_20px_rgba(67,56,202,0.2)] active:scale-[0.98]">
               {saving?'Saving...':<><Save size={16}/>Save changes</>}
             </button>
             <button onClick={async()=>{await fetch('/api/auth/logout',{method:'POST'});router.push('/login');}}

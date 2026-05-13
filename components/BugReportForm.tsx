@@ -125,7 +125,7 @@ export default function BugReportForm() {
       <button
         type="submit"
         disabled={status === 'loading' || status === 'success'}
-        className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_20px_rgba(91,127,255,0.2)] active:scale-[0.98]"
+        className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 hover:shadow-[0_0_20px_rgba(67,56,202,0.2)] active:scale-[0.98]"
       >
         {status === 'loading' ? 'Submitting...' : status === 'success' ? 'Submitted ✓' : 'Submit bug report'}
       </button>

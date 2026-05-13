@@ -104,7 +104,7 @@ function DonateForm({ clientSecret, amount, onSuccess, onError }: { clientSecret
       <Button
         type="submit"
         disabled={!stripe || processing}
-        className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:shadow-[0_0_30px_rgba(91,127,255,0.25)] disabled:opacity-50 transition-all"
+        className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:shadow-[0_0_30px_rgba(67,56,202,0.25)] disabled:opacity-50 transition-all"
       >
         {processing ? (
           <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -170,7 +170,7 @@ export default function DonatePage() {
     return () => clearTimeout(timer);
   }, [effectiveAmount, campaign, loading]);
 
-  const bg = '#0A0A0A';
+  const bg = '#0F0F23';
 
   // Loading
   if (loading) {
@@ -199,7 +199,7 @@ export default function DonatePage() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: bg }}>
       {/* Top nav bar */}
-      <div className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0A0A0A]/95 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0F0F23]/95 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
         <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft size={18} /> Back
         </button>
@@ -334,8 +334,8 @@ export default function DonatePage() {
                   appearance: {
                     theme: 'night',
                     variables: {
-                      colorPrimary: '#5B7FFF',
-                      colorBackground: '#0A0A0A',
+                      colorPrimary: '#4338CA',
+                      colorBackground: '#0F0F23',
                       colorText: '#F0F0F0',
                       colorTextSecondary: '#8C8C8C',
                       borderRadius: '12px',

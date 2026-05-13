@@ -299,7 +299,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                             onClick={() => setPlatform(p.id)}
                             className={`flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border-2 transition-all active:scale-[0.96] ${
                               active
-                                ? 'border-primary bg-primary/[0.06] shadow-[0_0_20px_rgba(91,127,255,0.08)]'
+                                ? 'border-primary bg-primary/[0.06] shadow-[0_0_20px_rgba(67,56,202,0.08)]'
                                 : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]'
                             }`}
                           >
@@ -329,7 +329,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                   <Button
                     onClick={handleSubmit}
                     disabled={!url || submitting}
-                    className="w-full py-6 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_30px_rgba(91,127,255,0.2)] active:scale-[0.98]"
+                    className="w-full py-6 text-sm font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary transition-all hover:shadow-[0_0_30px_rgba(67,56,202,0.2)] active:scale-[0.98]"
                   >
                     {submitting ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

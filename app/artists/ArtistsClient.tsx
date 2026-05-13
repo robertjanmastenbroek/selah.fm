@@ -34,7 +34,7 @@ export default function ArtistsClient({ initialArtists }: { initialArtists: Arti
 
   const handleSearch = (e: React.FormEvent) => { e.preventDefault(); fetchArtists(searchText); };
 
-  const bg = 'radial-gradient(ellipse at 50% 0%, rgba(30,40,80,0.2) 0%, #0A0A0A 60%), #0A0A0A';
+  const bg = 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23';
 
   return (
     <div className="min-h-screen" style={{background:bg}}>
