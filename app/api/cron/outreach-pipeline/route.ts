@@ -173,22 +173,25 @@ export async function GET(request: Request) {
         const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const slug = `${artistSlug}-${trackSlug}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100).replace(/--+/g, '-');
 
-        // Cover art: download external URLs and re-host locally so OG images always work
-        let coverArtUrl = artist.latest_track_cover_url || '/images/og-image.jpg';
+        // Cover art: 1) Download & re-host locally  2) Keep external URL  3) Fallback
+        let coverArtUrl = artist.latest_track_cover_url || '';
         if (coverArtUrl && coverArtUrl.startsWith('http')) {
           try {
             const imgRes = await fetch(coverArtUrl, { headers: { 'User-Agent': 'SelahFM/1.0' } });
-            if (imgRes.ok) {
+            if (imgRes.ok && imgRes.headers.get('content-type')?.includes('image')) {
               const buffer = Buffer.from(await imgRes.arrayBuffer());
-              const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-              const dir = path.join(process.cwd(), 'public/images/campaigns');
-              fs.mkdirSync(dir, { recursive: true });
-              const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-              fs.writeFileSync(path.join(dir, filename), buffer);
-              coverArtUrl = `/images/campaigns/${filename}`;
+              if (buffer.length > 1000) {
+                const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+                const dir = path.join(process.cwd(), 'public/images/campaigns');
+                fs.mkdirSync(dir, { recursive: true });
+                const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+                fs.writeFileSync(path.join(dir, filename), buffer);
+                coverArtUrl = `/images/campaigns/${filename}`;
+              }
             }
-          } catch { /* keep original URL if download fails */ }
+          } catch { /* keep external URL if fetch fails */ }
         }
+        if (!coverArtUrl) coverArtUrl = '/images/og-image.jpg';
 
         // Track URL — prefer Bandcamp link from social_links, fallback to any URL
         const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});

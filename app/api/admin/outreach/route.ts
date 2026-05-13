@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       case 'get_pipeline':           return getPipelineOverview();
       case 'get_artist':             return getArtistById(body.artistId);
       case 'get_outreach_queue':     return getOutreachQueue();
+      case 'repair_campaign_images': return repairCampaignImages();
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -195,22 +196,27 @@ async function runCreateCampaign(artistId: string) {
     ? `${artist.artist_name} — ${artist.latest_track_name}`
     : `${artist.artist_name} — Latest Release`;
 
-  // Cover art: download external URLs and re-host locally so OG images always work
-  let coverArtUrl = artist.latest_track_cover_url || '/images/og-image.jpg';
+  // Cover art: 1) Download & re-host locally  2) Keep external URL  3) Fallback
+  let coverArtUrl = artist.latest_track_cover_url || '';
   if (coverArtUrl && coverArtUrl.startsWith('http')) {
     try {
       const res = await fetch(coverArtUrl, { headers: { 'User-Agent': 'SelahFM/1.0' } });
-      if (res.ok) {
+      if (res.ok && res.headers.get('content-type')?.includes('image')) {
         const buffer = Buffer.from(await res.arrayBuffer());
-        const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-        const dir = path.join(process.cwd(), 'public/images/campaigns');
-        fs.mkdirSync(dir, { recursive: true });
-        const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-        fs.writeFileSync(path.join(dir, filename), buffer);
-        coverArtUrl = `/images/campaigns/${filename}`;
+        if (buffer.length > 1000) {
+          const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+          const dir = path.join(process.cwd(), 'public/images/campaigns');
+          fs.mkdirSync(dir, { recursive: true });
+          const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+          fs.writeFileSync(path.join(dir, filename), buffer);
+          coverArtUrl = `/images/campaigns/${filename}`;
+        }
       }
-    } catch { /* keep original URL if download fails */ }
+      // If download failed or image too small, keep the external URL as fallback
+    } catch { /* keep external URL if fetch fails */ }
   }
+  // Final fallback: if nothing worked, use og-image
+  if (!coverArtUrl) coverArtUrl = '/images/og-image.jpg';
 
   const [campaign] = await sql`
     INSERT INTO campaigns (
@@ -526,6 +532,47 @@ async function getArtistById(artistId: string) {
   }
 
   return NextResponse.json({ artist, audit, outreach, claim, campaign });
+}
+
+/** Repair campaign images — re-download external URLs and re-host locally */
+async function repairCampaignImages() {
+  const campaigns = await sql`
+    SELECT id, slug, cover_art_url FROM campaigns
+    WHERE cover_art_url IS NOT NULL AND cover_art_url != ''
+      AND cover_art_url NOT LIKE '/images/%'
+    LIMIT 100
+  `;
+
+  let repaired = 0, skipped = 0, failed = 0;
+  for (const c of campaigns) {
+    const url = c.cover_art_url;
+    if (!url || !url.startsWith('http')) { skipped++; continue; }
+
+    try {
+      const res = await fetch(url, { headers: { 'User-Agent': 'SelahFM/1.0' } });
+      if (res.ok && res.headers.get('content-type')?.includes('image')) {
+        const buffer = Buffer.from(await res.arrayBuffer());
+        if (buffer.length > 1000) {
+          const ext = url.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+          const dir = path.join(process.cwd(), 'public/images/campaigns');
+          fs.mkdirSync(dir, { recursive: true });
+          const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+          fs.writeFileSync(path.join(dir, filename), buffer);
+          await sql`UPDATE campaigns SET cover_art_url = ${'/images/campaigns/' + filename} WHERE id = ${c.id}`;
+          repaired++;
+          continue;
+        }
+      }
+      // Download failed or not an image — fall back to og-image
+      await sql`UPDATE campaigns SET cover_art_url = ${'/images/og-image.jpg'} WHERE id = ${c.id}`;
+      failed++;
+    } catch {
+      await sql`UPDATE campaigns SET cover_art_url = ${'/images/og-image.jpg'} WHERE id = ${c.id}`;
+      failed++;
+    }
+  }
+
+  return NextResponse.json({ repaired, skipped, failed, total: campaigns.length });
 }
 
 /** Returns all artists with campaign_created status (ready for outreach) + their audit data */

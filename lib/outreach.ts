@@ -95,7 +95,10 @@ async function discoverSocialLinks(
     });
     if (ttRes.ok) {
       const ttHtml = await ttRes.text();
-      if (ttHtml.includes('@' + subdomain)) {
+      // Reject known error patterns for non-existent accounts
+      if (ttHtml.includes('Couldn\'t find this account') || ttHtml.includes('This account cannot be found')) {
+        // Skip — account doesn't exist
+      } else if (ttHtml.includes('@' + subdomain) || ttHtml.includes('uniqueId')) {
         tiktok_handle = subdomain;
       }
     }
