@@ -632,8 +632,8 @@ export async function discoverArtists(_query?: string, limit: number = 15): Prom
       diagnostics.push(`  ⚠️  Spotify lookup failed for ${candidate.artist_name}: ${e.message}`);
     }
 
-    // Rate limit: Spotify allows ~180 requests/min for search, be conservative
-    if (spotifyLookups % 5 === 0) await sleep(200);
+    // Rate limit: Spotify free tier is ~30 req/30s. Delay between every call.
+    await sleep(1000); // 1 second between Spotify lookups = 60/min, safe margin
   }
 
   diagnostics.push(`\nSpotify: ${spotifyMatches} matches from ${spotifyLookups} lookups`);
@@ -688,7 +688,7 @@ export async function discoverFromSingleChannel(
       const resolved = await resolveOnSpotify(c);
       if (resolved) artists.push(resolved);
     } catch {}
-    await sleep(200);
+    await sleep(1000);
   }
 
   return { artists, diagnostics, channels: channelInfo };
