@@ -44,13 +44,17 @@ export async function POST(request: Request) {
 // ── GET /api/admin/outreach ───────────────────────────────────────
 
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) {
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get('action');
+  const secret = searchParams.get('secret');
+
+  // Allow repair with secret (like cron endpoints) or admin session
+  const isRepairWithSecret = action === 'repair_campaign_images' && secret && secret === process.env.CRON_SECRET;
+  if (!isRepairWithSecret && !isAdminRequest(request)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
-  const { searchParams } = new URL(request.url);
   const artistId = searchParams.get('artistId');
-  const action = searchParams.get('action');
 
   try {
     if (action === 'repair_campaign_images') return repairCampaignImages();
