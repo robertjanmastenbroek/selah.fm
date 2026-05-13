@@ -15,12 +15,14 @@ export async function GET() {
 
     // Total submissions
     const [subRow] = await sql`SELECT COUNT(*)::int as c FROM submissions`;
-    // Total donations
+    // Total donations (from donate flow)
     const [donRow] = await sql`SELECT COALESCE(SUM(amount_cents),0)::int as c FROM campaign_donations`;
+    // Total deposits (from campaign budgets — artists who funded their own campaign)
+    const [depRow] = await sql`SELECT COALESCE(SUM(total_budget_cents),0)::int as c FROM campaigns WHERE total_budget_cents > 0`;
 
     const data = {
       total_videos: subRow?.c || 0,
-      total_donations: Math.round((donRow?.c || 0) / 100),
+      total_donations: Math.round(((donRow?.c || 0) + (depRow?.c || 0)) / 100),
     };
 
     cache = { data, ts: now };
