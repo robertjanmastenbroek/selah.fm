@@ -61,11 +61,13 @@ export async function GET(request: Request) {
           COALESCE(v.approved_submissions, '0') as approved_submissions,
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
-          u.display_name as artist_name,
+          COALESCE(u.display_name, da.artist_name) as artist_name,
           u.profile_image_url as artist_avatar
         FROM campaigns c
         LEFT JOIN campaign_stats v ON v.id = c.id
         LEFT JOIN users u ON u.id = c.artist_id
+        LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+        LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
         WHERE c.status IN ('active', 'draft')
         ORDER BY ${orderClause2}
         LIMIT ${limit}
