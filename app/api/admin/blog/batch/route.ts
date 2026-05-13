@@ -9,7 +9,7 @@ import {
   getFallbackQuestions,
   sourceQuestionsFromReddit,
 } from '@/lib/blog-engine';
-import { fetchBlogImage, loadUsedImages, markImageUsed } from '@/lib/blog-images';
+import { fetchBlogImage, loadUsedImages, markImageUsed, getAttribution } from '@/lib/blog-images';
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
@@ -404,6 +404,7 @@ async function previewPost(interviewId: string) {
       status, author_id
     ) VALUES (
       ${interview.id}, ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
+      ${pexelsUrl || null},
       ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
       ${JSON.stringify(article.image_suggestions || [])},
       ${article.primary_keyword || (article.tags?.[0] || null)},
@@ -502,15 +503,18 @@ async function generateFromVoice(topic: string, keyword: string) {
   const slug = baseSlug + '-' + Date.now().toString(36);
   const imageQuery = article.image_suggestions?.[0]?.description || article.tags?.[0] || searchTopic;
   const featuredImage = await fetchBlogImage(imageQuery);
+  const pexelsUrl = getAttribution(featuredImage);
 
   const [post] = await sql`
     INSERT INTO blog_posts (
       title, slug, content_html, excerpt, featured_image,
+      pexels_source_url,
       meta_title, meta_description, tags, image_suggestions,
       primary_keyword, internal_links, faq_schema, word_count, cta_positions,
       status, author_id
     ) VALUES (
       ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
+      ${pexelsUrl || null},
       ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
       ${JSON.stringify(article.image_suggestions || [])},
       ${keyword || article.primary_keyword || (article.tags?.[0] || null)},

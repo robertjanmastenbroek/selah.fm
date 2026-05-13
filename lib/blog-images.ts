@@ -95,14 +95,14 @@ export async function fetchBlogImage(query: string): Promise<string> {
     const pexelsUrl = photo.src?.large2x || photo.src?.large || photo.src?.original;
     if (!pexelsUrl) return FALLBACK_IMAGE;
 
-    // Download to our server
-    const localUrl = await downloadToCache(pexelsUrl, query);
-    if (localUrl) {
-      markImageUsed(localUrl);
-      return localUrl;
-    }
+    // Store Pexels URL directly (avoids Railway ephemeral filesystem)
+    // Download to local is still attempted for self-hosting but doesn't block
+    downloadToCache(pexelsUrl, query).then(localUrl => {
+      if (localUrl) markImageUsed(localUrl);
+    }).catch(() => {});
 
-    return FALLBACK_IMAGE;
+    markImageUsed(pexelsUrl);
+    return pexelsUrl;
   } catch {
     return FALLBACK_IMAGE;
   }
