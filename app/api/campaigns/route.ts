@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { generateCampaignDefaults } from '@/lib/defaults';
 import { trackCreateCampaign } from '@/lib/analytics-server';
 
+export const dynamic = 'force-dynamic';
 // Allow larger request bodies for campaign creation (cover art can be 5MB+ as data URL)
 export const maxDuration = 30; // 30 seconds timeout
 
