@@ -112,9 +112,21 @@ Bandcamp API → discovered_artists → artist_audits (YT + social) → campaign
 
 ---
 
+## 2026-05-13 Session — DeepSeek V4 Refactor (10 files changed)
+
+| Change | Files | Details |
+|--------|-------|---------|
+| OG image fix | `layout.tsx`, `browse/page.tsx`, `blog/page.tsx`, `welcome-artists/layout.tsx`, `welcome-creators/layout.tsx` | Root layout no longer forces OG images; each page sets its own. Instagram DMs now show campaign-specific images. |
+| Outreach UI refactor | `admin/outreach/page.tsx` + 5 new component files | 550-line monolith → 234-line orchestrator + StatCard, ToastBar, ArtistCard, OutreachQueue, EmptyState. |
+| Instagram-only gates | `api/admin/outreach/route.ts`, `api/cron/outreach-pipeline/route.ts`, `api/cron/outreach-followup/route.ts` | Campaigns only created for artists with Instagram handles. No IG = auto-declined at audit. All 3 pipeline phases gated. |
+| Cumulative campaign count | `api/admin/outreach/route.ts` | `campaigns_created` stat now counts `campaign_claims` table (never decreases). |
+| Dedup guards (API) | `api/admin/outreach/route.ts`, `api/cron/outreach-pipeline/route.ts` | Status checks, claim checks, DISTINCT ON in dashboard queries, proper discovery dedup. |
+| Dedup guards (UI) | `admin/outreach/components/ArtistCard.tsx`, `OutreachQueue.tsx` | Global action lock, cross-component button lock (`dm-/outreach-` prefixes). |
+| Homepage campaigns | `components/HomePageClient.tsx`, `api/campaigns/route.ts` | `limit=3→6`, `sort=popular→recent` (now respects sort param). |
+
 ## Immediate Next Steps
 
-1. **Run outreach** — Click "Message" on the 10 ready artists in `/admin/outreach`
+1. **Run outreach** — Click "Message" on ready artists in `/admin/outreach` (all have IG now)
 2. **Monitor pipeline** — Railway cron runs 2× daily, fills with ~60 new artists/day
 3. **Blog content** — Generate more posts from voice library to build SEO authority
 4. **YouTube API key** — Set on Railway for automatic view verification on submissions

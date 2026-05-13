@@ -22,9 +22,9 @@ export default function RootPage() {
 
   useEffect(() => {
     fetch('/api/stats').then(r => r.json()).then(d => setStats(d)).catch(() => {});
-    // Fetch featured/active campaigns
-    fetch('/api/campaigns?limit=3&sort=popular').then(r => r.json()).then(d => {
-      if (d.campaigns) setFeaturedCampaigns(d.campaigns.slice(0, 3));
+    // Fetch featured/active campaigns — show most recent so outreach campaigns appear
+    fetch('/api/campaigns?limit=6&sort=recent').then(r => r.json()).then(d => {
+      if (d.campaigns) setFeaturedCampaigns(d.campaigns.slice(0, 6));
     }).catch(() => {});
   }, []);
 

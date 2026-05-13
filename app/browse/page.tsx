@@ -12,11 +12,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description: 'Discover music promotion campaigns from artists. Submit your video, earn for verified views, or donate to support your favorite tracks.',
       url: 'https://selah.fm/browse',
       type: 'website',
+      images: [{ url: 'https://selah.fm/images/og-image.jpg', width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
       title: 'Browse Music Campaigns — Selah.fm',
       description: 'Discover music promotion campaigns from artists.',
+      images: ['https://selah.fm/images/og-image.jpg'],
     },
   };
 }

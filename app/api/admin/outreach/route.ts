@@ -70,8 +70,14 @@ async function runDiscovery(query: string = 'year:2025-2026', limit: number = 10
     if (!a.artist_name || a.artist_name.length < 2) continue;
     if (!a.latest_track_name || a.latest_track_name.length < 2) continue;
 
-    const existing = await sql`SELECT id FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;
-    if (existing.length > 0) continue;
+    // Dedup: check by spotify_id if non-empty, otherwise by artist_name + track_name
+    if (a.spotify_id) {
+      const existing = await sql`SELECT id FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;
+      if (existing.length > 0) continue;
+    } else {
+      const existing = await sql`SELECT id FROM discovered_artists WHERE artist_name = ${a.artist_name} AND latest_track_name = ${a.latest_track_name}`;
+      if (existing.length > 0) continue;
+    }
 
     await sql`
       INSERT INTO discovered_artists (
@@ -120,11 +126,22 @@ async function runAudit(artistId: string) {
   const [artist] = await sql`SELECT * FROM discovered_artists WHERE id = ${artistId}`;
   if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
 
+  // Skip if already audited or beyond
+  if (artist.status !== 'discovered') {
+    return NextResponse.json({ error: `Artist is already ${artist.status} — cannot re-audit` }, { status: 400 });
+  }
+
   // Run audit via YouTube + Bandcamp social discovery
   const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
   const bandcampUrl = socialLinks.bandcamp || '';
   const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl);
   if (!audit) return NextResponse.json({ error: 'Audit failed' }, { status: 500 });
+
+  // Auto-decline if no Instagram handle — can't do outreach without it
+  if (!audit.instagram_handle) {
+    await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
+    return NextResponse.json({ artist, audit, status: 'declined', reason: 'no_instagram_handle' });
+  }
 
   // Store audit
   await sql`
@@ -153,13 +170,22 @@ async function runCreateCampaign(artistId: string) {
   const [artist] = await sql`SELECT * FROM discovered_artists WHERE id = ${artistId}`;
   if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
 
+  // Prevent duplicate campaigns — check if claim already exists
+  const [existingClaim] = await sql`SELECT id, campaign_id FROM campaign_claims WHERE discovered_artist_id = ${artist.id} LIMIT 1`;
+  if (existingClaim) {
+    const [existingCampaign] = await sql`SELECT slug FROM campaigns WHERE id = ${existingClaim.campaign_id}`;
+    const campaignUrl = existingCampaign ? `https://selah.fm/c/${existingCampaign.slug}` : null;
+    return NextResponse.json({
+      error: 'Campaign already exists for this artist',
+      campaign_url: campaignUrl,
+    }, { status: 409 });
+  }
+
   const [audit] = await sql`SELECT * FROM artist_audits WHERE discovered_artist_id = ${artist.id} ORDER BY audited_at DESC LIMIT 1`;
   if (!audit) return NextResponse.json({ error: 'No audit found — run audit first' }, { status: 400 });
 
-  // Warn if no Instagram/TikTok handle found, but allow campaign creation
-  if (!audit.instagram_handle && !audit.tiktok_handle) {
-    // Continue anyway — campaign still serves as an artist discovery page
-    // Social handles can be added manually later
+  if (!audit.instagram_handle) {
+    return NextResponse.json({ error: 'No Instagram handle — cannot DM this artist. Campaign not created.' }, { status: 400 });
   }
 
   // Clean slug: artist-name-track-name-random4 (ASCII only, max 100 chars)
@@ -396,7 +422,7 @@ async function runLogOutreach(artistId: string, channel: string, status: string)
 async function getPipelineOverview() {
   const [totalDiscovered] = await sql`SELECT COUNT(*)::int FROM discovered_artists`;
   const [totalAudited] = await sql`SELECT COUNT(*)::int FROM discovered_artists WHERE status = 'audited'`;
-  const [totalCampaignsCreated] = await sql`SELECT COUNT(*)::int FROM discovered_artists WHERE status = 'campaign_created'`;
+  const [totalCampaignsCreated] = await sql`SELECT COUNT(*)::int FROM campaign_claims`;
   const [totalOutreachSent] = await sql`SELECT COUNT(*)::int FROM discovered_artists WHERE status = 'outreach_sent'`;
   const [totalClaimed] = await sql`SELECT COUNT(*)::int FROM discovered_artists WHERE status = 'claimed'`;
   const [totalDeclined] = await sql`SELECT COUNT(*)::int FROM discovered_artists WHERE status = 'declined'`;
@@ -404,14 +430,15 @@ async function getPipelineOverview() {
   const [totalOutreach] = await sql`SELECT COUNT(*)::int FROM outreach_log`;
   const [repliesReceived] = await sql`SELECT COUNT(*)::int FROM outreach_log WHERE status = 'replied'`;
 
-  // Recent discoveries — join with audits for Instagram/TikTok handles
+  // Recent discoveries — join with LATEST audit only to avoid duplicate rows
   const recent = await sql`
-    SELECT da.*, aa.instagram_handle, aa.tiktok_handle
+    SELECT DISTINCT ON (da.id) da.*, aa.instagram_handle, aa.tiktok_handle
     FROM discovered_artists da
     LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
-    ORDER BY da.discovered_at DESC
-    LIMIT 10
+    ORDER BY da.id, aa.audited_at DESC
   `;
+  // Re-sort by discovered_at DESC and limit
+  const sorted = recent.sort((a: any, b: any) => new Date(b.discovered_at).getTime() - new Date(a.discovered_at).getTime()).slice(0, 20);
 
   return NextResponse.json({
     pipeline: {
@@ -427,7 +454,7 @@ async function getPipelineOverview() {
       total_sent: totalOutreach?.count || 0,
       replies: repliesReceived?.count || 0,
     },
-    recent: recent.slice(0, 20),
+    recent: sorted,
   });
 }
 
@@ -459,8 +486,8 @@ async function runBatchAudit(limit: number = 5) {
         continue;
       }
 
-      // If no social handles found, auto-decline
-      if (!audit.instagram_handle && !audit.tiktok_handle) {
+      // If no Instagram handle found, auto-decline — can't DM them
+      if (!audit.instagram_handle) {
         await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
         skipped++;
         continue;
@@ -500,15 +527,16 @@ async function getArtistById(artistId: string) {
 /** Returns all artists with campaign_created status (ready for outreach) + their audit data */
 async function getOutreachQueue() {
   const artists = await sql`
-    SELECT da.*, aa.instagram_handle, aa.tiktok_handle, aa.personal_angle, aa.youtube_video_url,
+    SELECT DISTINCT ON (da.id) da.*, aa.instagram_handle, aa.tiktok_handle, aa.personal_angle, aa.youtube_video_url,
            c.slug as campaign_slug, c.title as campaign_title
     FROM discovered_artists da
     JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
     JOIN campaigns c ON c.id = cc.campaign_id
     WHERE da.status = 'campaign_created'
+      AND aa.instagram_handle IS NOT NULL
       AND NOT EXISTS (SELECT 1 FROM outreach_log ol WHERE ol.discovered_artist_id = da.id AND ol.status = 'sent')
-    ORDER BY aa.audited_at DESC
+    ORDER BY da.id, aa.audited_at DESC
     LIMIT 50
   `;
 

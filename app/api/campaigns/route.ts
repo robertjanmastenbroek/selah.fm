@@ -53,13 +53,16 @@ export async function GET(request: Request) {
       `;
       campaigns = await sql.raw(query, [userId, limit]);
     } else {
-      const orderClause2 = `${pinSort},
-        CASE WHEN c.total_budget_cents > 0 
-          THEN (c.total_budget_cents - c.budget_remaining_cents)::float / c.total_budget_cents 
-          ELSE 0 
-        END DESC,
-        c.total_budget_cents DESC,
-        c.created_at DESC`;
+      // Public browsing: support 'recent' (newest first) and 'popular' (budget fill first)
+      const orderClause2 = sort === 'recent'
+        ? `${pinSort}, c.created_at DESC`
+        : `${pinSort},
+          CASE WHEN c.total_budget_cents > 0 
+            THEN (c.total_budget_cents - c.budget_remaining_cents)::float / c.total_budget_cents 
+            ELSE 0 
+          END DESC,
+          c.total_budget_cents DESC,
+          c.created_at DESC`;
       
       const query = `
         SELECT c.*,

@@ -49,11 +49,13 @@ export async function GET(request: Request) {
         c.is_unclaimed
       FROM outreach_log ol
       JOIN discovered_artists da ON da.id = ol.discovered_artist_id
+      JOIN artist_audits aa ON aa.discovered_artist_id = ol.discovered_artist_id
       LEFT JOIN campaign_claims cc ON cc.campaign_id = ol.campaign_id
       LEFT JOIN campaigns c ON c.id = ol.campaign_id
       WHERE ol.message_type = 'initial'
         AND ol.status = 'sent'
         AND ol.created_at < NOW() - INTERVAL '7 days'
+        AND aa.instagram_handle IS NOT NULL
         AND c.is_unclaimed = true
         AND cc.claimed_at IS NULL
         AND NOT EXISTS (

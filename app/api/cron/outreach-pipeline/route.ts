@@ -107,6 +107,13 @@ export async function GET(request: Request) {
           continue;
         }
 
+        // Auto-decline if no Instagram handle
+        if (!audit.instagram_handle) {
+          await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
+          log.push(`  ⚠️  No Instagram for ${artist.artist_name} — declined`);
+          continue;
+        }
+
         await sql`
           INSERT INTO artist_audits (
             discovered_artist_id, spotify_monthly_listeners, spotify_track_streams,
@@ -152,8 +159,16 @@ export async function GET(request: Request) {
           ORDER BY audited_at DESC LIMIT 1
         `;
         const audit = auditCheck[0];
-        if (!audit?.instagram_handle && !audit?.tiktok_handle) {
-          log.push(`  ⚠️  No social handles for ${artist.artist_name} — creating campaign anyway (can DM from Bandcamp profile)`);
+        if (!audit?.instagram_handle) {
+          log.push(`  ⚠️  No Instagram handle for ${artist.artist_name} — skipping (can't DM)`);
+          continue;
+        }
+
+        // Prevent duplicate campaigns
+        const [existingClaim] = await sql`SELECT id FROM campaign_claims WHERE discovered_artist_id = ${artist.id} LIMIT 1`;
+        if (existingClaim) {
+          log.push(`  ⚠️  Campaign already exists for ${artist.artist_name} — skipping`);
+          continue;
         }
 
         log.push(`Creating campaign: ${artist.artist_name}`);

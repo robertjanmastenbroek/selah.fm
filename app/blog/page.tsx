@@ -14,6 +14,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://selah.fm/blog',
     siteName: 'Selah.fm',
+    images: [{ url: 'https://selah.fm/images/og-image.jpg', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Selah.fm Blog — Music Promotion Tips & Creator Insights',
+    description: 'Practical advice for music artists and content creators.',
+    images: ['https://selah.fm/images/og-image.jpg'],
   },
 };
 
