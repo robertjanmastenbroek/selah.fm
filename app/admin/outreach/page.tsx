@@ -194,6 +194,31 @@ export default function OutreachDashboard() {
         actionLoading={actionLoading} setActionLoading={setActionLoading} addToast={addToast}
         fetchPipeline={fetchPipeline} onLogOutreach={logOutreach} />
 
+      {/* Ready for Campaign Creation — audited artists with social handles */}
+      {artists.filter((a: any) => a.status === 'audited').length > 0 && (
+        <div>
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold flex items-center gap-2">
+              <Megaphone size={14} className="text-amber-400" />
+              Ready for Campaign
+              <span className="text-[10px] text-muted-foreground font-normal">
+                {artists.filter((a: any) => a.status === 'audited').length} audited
+              </span>
+            </h2>
+          </div>
+          <motion.div layout className="space-y-2">
+            <AnimatePresence mode="popLayout">
+              {artists.filter((a: any) => a.status === 'audited').map((a: any) => (
+                <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
+                  onAudit={runAudit} onCreateCampaign={createCampaign}
+                  onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
+                  onLogOutreach={logOutreach} onSkip={skipArtist} />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      )}
+
       {/* Artist list */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -248,10 +273,10 @@ export default function OutreachDashboard() {
             </div>
           )}
         </div>
-        {artists.length === 0 ? <EmptyState onDiscover={runDiscovery} /> : (
+        {artists.filter((a: any) => a.status !== 'audited').length === 0 && artists.filter((a: any) => a.status === 'audited').length === 0 ? <EmptyState onDiscover={runDiscovery} /> : (
           <motion.div layout className="space-y-2">
             <AnimatePresence mode="popLayout">
-              {artists.map((a: any) => (
+              {artists.filter((a: any) => a.status !== 'audited').map((a: any) => (
                 <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
                   onAudit={runAudit} onCreateCampaign={createCampaign}
                   onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
