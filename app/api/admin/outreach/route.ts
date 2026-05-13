@@ -561,9 +561,9 @@ async function downloadImage(url: string): Promise<{ buffer: Buffer; mime: strin
 
   // Header strategies to rotate through
   const headerSets = [
-    { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36', 'Accept': 'image/*' },
-    { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept': '*/*' },
-    {}, // No headers — raw request
+    { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36', 'Accept': 'image/*' } as Record<string, string>,
+    { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept': '*/*' } as Record<string, string>,
+    {} as Record<string, string>,
   ];
 
   for (const u of urls) {
