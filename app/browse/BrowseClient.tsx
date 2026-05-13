@@ -141,18 +141,23 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                     <CampaignCover src={c.cover_art_url} title={c.track_title} className="h-40" />
 
                     {/* Card body */}
-                    <div className="p-4 space-y-3">
+                    <div className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-sm leading-tight line-clamp-2 font-semibold"
-                          style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
-                          {c.track_title}
-                        </h3>
+                        <div className="min-w-0">
+                          {c.artist_name && (
+                            <p className="text-[11px] text-muted-foreground line-clamp-1 mb-0.5">{c.artist_name}</p>
+                          )}
+                          <h3 className="text-sm leading-tight line-clamp-2 font-semibold"
+                            style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
+                            {c.track_title}
+                          </h3>
+                        </div>
                         <div className="flex items-center gap-1 shrink-0">
                           {(c.platforms || []).map((p: string) => <PlatformBadge key={p} platform={p} />)}
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between pt-1">
                         <div className="flex items-center gap-2 min-w-0">
                           <CircleProgress pct={pct} size={32} />
                           <div className="text-[10px] text-muted-foreground leading-tight">
@@ -160,15 +165,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                             {budget > 0 && <span> of ${budget.toFixed(0)}</span>}
                           </div>
                         </div>
-                        {c.artist_name && (
-                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                            <div className="w-5 h-5 rounded-full bg-white/[0.04] flex items-center justify-center text-[8px] font-bold text-muted-foreground overflow-hidden">
-                              {c.artist_avatar
-                                ? <img src={c.artist_avatar} alt="" className="w-full h-full object-cover" />
-                                : c.artist_name[0]?.toUpperCase()}
-                            </div>
-                          </div>
-                        )}
+                        <span className="text-[10px] text-[#22C55E] font-semibold">${cpm.toFixed(2)} CPM</span>
                       </div>
                     </div>
                   </motion.div>
