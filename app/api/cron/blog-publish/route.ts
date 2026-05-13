@@ -7,10 +7,10 @@ import sql from '@/lib/db';
  * Protects against duplicate publishes.
  */
 export async function GET(request: Request) {
-  // Simple secret-based auth for cron
-  const auth = request.headers.get('authorization') || '';
+  // Auth via X-Cron-Secret header or Authorization: Bearer
+  const secret = request.headers.get('X-Cron-Secret') || request.headers.get('authorization')?.replace('Bearer ', '') || '';
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && auth !== `Bearer ${cronSecret}`) {
+  if (cronSecret && secret !== cronSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

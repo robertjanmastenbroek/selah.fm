@@ -22,6 +22,11 @@
         "schedule": "0 18 * * *",
         "path": "/api/cron/outreach-followup",
         "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
+      },
+      {
+        "schedule": "0 10 * * *",
+        "path": "/api/cron/blog-publish",
+        "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
       }
     ]
   },
