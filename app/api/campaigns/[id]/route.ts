@@ -20,7 +20,7 @@ export async function GET(
             COALESCE(v.approved_submissions, '0') as approved_submissions,
             COALESCE(v.pending_submissions, '0') as pending_submissions,
             COALESCE(v.total_verified_views, '0') as total_verified_views,
-            u.display_name as artist_name,
+            COALESCE(u.display_name, da.artist_name) as artist_name,
             u.profile_image_url as artist_avatar,
             cc.claim_code,
             cc.claimed_at as claim_claimed_at
@@ -28,6 +28,7 @@ export async function GET(
           LEFT JOIN campaign_stats v ON v.id = c.id
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+          LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
           WHERE c.id = ${params.id}::uuid
         `
       : await sql`
@@ -36,7 +37,7 @@ export async function GET(
             COALESCE(v.approved_submissions, '0') as approved_submissions,
             COALESCE(v.pending_submissions, '0') as pending_submissions,
             COALESCE(v.total_verified_views, '0') as total_verified_views,
-            u.display_name as artist_name,
+            COALESCE(u.display_name, da.artist_name) as artist_name,
             u.profile_image_url as artist_avatar,
             cc.claim_code,
             cc.claimed_at as claim_claimed_at
@@ -44,6 +45,7 @@ export async function GET(
           LEFT JOIN campaign_stats v ON v.id = c.id
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+          LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
           WHERE c.slug = ${params.id}
         `;
 

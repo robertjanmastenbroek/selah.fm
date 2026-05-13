@@ -192,7 +192,7 @@ export default function CheckoutPage() {
   const budget = campaign.total_budget_cents / 100;
   const spent = budget - (campaign.budget_remaining_cents / 100);
   const progress = budget > 0 ? (spent / budget) * 100 : 0;
-  const artistName = campaign.artist_name || 'Unknown Artist';
+  const artistName = campaign.artist_name || '';
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: bg }}>

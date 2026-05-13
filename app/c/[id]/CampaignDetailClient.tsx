@@ -216,7 +216,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
   const views = parseInt(campaign.total_verified_views || '0');
   const submissions = parseInt(campaign.approved_submissions || '0');
   const totalRaised = donations.totalCents / 100;
-  const artistName = campaign.artist_name || 'Unknown Artist';
+  const artistName = campaign.artist_name || '';
   const displayTitle = campaign.title || campaign.track_title;
   const trackTitle = campaign.track_title || '';
 
