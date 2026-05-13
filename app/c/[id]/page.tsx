@@ -102,7 +102,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: canonicalUrl,
       siteName: 'Selah.fm',
       images: [{ url: imageUrl }],
-    },
+      ...(process.env.FACEBOOK_APP_ID ? { 'fb:app_id': process.env.FACEBOOK_APP_ID } : {}),
+    } as any,
     twitter: {
       card: 'summary_large_image',
       title,

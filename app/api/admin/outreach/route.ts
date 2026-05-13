@@ -268,6 +268,14 @@ async function runCreateCampaign(artistId: string) {
   const campaignUrl = `https://selah.fm/c/${campaign.slug}`;
   const claimUrl = `https://selah.fm/claim/${claimCode}`;
 
+  // Force Facebook/Instagram to re-scrape the new campaign URL
+  const fbToken = process.env.FACEBOOK_ACCESS_TOKEN;
+  if (fbToken) {
+    try {
+      await fetch(`https://graph.facebook.com/v18.0/?id=${encodeURIComponent(campaignUrl)}&scrape=true&access_token=${fbToken}`, { method: 'POST' });
+    } catch { /* non-critical */ }
+  }
+
   return NextResponse.json({
     campaign,
     campaign_url: campaignUrl,

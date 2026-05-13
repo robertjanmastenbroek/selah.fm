@@ -251,6 +251,14 @@ export async function GET(request: Request) {
         results.campaigns_created++;
         log.push(`  ✅ Campaign: ${campaign.title} → /c/${campaign.slug}`);
 
+        // Force Facebook re-scrape
+        const fbToken = process.env.FACEBOOK_ACCESS_TOKEN;
+        if (fbToken) {
+          try {
+            await fetch(`https://graph.facebook.com/v18.0/?id=${encodeURIComponent(`https://selah.fm/c/${campaign.slug}`)}&scrape=true&access_token=${fbToken}`, { method: 'POST' });
+          } catch {}
+        }
+
       } catch (e: any) {
         log.push(`  ❌ Error creating campaign for ${artist.artist_name}: ${e.message}`);
         results.errors++;
