@@ -97,7 +97,7 @@ export async function auditArtist(artistName: string, trackName: string, genres:
       spotify_embed_url: '',
       artist_bio: artistName,
       recommended_cpm_cents: 10,
-      recommended_budget_cents: 10000,
+      recommended_budget_cents: 0, // $0 — auto-generated campaigns start unfunded
       instagram_handle: null,
       instagram_followers: 0,
       tiktok_handle: null,

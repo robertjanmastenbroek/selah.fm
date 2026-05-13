@@ -6,7 +6,17 @@
   "deploy": {
     "startCommand": "npm start",
     "healthcheckPath": "/",
-    "healthcheckTimeout": 30
+    "healthcheckTimeout": 30,
+    "cron": [
+      {
+        "schedule": "0 6 * * *",
+        "path": "/api/cron/outreach-pipeline?secret=ROTATED_SECRET&limit=5"
+      },
+      {
+        "schedule": "0 18 * * *",
+        "path": "/api/cron/outreach-followup?secret=ROTATED_SECRET"
+      }
+    ]
   },
   "services": {
     "postgres": {

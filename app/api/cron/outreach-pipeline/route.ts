@@ -138,40 +138,52 @@ export async function GET(request: Request) {
       try {
         log.push(`Creating campaign: ${artist.artist_name}`);
 
-        const slug = `${artist.artist_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${artist.latest_track_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100);
+        // Format slug: artist-name-track-name-random4
+        const artistSlug = (artist.artist_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        const slug = `${artistSlug}-${trackSlug}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100).replace(/--+/g, '-');
 
-        // Download cover art from Spotify CDN
+        // Cover art — use Bandcamp CDN URL directly (no download needed)
         let coverArtUrl = artist.latest_track_cover_url || '/images/og-image.jpg';
+        // Download only Spotify CDN images (legacy — shouldn't happen anymore)
         if (coverArtUrl.startsWith('https://i.scdn.co/')) {
           try {
             const imgRes = await fetch(coverArtUrl);
             if (imgRes.ok) {
               const buffer = Buffer.from(await imgRes.arrayBuffer());
-              const fs = await import('fs');
-              const path = await import('path');
+              const fs = await import('fs'); const path = await import('path');
               const dir = path.join(process.cwd(), 'public/images/campaigns');
               fs.mkdirSync(dir, { recursive: true });
-              const filename = `campaign-${artist.spotify_id?.slice(0, 8) || 'outreach'}-${Date.now().toString(36)}.jpg`;
+              const filename = `campaign-${Date.now().toString(36)}.jpg`;
               fs.writeFileSync(path.join(dir, filename), buffer);
               coverArtUrl = `/images/campaigns/${filename}`;
             }
           } catch {}
         }
 
+        // Track URL — prefer Bandcamp link from social_links, fallback to any URL
+        const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
+        const trackUrl = socialLinks.bandcamp || artist.latest_track_spotify_url || 'https://selah.fm';
+
+        const budgetCents = artist.recommended_budget_cents || 0; // $0 for auto-generated
+
         const [campaign] = await sql`
           INSERT INTO campaigns (
-            artist_id, track_title, title, slug, cover_art_url, track_url,
-            cpm_rate_cents, max_payout_per_submission_cents,
+            artist_id, track_title, track_url, title, slug, cover_art_url,
+            cpm_rate_cents, total_budget_cents, budget_remaining_cents,
+            max_payout_per_submission_cents,
             requirements, recommended_hashtags, platforms,
             youtube_video_url, is_unclaimed, status
           ) VALUES (
             (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1),
             ${artist.latest_track_name || artist.artist_name},
+            ${trackUrl},
             ${`${artist.artist_name} — ${artist.latest_track_name || 'Latest Release'}`},
             ${slug},
             ${coverArtUrl},
-            ${artist.latest_track_spotify_url || ''},
             ${artist.recommended_cpm_cents || 10},
+            ${budgetCents},
+            ${budgetCents},
             ${artist.recommended_budget_cents || 10000},
             ${'Make a video featuring this track. Any style. Any length. No minimum followers. Just good content.'},
             ${artist.hashtags || []},
