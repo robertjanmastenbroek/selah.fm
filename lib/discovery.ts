@@ -352,9 +352,12 @@ export async function discoverArtists(limit: number = 15): Promise<DiscoveryResu
     diagnostics.push(`⚠️  Rejected ${rejected} candidates — missing artist or track name`);
   }
 
+  // Shuffle candidates so Reddit + Bandcamp both get represented
+  const shuffled = [...valid].sort(() => Math.random() - 0.5);
+
   // Return candidates directly as DiscoveredArtist (no Spotify enrichment)
   const artists: DiscoveredArtist[] = [];
-  for (const candidate of valid) {
+  for (const candidate of shuffled) {
     if (artists.length >= limit) break;
     artists.push({
       artist_name: candidate.artist_name,
