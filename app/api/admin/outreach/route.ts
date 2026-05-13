@@ -471,8 +471,12 @@ async function getPipelineOverview() {
     LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     ORDER BY da.id, aa.audited_at DESC
   `;
-  // Re-sort by discovered_at DESC and limit
-  const sorted = recent.sort((a: any, b: any) => new Date(b.discovered_at).getTime() - new Date(a.discovered_at).getTime()).slice(0, 20);
+  // Sort undiscovered first, then by recency — so fresh artists always show
+  const sorted = recent.sort((a: any, b: any) => {
+    if (a.status === 'discovered' && b.status !== 'discovered') return -1;
+    if (a.status !== 'discovered' && b.status === 'discovered') return 1;
+    return new Date(b.discovered_at).getTime() - new Date(a.discovered_at).getTime();
+  }).slice(0, 20);
 
   return NextResponse.json({
     pipeline: {
