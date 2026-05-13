@@ -43,16 +43,12 @@ export async function GET(request: Request) {
       log.push(`Channels: Reddit ${discoveryResult.channels.reddit.candidates}, Bandcamp ${discoveryResult.channels.bandcamp.candidates}, YouTube ${discoveryResult.channels.youtube.candidates}`);
     }
 
-    if (discovered.length === 0) {
-      log.push('No artists discovered in this run');
-      return NextResponse.json({ results: { ...results, discovered: 0 }, log });
-    }
+    if (discovered.length > 0) {
+      log.push(`Discovered ${discovered.length} artists`);
 
-    log.push(`Discovered ${discovered.length} artists`);
-
-    // Store discovered artists
-    let stored = 0;
-    for (const a of discovered) {
+      // Store discovered artists
+      let stored = 0;
+      for (const a of discovered) {
       // Use spotify_id if available, otherwise check by artist_name
       if (a.spotify_id) {
         const existing = await sql`SELECT id FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;
@@ -63,23 +59,26 @@ export async function GET(request: Request) {
       }
 
       await sql`
-        INSERT INTO discovered_artists (
-          artist_name, spotify_id, genres, monthly_listeners, followers,
-          social_links, latest_track_name, latest_track_spotify_url,
-          latest_track_cover_url, latest_release_date, discovery_source,
-          ai_signals_detected, is_ai_artist, status
-        ) VALUES (
-          ${a.artist_name}, ${a.spotify_id || null}, ${a.genres}, ${a.monthly_listeners}, ${a.followers},
-          ${JSON.stringify(a.social_links)}, ${a.latest_track_name}, ${a.latest_track_spotify_url},
-          ${a.latest_track_cover_url}, ${a.latest_release_date || null}, ${a.discovery_source || 'multi_channel'},
-          ${a.ai_signals_detected}, ${a.is_ai_artist}, 'discovered'
-        )
-      `;
-      stored++;
-    }
+          INSERT INTO discovered_artists (
+            artist_name, spotify_id, genres, monthly_listeners, followers,
+            social_links, latest_track_name, latest_track_spotify_url,
+            latest_track_cover_url, latest_release_date, discovery_source,
+            ai_signals_detected, is_ai_artist, status
+          ) VALUES (
+            ${a.artist_name}, ${a.spotify_id || null}, ${a.genres}, ${a.monthly_listeners}, ${a.followers},
+            ${JSON.stringify(a.social_links)}, ${a.latest_track_name}, ${a.latest_track_spotify_url},
+            ${a.latest_track_cover_url}, ${a.latest_release_date || null}, ${a.discovery_source || 'multi_channel'},
+            ${a.ai_signals_detected}, ${a.is_ai_artist}, 'discovered'
+          )
+        `;
+        stored++;
+      }
 
-    results.discovered = stored;
-    log.push(`Stored ${stored} new artists`);
+      results.discovered = stored;
+      log.push(`Stored ${stored} new artists`);
+    } else {
+      log.push('No new artists discovered (all candidates already in DB)');
+    }
 
     // ── Phase 2: Audit ─────────────────────────────────────
     const toAudit = await sql`
