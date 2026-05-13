@@ -153,6 +153,20 @@ function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetch
   const dmArtist = async (artist: any) => {
     const id = `dm-${artist.id}`;
     setActionLoading(id);
+    
+    // Open DM tabs IMMEDIATELY — must happen before any await (popup blocker)
+    const ig = artist.instagram_handle;
+    const tt = artist.tiktok_handle;
+    if (ig) window.open(`https://ig.me/m/${ig}`, '_blank');
+    if (tt) window.open(`https://www.tiktok.com/@${tt}`, '_blank');
+    
+    if (!ig && !tt) {
+      addToast('info', `No social handles found for ${artist.artist_name}`,
+        'Run Audit first to scrape Bandcamp for Instagram/TikTok links.');
+      setActionLoading('');
+      return;
+    }
+    
     try {
       const res = await fetch('/api/admin/outreach', {
         method: 'POST',
@@ -165,21 +179,8 @@ function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetch
         addToast('error', 'Failed', data.error);
       } else {
         await navigator.clipboard.writeText(data.message);
-        const igHandle = data.instagram_handle || artist.instagram_handle;
-        const ttHandle = data.tiktok_handle || artist.tiktok_handle;
-        const igLink = igHandle ? `https://ig.me/m/${igHandle}` : null;
-        const ttLink = ttHandle ? `https://www.tiktok.com/@${ttHandle}` : null;
-
-        const channels: string[] = [];
-        if (igLink) channels.push(`📸 IG: ${igLink}`);
-        if (ttLink) channels.push(`🎵 TikTok: ${ttLink}`);
-        const channelText = channels.join(' · ');
-
         addToast('success', `Message copied — ${artist.artist_name}`,
-          channelText || 'Paste into DM and send.');
-
-        if (igLink) setTimeout(() => window.open(igLink, '_blank'), 300);
-        if (ttLink) setTimeout(() => window.open(ttLink, '_blank'), 800);
+          `📋 Copied · 📸 IG: https://ig.me/m/${ig}${tt ? ` · 🎵 TikTok: https://www.tiktok.com/@${tt}` : ''}`);
       }
     } catch (e: any) {
       addToast('error', 'Failed', e.message);
