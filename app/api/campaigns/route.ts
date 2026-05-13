@@ -32,8 +32,10 @@ export async function GET(request: Request) {
       const orderClause = sort === 'popular'
         ? `${pinSort}, COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC`
         : `${pinSort}, c.created_at DESC`;
-      campaigns = await sql`
-        SELECT c.*, 
+      
+      // Build query as raw SQL (ORDER BY must not be parameterized)
+      const query = `
+        SELECT c.*,
           COALESCE(c.title, c.track_title) as title,
           COALESCE(v.approved_submissions, '0') as approved_submissions,
           COALESCE(v.pending_submissions, '0') as pending_submissions,
@@ -45,12 +47,12 @@ export async function GET(request: Request) {
         LEFT JOIN users u ON u.id = c.artist_id
         LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
         LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-        WHERE c.artist_id = ${userId}
+        WHERE c.artist_id = $1
         ORDER BY ${orderClause}
-        LIMIT ${limit}
+        LIMIT $2
       `;
+      campaigns = await sql.raw(query, [userId, limit]);
     } else {
-      // Public browse: sort by pinned → budget utilization % → total budget → date
       const orderClause2 = `${pinSort},
         CASE WHEN c.total_budget_cents > 0 
           THEN (c.total_budget_cents - c.budget_remaining_cents)::float / c.total_budget_cents 
@@ -58,8 +60,9 @@ export async function GET(request: Request) {
         END DESC,
         c.total_budget_cents DESC,
         c.created_at DESC`;
-      campaigns = await sql`
-        SELECT c.*, 
+      
+      const query = `
+        SELECT c.*,
           COALESCE(c.title, c.track_title) as title,
           COALESCE(v.approved_submissions, '0') as approved_submissions,
           COALESCE(v.pending_submissions, '0') as pending_submissions,
@@ -73,8 +76,9 @@ export async function GET(request: Request) {
         LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
         WHERE c.status IN ('active', 'draft')
         ORDER BY ${orderClause2}
-        LIMIT ${limit}
+        LIMIT $1
       `;
+      campaigns = await sql.raw(query, [limit]);
     }
 
     let filtered = campaigns;

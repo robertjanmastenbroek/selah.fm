@@ -38,3 +38,10 @@ export default function sql(strings: TemplateStringsArray, ...values: any[]) {
     },
   } as any;
 }
+
+/** Raw query with explicit parameters (ORDER BY safe — no parameterization of column names) */
+sql.raw = async function(query: string, params: any[] = []): Promise<QueryResultRow[]> {
+  const pool = getPool();
+  const result = await pool.query(query, params);
+  return result.rows;
+};
