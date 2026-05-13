@@ -154,7 +154,7 @@ export default function StripePaymentModal({
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             onClick={e => e.stopPropagation()}
-            className="relative z-10 w-full max-w-sm rounded-2xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-hidden"
+            className="relative z-10 w-full max-w-sm rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl overflow-hidden"
           >
             <div className="p-8 text-center space-y-4">
               <AlertCircle size={40} className="mx-auto text-yellow-400/60" />
@@ -203,7 +203,7 @@ export default function StripePaymentModal({
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           onClick={e => e.stopPropagation()}
-          className="relative z-10 w-full max-w-md rounded-2xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-hidden"
+          className="relative z-10 w-full max-w-md rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl overflow-hidden"
         >
           {/* Close button */}
           <button

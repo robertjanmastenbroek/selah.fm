@@ -161,7 +161,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 400, damping: 35 }}
             onClick={e => e.stopPropagation()}
-            className="relative z-10 w-full sm:max-w-lg max-h-[92vh] sm:rounded-3xl rounded-t-3xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl overflow-y-auto"
+            className="relative z-10 w-full sm:max-w-lg max-h-[92vh] sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl overflow-y-auto"
           >
             {/* Handle bar (mobile) */}
             <div className="flex justify-center pt-3 pb-1 sm:hidden">

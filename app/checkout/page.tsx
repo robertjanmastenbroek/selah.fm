@@ -362,7 +362,7 @@ export default function CheckoutPage() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
             onClick={() => router.push(`/c/${campaignId}`)}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="bg-[#0D0D0D] border border-white/[0.08] rounded-3xl p-8 text-center max-w-sm w-full space-y-5" onClick={e => e.stopPropagation()}>
+              className="bg-[#0F0F23] border border-white/[0.08] rounded-3xl p-8 text-center max-w-sm w-full space-y-5" onClick={e => e.stopPropagation()}>
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring', stiffness: 400 }}>
                 <div className="w-16 h-16 rounded-full bg-emerald-500/10 mx-auto flex items-center justify-center">
                   <Check size={32} className="text-emerald-400" />

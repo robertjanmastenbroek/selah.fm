@@ -126,7 +126,7 @@ export default function SupportWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-2xl bg-[#0D0D0D] border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden backdrop-blur-xl"
+            className="w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden backdrop-blur-xl"
           >
             {/* Header */}
             <div className="shrink-0 p-4 border-b border-white/[0.06] flex items-center gap-3">

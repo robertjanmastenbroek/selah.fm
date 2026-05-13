@@ -116,7 +116,7 @@ export default function ImageCropper({
       const ctx = canvas.getContext('2d');
       if (!ctx) { fallback(); return; }
 
-      ctx.fillStyle = '#0D0D0D';
+      ctx.fillStyle = '#0F0F23';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Source pixel coordinates of the top-left of the visible area

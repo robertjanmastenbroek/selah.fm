@@ -150,7 +150,7 @@ export default function PaymentSuccess({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25, delay: 0.1 }}
-            className="relative z-10 w-full max-w-sm rounded-3xl bg-[#0D0D0D] border border-white/[0.10] shadow-2xl overflow-hidden"
+            className="relative z-10 w-full max-w-sm rounded-3xl bg-[#0F0F23] border border-white/[0.10] shadow-2xl overflow-hidden"
           >
             {/* Glow ring */}
             <motion.div
