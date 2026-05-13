@@ -17,7 +17,7 @@ function formatMoney(cents: number): string {
 
 export default function RootPage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [stats, setStats] = useState({ artists: 0, creators: 0, totalPaidCents: 0, totalViews: 0, donors: 0, totalDonatedCents: 0, totalDepositedCents: 0 });
+  const [stats, setStats] = useState({ artists: 0, creators: 0, activeCampaigns: 0, totalPaidCents: 0, totalViews: 0, donors: 0, totalDonatedCents: 0, totalDepositedCents: 0 });
   const [featuredCampaigns, setFeaturedCampaigns] = useState<any[]>([]);
 
   useEffect(() => {
@@ -66,23 +66,24 @@ export default function RootPage() {
             </p>
           </motion.div>
 
-          {/* Trust stats */}
-          {(stats.artists > 0 || stats.totalDonatedCents > 0 || stats.totalDepositedCents > 0) && (
-            <motion.div className="flex items-center justify-center gap-6 text-sm text-muted-foreground flex-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-              {stats.artists > 0 && (<span className="font-semibold text-foreground">{formatCount(stats.artists)}</span>)}
-              {stats.artists > 0 && (<span>artists</span>)}
-              {stats.artists > 0 && stats.creators > 0 && (<span className="w-1 h-1 rounded-full bg-muted-foreground/30" />)}
-              {stats.creators > 0 && (<span className="font-semibold text-foreground">{formatCount(stats.creators)}</span>)}
-              {stats.creators > 0 && (<span>creators</span>)}
-              {(stats.totalDonatedCents > 0 || stats.totalDepositedCents > 0) && (<span className="w-1 h-1 rounded-full bg-muted-foreground/30" />)}
-              {(stats.totalDonatedCents > 0 || stats.totalDepositedCents > 0) && (<span className="font-semibold text-foreground">{formatMoney((stats.totalDonatedCents || 0) + (stats.totalDepositedCents || 0))}</span>)}
-              {(stats.totalDonatedCents > 0 || stats.totalDepositedCents > 0) && (<span>funded</span>)}
-              {stats.totalPaidCents > 0 && (<span className="w-1 h-1 rounded-full bg-muted-foreground/30" />)}
-              {stats.totalPaidCents > 0 && (<span className="font-semibold text-foreground">{formatMoney(stats.totalPaidCents)}</span>)}
-              {stats.totalPaidCents > 0 && (<span>paid</span>)}
-              {stats.artists === 0 && stats.totalDonatedCents === 0 && stats.totalDepositedCents === 0 && (<span>The marketplace for music promotion</span>)}
-            </motion.div>
-          )}
+          {/* Trust stats — always visible */}
+          <motion.div className="flex items-center justify-center gap-6 text-sm text-muted-foreground flex-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+            {stats.activeCampaigns > 0 && (<span className="font-semibold text-foreground">{formatCount(stats.activeCampaigns)}</span>)}
+            {stats.activeCampaigns > 0 && (<span>campaigns</span>)}
+            {stats.activeCampaigns > 0 && (stats.artists > 0 || stats.creators > 0 || (stats.totalDonatedCents || 0) + (stats.totalDepositedCents || 0) > 0 || stats.totalPaidCents > 0) && (<span className="w-1 h-1 rounded-full bg-muted-foreground/30" />)}
+            {stats.artists > 0 && (<span className="font-semibold text-foreground">{formatCount(stats.artists)}</span>)}
+            {stats.artists > 0 && (<span>artists</span>)}
+            {stats.artists > 0 && stats.creators > 0 && (<span className="w-1 h-1 rounded-full bg-muted-foreground/30" />)}
+            {stats.creators > 0 && (<span className="font-semibold text-foreground">{formatCount(stats.creators)}</span>)}
+            {stats.creators > 0 && (<span>creators</span>)}
+            {(stats.totalDonatedCents > 0 || stats.totalDepositedCents > 0) && (<span className="w-1 h-1 rounded-full bg-muted-foreground/30" />)}
+            {(stats.totalDonatedCents > 0 || stats.totalDepositedCents > 0) && (<span className="font-semibold text-foreground">{formatMoney((stats.totalDonatedCents || 0) + (stats.totalDepositedCents || 0))}</span>)}
+            {(stats.totalDonatedCents > 0 || stats.totalDepositedCents > 0) && (<span>funded</span>)}
+            {stats.totalPaidCents > 0 && (<span className="w-1 h-1 rounded-full bg-muted-foreground/30" />)}
+            {stats.totalPaidCents > 0 && (<span className="font-semibold text-foreground">{formatMoney(stats.totalPaidCents)}</span>)}
+            {stats.totalPaidCents > 0 && (<span>paid</span>)}
+            {stats.activeCampaigns === 0 && stats.artists === 0 && (stats.totalDonatedCents || 0) + (stats.totalDepositedCents || 0) === 0 && stats.totalPaidCents === 0 && (<span>The marketplace for music promotion</span>)}
+          </motion.div>
 
           {/* CTA buttons */}
           <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-3" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
