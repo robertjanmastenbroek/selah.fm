@@ -273,6 +273,8 @@ function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetch
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ action: 'log_outreach', artistId: artist.id, channel: 'instagram_dm', status: 'sent' }),
                             });
+                            // Remove from queue immediately (optimistic)
+                            setQueue(prev => prev.filter(a => a.id !== artist.id));
                             addToast('success', `✓ DM logged for ${artist.artist_name}`, 'Moved to outreach_sent.');
                             fetchPipeline();
                           } catch (e: any) {
