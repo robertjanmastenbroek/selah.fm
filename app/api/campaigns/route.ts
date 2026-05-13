@@ -26,7 +26,9 @@ export async function GET(request: Request) {
     let campaigns;
     if (isOwnerView) {
       const userId = session.id || await resolveUserId(session);
-      const orderClause = sort === 'popular' ? sql`COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC` : sql`c.created_at DESC`;
+      const orderClause = sort === 'popular'
+        ? sql`c.is_pinned DESC NULLS LAST, COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC`
+        : sql`c.is_pinned DESC NULLS LAST, c.created_at DESC`;
       campaigns = await sql`
         SELECT c.*, 
           COALESCE(c.title, c.track_title) as title,
