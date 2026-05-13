@@ -120,13 +120,19 @@ async function discoverFromReddit(): Promise<{ candidates: RawArtistCandidate[];
         if (post.domain && ['imgur.com', 'i.redd.it', 'v.redd.it'].includes(post.domain) && !spotifyUrl && !youtubeUrl) continue;
 
         const parsed = parseArtistTrackTitle(post.title);
-        const artistName = parsed.artist || post.title.slice(0, 100);
+        const artistName = parsed.artist || '';
+        const trackName = parsed.track || '';
+        
+        // MUST have both artist AND track name from Reddit posts
+        if (!artistName || artistName.length < 2) continue;
+        if (!trackName || trackName.length < 2) continue;
+        
         const key = artistName.toLowerCase().trim();
         if (seen.has(key) || detectAiSignals(artistName) >= 2) continue;
         seen.add(key);
 
         candidates.push({
-          artist_name: artistName, track_name: parsed.track, source: 'reddit',
+          artist_name: artistName, track_name: trackName, source: 'reddit',
           source_url: post.permalink, source_detail: `r/${post.subreddit}`,
           genres_hint: extractGenresFromTitle(post.title),
           spotify_url: spotifyUrl || undefined, youtube_url: youtubeUrl || undefined,
@@ -173,21 +179,27 @@ async function fetchBandcampGenre(genre: string): Promise<RawArtistCandidate[]> 
       const coverUrl = item.art_id ? `https://f4.bcbits.com/img/a${item.art_id}_16.jpg` : undefined;
       const genreText = item.genre_text || genre;
 
-      // Clean track name for albums vs tracks
+      // Clean track name for albums vs tracks — MUST have a track name
       let displayTrack = rawTitle;
       if (itemType === 'a') {
-        // Album: try to extract a clean short name
-        // If primary_text contains " - " (Artist - Album format), take the album part
         if (rawTitle.includes(' - ')) {
           const parts = rawTitle.split(' - ');
           displayTrack = parts.slice(1).join(' - ').trim();
         }
-        // Strip edition suffixes: "remixes", "collection", "EP", "LP", "deluxe"
         displayTrack = displayTrack.replace(/\s*[-–—]\s*(the\s+)?(progressive\s+)?(breaks\s+)?(remixes|collection|compilation|deluxe|edition|version|EP|LP|single)\b[^-]*$/i, '').trim();
       }
 
-      // Fallback: if display track is empty, too long (>60 chars), or just the artist name
+      // Fallbacks for missing/bad track name
       if (!displayTrack || displayTrack.length > 60 || displayTrack.toLowerCase() === artistName.toLowerCase()) {
+        // Try URL slug — Bandcamp URLs are always artist-friendly and contain the release name
+        const slug = item.url_hints?.slug || '';
+        if (slug && slug.length > 2) {
+          displayTrack = slug.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+        }
+      }
+
+      // Final fallback: empty track name (will be rejected at the validation gate)
+      if (!displayTrack || displayTrack.length < 2) {
         displayTrack = '';
       }
 
@@ -257,13 +269,18 @@ async function discoverFromYoutube(): Promise<{ candidates: RawArtistCandidate[]
         if (viewCount < 100 || viewCount > 100000) continue;
         const parsed = parseArtistTrackTitle(video.snippet.title);
         const artistName = parsed.artist || video.snippet.channelTitle;
+        const trackName = parsed.track || video.snippet.title;
+        
+        if (!artistName || artistName.length < 2) continue;
+        if (!trackName || trackName.length < 2) continue;
         if (detectAiSignals(artistName) >= 2) continue;
+        
         const key = artistName.toLowerCase().trim();
         if (seen.has(key)) continue;
         seen.add(key);
 
         candidates.push({
-          artist_name: artistName, track_name: parsed.track || video.snippet.title, source: 'youtube',
+          artist_name: artistName, track_name: trackName, source: 'youtube',
           source_url: `https://www.youtube.com/watch?v=${video.id}`,
           source_detail: `YouTube — ${viewCount.toLocaleString()} views`,
           genres_hint: extractGenresFromTitle(video.snippet.title),
@@ -317,9 +334,16 @@ export async function discoverArtists(limit: number = 15): Promise<DiscoveryResu
   }
   diagnostics.push(`\nTotal unique candidates: ${unique.length}`);
 
+  // Validation gate: MUST have both artist name AND track name
+  const valid = unique.filter(c => c.artist_name.length >= 2 && (c.track_name?.length || 0) >= 2);
+  const rejected = unique.length - valid.length;
+  if (rejected > 0) {
+    diagnostics.push(`⚠️  Rejected ${rejected} candidates — missing artist or track name`);
+  }
+
   // Return candidates directly as DiscoveredArtist (no Spotify enrichment)
   const artists: DiscoveredArtist[] = [];
-  for (const candidate of unique) {
+  for (const candidate of valid) {
     if (artists.length >= limit) break;
     artists.push({
       artist_name: candidate.artist_name,

@@ -46,9 +46,13 @@ export async function GET(request: Request) {
     if (discovered.length > 0) {
       log.push(`Discovered ${discovered.length} artists`);
 
-      // Store discovered artists
+      // Store discovered artists — REQUIRE both artist name AND track name
       let stored = 0;
       for (const a of discovered) {
+      // Validation gate: must have both
+      if (!a.artist_name || a.artist_name.length < 2) continue;
+      if (!a.latest_track_name || a.latest_track_name.length < 2) continue;
+
       // Use spotify_id if available, otherwise check by artist_name
       if (a.spotify_id) {
         const existing = await sql`SELECT id FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;

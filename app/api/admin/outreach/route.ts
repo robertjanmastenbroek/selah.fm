@@ -62,9 +62,12 @@ async function runDiscovery(query: string = 'year:2025-2026', limit: number = 10
   const result = await discoverArtists(limit || 10);
   const { artists, diagnostics, channels } = result;
   
-  // Store in database
+  // Store in database — REQUIRE both artist name AND track name
   let stored = 0;
   for (const a of artists) {
+    if (!a.artist_name || a.artist_name.length < 2) continue;
+    if (!a.latest_track_name || a.latest_track_name.length < 2) continue;
+
     const existing = await sql`SELECT id FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;
     if (existing.length > 0) continue;
 
