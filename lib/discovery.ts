@@ -154,14 +154,18 @@ async function discoverFromReddit(): Promise<{ candidates: RawArtistCandidate[];
 
 const BANDCAMP_GENRES = ['electronic', 'hiphop-rap', 'rock', 'pop', 'folk', 'metal', 'punk', 'experimental', 'ambient', 'indie', 'alternative', 'r-b-soul', 'jazz', 'country'];
 
-async function fetchBandcampGenre(genre: string): Promise<RawArtistCandidate[]> {
+async function fetchBandcampGenre(genre: string, page: number = 0): Promise<RawArtistCandidate[]> {
+  // Rotate sort order — 'new', 'top', 'rec' give different artists
+  const sorts = ['new', 'top', 'rec'];
+  const sort = sorts[Math.floor(Math.random() * sorts.length)];
   try {
-    const res = await fetch(`https://bandcamp.com/api/discover/3/get_web?g=${encodeURIComponent(genre)}&s=new&p=0&f=digital&t=albums`, {
+    const res = await fetch(`https://bandcamp.com/api/discover/3/get_web?g=${encodeURIComponent(genre)}&s=${sort}&p=${page}&f=digital&t=albums`, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
     });
     if (!res.ok) return [];
     const data = await res.json();
     const items = (data.items || []) as any[];
+    if (items.length === 0) return []; // No more pages
     const candidates: RawArtistCandidate[] = [];
     const seen = new Set<string>();
 
@@ -220,20 +224,27 @@ async function discoverFromBandcamp(): Promise<{ candidates: RawArtistCandidate[
   const seen = new Set<string>();
   const shuffled = [...BANDCAMP_GENRES].sort(() => Math.random() - 0.5);
   const genres = shuffled.slice(0, 6);
+  const pagesToFetch = 3; // Pages 0, 1, 2 — ~48 items each = ~144 per genre
 
   for (const genre of genres) {
-    try {
-      const candidates = await fetchBandcampGenre(genre);
-      diagnostics.push(`  Bandcamp/${genre}: ${candidates.length} candidates`);
-      for (const c of candidates) {
-        const key = c.artist_name.toLowerCase().trim();
-        if (seen.has(key)) continue;
-        seen.add(key); allCandidates.push(c);
-      }
-    } catch (e: any) { diagnostics.push(`  ❌ Bandcamp/${genre}: ${e.message}`); }
-    await sleep(500);
+    let genreTotal = 0;
+    for (let page = 0; page < pagesToFetch; page++) {
+      try {
+        const candidates = await fetchBandcampGenre(genre, page);
+        if (candidates.length === 0) break; // No more pages for this genre
+        genreTotal += candidates.length;
+        for (const c of candidates) {
+          const key = c.artist_name.toLowerCase().trim();
+          if (seen.has(key)) continue;
+          seen.add(key); allCandidates.push(c);
+        }
+      } catch (e: any) { diagnostics.push(`  ❌ Bandcamp/${genre} p${page}: ${e.message}`); break; }
+      await sleep(400);
+    }
+    diagnostics.push(`  Bandcamp/${genre}: ${genreTotal} candidates (${pagesToFetch} pages)`);
+    await sleep(300);
   }
-  diagnostics.push(`Bandcamp: ${allCandidates.length} candidates`);
+  diagnostics.push(`Bandcamp: ${allCandidates.length} candidates total`);
   return { candidates: allCandidates, diagnostics };
 }
 
