@@ -210,11 +210,13 @@ export default function OutreachDashboard() {
                            hover:bg-purple-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                 {actionLoading === 'batch-audit' ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}Audit 5
               </motion.button>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={fetchPipeline}
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                onClick={async () => { setActionLoading('refresh'); await fetchPipeline(); setActionLoading(''); }}
+                disabled={actionLoading === 'refresh'}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
                            bg-white/[0.03] border border-white/[0.06] text-muted-foreground
-                           hover:text-foreground hover:border-white/[0.12] transition-all">
-                <RefreshCw size={11} />Refresh
+                           hover:text-foreground hover:border-white/[0.12] transition-all disabled:opacity-40">
+                {actionLoading === 'refresh' ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}Refresh
               </motion.button>
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={async () => {
