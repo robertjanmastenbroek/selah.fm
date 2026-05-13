@@ -677,37 +677,24 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
 
 function InfiniteCampaigns({ currentId }: { currentId: string }) {
   const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const loaderRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchMore = useCallback(async () => {
-    if (loading || !hasMore) return;
-    setLoading(true);
-    try {
-      const offset = page * 12;
-      const res = await fetch(`/api/campaigns?limit=12&offset=${offset}&sort=popular`);
-      const data = await res.json();
-      const fresh = (data.campaigns || []).filter((c: any) => c.id !== currentId);
-      if (fresh.length === 0) { setHasMore(false); }
-      else { setCampaigns(prev => [...prev, ...fresh]); setPage(p => p + 1); }
-    } catch { setHasMore(false); }
-    setLoading(false);
-  }, [page, loading, hasMore, currentId]);
-
-  useEffect(() => { fetchMore(); }, []);
-
   useEffect(() => {
-    const el = loaderRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) fetchMore(); }, { rootMargin: '200px' });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [fetchMore]);
+    // Fetch all active campaigns at once — small dataset, no need for pagination
+    fetch('/api/campaigns?limit=50')
+      .then(r => r.json())
+      .then(data => {
+        const all = (data.campaigns || [])
+          .filter((c: any) => c.slug !== currentId && c.id !== currentId)
+          .slice(0, 30);
+        setCampaigns(all);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [currentId]);
 
-  if (campaigns.length === 0 && loading) {
+  if (loading) {
     return (
       <div className="grid grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -720,22 +707,19 @@ function InfiniteCampaigns({ currentId }: { currentId: string }) {
     );
   }
 
-  if (campaigns.length === 0 && !loading) return <p className="text-xs text-muted-foreground text-center py-4">No more campaigns</p>;
+  if (campaigns.length === 0) return <p className="text-xs text-muted-foreground text-center py-4">No more campaigns</p>;
 
   return (
-    <>
-      <div className="grid grid-cols-3 gap-3">
-        {campaigns.map((c: any) => (
-          <button key={c.id} onClick={() => router.push(`/c/${c.slug || c.id}`)} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/20 transition-all text-left">
-            <div className="aspect-square bg-white/[0.02]">{c.cover_art_url && <img src={c.cover_art_url} alt="" className="w-full h-full object-cover" loading="lazy" />}</div>
-            <div className="p-3">
-              <p className="text-xs font-semibold truncate">{c.title || c.track_title}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{c.artist_name || 'Artist'}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-      <div ref={loaderRef} className="py-4 flex justify-center">{loading && hasMore && <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />}</div>
-    </>
+    <div className="grid grid-cols-3 gap-3">
+      {campaigns.map((c: any) => (
+        <button key={c.id} onClick={() => router.push(`/c/${c.slug || c.id}`)} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/20 transition-all text-left">
+          <div className="aspect-square bg-white/[0.02]">{c.cover_art_url && <img src={c.cover_art_url} alt="" className="w-full h-full object-cover" loading="lazy" />}</div>
+          <div className="p-3">
+            <p className="text-xs font-semibold truncate">{c.title || c.track_title}</p>
+            <p className="text-[10px] text-muted-foreground truncate">{c.artist_name || 'Artist'}</p>
+          </div>
+        </button>
+      ))}
+    </div>
   );
 }
