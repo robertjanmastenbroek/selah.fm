@@ -543,46 +543,68 @@ async function getArtistById(artistId: string) {
   return NextResponse.json({ artist, audit, outreach, claim, campaign });
 }
 
-/** Download image from URL and return { buffer, mime } or null */
+/** Download image from URL with multiple retry strategies */
 async function downloadImage(url: string): Promise<{ buffer: Buffer; mime: string } | null> {
-  const urlsToTry = [url];
-  // If it's a Bandcamp CDN URL, also try the _10 (1200px) variant
+  if (!url?.startsWith('http')) return null;
+
+  // Generate all URLs to try
+  const urls = [url];
   const bcMatch = url.match(/(https:\/\/f\d+\.bcbits\.com\/img\/a\d+)_\d+\.(jpg|png)/);
   if (bcMatch) {
-    urlsToTry.push(`${bcMatch[1]}_10.${bcMatch[2]}`);
-    urlsToTry.push(`${bcMatch[1]}_2.${bcMatch[2]}`);
+    urls.push(`${bcMatch[1]}_10.${bcMatch[2]}`, `${bcMatch[1]}_16.${bcMatch[2]}`, `${bcMatch[1]}_2.${bcMatch[2]}`);
   }
-  for (const u of urlsToTry) {
-    try {
-      const res = await fetch(u, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-          'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Referer': 'https://bandcamp.com/',
-        },
-        signal: AbortSignal.timeout(15000),
-      });
-      if (res.ok) {
-        const contentType = res.headers.get('content-type') || '';
-        if (contentType.includes('image/') || contentType.includes('application/octet-stream')) {
-          const buffer = Buffer.from(await res.arrayBuffer());
-          // Valid JPEG starts with FF D8, PNG with 89 50 4E 47, WebP with 52 49 46 46
-          if (buffer.length > 2000) {
-            const isValidImage = 
-              (buffer[0] === 0xFF && buffer[1] === 0xD8) || // JPEG
-              (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) || // PNG
-              (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46); // WebP
-            if (isValidImage) {
-              let mime = 'image/jpeg';
-              if (buffer[0] === 0x89) mime = 'image/png';
-              else if (buffer[0] === 0x52) mime = 'image/webp';
-              return { buffer, mime };
+  // Also try the Bandcamp page itself to scrape a fresh image URL
+  const bandcampPage = url.match(/https?:\/\/([^.]+)\.bandcamp\.com/);
+  if (bandcampPage) {
+    urls.push(`https://${bandcampPage[1]}.bandcamp.com/`);
+  }
+
+  // Header strategies to rotate through
+  const headerSets = [
+    { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36', 'Accept': 'image/*' },
+    { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Accept': '*/*' },
+    {}, // No headers — raw request
+  ];
+
+  for (const u of urls) {
+    for (const headers of headerSets) {
+      try {
+        const res = await fetch(u, { headers, signal: AbortSignal.timeout(12000) });
+        if (!res.ok) continue;
+
+        // If we hit a Bandcamp page, scrape the og:image
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('text/html') && bandcampPage) {
+          const html = await res.text();
+          const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+          if (ogMatch) {
+            const scrapedUrl = ogMatch[1];
+            if (scrapedUrl.startsWith('http')) {
+              const imgResult = await downloadImage(scrapedUrl); // Recursive try
+              if (imgResult) return imgResult;
             }
           }
+          continue;
         }
-      }
-    } catch {}
+
+        if (!ct.includes('image/') && !ct.includes('application/octet-stream')) continue;
+
+        const buffer = Buffer.from(await res.arrayBuffer());
+        if (buffer.length < 2000) continue;
+
+        const isValidImage = 
+          (buffer[0] === 0xFF && buffer[1] === 0xD8) ||
+          (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) ||
+          (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46);
+
+        if (isValidImage) {
+          let mime = 'image/jpeg';
+          if (buffer[0] === 0x89) mime = 'image/png';
+          else if (buffer[0] === 0x52) mime = 'image/webp';
+          return { buffer, mime };
+        }
+      } catch {}
+    }
   }
   return null;
 }
