@@ -33,9 +33,12 @@ npx next dev                  # http://localhost:3000
 - **Database:** PostgreSQL (Neon, Railway)
 - **Payments:** Stripe Elements + Connect (80/20 split)
 - **Styling:** Tailwind CSS, Framer Motion, shadcn/ui
-- **AI:** DeepSeek API (blog generation, interview questions)
+- **AI:** DeepSeek API (blog generation, interview questions, outreach messages)
 - **Images:** Pexels API → local cache
 - **Email:** Resend
+- **Discovery:** Bandcamp API + Reddit JSON + YouTube Data API (multi-channel, Spotify-free)
+- **Social:** Instagram DM + TikTok DM (one-click from admin dashboard)
+- **Cron:** Railway (2× daily outreach pipeline + follow-up)
 
 ## Project Structure
 
@@ -113,6 +116,16 @@ components/
 - Artists review submissions, approve with one click, undo within 4 seconds
 - Stripe handles deposits (Elements) and payouts (Connect)
 - 80/20 revenue split via Stripe Connect
+
+### Outreach Pipeline (Marketing Automation)
+- Multi-channel discovery: Bandcamp API + Reddit + YouTube (Spotify-free)
+- Auto-audit: YouTube video search + Bandcamp social scraping (IG/TikTok handles)
+- Auto-campaign: $0 budget, unclaimed campaign pages with Bandcamp cover art
+- AI outreach: DeepSeek generates unique messages per artist (founder voice)
+- One-click DM: copies message + opens Instagram DM + TikTok profile
+- Railway cron: 2× daily pipeline cycles + Day-7 follow-up
+- 369 artists discovered · 10 live unclaimed campaigns · 354 awaiting audit
+- Full docs: `MARKETING.md`
 
 ### Dual Role System
 - Every user is both artist AND creator by default

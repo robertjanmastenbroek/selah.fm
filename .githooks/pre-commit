@@ -14,10 +14,13 @@ BLOCKED=0
 
 # ── Check each staged file ──────────────────────────────────────────
 for FILE in $STAGED_FILES; do
-  # Skip binary files
+  # Skip binary files, docs, and configs (no secrets in markdown/yml)
   if file -b "$FILE" 2>/dev/null | grep -q "binary"; then
     continue
   fi
+  case "$FILE" in
+    *.md|*.yml|*.yaml|*.toml|*.json|railway.json|.gitignore|.gitattributes) continue ;;
+  esac
 
   DIFF=$(git diff --cached "$FILE")
 

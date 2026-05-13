@@ -1,29 +1,61 @@
 # Selah.fm — Status & Reference
-**Version:** 1.0 · **Live:** https://selah.fm · **Updated:** 2026-05-12
+**Version:** 1.1 · **Live:** https://selah.fm · **Updated:** 2026-05-13
 
 ---
 
-## Current Focus: Outbound Artist Marketing Automation
+## Current Focus: Outbound Artist Marketing Pipeline
 
-**Goal:** 100 artists/day claiming auto-generated campaigns.
+**Goal:** 50 artists/day reached via Instagram/TikTok DM.
 
 **Pipeline:** FIND → AUDIT → BUILD → OUTREACH → CLAIM → SHARE
 
+```
+Bandcamp API → discovered_artists → artist_audits (YT + social) → campaigns ($0, unclaimed) → DM message → claim
+```
+
 | Phase | Status |
 |-------|--------|
-| 1. DB migration (012_outreach_pipeline) | ✅ Applied to production |
-| 2. lib/outreach.ts (Spotify auth, discovery, audit, AI detection, outreach templates) | ✅ Built |
-| 3. API routes (discover, audit, create_campaign, render_outreach, log_outreach) | ✅ Built |
-| 4. Admin dashboard (/admin/outreach) with pipeline stats + action buttons | ✅ Built |
-| 5. Autonomous cron endpoint (/api/cron/outreach-pipeline) — fully self-running | ✅ Built |
-| 6. Claim page (/claim/[code]) + ClaimButton + /api/claim | ✅ Built |
-| 7. Outreach template (personalized, copy-to-clipboard, Instagram DM ready) | ✅ Built |
-| 8. Spotify API verified working (genre search, artist lookup, top tracks) | ✅ Tested |
-| 9. Discovery pipeline: text search + popularity < 40 filter (24 search terms, limit=10) | ✅ Working |
-| 10. Admin dashboard polished (Framer Motion, toast notifications, cover art thumbnails, micro-rewards) | ✅ Built |
-| 11. Follow-up system (Day-7 cron + admin action + social proof injection) | ✅ Built |
-| 12. Campaign page unclaimed state (gift-like UX, pre-set donations, FOMO slots, share messages) | ✅ Built |
-| 13. OG image fix (relative paths → absolute URLs for WhatsApp/Telegram/iMessage previews) | ✅ Fixed |
+| 1. DB migration (012_outreach_pipeline) — 4 tables | ✅ Applied to production |
+| 2. lib/discovery.ts — multi-channel (Bandcamp API + Reddit + YouTube) | ✅ Spotify-free |
+| 3. lib/outreach.ts — audit (YouTube + social scraping) + AI outreach messages | ✅ Built |
+| 4. API routes: discover, audit, create_campaign, render_outreach, render_follow_up, log_outreach, get_outreach_queue | ✅ Built |
+| 5. Admin dashboard (/admin/outreach) — pipeline stats, artist cards, one-click DM queue | ✅ Built |
+| 6. Autonomous cron endpoint (/api/cron/outreach-pipeline) — discover→audit→campaign | ✅ Built |
+| 7. Railway cron: 02:00 + 14:00 UTC pipeline, 18:00 UTC follow-up | ✅ Configured |
+| 8. Claim page (/claim/[code]) + ClaimButton | ✅ Built |
+| 9. AI-powered outreach messages (DeepSeek API, founder voice, genre-specific) | ✅ Built |
+| 10. Fallback outreach templates (8 genres, anti-spam patterns) | ✅ Built |
+| 11. Instagram DM one-click flow (copies message + opens ig.me/m/{handle}) | ✅ Built |
+| 12. TikTok DM one-click flow (opens tiktok.com/@{handle}) | ✅ Built |
+| 13. Social link discovery (scrapes Bandcamp artist pages for IG/TikTok handles) | ✅ Built |
+| 14. Campaign page unclaimed state (gift-like UX, pre-set donations, FOMO, share messages) | ✅ Built |
+| 15. Follow-up system (Day-7 cron + admin action + social proof injection) | ✅ Built |
+| 16. Pin system (admin toggle, browse sort priority, "more campaigns" priority) | ✅ Built |
+| 17. Browse sort algorithm (pinned → budget utilization % → total funding → date) | ✅ Live |
+| 18. Stats API: totalDonatedCents + totalDepositedCents → homepage trust bar | ✅ Live |
+| 19. Security: CRON_SECRET rotated, git history cleaned, pre-commit hook installed | ✅ Done |
+
+---
+
+## Pipeline Database (Production)
+
+| Table | Rows | Notes |
+|-------|------|-------|
+| discovered_artists | 369 | From Bandcamp API (10 genres × 48 items) |
+| artist_audits | 15 | YouTube video search + social scraping |
+| campaigns (unclaimed) | 10 | $0 budget, artist-name-track-name slug |
+| campaign_claims | 10 | UUID claim codes generated |
+| Ready for outreach | 10 | Campaigns created, not yet messaged |
+
+---
+
+## Design System
+
+- **Style:** Dark Mode (OLED) — UI/UX Pro Max v2.5.0
+- **Colors:** Primary `#4338CA` (indigo), Accent `#22C55E` (green), Background `#0F0F23` (deep navy)
+- **Fonts:** Righteous (headings) + Poppins (body) via `next/font/google`
+- **34 files** batch-updated with new color palette
+- Design system documentation: `design-system/selah.fm/MASTER.md` + page-specific files
 
 ---
 
@@ -32,9 +64,8 @@
 ### Core Platform
 | Area | Status |
 |------|--------|
-| Campaign creation → checkout → funding | ✅ |
+| Campaign creation → checkout → funding (Stripe Elements) | ✅ |
 | CPM-based creator marketplace | ✅ |
-| Stripe Elements (deposits + donations) | ✅ |
 | Webhook processing + referral auto-credit | ✅ |
 | Creator submissions with platform verification | ✅ |
 | Artist review + approve/reject with 4s undo | ✅ |
@@ -44,9 +75,10 @@
 | Artist + Creator profiles | ✅ |
 | Dashboard with campaign management | ✅ |
 | Settings + dual-role system | ✅ |
-| SEO: JSON-LD, OG/Twitter, canonical, sitemap | ✅ |
+| SEO: JSON-LD, OG/Twitter, canonical, sitemap (25 pages) | ✅ |
 | Google Analytics: server-side Measurement Protocol | ✅ |
 | 55+ API routes · 44 E2E tests · Zero TypeScript errors | ✅ |
+| Homepage trust bar: campaigns · artists · creators · funded · paid | ✅ |
 
 ### Blog System
 | Area | Status |
@@ -57,11 +89,9 @@
 | Interview Studio (52 topics, voice input) | ✅ |
 | Voice library: 220 chunks | ✅ |
 | Content Hub + Generate from Voice pipeline | ✅ |
-| Question dedup system (never answer the same question twice) | ✅ |
-| Auto-schedule (1 post/day, next-available-day logic) | ✅ |
-| Batch generation (select multiple questions, generate all) | ✅ |
-| Source real questions from Reddit (rotating sort orders) | ✅ |
-| Blog post editor (preview → edit → publish/schedule) | ✅ |
+| Question dedup system | ✅ |
+| Auto-schedule (1 post/day) | ✅ |
+| Batch generation + Reddit question sourcing | ✅ |
 
 ### Interactive SEO Tools
 | Area | Status |
@@ -70,28 +100,25 @@
 | Creator Earnings Estimator | ✅ |
 | Promotion Budget Planner | ✅ |
 
-### Recent Changes (May 12)
-| Change | Status |
-|--------|--------|
-| Campaign copy: "EARN" → "JOIN" (all CTA buttons, EarnModal, SEO metadata) | ✅ |
-| Outreach pipeline: DB migration, discovery, audit, API routes, admin dashboard, cron, claim page | ✅ |
-| Campaign page: unclaimed gift-like UX + audience-specific share messages | ✅ |
-| Follow-up system: Day-7 cron + admin action + social proof | ✅ |
-| OG image: fixed relative paths → absolute URLs for link previews | ✅ |
-| Admin dashboard: complete polish redesign (Framer Motion, toasts, cover art, micro-rewards) | ✅ |
-| Discovery: iterated through genre/yearch/tag:new/recommendations → settled on text search + popularity filter | ✅ |
+---
 
-### Known Issues
-| Issue | Status |
-|-------|--------|
-| Discovery returns 0 artists when no low-popularity tracks match follower range | ⚠️ Being tuned (popularity threshold, search terms, follower range) |
-| Inbound email (Resend webhook → admin inbox) | ⚠️ Endpoint ready, needs subdomain DNS |
+## Key Architecture Decisions
 
-### Database
-- 1 live campaign (Merhav Yah)
-- 1 published blog post
-- Voice library: 220 chunks
-- Migrations: 001–011 applied
+- **Spotify removed entirely** — Bandcamp API provides artist name, track title, cover art, genre, and band URL. Spotify added nothing but rate limits (Railway IP was blocked).
+- **AI-powered outreach messages** — DeepSeek API generates unique messages per artist matching the founder's voice (same engine as blog system). Anti-spam guardrails built in.
+- **$0 budget for auto-generated campaigns** — No upfront cost. Artists can fund after claiming.
+- **Instagram + TikTok DM** — One-click flow copies message and opens DM. No Meta API needed (cold DMs via API are against ToS anyway).
+- **Pinned campaigns** — Admin can pin campaigns to top of browse + "more campaigns" sections.
+
+---
+
+## Immediate Next Steps
+
+1. **Run outreach** — Click "Message" on the 10 ready artists in `/admin/outreach`
+2. **Monitor pipeline** — Railway cron runs 2× daily, fills with ~60 new artists/day
+3. **Blog content** — Generate more posts from voice library to build SEO authority
+4. **YouTube API key** — Set on Railway for automatic view verification on submissions
+5. **Resend API key** — Set on Railway for email notifications
 
 ---
 
