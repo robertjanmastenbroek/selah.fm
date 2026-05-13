@@ -134,16 +134,10 @@ async function runAudit(artistId: string) {
   // Run audit via YouTube + Bandcamp social discovery
   const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
   const bandcampUrl = socialLinks.bandcamp || '';
-  const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl);
+  const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl, socialLinks);
   if (!audit) return NextResponse.json({ error: 'Audit failed' }, { status: 500 });
 
-  // Auto-decline if no Instagram handle — can't do outreach without it
-  if (!audit.instagram_handle) {
-    await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
-    return NextResponse.json({ artist, audit, status: 'declined', reason: 'no_instagram_handle' });
-  }
-
-  // Store audit
+  // Store audit (even without IG — campaign creation gate handles the IG check)
   await sql`
     INSERT INTO artist_audits (
       discovered_artist_id, spotify_monthly_listeners, spotify_track_streams,
@@ -478,16 +472,9 @@ async function runBatchAudit(limit: number = 5) {
     try {
       const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
       const bandcampUrl = socialLinks.bandcamp || '';
-      const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl);
+      const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl, socialLinks);
 
       if (!audit) {
-        await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
-        skipped++;
-        continue;
-      }
-
-      // If no Instagram handle found, auto-decline — can't DM them
-      if (!audit.instagram_handle) {
         await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
         skipped++;
         continue;

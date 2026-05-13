@@ -129,6 +129,7 @@ export async function auditArtist(
   trackName: string,
   genres: string[] = [],
   bandcampUrl?: string,
+  storedSocialLinks?: Record<string, string>,
 ): Promise<ArtistAudit | null> {
   try {
     // YouTube video search
@@ -150,15 +151,24 @@ export async function auditArtist(
       } catch {}
     }
 
-    // Social links from Bandcamp page
+    // Social links: check stored links first, then scrape Bandcamp
     let instagram_handle: string | null = null;
     let tiktok_handle: string | null = null;
     let website_url: string | null = null;
-    if (bandcampUrl) {
+
+    // Check stored social_links for IG/TikTok handles (from Reddit posts, etc.)
+    if (storedSocialLinks) {
+      if (storedSocialLinks.instagram) instagram_handle = storedSocialLinks.instagram;
+      if (storedSocialLinks.tiktok) tiktok_handle = storedSocialLinks.tiktok;
+      if (storedSocialLinks.website) website_url = storedSocialLinks.website;
+    }
+
+    // If no IG handle from stored links, try Bandcamp scraping
+    if (!instagram_handle && bandcampUrl) {
       const social = await discoverSocialLinks(bandcampUrl);
-      instagram_handle = social.instagram_handle;
-      tiktok_handle = social.tiktok_handle;
-      website_url = social.website_url;
+      instagram_handle = instagram_handle || social.instagram_handle;
+      tiktok_handle = tiktok_handle || social.tiktok_handle;
+      website_url = website_url || social.website_url;
     }
 
     // Personal angle

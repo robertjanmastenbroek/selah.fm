@@ -99,18 +99,11 @@ export async function GET(request: Request) {
         // Extract Bandcamp URL from social_links if available
         const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
         const bandcampUrl = socialLinks.bandcamp || '';
-        const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl);
+        const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl, socialLinks);
 
         if (!audit) {
           log.push(`  ❌ Audit failed for ${artist.artist_name}`);
           results.errors++;
-          continue;
-        }
-
-        // Auto-decline if no Instagram handle
-        if (!audit.instagram_handle) {
-          await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
-          log.push(`  ⚠️  No Instagram for ${artist.artist_name} — declined`);
           continue;
         }
 

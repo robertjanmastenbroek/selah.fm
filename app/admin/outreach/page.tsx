@@ -128,7 +128,7 @@ export default function OutreachDashboard() {
     try {
       const data = await api('batch_audit', { limit: 5 });
       if (data.error) { addToast('error', 'Batch audit failed', data.error); }
-      else { addToast('success', `Audited ${data.audited || 0} artists`, `${data.skipped || 0} skipped (no Instagram)`); fetchPipeline(); }
+      else { addToast('success', `Audited ${data.audited || 0} artists`, data.skipped ? `${data.skipped} failed` : ''); fetchPipeline(); }
     } catch (e: any) { addToast('error', 'Batch audit failed', e.message); }
     setActionLoading('');
   };
