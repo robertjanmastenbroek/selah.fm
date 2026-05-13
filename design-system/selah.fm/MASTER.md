@@ -7,8 +7,8 @@
 ---
 
 **Project:** selah.fm
-**Generated:** 2026-05-13 00:47:24
-**Category:** Music Streaming
+**Generated:** 2026-05-13 17:23:00
+**Category:** Link-in-Bio Page Builder
 
 ---
 
@@ -18,18 +18,18 @@
 
 | Role | Hex | CSS Variable |
 |------|-----|--------------|
-| Primary | `#1E1B4B` | `--color-primary` |
+| Primary | `#2563EB` | `--color-primary` |
 | On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#4338CA` | `--color-secondary` |
-| Accent/CTA | `#22C55E` | `--color-accent` |
-| Background | `#0F0F23` | `--color-background` |
-| Foreground | `#F8FAFC` | `--color-foreground` |
-| Muted | `#27273B` | `--color-muted` |
-| Border | `#312E81` | `--color-border` |
-| Destructive | `#EF4444` | `--color-destructive` |
-| Ring | `#1E1B4B` | `--color-ring` |
+| Secondary | `#7C3AED` | `--color-secondary` |
+| Accent/CTA | `#EC4899` | `--color-accent` |
+| Background | `#FFFFFF` | `--color-background` |
+| Foreground | `#0F172A` | `--color-foreground` |
+| Muted | `#F1F5FD` | `--color-muted` |
+| Border | `#E4ECFC` | `--color-border` |
+| Destructive | `#DC2626` | `--color-destructive` |
+| Ring | `#2563EB` | `--color-ring` |
 
-**Color Notes:** Dark audio + play green
+**Color Notes:** Brand blue + creator purple
 
 ### Typography
 
@@ -73,7 +73,7 @@
 ```css
 /* Primary Button */
 .btn-primary {
-  background: #22C55E;
+  background: #EC4899;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -90,8 +90,8 @@
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #1E1B4B;
-  border: 2px solid #1E1B4B;
+  color: #2563EB;
+  border: 2px solid #2563EB;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -104,7 +104,7 @@
 
 ```css
 .card {
-  background: #0F0F23;
+  background: #FFFFFF;
   border-radius: 12px;
   padding: 24px;
   box-shadow: var(--shadow-md);
@@ -130,9 +130,9 @@
 }
 
 .input:focus {
-  border-color: #1E1B4B;
+  border-color: #2563EB;
   outline: none;
-  box-shadow: 0 0 0 3px #1E1B4B20;
+  box-shadow: 0 0 0 3px #2563EB20;
 }
 ```
 
@@ -158,28 +158,28 @@
 
 ## Style Guidelines
 
-**Style:** Dark Mode (OLED)
+**Style:** Vibrant & Block-based
 
-**Keywords:** Dark theme, low light, high contrast, deep black, midnight blue, eye-friendly, OLED, night mode, power efficient
+**Keywords:** Bold, energetic, playful, block layout, geometric shapes, high color contrast, duotone, modern, energetic
 
-**Best For:** Night-mode apps, coding platforms, entertainment, eye-strain prevention, OLED devices, low-light
+**Best For:** Startups, creative agencies, gaming, social media, youth-focused, entertainment, consumer
 
-**Key Effects:** Minimal glow (text-shadow: 0 0 10px), dark-to-light transitions, low white emission, high readability, visible focus
+**Key Effects:** Large sections (48px+ gaps), animated patterns, bold hover (color shift), scroll-snap, large type (32px+), 200-300ms
 
 ### Page Pattern
 
-**Pattern Name:** Marketplace / Directory
+**Pattern Name:** Enterprise Gateway
 
-- **Conversion Strategy:** Search bar is the CTA. Reduce friction to search. Popular searches suggestions.
-- **CTA Placement:** Hero Search Bar + Navbar 'List your item'
-- **Section Order:** 1. Hero (Search focused), 2. Categories, 3. Featured Listings, 4. Trust/Safety, 5. CTA (Become a host/seller)
+- **Conversion Strategy:** Path selection (I am a...). Mega menu navigation. Trust signals prominent.
+- **CTA Placement:** Contact Sales (Primary) + Login (Secondary)
+- **Section Order:** 1. Hero (Video/Mission), 2. Solutions by Industry, 3. Solutions by Role, 4. Client Logos, 5. Contact Sales
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
-- ❌ Cluttered layout
-- ❌ Poor audio player UX
+- ❌ Muted colors
+- ❌ Low energy
 
 ### Additional Forbidden Patterns
 
