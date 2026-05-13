@@ -10,15 +10,18 @@
     "cron": [
       {
         "schedule": "0 2 * * *",
-        "path": "/api/cron/outreach-pipeline?secret=ROTATED_SECRET&limit=10&audit=30&campaigns=30"
+        "path": "/api/cron/outreach-pipeline?limit=10&audit=30&campaigns=30",
+        "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
       },
       {
         "schedule": "0 14 * * *",
-        "path": "/api/cron/outreach-pipeline?secret=ROTATED_SECRET&limit=10&audit=30&campaigns=30"
+        "path": "/api/cron/outreach-pipeline?limit=10&audit=30&campaigns=30",
+        "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
       },
       {
         "schedule": "0 18 * * *",
-        "path": "/api/cron/outreach-followup?secret=ROTATED_SECRET"
+        "path": "/api/cron/outreach-followup",
+        "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
       }
     ]
   },

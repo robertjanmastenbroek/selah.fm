@@ -21,7 +21,7 @@ export const maxDuration = 120;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret');
+  const secret = searchParams.get('secret') || request.headers.get('X-Cron-Secret') || '';
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && secret !== cronSecret) {
     return NextResponse.json({ error: 'Invalid secret' }, { status: 401 });

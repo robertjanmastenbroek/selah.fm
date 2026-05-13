@@ -14,9 +14,9 @@ export const maxDuration = 300; // 5 minutes for full pipeline run
  */
 
 export async function GET(request: Request) {
-  // Optional secret auth
+  // Optional secret auth — via query param or X-Cron-Secret header
   const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret');
+  const secret = searchParams.get('secret') || request.headers.get('X-Cron-Secret') || '';
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && secret !== cronSecret) {
     return NextResponse.json({ error: 'Invalid secret' }, { status: 401 });
