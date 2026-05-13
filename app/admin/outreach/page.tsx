@@ -227,7 +227,13 @@ export default function OutreachDashboard() {
                     });
                     const data = await res.json();
                     if (data.error) { addToast('error', 'Repair failed', data.error); }
-                    else { addToast('success', `Images repaired`, `${data.restored || 0} restored · ${data.downloaded || 0} downloaded · ${data.skipped || 0} skipped`); fetchPipeline(); }
+                    else {
+                      const d = data.diag || {};
+                      addToast('success', `Images repaired`,
+                        `${data.restored || 0} restored · ${data.downloaded || 0} downloaded · ${data.skipped || 0} skipped\n` +
+                        `DB: ${d.total_campaigns} total · ${d.local_images} local · ${d.external_urls} external · ${d.og_fallbacks} fallback · ${d.empty} empty`);
+                      fetchPipeline();
+                    }
                   } catch (e: any) { addToast('error', 'Repair failed', e.message); }
                   setActionLoading('');
                 }}

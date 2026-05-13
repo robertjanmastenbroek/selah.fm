@@ -542,6 +542,13 @@ async function getArtistById(artistId: string) {
 
 /** Repair campaign images — restore from discovered_artists or download + re-host */
 async function repairCampaignImages() {
+  // First, get a diagnostic count of what's in the DB
+  const [totalCampaigns] = await sql`SELECT COUNT(*)::int FROM campaigns`;
+  const [localImages] = await sql`SELECT COUNT(*)::int FROM campaigns WHERE cover_art_url LIKE '/images/campaigns/%'`;
+  const [externalUrls] = await sql`SELECT COUNT(*)::int FROM campaigns WHERE cover_art_url LIKE 'http%'`;
+  const [ogFallbacks] = await sql`SELECT COUNT(*)::int FROM campaigns WHERE cover_art_url = '/images/og-image.jpg'`;
+  const [other] = await sql`SELECT COUNT(*)::int FROM campaigns WHERE cover_art_url IS NULL OR cover_art_url = ''`;
+
   // Find campaigns without local images (external URLs or og-image fallback)
   const campaigns = await sql`
     SELECT c.id, c.slug, c.cover_art_url, da.latest_track_cover_url
@@ -550,6 +557,7 @@ async function repairCampaignImages() {
     LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
     WHERE c.cover_art_url IS NOT NULL AND c.cover_art_url != ''
       AND c.cover_art_url NOT LIKE '/images/campaigns/%'
+    ORDER BY c.created_at DESC
     LIMIT 200
   `;
 
@@ -592,7 +600,16 @@ async function repairCampaignImages() {
     skipped++;
   }
 
-  return NextResponse.json({ restored, downloaded, skipped, total: campaigns.length });
+  return NextResponse.json({
+    restored, downloaded, skipped, total: campaigns.length,
+    diag: {
+      total_campaigns: totalCampaigns?.count || 0,
+      local_images: localImages?.count || 0,
+      external_urls: externalUrls?.count || 0,
+      og_fallbacks: ogFallbacks?.count || 0,
+      empty: other?.count || 0,
+    },
+  });
 }
 
 /** Returns all artists with campaign_created status (ready for outreach) + their audit data */
