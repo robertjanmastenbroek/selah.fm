@@ -60,7 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!campaign) {
     return {
       title: 'Campaign not found — Selah.fm',
-      openGraph: { images: [{ url: 'https://selah.fm/images/og-image.jpg', width: 1200, height: 630 }] },
+      openGraph: { images: [{ url: 'https://selah.fm/images/og-image.jpg' }] },
       twitter: { card: 'summary_large_image', images: ['https://selah.fm/images/og-image.jpg'] },
     };
   }
@@ -75,10 +75,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Tiered title templates — balanced default
   const title = `Join this campaign for ${artistName}'s "${trackTitle}" — Selah.fm`;
 
-  // Rich meta description
+  // Meta description — keep under ~200 chars for WhatsApp/Instagram crawlers
   const desc = cpm
-    ? `Join ${artistName}'s campaign for "${trackTitle}". Creators: submit your video and earn $${cpm} per 1K verified views. Fans: donate to boost the campaign. Join now on Selah.fm, the UGC music marketplace.`
-    : `Join ${artistName}'s campaign for "${trackTitle}". Creators: submit your video and earn per view. Fans: donate to support. Join now on Selah.fm.`;
+    ? `Join ${artistName}'s campaign for "${trackTitle}". Submit your video and earn $${cpm} per 1K verified views on Selah.fm.`
+    : `Join ${artistName}'s campaign for "${trackTitle}". Submit your video and earn per view on Selah.fm.`;
 
   return {
     title,
@@ -101,7 +101,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'website',
       url: canonicalUrl,
       siteName: 'Selah.fm',
-      images: [{ url: imageUrl, width: 1200, height: 630 }],
+      images: [{ url: imageUrl }],
     },
     twitter: {
       card: 'summary_large_image',
