@@ -540,23 +540,24 @@ async function getArtistById(artistId: string) {
   return NextResponse.json({ artist, audit, outreach, claim, campaign });
 }
 
-/** Repair campaign images — re-download external URLs and re-host locally */
+/** Repair campaign images — download external URLs and re-host locally. Never overwrites with fallback. */
 async function repairCampaignImages() {
+  // Find campaigns with external URLs OR og-image fallback (that might have original art)
   const campaigns = await sql`
     SELECT c.id, c.slug, c.cover_art_url, da.latest_track_cover_url
     FROM campaigns c
     LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
     LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
     WHERE c.cover_art_url IS NOT NULL AND c.cover_art_url != ''
-      AND c.cover_art_url NOT LIKE '/images/%'
-    LIMIT 100
+      AND c.cover_art_url NOT LIKE '/images/campaigns/%'
+    LIMIT 200
   `;
 
-  let repaired = 0, skipped = 0, failed = 0;
+  let repaired = 0, skipped = 0;
 
   async function tryDownload(url: string): Promise<Buffer | null> {
     try {
-      const res = await fetch(url, { headers: { 'User-Agent': 'SelahFM/1.0' } });
+      const res = await fetch(url, { headers: { 'User-Agent': 'SelahFM/1.0' }, signal: AbortSignal.timeout(8000) });
       if (res.ok && res.headers.get('content-type')?.includes('image')) {
         const buffer = Buffer.from(await res.arrayBuffer());
         if (buffer.length > 1000) return buffer;
@@ -565,41 +566,30 @@ async function repairCampaignImages() {
     return null;
   }
 
-  async function tryBandcampVariants(artId: string): Promise<Buffer | null> {
-    const sizes = ['_10', '_16', '_2', '_0'];
-    for (const size of sizes) {
-      const url = `https://f4.bcbits.com/img/a${artId}${size}.jpg`;
-      const buf = await tryDownload(url);
-      if (buf) return buf;
-    }
-    return null;
-  }
-
   for (const c of campaigns) {
-    let buffer: Buffer | null = null;
-    let bestUrl = c.cover_art_url;
+    // Try the original discovered_artists URL first (freshest source)
+    let buffer = c.latest_track_cover_url?.startsWith('http') ? await tryDownload(c.latest_track_cover_url) : null;
+    let bestUrl = buffer ? c.latest_track_cover_url : null;
 
-    // Try the stored URL first
-    if (bestUrl && bestUrl.startsWith('http')) {
-      buffer = await tryDownload(bestUrl);
+    // If that failed, try the stored campaign URL (if it's external)
+    if (!buffer && c.cover_art_url?.startsWith('http')) {
+      buffer = await tryDownload(c.cover_art_url);
+      if (buffer) bestUrl = c.cover_art_url;
     }
 
-    // Try Bandcamp art_id variants if the URL looks like a Bandcamp CDN URL
-    if (!buffer) {
-      const artMatch = bestUrl?.match(/\/a(\d+)_\d+\.jpg/);
+    // Try Bandcamp size variants
+    if (!buffer && bestUrl) {
+      const artMatch = bestUrl.match(/\/a(\d+)_\d+\.jpg/);
       if (artMatch) {
-        buffer = await tryBandcampVariants(artMatch[1]);
+        for (const size of ['_10', '_16', '_2']) {
+          buffer = await tryDownload(`https://f4.bcbits.com/img/a${artMatch[1]}${size}.jpg`);
+          if (buffer) break;
+        }
       }
     }
 
-    // Try the original discovered_artists URL (might be a fresher CDN URL)
-    if (!buffer && c.latest_track_cover_url && c.latest_track_cover_url.startsWith('http') && c.latest_track_cover_url !== bestUrl) {
-      buffer = await tryDownload(c.latest_track_cover_url);
-      if (buffer) bestUrl = c.latest_track_cover_url;
-    }
-
     if (buffer) {
-      const ext = bestUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+      const ext = (bestUrl || c.cover_art_url).match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
       const dir = path.join(process.cwd(), 'public/images/campaigns');
       fs.mkdirSync(dir, { recursive: true });
       const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
@@ -607,12 +597,11 @@ async function repairCampaignImages() {
       await sql`UPDATE campaigns SET cover_art_url = ${'/images/campaigns/' + filename} WHERE id = ${c.id}`;
       repaired++;
     } else {
-      await sql`UPDATE campaigns SET cover_art_url = ${'/images/og-image.jpg'} WHERE id = ${c.id}`;
-      failed++;
+      skipped++;
     }
   }
 
-  return NextResponse.json({ repaired, skipped, failed, total: campaigns.length });
+  return NextResponse.json({ repaired, skipped, total: campaigns.length });
 }
 
 /** Returns all artists with campaign_created status (ready for outreach) + their audit data */
