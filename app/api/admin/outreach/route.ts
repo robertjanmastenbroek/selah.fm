@@ -198,7 +198,7 @@ async function runCreateCampaign(artistId: string) {
       ${audit.recommended_budget_cents || 10000},
       ${'Make a video featuring this track. Any style. Any length. No minimum followers. Just good content.'},
       ${audit.hashtags || []},
-      ${JSON.stringify(['tiktok', 'instagram', 'youtube'])},
+      ${['tiktok', 'instagram', 'youtube']},
       ${audit.youtube_video_url || null},
       true,
       'active'

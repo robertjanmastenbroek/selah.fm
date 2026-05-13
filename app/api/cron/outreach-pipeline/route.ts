@@ -193,7 +193,7 @@ export async function GET(request: Request) {
             ${artist.recommended_budget_cents || 10000},
             ${'Make a video featuring this track. Any style. Any length. No minimum followers. Just good content.'},
             ${artist.hashtags || []},
-            ${JSON.stringify(['tiktok', 'instagram', 'youtube'])},
+            ${['tiktok', 'instagram', 'youtube']},
             ${artist.youtube_video_url || null},
             true,
             'active'
