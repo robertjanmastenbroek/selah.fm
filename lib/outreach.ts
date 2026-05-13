@@ -186,30 +186,36 @@ BANNED WORDS: furthermore, moreover, consequently, thus, hence, crucial, essenti
 
 const OUTREACH_PROMPT = `${FOUNDER_VOICE}
 
-TASK: Write a short Instagram DM to an independent artist. Follow this exact 2-part structure:
+TASK: Write a short Instagram DM to an independent artist. You MUST follow the 2-part structure below, but your WORD CHOICES and SENTENCE STRUCTURE must be COMPLETELY UNIQUE every time. No two messages should share the same phrasing.
 
-PART 1 — THE PROBLEM (1-2 sentences):
-Acknowledge that their music deserves to be heard by more people. It's stuck in the noise. The algorithm isn't helping. They're making great music but it's not reaching ears. Be specific — reference their track name.
+PART 1 — THE PROBLEM (1-2 sentences, be specific about their track):
+Example approaches (pick ONE, never reuse the same words):
+- "Your track is doing numbers but it should be doing way more"
+- "The algorithm isn't doing {track} any favors"
+- "I listened to {track} and wondered why it's not everywhere"
+- "{track} is too good to be this hidden"
+- "You're making real music and the platform isn't pushing it"
+- ENDLESS other variations. Never repeat an opening.
 
 PART 2 — THE SOLUTION (3-4 sentences):
-You already built a page for them on Selah.fm. Here's what that means: they can share this page with their family, friends, and fans. Those people can either (a) create a TikTok/Reel with the song and earn per view, or (b) chip in a few dollars to fund promotion by other creators. The artist doesn't pay anything upfront — they only pay when videos get verified views. All they have to do is claim the page and share it with their people.
+Core message: I built a page for this track on Selah.fm. They share it with friends/family/fans. Those people can make TikToks/Reels with the song and earn per view, OR chip in a few bucks. Artist pays nothing upfront — only for verified views. They just claim it and share.
+
+Vary how you say this ENTIRELY each time. Pick different words for: page, share, earn, chip in, claim, friends/family/fans. The concept stays the same but the delivery must be fresh every single time.
+
+UNIQUENESS SEED (most important): ${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}
 
 RULES:
-- Keep it under 180 words — this is an Instagram DM
-- The problem must feel real, not manufactured. "Your song's not getting the reach it deserves" not "in today's competitive landscape"
-- The solution must feel like a gift, not a pitch. "I built a page for it" not "our platform can help"
+- Keep it under 160 words — this is an Instagram DM
 - Include the campaign URL on its own line with 👉
-- You can reference their Instagram handle if you DM'd them there: "DM'd you here since I follow you"
-- End authentically, not with a fake CTA. Something like: "Claim it when you're ready. Or don't. It just sits there."
 - Sign as: — Robert-Jan (founder, Selah.fm)
+- Never end with the same sentence twice. Rotate closings.
 
 ANTI-SPAM RULES:
 - Never: "I came across your profile", "I was impressed by", "Your music is amazing", "As a fellow musician", "We'd love to have you", "Join our community"
 - Never: more than one exclamation mark total
 - Never: ALL CAPS or emojis in body
-- Sound like a human, not a template
 
-FORMAT: Return ONLY the message text. No quotes, no JSON.`;
+FORMAT: Return ONLY the message text. No quotes. No JSON.`;
 
 export async function generateOutreachMessage(
   artistName: string,
@@ -225,12 +231,19 @@ export async function generateOutreachMessage(
     return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
   }
 
+  // Randomized context for maximum uniqueness
+  const styles = ['casual', 'direct', 'warm', 'short-punchy', 'storyteller'];
+  const style = styles[Math.floor(Math.random() * styles.length)];
+  
   const context = `Artist: ${artistName}
 Track: ${trackName || 'latest release'}
 Genre: ${genre || 'independent music'}
 Campaign page: ${campaignUrl}
+Tone: ${style}${Math.random() < 0.5 ? ' — be brief' : ''}
 ${instagramHandle ? `Instagram: @${instagramHandle}` : ''}
-${youtubeUrl ? `YouTube video: ${youtubeUrl}` : ''}`;
+${youtubeUrl ? `YouTube video: ${youtubeUrl}` : ''}
+
+Write this message in a ${style} style. Make the opening about their track "${trackName}" specifically — not generic.`;
 
   try {
     const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -245,8 +258,10 @@ ${youtubeUrl ? `YouTube video: ${youtubeUrl}` : ''}`;
           { role: 'system', content: OUTREACH_PROMPT },
           { role: 'user', content: context },
         ],
-        temperature: 0.85,
-        max_tokens: 500,
+        temperature: 1.0,
+        max_tokens: 400,
+        top_p: 0.95,
+        frequency_penalty: 0.3,
       }),
     });
 
