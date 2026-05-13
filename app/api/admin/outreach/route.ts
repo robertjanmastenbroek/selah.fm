@@ -151,7 +151,16 @@ async function runCreateCampaign(artistId: string) {
   const [audit] = await sql`SELECT * FROM artist_audits WHERE discovered_artist_id = ${artist.id} ORDER BY audited_at DESC LIMIT 1`;
   if (!audit) return NextResponse.json({ error: 'No audit found — run audit first' }, { status: 400 });
 
-  const slug = `${artist.artist_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${artist.latest_track_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100);
+  // Clean slug: artist-name-track-name-random4 (ASCII only, max 100 chars)
+  const artistSlug = (artist.artist_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  const baseSlug = trackSlug ? `${artistSlug}-${trackSlug}` : artistSlug;
+  const slug = `${baseSlug}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100).replace(/--+/g, '-').replace(/^-|-$/g, '');
+
+  // Campaign title: "Artist — Track" or "Artist — Latest Release"
+  const campaignTitle = artist.latest_track_name
+    ? `${artist.artist_name} — ${artist.latest_track_name}`
+    : `${artist.artist_name} — Latest Release`;
 
   // Try to get cover art — use Spotify CDN URL or fallback
   let coverArtUrl = artist.latest_track_cover_url || '/images/og-image.jpg';
@@ -181,7 +190,7 @@ async function runCreateCampaign(artistId: string) {
     ) VALUES (
       (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1),
       ${artist.latest_track_name || artist.artist_name},
-      ${`${artist.artist_name} — ${artist.latest_track_name || 'Latest Release'}`},
+      ${campaignTitle},
       ${slug},
       ${coverArtUrl},
       ${artist.latest_track_spotify_url || ''},

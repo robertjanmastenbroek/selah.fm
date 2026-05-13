@@ -166,23 +166,36 @@ async function fetchBandcampGenre(genre: string): Promise<RawArtistCandidate[]> 
       if (seen.has(key)) continue;
       seen.add(key);
 
-      const trackName = (item.primary_text || '').trim();
+      const rawTitle = (item.primary_text || '').trim();
+      const itemType = item.url_hints?.item_type || 'a'; // 'a'=album, 't'=track
       const subdomain = item.url_hints?.subdomain || '';
       const bandUrl = subdomain ? `https://${subdomain}.bandcamp.com/` : '';
       const coverUrl = item.art_id ? `https://f4.bcbits.com/img/a${item.art_id}_16.jpg` : undefined;
       const genreText = item.genre_text || genre;
 
-      let displayTrack = trackName;
-      if (trackName.includes(' - ')) {
-        const parts = trackName.split(' - ');
-        if (parts.length >= 2) displayTrack = parts.slice(1).join(' - ').trim();
+      // Clean track name for albums vs tracks
+      let displayTrack = rawTitle;
+      if (itemType === 'a') {
+        // Album: try to extract a clean short name
+        // If primary_text contains " - " (Artist - Album format), take the album part
+        if (rawTitle.includes(' - ')) {
+          const parts = rawTitle.split(' - ');
+          displayTrack = parts.slice(1).join(' - ').trim();
+        }
+        // Strip edition suffixes: "remixes", "collection", "EP", "LP", "deluxe"
+        displayTrack = displayTrack.replace(/\s*[-–—]\s*(the\s+)?(progressive\s+)?(breaks\s+)?(remixes|collection|compilation|deluxe|edition|version|EP|LP|single)\b[^-]*$/i, '').trim();
+      }
+
+      // Fallback: if display track is empty, too long (>60 chars), or just the artist name
+      if (!displayTrack || displayTrack.length > 60 || displayTrack.toLowerCase() === artistName.toLowerCase()) {
+        displayTrack = '';
       }
 
       candidates.push({
         artist_name: artistName, track_name: displayTrack || undefined, source: 'bandcamp',
         source_url: bandUrl, source_detail: `Bandcamp ${genreText}`,
         genres_hint: [genreText], social_links: { bandcamp: bandUrl },
-        cover_url: coverUrl, discovery_meta: { band_id: item.band_id, art_id: item.art_id, subdomain, genre: genreText },
+        cover_url: coverUrl, discovery_meta: { band_id: item.band_id, art_id: item.art_id, subdomain, genre: genreText, item_type: itemType },
       });
     }
     return candidates;
