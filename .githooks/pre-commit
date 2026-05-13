@@ -21,27 +21,27 @@ for FILE in $STAGED_FILES; do
 
   DIFF=$(git diff --cached "$FILE")
 
-  # ── Pattern 1: Common secret formats ──
-  if echo "$DIFF" | grep -qP '([A-Za-z0-9+/]{40,})'; then
+  # ── Pattern 1: Common secret formats (base64-like strings) ──
+  if echo "$DIFF" | grep -qE '[A-Za-z0-9+/]{40,}'; then
     echo "${RED}⚠  SECURITY: High-entropy string found in $FILE${NC}"
     echo "   This looks like a secret key/token. Use environment variables instead."
     BLOCKED=1
   fi
 
   # ── Pattern 2: Hardcoded credentials ──
-  if echo "$DIFF" | grep -qP '(secret|token|key|password|passwd)\s*[=:]\s*["'\'']?[A-Za-z0-9_\-]{16,}["'\'']?'; then
+  if echo "$DIFF" | grep -qE '(secret|token|key|password|passwd)[[:space:]]*[=:][[:space:]]*["A-Za-z0-9_\-]{16,}'; then
     echo "${RED}⚠  SECURITY: Possible hardcoded credential in $FILE${NC}"
     BLOCKED=1
   fi
 
   # ── Pattern 3: AWS-style keys ──
-  if echo "$DIFF" | grep -qP '(AKIA|ASIA)[A-Z0-9]{16}'; then
+  if echo "$DIFF" | grep -qE '(AKIA|ASIA)[A-Z0-9]{16}'; then
     echo "${RED}⚠  SECURITY: AWS access key detected in $FILE${NC}"
     BLOCKED=1
   fi
 
-  # ── Pattern 4: Stripe/Evervault keys ──
-  if echo "$DIFF" | grep -qP '(sk_live|pk_live|rk_live|whsec)_[A-Za-z0-9]{24,}'; then
+  # ── Pattern 4: Stripe/Paystack live keys ──
+  if echo "$DIFF" | grep -qE '(sk_live|pk_live|rk_live|whsec)_[A-Za-z0-9]{24,}'; then
     echo "${RED}⚠  SECURITY: Live API key detected in $FILE${NC}"
     BLOCKED=1
   fi
