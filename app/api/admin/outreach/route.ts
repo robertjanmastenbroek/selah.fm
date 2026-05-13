@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { isAdminRequest } from '@/lib/auth';
-import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMessage } from '@/lib/outreach';
+import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMessage, generateOutreachMessage } from '@/lib/outreach';
 import { generateArticle, findVoiceExamples } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
 
@@ -249,11 +249,15 @@ async function runRenderOutreach(artistId: string) {
     personal_angle: audit.personal_angle,
   };
 
-  const message = renderOutreachMessage(
+  // Use AI-powered message if DEEPSEEK_API_KEY is set, fallback to template
+  const genre = (audit.hashtags?.[0] || '').replace('#', '') || (artist.genres?.[0] || 'music');
+  const message = await generateOutreachMessage(
     artist.artist_name,
     artist.latest_track_name || 'your latest track',
-    auditObj,
-    campaignUrl
+    genre,
+    campaignUrl,
+    audit.instagram_handle || undefined,
+    audit.youtube_video_url || undefined,
   );
 
   return NextResponse.json({

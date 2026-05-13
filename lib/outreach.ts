@@ -152,29 +152,148 @@ export async function auditArtist(
   }
 }
 
-// ── Outreach Templates ────────────────────────────────────────────
+// ── Founder Voice Profile (shared with blog engine) ──────────────
 
-export function renderOutreachMessage(artistName: string, trackName: string, audit: ArtistAudit, campaignUrl: string): string {
-  const videoLine = audit.youtube_video_url
-    ? `\nI even found your music video on YouTube. Added that too.`
-    : '';
-  const instagramLine = audit.instagram_handle
-    ? `\nP.S. — Found your Instagram (@${audit.instagram_handle}). I'll DM you there too.`
-    : '';
+const FOUNDER_VOICE = `You are Robert-Jan Mastenbroek, founder of Selah.fm — a CPM marketplace where artists set budgets and creators earn per verified view for TikToks, Reels, and Shorts.
+
+YOUR BACKSTORY (use naturally, don't force it):
+- Was a professional musician who got a record deal but walked away — labels take 98%
+- Built the biggest personal crowdfunding platform in Holland/Belgium (€6M+ donated)
+- Became a multi-millionaire by 27, lost everything, lived in a campervan busking on Tenerife beaches
+- Found faith, quit smoking after 15 years, now makes electronic worship music ("holy raves")
+- Believes artists should own their promotion, not depend on labels or black-box ad platforms
+- Lives by donations, doesn't own a house or car, but says "He always provides"
+
+VOICE GUIDELINES:
+- Warm, direct, a little rough around the edges. Like a friend who's been through hell and came out the other side.
+- Contractions ALWAYS: don't, can't, won't, isn't, I've, you've, it's, that's, here's, what's
+- NEVER use the full forms: do not, cannot, will not, is not
+- Use "gonna", "wanna", "kinda" occasionally
+- Start sentences with: And. But. So. Because. Look. Here's. Honestly.
+- Vary sentence length aggressively — mix 3-word punchy ones with longer flowing ones
+- Use personal voice markers: "I'll be honest...", "Look, here's the thing...", "Trust me on this"
+- Reference real experiences naturally: busking, record deal, losing everything, Tenerife
+- Never be preachy — just real
+- Mix practical advice with spiritual depth naturally
+
+BANNED WORDS: furthermore, moreover, consequently, thus, hence, crucial, essential, vital, game-changer, revolutionary, leverage, utilize, delve into, dive deep, comprehensive, holistic, seamless, robust, empower, foster, cultivate, navigate, in the realm of`;
+
+const OUTREACH_PROMPT = `${FOUNDER_VOICE}
+
+TASK: Write a short, personal outreach message to an independent artist. You discovered their music and already built a campaign page for them on Selah.fm. You're reaching out to let them know — no pressure, just genuine appreciation for their music.
+
+RULES:
+- Keep it under 200 words — this is an Instagram DM, not an email
+- Open with a specific, genuine compliment about their music (use the track name and genre)
+- Don't sound like a template. Every message must feel like you actually listened to their track
+- Share a brief personal connection if it fits: "I used to make [genre] music myself" or "This reminds me of..."
+- Mention the campaign page naturally, not as a pitch. "I actually built a page for it" not "Check out our platform"
+- Include the campaign URL
+- End with warmth, not a hard CTA. "No rush, no pressure. The page is just there whenever."
+- Sign as: — Robert-Jan (founder, Selah.fm)
+
+ANTI-SPAM RULES (CRITICAL):
+- Never use: "I came across your profile", "I was impressed by", "Your music is amazing" (too generic)
+- Never use: "As a fellow musician", "We'd love to have you", "Join our community" (spam signals)
+- Never use: more than one exclamation mark total
+- Never: ALL CAPS words
+- Never: emojis in the body (signature emojis are fine)
+- The message must sound like a human being wrote it specifically for this artist
+
+FORMAT: Return ONLY the message text, ready to paste. No quotes, no JSON wrapper.`;
+
+export async function generateOutreachMessage(
+  artistName: string,
+  trackName: string,
+  genre: string,
+  campaignUrl: string,
+  instagramHandle?: string,
+  youtubeUrl?: string,
+): Promise<string> {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) {
+    // Fallback to template if no API key
+    return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
+  }
+
+  const context = `Artist: ${artistName}
+Track: ${trackName || 'latest release'}
+Genre: ${genre || 'independent music'}
+Campaign page: ${campaignUrl}
+${instagramHandle ? `Instagram: @${instagramHandle}` : ''}
+${youtubeUrl ? `YouTube video: ${youtubeUrl}` : ''}`;
+
+  try {
+    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: OUTREACH_PROMPT },
+          { role: 'user', content: context },
+        ],
+        temperature: 0.85,
+        max_tokens: 500,
+      }),
+    });
+
+    if (!res.ok) {
+      return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
+    }
+
+    const data = await res.json();
+    const message = data.choices?.[0]?.message?.content?.trim();
+    return message || renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
+  } catch {
+    return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, instagramHandle, youtubeUrl);
+  }
+}
+
+/**
+ * Fallback template — used when DeepSeek API is unavailable.
+ * Still better than the old template with personal angle and contractions.
+ */
+function renderOutreachTemplate(
+  artistName: string,
+  trackName: string,
+  genre: string,
+  campaignUrl: string,
+  instagramHandle?: string,
+  youtubeUrl?: string,
+): string {
+  const videoLine = youtubeUrl ? `\nI even found a music video on YouTube and added it.` : '';
+  const igLine = instagramHandle ? `\nP.S. — I'll DM you on Instagram too (@${instagramHandle}).` : '';
+
+  const genreAngles: Record<string, string> = {
+    electronic: `I've been digging through new electronic music and "${trackName}" stopped me mid-scroll.`,
+    rock: `Heard "${trackName}" and it hit me — this is the kind of rock that deserves way more ears.`,
+    indie: `"${trackName}" has that raw, honest indie energy that's getting harder to find.`,
+    metal: `The production on "${trackName}" is tight. This is the metal I wish I heard more of.`,
+    pop: `"${trackName}" is catchy in the best way — not manufactured, just genuinely good pop.`,
+    folk: `There's something honest about "${trackName}". The kind of folk music that tells a real story.`,
+    'hip-hop': `"${trackName}" has bars that actually say something. Refreshing in a sea of filler.`,
+    experimental: `"${trackName}" is doing something different and I'm here for it.`,
+  };
+
+  const angle = genreAngles[genre.toLowerCase()] || `"${trackName}" caught my attention — and I don't say that lightly.`;
 
   return `Hey ${artistName},
 
-${audit.personal_angle}
+${angle}
 
-I run Selah.fm — a platform where people make TikToks and Reels with your music. You only pay when their videos get verified views. No upfront cost.
+Look, here's the thing. I run Selah.fm — a platform where people make TikToks and Reels with your music. You set the terms. You approve every video. You only pay when views actually happen. No upfront cost. No bots.
 
-Here's the thing: I already made a campaign page for "${trackName || 'your music'}" with your cover art and everything:${videoLine}
+I already built a campaign page for "${trackName}" with your cover art and everything.${videoLine}
 
 👉 ${campaignUrl}
 
-It's ready to share with your people. Friends and family can chip in a few dollars to fund it. Anyone can submit a TikTok — even your cousin with 300 followers. You only pay if their video actually gets views.
+Your friends and fans can chip in a few bucks to fund it. Anyone can submit a video — even someone with 300 followers. You're in control the whole time.
 
-Claim it whenever you want (takes 30 seconds). Or don't. The page just sits there until you're ready.${instagramLine}
+Claim it when you want. Or don't. No pressure. No rush. The page just sits there working in the background.${igLine}
 
 — Robert-Jan
   Founder, Selah.fm
@@ -182,8 +301,18 @@ Claim it whenever you want (takes 30 seconds). Or don't. The page just sits ther
 }
 
 /**
- * Day-7 follow-up message — sent if artist hasn't claimed after initial outreach.
- * Softer tone, adds social proof if any exists (donations, submissions).
+ * Legacy wrapper — calls generateOutreachMessage() if DEEPSEEK_API_KEY is set,
+ * otherwise falls back to the template. Maintains backward compat.
+ */
+export function renderOutreachMessage(artistName: string, trackName: string, audit: ArtistAudit, campaignUrl: string): string {
+  // This is synchronous for backward compat — the admin dashboard calls it directly
+  // The AI version is async (generateOutreachMessage). For now, use the template.
+  const genre = audit.hashtags?.[0]?.replace('#', '') || 'music';
+  return renderOutreachTemplate(artistName, trackName, genre, campaignUrl, audit.instagram_handle || undefined, audit.youtube_video_url || undefined);
+}
+
+/**
+ * Day-7 follow-up message — softer tone, adds social proof if any exists.
  */
 export function renderFollowUpMessage(
   artistName: string,
@@ -201,17 +330,17 @@ export function renderFollowUpMessage(
     socialProof.push(`${submissionCount} ${submissionCount === 1 ? 'creator has' : 'creators have'} submitted videos`);
   }
   const proofLine = socialProof.length > 0
-    ? `\nSince last week, ${socialProof.join(' and ')} on your campaign page.`
+    ? `\nSince I last reached out, ${socialProof.join(' and ')} on your page.`
     : '';
 
-  return `Hey ${artistName} — just a quick follow-up.${proofLine}
+  return `Hey ${artistName} — quick follow-up.${proofLine}
 
-Your campaign page for "${trackName || 'your music'}" is still live at:
+Your campaign page for "${trackName || 'your music'}" is still live:
 👉 ${campaignUrl}
 
-No pressure at all. The page just keeps working — people can donate, creators can submit videos, and everything runs automatically. You can claim it whenever you want, or not at all.
+No pressure at all. The page just keeps working in the background — people can donate, creators can submit videos. You can claim it whenever, or not at all.
 
-Either way, your music is out there getting attention. Wanted to make sure you knew.
+Either way, your music is out there. Just wanted to make sure you knew.
 
 — Robert-Jan
   Founder, Selah.fm`;
