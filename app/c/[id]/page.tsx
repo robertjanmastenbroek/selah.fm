@@ -3,7 +3,6 @@ import CampaignDetailClient from './CampaignDetailClient';
 import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 60; // ISR: regenerate page every 60 seconds
 
 interface Props { params: { id: string } }
 
