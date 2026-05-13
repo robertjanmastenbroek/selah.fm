@@ -27,6 +27,7 @@ export async function POST(request: Request) {
       case 'log_outreach':           return runLogOutreach(body.artistId, body.channel, body.status);
       case 'get_pipeline':           return getPipelineOverview();
       case 'get_artist':             return getArtistById(body.artistId);
+      case 'get_outreach_queue':     return getOutreachQueue();
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -433,4 +434,22 @@ async function getArtistById(artistId: string) {
   }
 
   return NextResponse.json({ artist, audit, outreach, claim, campaign });
+}
+
+/** Returns all artists with campaign_created status (ready for outreach) + their audit data */
+async function getOutreachQueue() {
+  const artists = await sql`
+    SELECT da.*, aa.instagram_handle, aa.tiktok_handle, aa.personal_angle, aa.youtube_video_url,
+           c.slug as campaign_slug, c.title as campaign_title
+    FROM discovered_artists da
+    JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+    JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
+    JOIN campaigns c ON c.id = cc.campaign_id
+    WHERE da.status = 'campaign_created'
+      AND NOT EXISTS (SELECT 1 FROM outreach_log ol WHERE ol.discovered_artist_id = da.id AND ol.status = 'sent')
+    ORDER BY aa.audited_at DESC
+    LIMIT 50
+  `;
+
+  return NextResponse.json(artists);
 }

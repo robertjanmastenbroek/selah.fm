@@ -120,6 +120,150 @@ function ToastBar({ toast, onDismiss }: { toast: Toast; onDismiss: () => void })
   );
 }
 
+// ── Outreach Queue component (DM workflow) ──────────────────────────
+function OutreachQueue({ count, actionLoading, setActionLoading, addToast, fetchPipeline }: {
+  count: number;
+  actionLoading: string;
+  setActionLoading: (v: string) => void;
+  addToast: (type: Toast['type'], title: string, detail?: string) => void;
+  fetchPipeline: () => void;
+}) {
+  const [queue, setQueue] = useState<any[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (count > 0 && !loaded) {
+      fetch('/api/admin/outreach', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get_outreach_queue' }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (!data.error) setQueue(data);
+          setLoaded(true);
+        })
+        .catch(() => setLoaded(true));
+    }
+  }, [count, loaded]);
+
+  if (count <= 0) return null;
+
+  const dmArtist = async (artist: any) => {
+    const id = `dm-${artist.id}`;
+    setActionLoading(id);
+    try {
+      const res = await fetch('/api/admin/outreach', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'render_outreach', artistId: artist.id }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        addToast('error', 'Failed', data.error);
+      } else {
+        await navigator.clipboard.writeText(data.message);
+        const igHandle = data.instagram_handle || artist.instagram_handle;
+        const ttHandle = data.tiktok_handle || artist.tiktok_handle;
+        const igLink = igHandle ? `https://ig.me/m/${igHandle}` : null;
+        const ttLink = ttHandle ? `https://www.tiktok.com/@${ttHandle}` : null;
+
+        const channels: string[] = [];
+        if (igLink) channels.push(`📸 IG: ${igLink}`);
+        if (ttLink) channels.push(`🎵 TikTok: ${ttLink}`);
+        const channelText = channels.join(' · ');
+
+        addToast('success', `Message copied — ${artist.artist_name}`,
+          channelText || 'Paste into DM and send.');
+
+        if (igLink) setTimeout(() => window.open(igLink, '_blank'), 300);
+        if (ttLink) setTimeout(() => window.open(ttLink, '_blank'), 800);
+      }
+    } catch (e: any) {
+      addToast('error', 'Failed', e.message);
+    }
+    setActionLoading('');
+  };
+
+  return (
+    <div className="rounded-2xl border border-[#22C55E]/10 p-5" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.04) 0%, transparent 100%)' }}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold flex items-center gap-2">
+          <Send size={14} className="text-[#22C55E]" />
+          Ready for Outreach
+          <span className="text-[10px] text-muted-foreground font-normal">{count} waiting</span>
+        </h2>
+        <span className="text-[10px] text-muted-foreground">Click any row → copies message + opens DM</span>
+      </div>
+
+      {queue.length === 0 ? (
+        <p className="text-[11px] text-muted-foreground text-center py-4">Loading queue...</p>
+      ) : (
+        <div className="space-y-2">
+          {queue.map((artist: any) => {
+            const isBusy = actionLoading === `dm-${artist.id}`;
+            const ig = artist.instagram_handle;
+            const tt = artist.tiktok_handle;
+            const campaignUrl = `https://selah.fm/c/${artist.campaign_slug}`;
+
+            return (
+              <motion.div
+                key={artist.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.01 }}
+                onClick={() => !isBusy && dmArtist(artist)}
+                className={`group rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 flex items-center gap-3 cursor-pointer 
+                  hover:bg-white/[0.05] hover:border-[#22C55E]/20 transition-all duration-150 ${isBusy ? 'opacity-50 pointer-events-none' : ''}`}
+              >
+                {/* Cover art */}
+                {artist.latest_track_cover_url ? (
+                  <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-white/[0.04]">
+                    <img src={artist.latest_track_cover_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-lg shrink-0 bg-white/[0.04] flex items-center justify-center">
+                    <Music2 size={16} className="text-muted-foreground/20" />
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm truncate">{artist.artist_name}</span>
+                    {ig && <span className="text-[10px] text-pink-400 shrink-0">📸 @{ig}</span>}
+                    {tt && <span className="text-[10px] text-blue-400 shrink-0">🎵 @{tt}</span>}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground truncate mt-0.5">
+                    {artist.latest_track_name && `🎵 ${artist.latest_track_name}`}
+                    {!artist.latest_track_name && 'Click to copy message'}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  {isBusy ? (
+                    <Loader2 size={14} className="animate-spin text-[#22C55E]" />
+                  ) : (
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-semibold
+                        group-hover:bg-[#22C55E]/20 transition-colors"
+                    >
+                      <Send size={11} />
+                      Message
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Empty state component ─────────────────────────────────────────
 function EmptyState({ onDiscover }: { onDiscover: () => void }) {
   return (
@@ -623,23 +767,13 @@ export default function OutreachDashboard() {
       </div>
 
       {/* ── Ready for Outreach (campaigns created, not yet messaged) ── */}
-      {p.campaigns_created > 0 && (
-        <div className="rounded-2xl border border-[#22C55E]/10 p-5" style={{ background: 'linear-gradient(135deg, rgba(34,197,94,0.04) 0%, transparent 100%)' }}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold flex items-center gap-2">
-              <Send size={14} className="text-[#22C55E]" />
-              Ready for Outreach
-              <span className="text-[10px] text-muted-foreground font-normal">
-                {p.campaigns_created - p.outreach_sent} waiting
-              </span>
-            </h2>
-            <span className="text-[10px] text-muted-foreground">Click any artist → message copies + IG DM opens</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground mb-3">
-            These artists have campaigns ready. Click to copy their message and open Instagram DM in one click.
-          </p>
-        </div>
-      )}
+      <OutreachQueue
+        count={p.campaigns_created - p.outreach_sent}
+        actionLoading={actionLoading}
+        setActionLoading={setActionLoading}
+        addToast={addToast}
+        fetchPipeline={fetchPipeline}
+      />
 
       {/* ── Artist list ── */}
       <div>
