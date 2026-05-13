@@ -270,58 +270,71 @@ const BANDCAMP_GENRES = [
 
 async function fetchBandcampGenre(genre: string): Promise<RawArtistCandidate[]> {
   try {
-    const res = await fetch(`https://bandcamp.com/?g=${genre}&s=new`, {
+    const apiUrl = `https://bandcamp.com/api/discover/3/get_web?g=${encodeURIComponent(genre)}&s=new&p=0&f=digital&t=albums`;
+    const res = await fetch(apiUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
     });
     if (!res.ok) return [];
-    const html = await res.text();
+
+    const data = await res.json();
+    const items = (data.items || data.results || []) as any[];
 
     const candidates: RawArtistCandidate[] = [];
-    // Parse the discover section — items with data-item-id
-    const itemRegex = /<a[^>]*href="(https:\/\/[^"]*\.bandcamp\.com\/album\/[^"]*)"[^>]*>[\s\S]*?<img[^>]*src="([^"]*)"[^>]*>[\s\S]*?<p[^>]*class="item-title"[^>]*>([^<]+)<\/p>[\s\S]*?<p[^>]*class="item-artist"[^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/gi;
+    const seen = new Set<string>();
 
-    let match;
-    while ((match = itemRegex.exec(html)) !== null) {
-      const [, url, coverUrl, title, artistName] = match;
-      const cleanArtist = artistName.trim();
-      const cleanTitle = title.trim();
-      if (!cleanArtist) continue;
+    for (const item of items) {
+      // Bandcamp API format:
+      // primary_text = track/album title, secondary_text = artist name
+      // art_id = cover art, url_hints.subdomain = band URL
+      const artistName = (item.secondary_text || '').trim();
+      const trackName = (item.primary_text || '').trim();
+      const bandId = item.band_id;
+      const artId = item.art_id;
+      const subdomain = item.url_hints?.subdomain || '';
+      const genreText = item.genre_text || genre;
 
-      // Check for AI artist name patterns
-      if (detectAiSignals(cleanArtist) >= 2) continue;
+      if (!artistName) continue;
+
+      const key = artistName.toLowerCase().trim();
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      if (detectAiSignals(artistName) >= 2) continue;
+
+      // Build URLs
+      const bandUrl = subdomain
+        ? `https://${subdomain}.bandcamp.com/`
+        : `https://bandcamp.com/`;
+      const coverUrl = artId
+        ? `https://f4.bcbits.com/img/a${artId}_16.jpg`
+        : undefined;
+
+      // Parse title into artist/track
+      let displayTrack = trackName;
+      if (trackName.includes(' - ')) {
+        const parts = trackName.split(' - ');
+        if (parts.length >= 2) {
+          displayTrack = parts.slice(1).join(' - ').trim();
+        }
+      }
 
       candidates.push({
-        artist_name: cleanArtist,
-        track_name: cleanTitle,
+        artist_name: artistName,
+        track_name: displayTrack || undefined,
         source: 'bandcamp',
-        source_url: url,
-        source_detail: `Bandcamp ${genre} (new)`,
-        genres_hint: [genre.replace(/-/g, ' ')],
-        social_links: { bandcamp: url },
-        cover_url: coverUrl || undefined,
-        discovery_meta: { bandcamp_url: url, genre },
+        source_url: bandUrl,
+        source_detail: `Bandcamp ${genreText} (new)`,
+        genres_hint: [genreText],
+        social_links: { bandcamp: bandUrl },
+        cover_url: coverUrl,
+        discovery_meta: {
+          band_id: bandId,
+          art_id: artId,
+          subdomain,
+          genre: genreText,
+          publish_date: item.publish_date,
+        },
       });
-    }
-
-    // Also try alternative parsing for the discover items
-    if (candidates.length === 0) {
-      // Simpler regex for the card-item structure
-      const altRegex = /<div[^>]*data-item-id[^>]*>[\s\S]*?<a[^>]*href="(https:\/\/[^"]*\.bandcamp\.com\/(?:album|track)\/[^"]*)"[^>]*>/gi;
-      let altMatch;
-      while ((altMatch = altRegex.exec(html)) !== null) {
-        const url = altMatch[1];
-        // Need artist+title from URL structure or page meta
-        candidates.push({
-          artist_name: url.split('/').slice(-2, -1)[0]?.replace(/-/g, ' ') || 'Unknown',
-          track_name: url.split('/').pop()?.replace(/-/g, ' '),
-          source: 'bandcamp',
-          source_url: url,
-          source_detail: `Bandcamp ${genre}`,
-          genres_hint: [genre.replace(/-/g, ' ')],
-          social_links: { bandcamp: url },
-          discovery_meta: { bandcamp_url: url, genre },
-        });
-      }
     }
 
     return candidates;
