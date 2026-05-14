@@ -7,7 +7,6 @@
  *
  * Usage:
  *   node scripts/migrate.mjs           # runs all pending migrations
- *   node scripts/migrate.mjs --seed    # runs migrations + seed data
  *   node scripts/migrate.mjs --dry-run # shows what would run without executing
  *   node scripts/migrate.mjs --fresh   # drops all tables and re-runs everything
  */
@@ -22,13 +21,10 @@ const projectRoot = join(__dirname, '..');
 
 // ── Configuration ──────────────────────────────────────────────
 const MIGRATIONS_DIR = join(projectRoot, 'lib', 'db', 'migrations');
-const SEED_FILE = join(projectRoot, 'lib', 'db', 'seed.sql');
-const SEED_SUBMISSIONS_FILE = join(projectRoot, 'lib', 'db', 'seed_submissions.sql');
 const SCHEMA_FILE = join(projectRoot, 'lib', 'db', 'schema.sql');
 
 // ── CLI Args ───────────────────────────────────────────────────
 const args = process.argv.slice(2);
-const SEED_MODE = args.includes('--seed');
 const DRY_RUN = args.includes('--dry-run');
 const FRESH = args.includes('--fresh');
 const VERBOSE = args.includes('--verbose');
@@ -131,36 +127,6 @@ async function recordMigration({ name, duration_ms }) {
     'INSERT INTO _migrations (name, checksum, duration_ms) VALUES ($1, $2, $3) ON CONFLICT (name) DO NOTHING',
     [name, checksum, duration_ms]
   );
-}
-
-async function applySeed(filePath, label) {
-  const sql = readFileSync(filePath, 'utf8');
-  const cleanSql = sql.replace(/--.*$/gm, '').trim();
-
-  if (!cleanSql) {
-    warn(`Seed file "${label}" is empty. Skipping.`);
-    return;
-  }
-
-  if (DRY_RUN) {
-    info(`[DRY RUN] Would apply seed: "${label}"`);
-    return;
-  }
-
-  const start = Date.now();
-
-  try {
-    // Seed runs outside migration tracking — it's data, not schema
-    await pool.query('BEGIN');
-    await pool.query(cleanSql);
-    await pool.query('COMMIT');
-    success(`Applied seed data: "${label}" in ${Date.now() - start}ms`);
-  } catch (err) {
-    await pool.query('ROLLBACK');
-    // Seed failures are non-fatal (data may already exist)
-    warn(`Seed "${label}" had issues: ${err.message}`);
-    warn('This is often fine if data already exists. Continuing...');
-  }
 }
 
 async function verifyTables() {
@@ -305,23 +271,11 @@ async function main() {
     success(`All ${pending.length} pending migrations applied successfully!`);
   }
 
-  // 6. Seed data (if --seed flag)
-  if (SEED_MODE) {
-    divider();
-    info('Seeding database...');
-    divider();
-
-    await applySeed(SEED_FILE, 'seed.sql');
-    await applySeed(SEED_SUBMISSIONS_FILE, 'seed_submissions.sql');
-    divider();
-    success('Seed data applied.');
-  }
-
-  // 7. Verify
+  // 6. Verify
   divider();
   const tables = await verifyTables();
 
-  // 8. Summary
+  // 7. Summary
   divider();
   console.log('╔══════════════════════════════════════════════╗');
   console.log('║               Migration Complete            ║');

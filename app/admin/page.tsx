@@ -103,7 +103,7 @@ export default function AdminOverviewPage() {
             <a href="/admin/users" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Manage Users →</a>
             <a href="/admin/bugs" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Review Bugs →</a>
             <a href="/admin/campaigns" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">View Campaigns →</a>
-            <a href="/admin/seed" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Seed Demo Data →</a>
+
           </div>
         </div>
       </div>
