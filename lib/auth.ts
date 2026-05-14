@@ -155,3 +155,13 @@ export function setSessionCookie(res: NextResponse, user: SessionUser): void {
 export function clearSessionCookie(res: NextResponse): void {
   res.cookies.set('session', '', cookieOptions(0));
 }
+
+// ── Session renewal (sliding expiration) ─────────────────────────
+// Call this on every authenticated request to re-set the cookie with a fresh
+// 7-day maxAge. Prevents the "logged out after exactly 7 days" issue.
+export function renewSessionCookie(request: Request, res: NextResponse): boolean {
+  const session = getSession(request);
+  if (!session) return false;
+  setSessionCookie(res, session);
+  return true;
+}

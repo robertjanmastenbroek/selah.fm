@@ -155,12 +155,12 @@ export default function RootPage() {
               const remaining = (c.budget_remaining_cents || 0) / 100;
               const pct = budget > 0 ? Math.min(((budget - remaining) / budget) * 100, 100) : 0;
               return (
-                <Link key={c.id} href={`/c/${c.slug || c.id}`}>
+                <Link key={c.id} href={`/c/${c.slug || c.id}`} className="h-full">
                   <motion.div
-                    className="group rounded-2xl border border-white/[0.05] overflow-hidden cursor-pointer transition-all duration-300 hover:border-white/[0.12] hover:shadow-[0_0_60px_rgba(67,56,202,0.08)] hover:-translate-y-1"
+                    className="h-full flex flex-col group rounded-2xl border border-white/[0.05] overflow-hidden cursor-pointer transition-all duration-300 hover:border-white/[0.12] hover:shadow-[0_0_60px_rgba(67,56,202,0.08)] hover:-translate-y-1"
                     style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.015) 0%, rgba(255,255,255,0.005) 100%)' }}
                     initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.5 }}>
-                    <div className="aspect-square overflow-hidden relative">
+                    <div className="aspect-square overflow-hidden relative shrink-0">
                       {c.cover_art_url ? (
                         <img src={c.cover_art_url} alt={c.track_title || c.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                       ) : (
@@ -178,19 +178,21 @@ export default function RootPage() {
                         )}
                       </div>
                     </div>
-                    <div className="p-4 space-y-3">
+                    <div className="flex-1 flex flex-col justify-between p-4">
                       <div>
                         {c.artist_name && <p className="text-[10px] text-white/30 uppercase tracking-wider font-medium mb-1 line-clamp-1">{c.artist_name}</p>}
-                        <h3 className="font-heading text-[14px] leading-snug line-clamp-2 text-white/85 group-hover:text-white transition-colors">{c.track_title || c.title}</h3>
+                        <h3 className="font-heading text-[14px] leading-snug line-clamp-2 min-h-[2.5rem] text-white/85 group-hover:text-white transition-colors">{c.track_title || c.title}</h3>
                       </div>
-                      {budget > 0 && (
-                        <div className="w-full h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
-                          <div className="h-full rounded-full transition-all duration-700" style={{ background: 'linear-gradient(90deg, #4338CA, #22C55E)', width: `${pct}%` }} />
+                      <div>
+                        {budget > 0 && (
+                          <div className="w-full h-[3px] rounded-full bg-white/[0.04] overflow-hidden mb-3">
+                            <div className="h-full rounded-full transition-all duration-700" style={{ background: 'linear-gradient(90deg, #4338CA, #22C55E)', width: `${pct}%` }} />
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-white/25 flex items-center gap-1"><TrendingUp size={10} /> Earn per view</span>
+                          <span className="text-[10px] text-[#22C55E]/80 font-medium">Submit video →</span>
                         </div>
-                      )}
-                      <div className="flex items-center justify-between pt-0.5">
-                        <span className="text-[10px] text-white/25 flex items-center gap-1"><TrendingUp size={10} /> Earn per view</span>
-                        <span className="text-[10px] text-[#22C55E]/80 font-medium">Submit video →</span>
                       </div>
                     </div>
                   </motion.div>

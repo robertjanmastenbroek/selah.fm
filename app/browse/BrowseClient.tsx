@@ -128,36 +128,37 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
               const remaining = (c.budget_remaining_cents || 0) / 100;
               const pct = budget > 0 ? ((budget - remaining) / budget) * 100 : 0;
               return (
-                <Link key={c.id} href={`/c/${c.slug || c.id}`}>
+                <Link key={c.id} href={`/c/${c.slug || c.id}`} className="h-full">
                   <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
                     whileHover={{ y: -2 }}
-                    className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden cursor-pointer
+                    className="h-full flex flex-col rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden cursor-pointer
                       transition-all duration-200 hover:border-[#4338CA]/15 hover:bg-white/[0.04]"
                   >
                     {/* Cover image */}
-                    <CampaignCover src={c.cover_art_url} title={c.track_title} className="h-40" />
+                    <CampaignCover src={c.cover_art_url} title={c.track_title} className="h-40 shrink-0" />
 
-                    {/* Card body */}
-                    <div className="p-4 space-y-2">
+                    {/* Card body — fills remaining space, bottom section pinned to end */}
+                    <div className="flex-1 flex flex-col justify-between p-4">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           {c.artist_name && (
                             <p className="text-[11px] text-muted-foreground line-clamp-1 mb-0.5">{c.artist_name}</p>
                           )}
-                          <h3 className="text-sm leading-tight line-clamp-2 font-semibold"
+                          {/* Reserve space for 2 lines so all cards have the same title height */}
+                          <h3 className="text-sm leading-snug line-clamp-2 font-semibold min-h-[2.5rem]"
                             style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
                             {c.track_title}
                           </h3>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0 mt-0.5">
                           {(c.platforms || []).map((p: string) => <PlatformBadge key={p} platform={p} />)}
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center justify-between pt-3">
                         <div className="flex items-center gap-2 min-w-0">
                           <CircleProgress pct={pct} size={32} />
                           <div className="text-[10px] text-muted-foreground leading-tight">
