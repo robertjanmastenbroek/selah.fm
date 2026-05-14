@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, Users, Megaphone, FileCheck, Banknote, Mail, Bug, MessageCircle, BookOpen, Mic, Layers, Search, PenTool, Send, LogOut, ArrowLeft, Shield } from 'lucide-react';
-import { ADMIN_EMAILS } from '@/lib/constants';
 
 const nav = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
@@ -33,9 +32,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     fetch('/api/auth/me', { credentials: 'include' }).then(r => r.json()).then(d => {
       const userEmail = d.user?.email || '';
+      const isAdmin = d.user?.isAdmin === true || d.isAdmin === true;
       setEmail(userEmail);
       setChecking(false);
-      if (!ADMIN_EMAILS.includes(userEmail)) {
+      if (!isAdmin) {
         router.push('/login?redirect=/admin');
       }
     }).catch(() => { setChecking(false); router.push('/login?redirect=/admin'); });
@@ -53,7 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!email || !ADMIN_EMAILS.includes(email)) {
+  if (!email) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0F0F23' }}>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">

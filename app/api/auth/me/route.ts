@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { ADMIN_EMAILS } from '@/lib/constants';
+
+// Case-insensitive admin check — handles any casing differences between DB and env
+const isAdminEmail = (email: string) =>
+  ADMIN_EMAILS.some(a => a.toLowerCase() === (email || '').toLowerCase());
 
 /**
  * GET  — Return current user (or null if not authenticated)
@@ -9,11 +14,11 @@ import { getSession } from '@/lib/auth';
 export async function GET(request: Request) {
   // Use the unified getSession — handles both cookies() and raw header parsing
   const session = getSession(request);
-  if (!session) return NextResponse.json({ user: null });
+  if (!session) return NextResponse.json({ user: null, isAdmin: false });
 
   // Resolve user ID (handles old sessions that lack id)
   const userId = session.id || (await sql`SELECT id FROM users WHERE email = ${session.email}`.then((r: any) => r[0]?.id));
-  if (!userId) return NextResponse.json({ user: { ...session, id: undefined } });
+  if (!userId) return NextResponse.json({ user: { ...session, id: undefined, isAdmin: isAdminEmail(session.email) } });
 
   // Fetch additional fields from DB for the full profile
   try {
@@ -29,6 +34,7 @@ export async function GET(request: Request) {
         user: {
           id: u.id,
           email: u.email,
+          isAdmin: isAdminEmail(u.email),
           name: u.display_name || session.name,
           type: u.user_type || session.type,
           is_artist: u.is_artist ?? (u.user_type === 'artist'),
@@ -53,6 +59,7 @@ export async function GET(request: Request) {
     user: {
       id: session.id,
       email: session.email,
+      isAdmin: isAdminEmail(session.email),
       name: session.name,
       type: session.type,
     },
