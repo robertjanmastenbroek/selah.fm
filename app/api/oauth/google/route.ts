@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { setSessionCookie } from '@/lib/auth';
+import { ADMIN_EMAILS } from '@/lib/constants';
 import { trackSignUp, trackLogin } from '@/lib/analytics-server';
 
 export async function GET(request: Request) {
@@ -98,7 +99,9 @@ export async function GET(request: Request) {
     }
 
     // Session is stateless (HMAC cookie) — no DB token needed
-    const response = NextResponse.redirect(new URL('/browse', baseUrl));
+    const isAdmin = ADMIN_EMAILS.includes(user[0].email);
+    const redirectTo = isAdmin ? '/admin' : '/browse';
+    const response = NextResponse.redirect(new URL(redirectTo, baseUrl));
     // Clear old cookie variant (no domain) so it doesn't conflict
     response.cookies.set('session', '', { maxAge: 0, path: '/' });
     setSessionCookie(response, {
