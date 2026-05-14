@@ -1,136 +1,133 @@
 # Selah.fm — Status & Reference
-**Version:** 1.1 · **Live:** https://selah.fm · **Updated:** 2026-05-13
+**Version:** 1.2 · **Live:** https://selah.fm · **Updated:** 2026-05-14
 
 ---
 
-## Current Focus: Outbound Artist Marketing Pipeline
+## Current Focus: Platform Polish & Conversion
 
-**Goal:** 50 artists/day reached via Instagram/TikTok DM.
-
-**Pipeline:** FIND → AUDIT → BUILD → OUTREACH → CLAIM → SHARE
-
-```
-Bandcamp API → discovered_artists → artist_audits (YT + social) → campaigns ($0, unclaimed) → DM message → claim
-```
-
-| Phase | Status |
-|-------|--------|
-| 1. DB migration (012_outreach_pipeline) — 4 tables | ✅ Applied to production |
-| 2. lib/discovery.ts — multi-channel (Bandcamp API + Reddit + YouTube) | ✅ Spotify-free |
-| 3. lib/outreach.ts — audit (YouTube + social scraping) + AI outreach messages | ✅ Built |
-| 4. API routes: discover, audit, create_campaign, render_outreach, render_follow_up, log_outreach, get_outreach_queue | ✅ Built |
-| 5. Admin dashboard (/admin/outreach) — pipeline stats, artist cards, one-click DM queue | ✅ Built |
-| 6. Autonomous cron endpoint (/api/cron/outreach-pipeline) — discover→audit→campaign | ✅ Built |
-| 7. Railway cron: 02:00 + 14:00 UTC pipeline, 18:00 UTC follow-up | ✅ Configured |
-| 8. Claim page (/claim/[code]) + ClaimButton | ✅ Built |
-| 9. AI-powered outreach messages (DeepSeek API, founder voice, genre-specific) | ✅ Built |
-| 10. Fallback outreach templates (8 genres, anti-spam patterns) | ✅ Built |
-| 11. Instagram DM one-click flow (copies message + opens ig.me/m/{handle}) | ✅ Built |
-| 12. TikTok DM one-click flow (opens tiktok.com/@{handle}) | ✅ Built |
-| 13. Social link discovery (scrapes Bandcamp artist pages for IG/TikTok handles) | ✅ Built |
-| 14. Campaign page unclaimed state (gift-like UX, pre-set donations, FOMO, share messages) | ✅ Built |
-| 15. Follow-up system (Day-7 cron + admin action + social proof injection) | ✅ Built |
-| 16. Pin system (admin toggle, browse sort priority, "more campaigns" priority) | ✅ Built |
-| 17. Browse sort algorithm (pinned → budget utilization % → total funding → date) | ✅ Live |
-| 18. Stats API: totalDonatedCents + totalDepositedCents → homepage trust bar | ✅ Live |
-| 19. Security: CRON_SECRET rotated, git history cleaned, pre-commit hook installed | ✅ Done |
+The outbound pipeline is running autonomously. Focus has shifted to:
+1. **Campaign page UX** — Creator-primary, one dominant CTA, scannable instructions
+2. **Homepage conversion** — Apple-grade visual quality, clear value prop, live stats
+3. **Persistent auth** — Sessions no longer drop unexpectedly
+4. **Image reliability** — Campaign images stored in DB (survives Railway deploys)
 
 ---
 
-## Pipeline Database (Production)
+## Pipeline Status
 
 | Table | Rows | Notes |
 |-------|------|-------|
-| discovered_artists | 369 | From Bandcamp API (10 genres × 48 items) |
-| artist_audits | 15 | YouTube video search + social scraping |
-| campaigns (unclaimed) | 10 | $0 budget, artist-name-track-name slug |
-| campaign_claims | 10 | UUID claim codes generated |
-| Ready for outreach | 10 | Campaigns created, not yet messaged |
+| discovered_artists | 1,800+ | Multi-channel discovery (Bandcamp + YouTube + Reddit) |
+| artist_audits | 111+ | YouTube video search + social scraping |
+| campaigns (active) | 54 | Mix of claimed + unclaimed auto-generated |
+| campaign_claims | 50+ | UUID claim codes, cumulative count |
+
+**Cron schedule:** Pipeline 02:00 + 14:00 UTC, Follow-up 18:00 UTC
+**DM channels:** Instagram + TikTok (both handles supported, IG prioritized)
+
+---
+
+## Recent Changes (2026-05-14)
+
+### Campaign Page v2 (3 files, 2 commits)
+| Change | Details |
+|--------|---------|
+| P0: CPM consistency | All displays read from `campaign.cpm_rate_cents`. Creator cut shown as "80% — $X" in parentheses. |
+| P0: Loading state fix | LiveTicker 8-second safety timeout → "Be the first creator on this track." |
+| P1: Dominant creator CTA | Full-width "Join campaign" button. Donate demoted to small text link. |
+| P1: Single donation panel | Removed duplicates. One panel below creator flow, visually de-emphasized. |
+| P1: Scannable instructions | Essentials block (6 bullets) + collapsible Full Guidelines. |
+| P1: Asset download first | Google Drive moved above How to Participate. Step 1 leads with download. |
+| P2: Submission confirmation | "You're in!" + 3-step timeline (review → verify → payout). |
+
+### Homepage v2 (`components/HomePageClient.tsx`)
+- Deeper `#080817` background + SVG grain texture + softer ambient light
+- 3-line hero headline ("Your music / real creators / real views")
+- Live campaign count from API total (not LIMITed page)
+- Open source badge in hero
+- Equal-height campaign cards with reserved title space
+- Problem/Solution comparison with more visceral copy
+- Trust pillars row (Verified views, You own everything, Open source, Built by musicians)
+
+### Equal-Height Campaign Cards (`BrowseClient.tsx` + `HomePageClient.tsx`)
+- `h-full flex flex-col` with `flex-1 justify-between` on card body
+- `min-h-[2.5rem]` on titles — all cards same height regardless of title length
+- Bottom section (budget bar + CPM) pinned to card bottom
+
+### Persistent Auth (`lib/auth.ts`)
+- Replaced `require('next/headers')` with static `import { cookies }`
+- Fixed cookie header regex: `/(?:^|;\s*)session=([^;]+)/`
+- Added `.selah.fm` cookie domain (works on www + root domain)
+- `secure` flag checks both `NODE_ENV` and `NEXT_PUBLIC_URL`
+
+### Image Storage — campaign_images table
+- Images stored as `BYTEA` in DB (survives Railway ephemeral filesystem)
+- Serving route: `/images/campaigns/[filename]`
+- Download function with browser headers + magic byte validation + Bandcamp page scraping
+- All 4 campaign creation paths store images: admin API, cron pipeline, POST /api/campaigns, PATCH /api/campaigns/[id]
+
+### TikTok DM Support
+- Campaigns created for artists with TikTok handles (not just Instagram)
+- `discoverSocialLinks` validates TikTok handle existence (rejects "Couldn't find this account")
+- Outreach DM opens TikTok tab alongside Instagram when both exist
+
+### Browse Page
+- Campaign cards show artist name above track title
+- Equal-height card grid with reserved title space
+- `campaigns_created` stat from `campaign_claims` (cumulative, never decreases)
 
 ---
 
 ## Design System
 
-- **Style:** Dark Mode (OLED) — UI/UX Pro Max v2.5.0
-- **Colors:** Primary `#4338CA` (indigo), Accent `#22C55E` (green), Background `#0F0F23` (deep navy)
-- **Fonts:** Righteous (headings) + Poppins (body) via `next/font/google`
-- **34 files** batch-updated with new color palette
-- Design system documentation: `design-system/selah.fm/MASTER.md` + page-specific files
-
----
-
-## What's Live
-
-### Core Platform
-| Area | Status |
-|------|--------|
-| Campaign creation → checkout → funding (Stripe Elements) | ✅ |
-| CPM-based creator marketplace | ✅ |
-| Webhook processing + referral auto-credit | ✅ |
-| Creator submissions with platform verification | ✅ |
-| Artist review + approve/reject with 4s undo | ✅ |
-| Stripe Connect payouts (80/20 split) | ✅ |
-| Campaign detail page (60/40 split, LiveTicker, MediaCarousel, Share) | ✅ |
-| Browse page with search-as-you-type | ✅ |
-| Artist + Creator profiles | ✅ |
-| Dashboard with campaign management | ✅ |
-| Settings + dual-role system | ✅ |
-| SEO: JSON-LD, OG/Twitter, canonical, sitemap (25 pages) | ✅ |
-| Google Analytics: server-side Measurement Protocol | ✅ |
-| 55+ API routes · 44 E2E tests · Zero TypeScript errors | ✅ |
-| Homepage trust bar: campaigns · artists · creators · funded · paid | ✅ |
-
-### Blog System
-| Area | Status |
-|------|--------|
-| DeepSeek article generation (founder voice + anti-AI guardrails) | ✅ |
-| 1 published post (Worlds Collide founder story) | ✅ |
-| Blog post page + listing + footer link | ✅ |
-| Interview Studio (52 topics, voice input) | ✅ |
-| Voice library: 220 chunks | ✅ |
-| Content Hub + Generate from Voice pipeline | ✅ |
-| Question dedup system | ✅ |
-| Auto-schedule (1 post/day) | ✅ |
-| Batch generation + Reddit question sourcing | ✅ |
-
-### Interactive SEO Tools
-| Area | Status |
-|------|--------|
-| CPM Calculator | ✅ |
-| Creator Earnings Estimator | ✅ |
-| Promotion Budget Planner | ✅ |
+- **Style:** Dark, premium — `#080817` base
+- **Colors:** Primary `#4338CA` (indigo), Accent `#22C55E` (green)
+- **Fonts:** Righteous (headings) + Poppins (body)
+- **Homepage:** Grain texture, glass-morphism cards, 1px subtle borders, wide ambient glow shadows
 
 ---
 
 ## Key Architecture Decisions
 
-- **Spotify removed entirely** — Bandcamp API provides artist name, track title, cover art, genre, and band URL. Spotify added nothing but rate limits (Railway IP was blocked).
-- **AI-powered outreach messages** — DeepSeek API generates unique messages per artist matching the founder's voice (same engine as blog system). Anti-spam guardrails built in.
-- **$0 budget for auto-generated campaigns** — No upfront cost. Artists can fund after claiming.
-- **Instagram + TikTok DM** — One-click flow copies message and opens DM. No Meta API needed (cold DMs via API are against ToS anyway).
-- **Pinned campaigns** — Admin can pin campaigns to top of browse + "more campaigns" sections.
+- **Creator-primary campaign pages** — One dominant CTA (Join), donation is secondary
+- **Instagram + TikTok DM** — Both handles supported. No IG = campaign blocked at creation.
+- **AI outreach messages** — DeepSeek API, founder voice, genre-specific, anti-spam guardrails
+- **$0 budget auto-campaigns** — Artists can fund after claiming
+- **DB image storage** — `campaign_images` table (BYTEA). Filesystem is ephemeral on Railway.
+- **Spotify removed** — Bandcamp API provides all needed artist data
+- **Stateless sessions** — HMAC-signed cookies, 7-day expiry, no DB tokens needed
 
 ---
 
-## 2026-05-13 Session — DeepSeek V4 Refactor (10 files changed)
+## Key Files
 
-| Change | Files | Details |
-|--------|-------|---------|
-| OG image fix | `layout.tsx`, `browse/page.tsx`, `blog/page.tsx`, `welcome-artists/layout.tsx`, `welcome-creators/layout.tsx` | Root layout no longer forces OG images; each page sets its own. Instagram DMs now show campaign-specific images. |
-| Outreach UI refactor | `admin/outreach/page.tsx` + 5 new component files | 550-line monolith → 234-line orchestrator + StatCard, ToastBar, ArtistCard, OutreachQueue, EmptyState. |
-| Instagram-only gates | `api/admin/outreach/route.ts`, `api/cron/outreach-pipeline/route.ts`, `api/cron/outreach-followup/route.ts` | Campaigns only created for artists with Instagram handles. No IG = auto-declined at audit. All 3 pipeline phases gated. |
-| Cumulative campaign count | `api/admin/outreach/route.ts` | `campaigns_created` stat now counts `campaign_claims` table (never decreases). |
-| Dedup guards (API) | `api/admin/outreach/route.ts`, `api/cron/outreach-pipeline/route.ts` | Status checks, claim checks, DISTINCT ON in dashboard queries, proper discovery dedup. |
-| Dedup guards (UI) | `admin/outreach/components/ArtistCard.tsx`, `OutreachQueue.tsx` | Global action lock, cross-component button lock (`dm-/outreach-` prefixes). |
-| Homepage campaigns | `components/HomePageClient.tsx`, `api/campaigns/route.ts` | `limit=3→6`, `sort=popular→recent` (now respects sort param). |
+| File | Purpose |
+|------|---------|
+| `app/c/[id]/page.tsx` | Campaign detail page (metadata + server component) |
+| `app/c/[id]/CampaignDetailClient.tsx` | Campaign page client (all UI + flows) |
+| `components/HomePageClient.tsx` | Homepage v2 (hero, campaigns, problem/solution, etc.) |
+| `app/browse/BrowseClient.tsx` | Browse page with equal-height campaign cards |
+| `app/api/admin/outreach/route.ts` | All outreach API actions + repair |
+| `app/api/cron/outreach-pipeline/route.ts` | Autonomous pipeline (cron) |
+| `app/api/cron/outreach-followup/route.ts` | Day-7 follow-up system (cron) |
+| `lib/auth.ts` | Session management (HMAC cookies, domain support) |
+| `lib/outreach.ts` | Artist audit + AI outreach messages |
+| `lib/discovery.ts` | Multi-channel artist discovery |
+| `components/EarnModal.tsx` | Creator submission flow with confirmation |
+| `components/LiveTicker.tsx` | Activity ticker with empty-state handling |
 
-## Immediate Next Steps
+---
 
-1. **Run outreach** — Click "Message" on ready artists in `/admin/outreach` (all have IG now)
-2. **Monitor pipeline** — Railway cron runs 2× daily, fills with ~60 new artists/day
-3. **Blog content** — Generate more posts from voice library to build SEO authority
-4. **YouTube API key** — Set on Railway for automatic view verification on submissions
-5. **Resend API key** — Set on Railway for email notifications
+## Important Rules
+
+- **CPM source of truth:** `campaign.cpm_rate_cents` only — never hardcode rate strings
+- **Creator-primary pages:** One dominant Join CTA, donation is secondary link
+- **Donations panel:** ONE instance, below creator flow, visually de-emphasized
+- **Image fallback chain:** DB binary → external URL → og-image.jpg
+- **Campaign count:** Uses `campaign_claims` table (cumulative)
+- **OG images:** Root layout must NOT set `openGraph.images`
+- **UI safety:** All buttons disable during loading, global actions lock all cards
+- **Session cookies:** `.selah.fm` domain, 7-day maxAge, secure in prod
 
 ---
 
