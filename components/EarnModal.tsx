@@ -213,24 +213,31 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                 </div>
               ) : submitted ? (
                 /* ── Success state ── */
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/10 p-6 text-center space-y-4">
+                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/10 p-6 text-center space-y-5">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: 'spring', stiffness: 400 }}>
                     <div className="w-14 h-14 rounded-full bg-emerald-500/10 mx-auto flex items-center justify-center">
                       <Check size={28} className="text-emerald-400" />
                     </div>
                   </motion.div>
                   <div>
-                    <h3 className="font-semibold text-lg">Submitted!</h3>
-                    <p className="text-sm text-muted-foreground mt-1">The artist will review your video and approve it before paying.</p>
+                    <h3 className="font-semibold text-lg">You&apos;re in!</h3>
+                    <p className="text-sm text-muted-foreground mt-1">Your video has been submitted. Here&apos;s what happens next:</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3 text-center">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">You&apos;ll earn</p>
-                    <p className="text-2xl font-bold text-emerald-400">${creatorEarnings}</p>
-                    <p className="text-[10px] text-emerald-400/60">per 1,000 verified views</p>
+                  <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-left space-y-2.5">
+                    {[
+                      { emoji: '👀', text: 'The artist reviews your video (usually within 48 hours).' },
+                      { emoji: '✅', text: 'Once approved, we start tracking verified views.' },
+                      { emoji: '💰', text: `You earn $${creatorEarnings} per 1K verified views — paid via Stripe.` },
+                    ].map((step, i) => (
+                      <div key={i} className="flex gap-2.5 text-[11px]">
+                        <span className="shrink-0">{step.emoji}</span>
+                        <span className="text-muted-foreground leading-relaxed">{step.text}</span>
+                      </div>
+                    ))}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" onClick={onClose} className="flex-1">Close</Button>
-                    <Button onClick={() => { setSubmitted(false); setUrl(''); }} className="flex-1">Join another</Button>
+                    <Button variant="outline" onClick={onClose} className="flex-1 text-xs">Close</Button>
+                    <Button onClick={() => { setSubmitted(false); setUrl(''); }} className="flex-1 text-xs">Submit another</Button>
                   </div>
                 </motion.div>
               ) : (

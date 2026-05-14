@@ -64,7 +64,7 @@ export default function LiveTicker({ campaignId }: { campaignId: string }) {
       setPlaceholderText(`${data.total_videos.toLocaleString()} videos submitted across Selah.fm · $${data.total_donations.toLocaleString()} donated so far`);
       setIsPlaceholder(true);
     } catch {
-      setPlaceholderText('Videos and donations across Selah.fm');
+      setPlaceholderText('Be the first creator on this track.');
       setIsPlaceholder(true);
     }
   }, []);
@@ -74,7 +74,7 @@ export default function LiveTicker({ campaignId }: { campaignId: string }) {
     let settled = false;
     const safety = setTimeout(() => {
       if (!settled) {
-        setPlaceholderText('Videos and donations across Selah.fm');
+        setPlaceholderText('Be the first creator on this track.');
         setIsPlaceholder(true);
       }
     }, 8000);

@@ -276,19 +276,16 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               </button>
             </div>
 
-            {/* CTA buttons */}
-            <div className="flex gap-2">
-              <button onClick={() => setJoinOpen(true)}
-                className="flex-1 py-4 text-base font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#4338CA]/80 text-white
-                  active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.35)]">
-                JOIN
-              </button>
-              <Link href={`/checkout?type=donation&campaignId=${id}`}
-                className="flex-1 py-4 text-base font-bold rounded-xl active:scale-[0.98] transition-all flex items-center justify-center text-white"
-                style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}CC)` }}>
-                DONATE
-              </Link>
-            </div>
+            {/* CTA — single dominant creator action */}
+            <button onClick={() => setJoinOpen(true)}
+              className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#6366F1] text-white
+                active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)]">
+              Join campaign — earn ${cpm.toFixed(2)}/1K views
+            </button>
+            <Link href={`/checkout?type=donation&campaignId=${id}`}
+              className="block text-center mt-2 text-[11px] text-muted-foreground hover:text-[#22C55E] transition-colors">
+              Or donate to support this track
+            </Link>
 
             {/* Unclaimed claim CTA */}
             {isUnclaimed && claimCode && (
@@ -303,26 +300,7 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               </div>
             )}
 
-            {/* Desktop — compact stats row (replaces full donation panel) */}
-            <div className="hidden md:block mt-6 pt-4 border-t border-white/[0.04]">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="rounded-lg bg-white/[0.02] border border-white/[0.04] py-2">
-                  <div className="text-sm font-bold">{submissions}</div>
-                  <div className="text-[9px] text-muted-foreground">Videos</div>
-                </div>
-                <div className="rounded-lg bg-white/[0.02] border border-white/[0.04] py-2">
-                  <div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div>
-                  <div className="text-[9px] text-muted-foreground">Views</div>
-                </div>
-                <div className="rounded-lg bg-white/[0.02] border border-white/[0.04] py-2">
-                  <div className="text-sm font-bold">{donations.count}</div>
-                  <div className="text-[9px] text-muted-foreground">Donors</div>
-                </div>
-              </div>
-              {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && (
-                <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />
-              )}
-            </div>
+
           </div>
         </div>
       </div>
@@ -444,41 +422,34 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             <RequirementsBlock requirements={campaign.requirements} />
           )}
 
-          {/* ── Mobile donations ── */}
-          <div className="md:hidden">
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <Heart size={13} className="text-[#4338CA]/60" />Donations
+          {/* ── Donations (below creator flow — secondary) ── */}
+          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <div className="rounded-2xl bg-white/[0.01] border border-white/[0.03] p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-wider flex items-center gap-1">
+                  <Heart size={11} className="text-muted-foreground/30" />Support
                 </h3>
-                <span className="text-xl font-bold text-[#4338CA]">${totalRaised.toFixed(0)}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center"><div className="text-sm font-bold">{donations.count}</div><div className="text-[9px] text-muted-foreground">Donors</div></div>
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center"><div className="text-sm font-bold">{submissions}</div><div className="text-[9px] text-muted-foreground">Videos</div></div>
-                <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center"><div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div><div className="text-[9px] text-muted-foreground">Views</div></div>
+                <span className="text-sm font-bold text-muted-foreground">${totalRaised.toFixed(0)} donated</span>
               </div>
               {donations.supporters.length > 0 ? (
-                <div className="space-y-1">{donations.supporters.map((s: any, i: number) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }} className="flex items-center gap-3 py-2.5 px-1">
-                    <div className="w-8 h-8 rounded-lg bg-[#4338CA]/10 flex items-center justify-center text-[10px] font-bold text-[#4338CA] shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium truncate">{s.donor_name || 'Anonymous'}</span>
-                        <span className="text-sm font-bold text-[#4338CA] shrink-0">${(s.amount_cents / 100).toFixed(0)}</span>
-                      </div>
-                      {s.message && <p className="text-[11px] text-muted-foreground italic mt-0.5 leading-relaxed">&ldquo;{s.message.slice(0, 80)}{s.message.length > 80 ? '...' : ''}&rdquo;</p>}
-                    </div>
-                  </motion.div>
+                <div className="space-y-1">{donations.supporters.slice(0, 5).map((s: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2.5 py-1.5 px-1 text-[11px]">
+                    <div className="w-6 h-6 rounded-md bg-[#4338CA]/5 flex items-center justify-center text-[9px] font-bold text-[#4338CA]/50 shrink-0">{(s.donor_name || 'A')[0].toUpperCase()}</div>
+                    <span className="flex-1 text-muted-foreground/40 truncate">{s.donor_name || 'Anonymous'}</span>
+                    <span className="font-semibold text-muted-foreground/50 shrink-0">${(s.amount_cents / 100).toFixed(0)}</span>
+                  </div>
                 ))}</div>
               ) : (
-                <div className="text-center py-4">
-                  <p className="text-[11px] text-muted-foreground">No donations yet</p>
-                  <Link href={`/checkout?type=donation&campaignId=${id}`} className="mt-2 inline-block text-xs font-semibold text-[#4338CA] hover:underline">Be the first</Link>
+                <div className="text-center py-3">
+                  <p className="text-[11px] text-muted-foreground/30">No donations yet</p>
+                  <Link href={`/checkout?type=donation&campaignId=${id}`} className="mt-1.5 inline-block text-[10px] text-[#22C55E]/40 hover:text-[#22C55E]/60 transition-colors">
+                    Be the first to support
+                  </Link>
                 </div>
               )}
+              <p className="text-[9px] text-muted-foreground/20 text-center mt-3">100% goes to verified content payouts</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* ── Claim CTA (mobile) ── */}
           {isUnclaimed && claimCode && (
@@ -514,11 +485,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                   <span className="text-[8px] font-medium text-muted-foreground">Share</span>
                 </button>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => setJoinOpen(true)} className="flex-1 py-3.5 text-sm font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#4338CA]/80 text-white active:scale-[0.97]">JOIN</button>
-                <Link href={`/checkout?type=donation&campaignId=${id}`} className="flex-1 py-3.5 text-sm font-bold rounded-xl active:scale-[0.97] flex items-center justify-center text-white"
-                  style={{ background: `linear-gradient(135deg, ${PRIMARY}, ${PRIMARY}CC)` }}>DONATE</Link>
-              </div>
+              <button onClick={() => setJoinOpen(true)} className="w-full py-3.5 text-sm font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#6366F1] text-white active:scale-[0.97]">
+                Join campaign — earn ${cpm.toFixed(2)}/1K views
+              </button>
               {isUnclaimed && claimCode && (
                 <Link href={`/claim/${claimCode}`} className="block w-full py-3 rounded-xl text-center font-bold text-sm bg-amber-500 text-black hover:bg-amber-400 transition-all active:scale-[0.98]">
                   Claim this campaign
