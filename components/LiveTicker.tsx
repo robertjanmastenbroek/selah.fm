@@ -69,11 +69,22 @@ export default function LiveTicker({ campaignId }: { campaignId: string }) {
     }
   }, []);
 
-  // Initial load
+  // Initial load — set a safety timeout so loading state never persists >8s
   useEffect(() => {
+    let settled = false;
+    const safety = setTimeout(() => {
+      if (!settled) {
+        setPlaceholderText('Videos and donations across Selah.fm');
+        setIsPlaceholder(true);
+      }
+    }, 8000);
+
     fetchEvents().then(hasEvents => {
+      settled = true;
+      clearTimeout(safety);
       if (!hasEvents) fetchPlaceholder();
     });
+    return () => clearTimeout(safety);
   }, [fetchEvents, fetchPlaceholder]);
 
   // Rotation timer
@@ -142,7 +153,7 @@ export default function LiveTicker({ campaignId }: { campaignId: string }) {
         </div>
       )}
 
-      {/* Loading state — show nothing initially */}
+      {/* Loading state — short-lived, auto-transitions to placeholder */}
       {!isPlaceholder && !currentEvent && (
         <div className="absolute inset-0 flex items-center gap-2">
           <LiveDot />

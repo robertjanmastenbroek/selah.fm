@@ -303,48 +303,21 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
               </div>
             )}
 
-            {/* Desktop donations panel */}
-            <div className="hidden md:block mt-6 space-y-4">
-              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                    <Heart size={13} className="text-[#4338CA]/60" />Donations
-                  </h4>
-                  <span className="text-lg font-bold text-[#4338CA]">${totalRaised.toFixed(0)}</span>
+            {/* Desktop — compact stats row (replaces full donation panel) */}
+            <div className="hidden md:block mt-6 pt-4 border-t border-white/[0.04]">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-white/[0.02] border border-white/[0.04] py-2">
+                  <div className="text-sm font-bold">{submissions}</div>
+                  <div className="text-[9px] text-muted-foreground">Videos</div>
                 </div>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
-                    <div className="text-sm font-bold">{donations.count}</div>
-                    <div className="text-[9px] text-muted-foreground">Donors</div>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
-                    <div className="text-sm font-bold">{submissions}</div>
-                    <div className="text-[9px] text-muted-foreground">Videos</div>
-                  </div>
-                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-2.5 text-center">
-                    <div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div>
-                    <div className="text-[9px] text-muted-foreground">Views</div>
-                  </div>
+                <div className="rounded-lg bg-white/[0.02] border border-white/[0.04] py-2">
+                  <div className="text-sm font-bold">{views >= 1000 ? `${(views/1000).toFixed(1)}K` : views}</div>
+                  <div className="text-[9px] text-muted-foreground">Views</div>
                 </div>
-                {donations.supporters.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {donations.supporters.slice(0, 3).map((s: any, i: number) => (
-                      <div key={i} className="flex items-center gap-3 py-2 px-1 text-xs">
-                        <div className="w-7 h-7 rounded-lg bg-[#4338CA]/10 flex items-center justify-center text-[10px] font-bold text-[#4338CA] shrink-0">
-                          {(s.donor_name || 'A')[0].toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                          <span className="text-muted-foreground truncate">{s.donor_name || 'Anonymous'}</span>
-                          <span className="font-semibold text-[#4338CA] shrink-0">${(s.amount_cents / 100).toFixed(0)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-3">
-                    <p className="text-[11px] text-muted-foreground">No donations yet</p>
-                  </div>
-                )}
+                <div className="rounded-lg bg-white/[0.02] border border-white/[0.04] py-2">
+                  <div className="text-sm font-bold">{donations.count}</div>
+                  <div className="text-[9px] text-muted-foreground">Donors</div>
+                </div>
               </div>
               {(submissions > 0 || parseInt(campaign.pending_submissions || '0') > 0) && (
                 <SubmissionsFeed campaignId={id} count={submissions + parseInt(campaign.pending_submissions || '0')} />
@@ -401,17 +374,58 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </motion.div>
           </div>
 
-          {/* ── How to participate ── */}
+          {/* ── Google Drive assets (moved up — primary instruction) ── */}
+          {campaign.content_assets_url && (
+            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer"
+                className="block rounded-2xl bg-[#4338CA]/[0.04] border border-[#4338CA]/15 p-5 hover:border-[#4338CA]/25 transition-all group active:scale-[0.99]">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-[#4338CA]/10 flex items-center justify-center shrink-0 group-hover:bg-[#4338CA]/15 transition-colors">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#4338CA]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sm text-[#4338CA] group-hover:underline">📦 Download official audio & assets</h4>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Master track (.wav + .mp3), cover art, reference videos — everything you need to create winning content.</p>
+                    <span className="inline-flex items-center gap-1.5 text-sm text-[#4338CA] font-semibold mt-3 group-hover:gap-2 transition-all">Open Google Drive <ChevronRight size={14} /></span>
+                  </div>
+                </div>
+              </a>
+            </motion.div>
+          )}
+
+          {/* ── How to participate (with Essentials block) ── */}
           <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] p-6">
               <h3 className="font-bold text-sm mb-4 flex items-center gap-2" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
                 <Camera size={15} className="text-[#4338CA]/60" />How to participate
               </h3>
+
+              {/* Essentials — scannable key info */}
+              <div className="rounded-xl bg-[#4338CA]/[0.03] border border-[#4338CA]/10 p-4 mb-5">
+                <p className="text-[10px] font-semibold text-[#4338CA]/60 uppercase tracking-wider mb-3">⚡ Essentials</p>
+                <div className="grid sm:grid-cols-2 gap-2 text-[11px]">
+                  {[
+                    `Earn $${cpm.toFixed(2)} per 1K verified views (creator cut: $${(cpm * 0.8).toFixed(2)})`,
+                    'Use the official audio — no screen recordings',
+                    'Vertical 9:16 video, 15–60 seconds',
+                    'Public account (private videos cannot be verified)',
+                    campaign.recommended_hashtags ? `Required hashtags: ${campaign.recommended_hashtags}` : null,
+                    campaign.min_video_length_seconds ? `Minimum length: ${campaign.min_video_length_seconds}s` : null,
+                  ].filter(Boolean).map((item, i) => (
+                    <div key={i} className="flex items-start gap-1.5">
+                      <span className="text-[#22C55E]/60 mt-0.5 shrink-0">✓</span>
+                      <span className="text-muted-foreground leading-relaxed">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Three steps */}
               <div className="grid md:grid-cols-3 gap-4">
                 {[
-                  { step: '1', title: 'Find the audio', desc: `Search "${trackTitle}" on TikTok, Instagram, or YouTube. Use the official audio.` },
-                  { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Dance, react, duet — be creative.' },
-                  { step: '3', title: 'Join & submit', desc: `Post publicly, paste the link here. Earn $${(cpm * 0.8).toFixed(2)} per 1K verified views.` },
+                  { step: '1', title: campaign.content_assets_url ? 'Download the audio' : 'Find the audio', desc: campaign.content_assets_url ? `Get the master track from the Google Drive above (you can also search "${trackTitle}" on TikTok, IG, or YouTube).` : `Search "${trackTitle}" on TikTok, Instagram, or YouTube. Use the official audio.` },
+                  { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Dance, react, duet — be creative. Make it public so views count.' },
+                  { step: '3', title: 'Submit & earn', desc: `Post publicly, paste the link here. Earn $${cpm.toFixed(2)} per 1K verified views (creators receive 80% — $${(cpm * 0.8).toFixed(2)}).` },
                 ].map(s => (
                   <div key={s.step} className="flex gap-3">
                     <div className="w-8 h-8 rounded-lg bg-[#4338CA]/10 flex items-center justify-center text-[11px] font-bold text-[#4338CA] shrink-0">{s.step}</div>
@@ -425,35 +439,9 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
             </div>
           </motion.div>
 
-          {/* ── Google Drive assets ── */}
-          {campaign.content_assets_url && (
-            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <a href={campaign.content_assets_url} target="_blank" rel="noopener noreferrer"
-                className="block rounded-2xl bg-[#4338CA]/[0.04] border border-[#4338CA]/15 p-5 hover:border-[#4338CA]/25 transition-all group active:scale-[0.99]">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[#4338CA]/10 flex items-center justify-center shrink-0 group-hover:bg-[#4338CA]/15 transition-colors">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#4338CA]"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-sm text-[#4338CA] group-hover:underline">Download official audio & assets</h4>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Master track (.wav + .mp3), cover art, reference videos — everything you need.</p>
-                    <span className="inline-flex items-center gap-1.5 text-sm text-[#4338CA] font-semibold mt-3 group-hover:gap-2 transition-all">Open Google Drive <ChevronRight size={14} /></span>
-                  </div>
-                </div>
-              </a>
-            </motion.div>
-          )}
-
-          {/* ── Requirements ── */}
+          {/* ── Requirements (collapsible) ── */}
           {campaign.requirements && (
-            <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] p-6">
-                <h3 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
-                  <Music2 size={15} className="text-[#4338CA]/60" />Requirements
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{campaign.requirements}</p>
-              </div>
-            </motion.div>
+            <RequirementsBlock requirements={campaign.requirements} />
           )}
 
           {/* ── Mobile donations ── */}
@@ -546,6 +534,43 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
       <EarnModal open={joinOpen} onClose={() => setJoinOpen(false)} campaignId={id} trackTitle={displayTitle}
         cpmCents={campaign.cpm_rate_cents} coverArtUrl={campaign.cover_art_url} contentAssetsUrl={campaign.content_assets_url} />
     </div>
+  );
+}
+
+// ── Collapsible Requirements block ────────────────────────────────
+function RequirementsBlock({ requirements }: { requirements: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+      <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] overflow-hidden">
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-full flex items-center justify-between p-6 text-left hover:bg-white/[0.02] transition-colors"
+        >
+          <h3 className="font-bold text-sm flex items-center gap-2" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
+            <Music2 size={15} className="text-[#4338CA]/60" />Full guidelines &amp; tips
+          </h3>
+          <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }} className="text-muted-foreground">
+            <ChevronRight size={16} />
+          </motion.span>
+        </button>
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="px-6 pb-6 pt-0 border-t border-white/[0.04]">
+                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap mt-4">{requirements}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }
 

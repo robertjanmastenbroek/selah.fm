@@ -334,7 +334,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     {submitting ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                      <><Camera size={16} className="mr-2" /> Join — earn ${creatorEarnings}/1K views</>
+                      <><Camera size={16} className="mr-2" /> Join — ${cpmDollars.toFixed(2)} per 1K views</>
                     )}
                   </Button>
 
