@@ -51,9 +51,10 @@ export function middleware(request: NextRequest) {
 
   const session = parseCookieInEdge(sessionCookie.value);
   if (!session) {
-    // Invalid cookie — clear it and redirect
+    // Invalid cookie — clear both variants (with and without domain)
     const redirect = NextResponse.redirect(new URL('/login?redirect=' + encodeURIComponent(pathname), request.url));
     redirect.cookies.set('session', '', { maxAge: 0, path: '/' });
+    redirect.cookies.set('session', '', { maxAge: 0, path: '/', domain: '.selah.fm' });
     return redirect;
   }
 
