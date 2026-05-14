@@ -1,17 +1,41 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getSession, setSessionCookie, clearSessionCookie } from '@/lib/auth';
+import crypto from 'crypto';
 
 /**
  * Auth guard middleware.
  * Protects pages that require authentication: admin, dashboard, review, earnings,
  * settings, analytics, onboarding.
  *
- * Validates the HMAC-signed session cookie (not just presence) and renews it with
- * a fresh 7-day maxAge on every request (sliding expiration). Invalid sessions are
- * cleared so the user sees a clean login page instead of a redirect flash.
+ * Validates the HMAC-signed session cookie using the NextRequest cookies API
+ * (which works in Edge Runtime, unlike next/headers cookies()).
  */
 const PROTECTED = ['/admin', '/dashboard', '/review', '/earnings', '/settings', '/analytics', '/onboarding'];
+
+function parseCookieInEdge(cookieValue: string) {
+  try {
+    const parts = cookieValue.split('.');
+    if (parts.length !== 2) return null;
+    const [payload, sig] = parts;
+    if (!payload || !sig) return null;
+
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) return null;
+
+    const expected = crypto
+      .createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex');
+
+    if (sig !== expected) return null;
+
+    const user = JSON.parse(Buffer.from(payload, 'base64').toString());
+    if (!user.email || !user.type || !user.name) return null;
+    return user;
+  } catch {
+    return null;
+  }
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -19,22 +43,21 @@ export function middleware(request: NextRequest) {
   const isProtected = PROTECTED.some(p => pathname === p || pathname.startsWith(p + '/'));
   if (!isProtected) return NextResponse.next();
 
-  // Validate session — not just cookie presence, but HMAC signature
-  const session = getSession(request);
+  // Validate session cookie using Edge-compatible NextRequest.cookies
+  const sessionCookie = request.cookies.get('session');
+  if (!sessionCookie?.value) {
+    return NextResponse.redirect(new URL('/login?redirect=' + encodeURIComponent(pathname), request.url));
+  }
 
+  const session = parseCookieInEdge(sessionCookie.value);
   if (!session) {
-    // Invalid or expired session — clear the cookie and send to login
-    const redirect = NextResponse.redirect(
-      new URL('/login?redirect=' + encodeURIComponent(pathname), request.url)
-    );
-    clearSessionCookie(redirect);
+    // Invalid cookie — clear it and redirect
+    const redirect = NextResponse.redirect(new URL('/login?redirect=' + encodeURIComponent(pathname), request.url));
+    redirect.cookies.set('session', '', { maxAge: 0, path: '/' });
     return redirect;
   }
 
-  // Valid session — re-set cookie with fresh 7-day expiry (sliding expiration)
-  const res = NextResponse.next();
-  setSessionCookie(res, session);
-  return res;
+  return NextResponse.next();
 }
 
 export const config = {
