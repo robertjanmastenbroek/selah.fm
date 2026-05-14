@@ -1,10 +1,11 @@
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { ADMIN_EMAILS } from './constants';
 
 // ── Session secret ───────────────────────────────────────────────
-// In development: auto-generates a random secret so the app starts without config.
-// In production: MUST be set via NEXTAUTH_SECRET env var, or sessions will break on restart.
+// In production: MUST be set via NEXTAUTH_SECRET env var.
+// Changing this value invalidates ALL existing sessions.
 let _cachedSecret: string | null = null;
 
 function getSecret(): string {
@@ -46,7 +47,9 @@ export interface SessionUser {
 // ── Core: parse + verify session cookie value ────────────────────
 function parseSessionCookie(cookieValue: string): SessionUser | null {
   try {
-    const [payload, sig] = cookieValue.split('.');
+    const parts = cookieValue.split('.');
+    if (parts.length !== 2) return null;
+    const [payload, sig] = parts;
     if (!payload || !sig) return null;
 
     const expected = crypto
@@ -69,23 +72,23 @@ function parseSessionCookie(cookieValue: string): SessionUser | null {
 }
 
 // ── Public: get session from request ─────────────────────────────
-export function getSession(request: Request): SessionUser | null {
+// Uses static import of next/headers cookies() — the canonical Next.js approach.
+// Falls back to raw Cookie header if cookies() throws (e.g. during build).
+export function getSession(request?: Request): SessionUser | null {
   let cookieValue: string | undefined;
 
   // Primary: Next.js cookies() — handles Railway/reverse-proxy correctly
   try {
-    // Dynamic import to avoid issues in Edge/non-Node runtimes
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const nextHeaders = require('next/headers');
-    cookieValue = nextHeaders.cookies().get('session')?.value;
+    cookieValue = cookies().get('session')?.value;
   } catch {
-    // Fall through to raw header
+    // cookies() throws outside request context — fall through to raw header
   }
 
-  // Fallback: raw cookie header
-  if (!cookieValue) {
+  // Fallback: parse raw Cookie header from the request object
+  if (!cookieValue && request) {
     const header = request.headers.get('cookie') || '';
-    const match = header.match(/session=([^;]+)/);
+    // Match session cookie at start (^) or after a semicolon (;\s*)
+    const match = header.match(/(?:^|;\s*)session=([^;]+)/);
     cookieValue = match ? match[1] : undefined;
   }
 
@@ -112,14 +115,34 @@ export async function resolveUserId(session: SessionUser): Promise<string> {
   return users[0].id;
 }
 
-// ── Cookie helpers ───────────────────────────────────────────────
+// ── Cookie configuration ─────────────────────────────────────────
+const PUBLIC_URL = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
+const IS_HTTPS = PUBLIC_URL.startsWith('https://');
+const IS_PROD = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production';
+
+// Extract domain from public URL for cookie (e.g. "selah.fm" from "https://selah.fm")
+// Leading dot makes it work on subdomains too (e.g. www.selah.fm)
+function getCookieDomain(): string | undefined {
+  try {
+    const hostname = new URL(PUBLIC_URL).hostname;
+    // Don't set domain on localhost (browsers ignore it)
+    if (hostname === 'localhost') return undefined;
+    return '.' + hostname;
+  } catch {
+    return undefined;
+  }
+}
+
+const COOKIE_DOMAIN = getCookieDomain();
+
 function cookieOptions(maxAge: number) {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT === 'production',
+    secure: IS_PROD && IS_HTTPS,
     sameSite: 'lax' as const,
     maxAge,
     path: '/',
+    ...(COOKIE_DOMAIN ? { domain: COOKIE_DOMAIN } : {}),
   };
 }
 
