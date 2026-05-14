@@ -1,14 +1,17 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import crypto from 'crypto';
 import { ADMIN_EMAILS } from '@/lib/constants';
 import AdminLayoutClient from './AdminLayoutClient';
 
+// Force dynamic rendering — cookies must be read on every request
+export const dynamic = 'force-dynamic';
+
 /**
  * Admin layout — server component.
- * Reads the session cookie server-side (where it's reliably available)
- * and passes isAdmin + email as props to the client component.
- * No client-side fetch to /api/auth/me needed.
+ * Reads the session cookie server-side and passes isAdmin + email as props
+ * to the client component. Uses both cookies() and raw Cookie header as
+ * fallback to handle domain-scoped cookies on Railway's proxy.
  */
 
 function parseSessionCookie(cookieValue: string) {
@@ -36,16 +39,36 @@ function parseSessionCookie(cookieValue: string) {
   }
 }
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  // Read session cookie server-side — this runs at request time on the server
-  const cookieStore = cookies();
-  const sessionCookie = cookieStore.get('session')?.value;
+/** Extract session cookie value from raw Cookie header string */
+function getSessionFromRawHeader(rawCookie: string): string | undefined {
+  const match = rawCookie.match(/(?:^|;\s*)session=([^;]+)/);
+  return match ? match[1] : undefined;
+}
 
-  if (!sessionCookie) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Attempt 1: cookies() from next/headers (standard approach)
+  let sessionValue: string | undefined;
+  try {
+    sessionValue = cookies().get('session')?.value;
+  } catch {
+    // cookies() can throw in some contexts
+  }
+
+  // Attempt 2: raw Cookie header (more reliable on Railway's proxy)
+  if (!sessionValue) {
+    try {
+      const rawCookie = headers().get('cookie') || '';
+      sessionValue = getSessionFromRawHeader(rawCookie);
+    } catch {
+      // headers() can throw in some contexts
+    }
+  }
+
+  if (!sessionValue) {
     redirect('/login?redirect=/admin');
   }
 
-  const session = parseSessionCookie(sessionCookie);
+  const session = parseSessionCookie(sessionValue);
   if (!session) {
     redirect('/login?redirect=/admin');
   }

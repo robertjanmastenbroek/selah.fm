@@ -10,7 +10,9 @@ import crypto from 'crypto';
  * Validates the HMAC-signed session cookie using the NextRequest cookies API
  * (which works in Edge Runtime, unlike next/headers cookies()).
  */
-const PROTECTED = ['/admin', '/dashboard', '/review', '/earnings', '/settings', '/analytics', '/onboarding'];
+// Admin auth is now handled by the server component (app/admin/layout.tsx) — 
+// removed from middleware protection to avoid double cookie-reading issues.
+const PROTECTED = ['/dashboard', '/review', '/earnings', '/settings', '/analytics', '/onboarding'];
 
 function parseCookieInEdge(cookieValue: string) {
   try {
@@ -62,5 +64,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*', '/review/:path*', '/earnings/:path*', '/settings/:path*', '/analytics/:path*', '/onboarding/:path*'],
+  matcher: ['/dashboard/:path*', '/review/:path*', '/earnings/:path*', '/settings/:path*', '/analytics/:path*', '/onboarding/:path*'],
 };
