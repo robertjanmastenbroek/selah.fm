@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { setSessionCookie } from '@/lib/auth';
 import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
+import { ADMIN_EMAILS } from '@/lib/constants';
 import bcrypt from 'bcryptjs';
 import { trackLogin } from '@/lib/analytics-server';
 
@@ -10,7 +11,7 @@ export async function POST(request: Request) {
   if (!rl.allowed) return NextResponse.json({ error: 'Too many attempts. Try again in a minute.' }, { status: 429 });
 
   try {
-    const { email, password } = await request.json();
+    const { email, password, redirect } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
@@ -27,6 +28,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+
     const sessionData = {
       id: user.id,
       email: user.email,
@@ -39,11 +42,16 @@ export async function POST(request: Request) {
     // Server-side GA tracking (fire and forget)
     trackLogin('email', user.id).catch(() => {});
 
-    const response = NextResponse.json({ ok: true, redirectTo: '/browse' });
-    setSessionCookie(response, sessionData);
-    // Also clear the old cookie variant (no domain, from before the auth fix)
-    // so the browser doesn't send both and confuse the middleware
+    // Resolve redirect target: explicit redirect param > admin default > browse fallback
+    const redirectTo = redirect || (isAdmin ? '/admin' : '/browse');
+
+    const response = NextResponse.json({ ok: true, redirectTo });
+
+    // Clear old domain-less cookie variant FIRST (from before the auth fix),
+    // THEN set the new domain-scoped session cookie — order matters in case
+    // NextResponse internally deduplicates same-name cookies by last-write-wins.
     response.cookies.set('session', '', { maxAge: 0, path: '/' });
+    setSessionCookie(response, sessionData);
     return response;
   } catch (e: any) {
     console.error('Login error:', e.message);

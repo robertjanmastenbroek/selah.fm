@@ -51,6 +51,7 @@ function LoginForm() {
     const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/signup';
     const body: any = { email, password, name: name || email.split('@')[0], type: role };
     if (refCode && mode === 'signup') body.refCode = refCode;
+    if (redirect && mode === 'login') body.redirect = redirect;
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
     if (data.ok) {
