@@ -99,6 +99,8 @@ export async function GET(request: Request) {
 
     // Session is stateless (HMAC cookie) — no DB token needed
     const response = NextResponse.redirect(new URL('/browse', baseUrl));
+    // Clear old cookie variant (no domain) so it doesn't conflict
+    response.cookies.set('session', '', { maxAge: 0, path: '/' });
     setSessionCookie(response, {
       id: user[0].id,
       email: user[0].email,

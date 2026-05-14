@@ -86,6 +86,8 @@ export async function POST(request: Request) {
     // Session is stateless (HMAC cookie) — no DB token needed
     const redirectTo = userType === 'artist' ? '/onboarding' : '/browse';
     const response = NextResponse.json({ ok: true, type: userType, redirectTo });
+    // Clear old cookie variant (no domain) so it doesn't conflict
+    response.cookies.set('session', '', { maxAge: 0, path: '/' });
     setSessionCookie(response, { id: user.id, email: user.email, name: user.display_name, type: user.user_type, is_artist: user.is_artist, is_creator: user.is_creator });
     return response;
   } catch (e: any) {

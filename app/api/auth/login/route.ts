@@ -41,6 +41,9 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({ ok: true, redirectTo: '/browse' });
     setSessionCookie(response, sessionData);
+    // Also clear the old cookie variant (no domain, from before the auth fix)
+    // so the browser doesn't send both and confuse the middleware
+    response.cookies.set('session', '', { maxAge: 0, path: '/' });
     return response;
   } catch (e: any) {
     console.error('Login error:', e.message);
