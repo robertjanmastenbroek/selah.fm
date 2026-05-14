@@ -107,7 +107,17 @@ export async function GET(request: Request) {
       filtered = filtered.filter((c: any) => c.cpm_rate_cents >= min);
     }
 
-    const total = filtered.length;
+    // total should be accurate count of ALL matching campaigns
+    let total = filtered.length;
+    try {
+      const countQuery = isOwnerView
+        ? `SELECT COUNT(*)::int FROM campaigns WHERE artist_id = $1`
+        : `SELECT COUNT(*)::int FROM campaigns WHERE status IN ('active', 'draft')`;
+      const countResult = isOwnerView
+        ? await sql.raw(countQuery, [session.id])
+        : await sql.raw(countQuery, []);
+      total = countResult[0]?.count || total;
+    } catch {}
     const page = filtered.slice(offset, offset + limit);
 
     return NextResponse.json({
