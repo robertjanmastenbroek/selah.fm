@@ -93,43 +93,57 @@ export async function GET(request: Request) {
     `;
 
     log.push(`Auditing ${toAudit.length} artists...`);
-    for (const artist of toAudit) {
-      try {
-        log.push(`Auditing: ${artist.artist_name}`);
-        // Extract Bandcamp URL from social_links if available
-        const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
-        const bandcampUrl = socialLinks.bandcamp || '';
-        const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl, socialLinks);
+    // ⚡ BATCHED PARALLEL: Process audits in batches for maximum throughput
+    const AUDIT_BATCH_SIZE = 8;
+    for (let batchIdx = 0; batchIdx < toAudit.length; batchIdx += AUDIT_BATCH_SIZE) {
+      const batch = toAudit.slice(batchIdx, batchIdx + AUDIT_BATCH_SIZE);
+      const batchNum = Math.floor(batchIdx / AUDIT_BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(toAudit.length / AUDIT_BATCH_SIZE);
+      log.push(`Audit batch ${batchNum}/${totalBatches} (${batch.length} artists)...`);
 
-        if (!audit) {
-          log.push(`  ❌ Audit failed for ${artist.artist_name}`);
-          results.errors++;
-          continue;
+      const batchResults = await Promise.all(batch.map(async (artist: any) => {
+        try {
+          log.push(`Auditing: ${artist.artist_name}`);
+          // Extract Bandcamp URL from social_links if available
+          const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
+          const bandcampUrl = socialLinks.bandcamp || '';
+          const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl, socialLinks);
+
+          if (!audit) {
+            log.push(`  ❌ Audit failed for ${artist.artist_name}`);
+            return { artist, error: true, msg: 'Audit returned null' };
+          }
+
+          await sql`
+            INSERT INTO artist_audits (
+              discovered_artist_id, spotify_monthly_listeners, spotify_track_streams,
+              youtube_video_url, youtube_video_views, spotify_embed_url, artist_bio,
+              recommended_cpm_cents, recommended_budget_cents,
+              instagram_handle, instagram_followers, tiktok_handle, tiktok_followers,
+              email_address, website_url, hashtags, personal_angle
+            ) VALUES (
+              ${artist.id}, ${audit.spotify_monthly_listeners}, ${audit.spotify_track_streams},
+              ${audit.youtube_video_url}, ${audit.youtube_video_views}, ${audit.spotify_embed_url}, ${audit.artist_bio},
+              ${audit.recommended_cpm_cents}, ${audit.recommended_budget_cents},
+              ${audit.instagram_handle}, ${audit.instagram_followers}, ${audit.tiktok_handle}, ${audit.tiktok_followers},
+              ${audit.email_address}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle}
+            )
+          `;
+
+          await sql`UPDATE discovered_artists SET status = 'audited', updated_at = NOW() WHERE id = ${artist.id}`;
+          log.push(`  ✅ Audited: ${artist.artist_name}`);
+          return { artist, error: false, msg: 'ok' };
+        } catch (e: any) {
+          log.push(`  ❌ Error auditing ${artist.artist_name}: ${e.message}`);
+          return { artist, error: true, msg: e.message };
         }
+      }));
 
-        await sql`
-          INSERT INTO artist_audits (
-            discovered_artist_id, spotify_monthly_listeners, spotify_track_streams,
-            youtube_video_url, youtube_video_views, spotify_embed_url, artist_bio,
-            recommended_cpm_cents, recommended_budget_cents,
-            instagram_handle, instagram_followers, tiktok_handle, tiktok_followers,
-            email_address, website_url, hashtags, personal_angle
-          ) VALUES (
-            ${artist.id}, ${audit.spotify_monthly_listeners}, ${audit.spotify_track_streams},
-            ${audit.youtube_video_url}, ${audit.youtube_video_views}, ${audit.spotify_embed_url}, ${audit.artist_bio},
-            ${audit.recommended_cpm_cents}, ${audit.recommended_budget_cents},
-            ${audit.instagram_handle}, ${audit.instagram_followers}, ${audit.tiktok_handle}, ${audit.tiktok_followers},
-            ${audit.email_address}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle}
-          )
-        `;
-
-        await sql`UPDATE discovered_artists SET status = 'audited', updated_at = NOW() WHERE id = ${artist.id}`;
-        results.audited++;
-        log.push(`  ✅ Audited: ${artist.artist_name}`);
-      } catch (e: any) {
-        log.push(`  ❌ Error auditing ${artist.artist_name}: ${e.message}`);
-        results.errors++;
-      }
+      const batchSuccesses = batchResults.filter(r => !r.error).length;
+      const batchErrors = batchResults.filter(r => r.error).length;
+      results.audited += batchSuccesses;
+      results.errors += batchErrors;
+      log.push(`Batch ${batchNum}/${totalBatches} done: ${batchSuccesses} ok, ${batchErrors} errors`);
     }
 
     // ── Phase 3: Campaign Creation ─────────────────────────
@@ -143,126 +157,140 @@ export async function GET(request: Request) {
       LIMIT ${campaignBatchSize}
     `;
 
-    for (const artist of toCreate) {
-      try {
-        // Skip artists without Instagram or TikTok — we can't reach them
-        const auditCheck = await sql`
-          SELECT instagram_handle, tiktok_handle FROM artist_audits
-          WHERE discovered_artist_id = ${artist.id}
-          ORDER BY audited_at DESC LIMIT 1
-        `;
-        const audit = auditCheck[0];
-        if (!audit?.instagram_handle && !audit?.tiktok_handle) {
-          log.push(`  ⚠️  No social handles for ${artist.artist_name} — skipping (can't DM)`);
-          continue;
-        }
+    // ⚡ BATCHED PARALLEL: Create campaigns in batches for maximum throughput
+    const CAMPAIGN_BATCH_SIZE = 5;
+    for (let batchIdx = 0; batchIdx < toCreate.length; batchIdx += CAMPAIGN_BATCH_SIZE) {
+      const batch = toCreate.slice(batchIdx, batchIdx + CAMPAIGN_BATCH_SIZE);
+      const batchNum = Math.floor(batchIdx / CAMPAIGN_BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(toCreate.length / CAMPAIGN_BATCH_SIZE);
+      log.push(`Campaign batch ${batchNum}/${totalBatches} (${batch.length} artists)...`);
 
-        // Prevent duplicate campaigns
-        const [existingClaim] = await sql`SELECT id FROM campaign_claims WHERE discovered_artist_id = ${artist.id} LIMIT 1`;
-        if (existingClaim) {
-          log.push(`  ⚠️  Campaign already exists for ${artist.artist_name} — skipping`);
-          continue;
-        }
+      const batchResults = await Promise.all(batch.map(async (artist: any) => {
+        try {
+          // Skip artists without Instagram or TikTok — we can't reach them
+          const auditCheck = await sql`
+            SELECT instagram_handle, tiktok_handle FROM artist_audits
+            WHERE discovered_artist_id = ${artist.id}
+            ORDER BY audited_at DESC LIMIT 1
+          `;
+          const audit = auditCheck[0];
+          if (!audit?.instagram_handle && !audit?.tiktok_handle) {
+            log.push(`  ⚠️  No social handles for ${artist.artist_name} — skipping (can't DM)`);
+            return { artist, error: false, skipped: true, msg: 'no social handles' };
+          }
 
-        log.push(`Creating campaign: ${artist.artist_name}`);
+          // Prevent duplicate campaigns
+          const [existingClaim] = await sql`SELECT id FROM campaign_claims WHERE discovered_artist_id = ${artist.id} LIMIT 1`;
+          if (existingClaim) {
+            log.push(`  ⚠️  Campaign already exists for ${artist.artist_name} — skipping`);
+            return { artist, error: false, skipped: true, msg: 'duplicate' };
+          }
 
-        // Format slug: artist-name-track-name-random4
-        const artistSlug = (artist.artist_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const slug = `${artistSlug}-${trackSlug}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100).replace(/--+/g, '-');
+          log.push(`Creating campaign: ${artist.artist_name}`);
 
-        // Cover art: download & store in DB (persistent)
-        let coverArtUrl = artist.latest_track_cover_url || '';
-        let imageData: Buffer | null = null;
-        let imageMime = 'image/jpeg';
-        if (coverArtUrl && coverArtUrl.startsWith('http')) {
-          const urls = [coverArtUrl];
-          const bcMatch = coverArtUrl.match(/(https:\/\/f\d+\.bcbits\.com\/img\/a\d+)_\d+\.(jpg|png)/);
-          if (bcMatch) { urls.push(`${bcMatch[1]}_10.${bcMatch[2]}`, `${bcMatch[1]}_2.${bcMatch[2]}`); }
-          for (const u of urls) {
-            try {
-              const res = await fetch(u, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36', 'Accept': 'image/*' },
-                signal: AbortSignal.timeout(15000),
-              });
-              if (res.ok) {
-                const buf = Buffer.from(await res.arrayBuffer());
-                if (buf.length > 2000 && ((buf[0] === 0xFF && buf[1] === 0xD8) || (buf[0] === 0x89 && buf[1] === 0x50) || (buf[0] === 0x52 && buf[1] === 0x49))) {
-                  imageData = buf;
-                  if (buf[0] === 0x89) imageMime = 'image/png';
-                  else if (buf[0] === 0x52) imageMime = 'image/webp';
-                  break;
+          // Format slug: artist-name-track-name-random4
+          const artistSlug = (artist.artist_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          const trackSlug = (artist.latest_track_name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          const slug = `${artistSlug}-${trackSlug}-${crypto.randomUUID().slice(0, 4)}`.slice(0, 100).replace(/--+/g, '-');
+
+          // Cover art: download & store in DB (persistent)
+          let coverArtUrl = artist.latest_track_cover_url || '';
+          let imageData: Buffer | null = null;
+          let imageMime = 'image/jpeg';
+          if (coverArtUrl && coverArtUrl.startsWith('http')) {
+            const urls = [coverArtUrl];
+            const bcMatch = coverArtUrl.match(/(https:\/\/f\d+\.bcbits\.com\/img\/a\d+)_\d+\.(jpg|png)/);
+            if (bcMatch) { urls.push(`${bcMatch[1]}_10.${bcMatch[2]}`, `${bcMatch[1]}_2.${bcMatch[2]}`); }
+            for (const u of urls) {
+              try {
+                const res = await fetch(u, {
+                  headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36', 'Accept': 'image/*' },
+                  signal: AbortSignal.timeout(15000),
+                });
+                if (res.ok) {
+                  const buf = Buffer.from(await res.arrayBuffer());
+                  if (buf.length > 2000 && ((buf[0] === 0xFF && buf[1] === 0xD8) || (buf[0] === 0x89 && buf[1] === 0x50) || (buf[0] === 0x52 && buf[1] === 0x49))) {
+                    imageData = buf;
+                    if (buf[0] === 0x89) imageMime = 'image/png';
+                    else if (buf[0] === 0x52) imageMime = 'image/webp';
+                    break;
+                  }
                 }
-              }
-            } catch {}
+              } catch {}
+            }
+            if (imageData) {
+              const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
+              coverArtUrl = `/images/campaigns/campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+            }
           }
+          if (!coverArtUrl) coverArtUrl = '/images/og-image.jpg';
+
+          // Track URL — prefer Bandcamp link from social_links, fallback to any URL
+          const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
+          const trackUrl = socialLinks.bandcamp || artist.latest_track_spotify_url || 'https://selah.fm';
+
+          const [campaign] = await sql`
+            INSERT INTO campaigns (
+              artist_id, track_title, track_url, title, slug, cover_art_url,
+              cpm_rate_cents, total_budget_cents, budget_remaining_cents,
+              max_payout_per_submission_cents,
+              requirements, recommended_hashtags, platforms,
+              youtube_video_url, is_unclaimed, status
+            ) VALUES (
+              (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1),
+              ${artist.latest_track_name || artist.artist_name},
+              ${trackUrl},
+              ${`${artist.artist_name} — ${artist.latest_track_name || 'Latest Release'}`},
+              ${slug},
+              ${coverArtUrl},
+              ${artist.recommended_cpm_cents || 10},
+              0,  /* total_budget_cents — always $0 for auto-generated */
+              0,  /* budget_remaining_cents — always $0 */
+              ${artist.recommended_budget_cents || 10000},
+              ${'Make a video featuring this track. Any style. Any length. No minimum followers. Just good content.'},
+              ${artist.hashtags || []},
+              ${['tiktok', 'instagram', 'youtube']},
+              ${artist.youtube_video_url || null},
+              true,
+              'active'
+            )
+            RETURNING *
+          `;
+
+          // Store image in campaign_images table
           if (imageData) {
-            const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-            coverArtUrl = `/images/campaigns/campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+            await sql`INSERT INTO campaign_images (campaign_id, data, mime) VALUES (${campaign.id}, ${imageData}, ${imageMime})`;
           }
+
+          // Create claim code
+          const claimCode = crypto.randomUUID();
+          await sql`
+            INSERT INTO campaign_claims (campaign_id, discovered_artist_id, claim_code)
+            VALUES (${campaign.id}, ${artist.id}, ${claimCode})
+          `;
+
+          await sql`UPDATE discovered_artists SET status = 'campaign_created', updated_at = NOW() WHERE id = ${artist.id}`;
+          log.push(`  ✅ Campaign: ${campaign.title} → /c/${campaign.slug}`);
+
+          // Force Facebook re-scrape (non-blocking fire-and-forget)
+          const fbToken = process.env.FACEBOOK_ACCESS_TOKEN;
+          if (fbToken) {
+            fetch(`https://graph.facebook.com/v18.0/?id=${encodeURIComponent(`https://selah.fm/c/${campaign.slug}`)}&scrape=true&access_token=${fbToken}`, { method: 'POST' }).catch(() => {});
+          }
+
+          return { artist, error: false, skipped: false, msg: campaign.title };
+        } catch (e: any) {
+          log.push(`  ❌ Error creating campaign for ${artist.artist_name}: ${e.message}`);
+          return { artist, error: true, msg: e.message };
         }
-        if (!coverArtUrl) coverArtUrl = '/images/og-image.jpg';
+      }));
 
-        // Track URL — prefer Bandcamp link from social_links, fallback to any URL
-        const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
-        const trackUrl = socialLinks.bandcamp || artist.latest_track_spotify_url || 'https://selah.fm';
-
-        const [campaign] = await sql`
-          INSERT INTO campaigns (
-            artist_id, track_title, track_url, title, slug, cover_art_url,
-            cpm_rate_cents, total_budget_cents, budget_remaining_cents,
-            max_payout_per_submission_cents,
-            requirements, recommended_hashtags, platforms,
-            youtube_video_url, is_unclaimed, status
-          ) VALUES (
-            (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1),
-            ${artist.latest_track_name || artist.artist_name},
-            ${trackUrl},
-            ${`${artist.artist_name} — ${artist.latest_track_name || 'Latest Release'}`},
-            ${slug},
-            ${coverArtUrl},
-            ${artist.recommended_cpm_cents || 10},
-            0,  /* total_budget_cents — always $0 for auto-generated */
-            0,  /* budget_remaining_cents — always $0 */
-            ${artist.recommended_budget_cents || 10000},
-            ${'Make a video featuring this track. Any style. Any length. No minimum followers. Just good content.'},
-            ${artist.hashtags || []},
-            ${['tiktok', 'instagram', 'youtube']},
-            ${artist.youtube_video_url || null},
-            true,
-            'active'
-          )
-          RETURNING *
-        `;
-
-        // Store image in campaign_images table
-        if (imageData) {
-          await sql`INSERT INTO campaign_images (campaign_id, data, mime) VALUES (${campaign.id}, ${imageData}, ${imageMime})`;
-        }
-
-        // Create claim code
-        const claimCode = crypto.randomUUID();
-        await sql`
-          INSERT INTO campaign_claims (campaign_id, discovered_artist_id, claim_code)
-          VALUES (${campaign.id}, ${artist.id}, ${claimCode})
-        `;
-
-        await sql`UPDATE discovered_artists SET status = 'campaign_created', updated_at = NOW() WHERE id = ${artist.id}`;
-        results.campaigns_created++;
-        log.push(`  ✅ Campaign: ${campaign.title} → /c/${campaign.slug}`);
-
-        // Force Facebook re-scrape
-        const fbToken = process.env.FACEBOOK_ACCESS_TOKEN;
-        if (fbToken) {
-          try {
-            await fetch(`https://graph.facebook.com/v18.0/?id=${encodeURIComponent(`https://selah.fm/c/${campaign.slug}`)}&scrape=true&access_token=${fbToken}`, { method: 'POST' });
-          } catch {}
-        }
-
-      } catch (e: any) {
-        log.push(`  ❌ Error creating campaign for ${artist.artist_name}: ${e.message}`);
-        results.errors++;
-      }
+      const batchDone = batchResults.filter(r => !r.error && !r.skipped).length;
+      const batchSkipped = batchResults.filter(r => r.skipped).length;
+      const batchErrors = batchResults.filter(r => r.error).length;
+      results.campaigns_created += batchDone;
+      results.errors += batchErrors;
+      log.push(`Campaign batch ${batchNum}/${totalBatches} done: ${batchDone} created, ${batchSkipped} skipped, ${batchErrors} errors`);
     }
 
     log.push(`\nPipeline complete: ${results.discovered} discovered, ${results.audited} audited, ${results.campaigns_created} campaigns, ${results.errors} errors`);

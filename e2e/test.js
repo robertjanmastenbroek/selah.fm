@@ -26,11 +26,11 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
   });
 
   await check('1.2 Landing has hero', async () => {
-    await page.waitForSelector('text=Get your music', { timeout: 5000 });
+    await page.waitForSelector('text=real creators', { timeout: 5000 });
   });
 
   await check('1.3 Landing has CTA cards', async () => {
-    await page.waitForSelector("text=I'm an artist", { timeout: 3000 });
+    await page.waitForSelector('text=Promote your music', { timeout: 3000 });
   });
 
   await check('1.4 Landing has trust text', async () => {
@@ -163,7 +163,7 @@ const BASE = process.env.TEST_URL || 'https://selah.fm';
   await check('10.1 Mobile (375px) renders landing page', async () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(BASE);
-    await page.waitForSelector('text=Get your music', { timeout: 5000 });
+    await page.waitForSelector('text=real creators', { timeout: 5000 });
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 
