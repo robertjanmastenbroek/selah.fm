@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
 
   // Get user from session
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }

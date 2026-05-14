@@ -9,7 +9,7 @@ import { getSession, isAdminRequest } from '@/lib/auth';
  * DELETE — Delete a bug (admin only)
  */
 export async function POST(request: Request) {
-  const session = getSession(request);
+  const session = await getSession(request);
   const { description, stepsToReproduce, severity = 'medium' } = await request.json();
 
   if (!description || typeof description !== 'string' || description.trim().length < 10) {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
     const bugs = await sql`
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   const { id, status } = await request.json();
   if (!id || !['new', 'in_progress', 'fixed', 'closed'].includes(status)) {
@@ -72,7 +72,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');

@@ -31,7 +31,11 @@ interface Props {
 export default function AdminLayoutClient({ children, isAdmin, email }: Props) {
   const pathname = usePathname();
 
-  const handleLogout = async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/login'; };
+  const handleLogout = async () => { 
+    const { createClient } = await import('@/lib/supabase/client');
+    await createClient().auth.signOut();
+    window.location.href = '/login'; 
+  };
 
   if (!isAdmin) {
     return (

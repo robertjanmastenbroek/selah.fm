@@ -20,8 +20,8 @@ export async function GET(request: Request) {
 
     // If user is authenticated, show only their campaigns (dashboard).
     // If not, show all active/draft campaigns (public browse).
-    const { getSession, resolveUserId } = await import('@/lib/auth');
-    const session = getSession(request);
+    const { getSession } = await import('@/lib/auth');
+    const session = await getSession(request);
     const isOwnerView = !!session;
 
     let campaigns;
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     const pinSort = `c.is_pinned DESC NULLS LAST`;
     
     if (isOwnerView) {
-      const userId = session.id || await resolveUserId(session);
+      const userId = session.id;
       const orderClause = sort === 'popular'
         ? `${pinSort}, COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC`
         : `${pinSort}, c.created_at DESC`;
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { validateCampaignInput } = await import('@/lib/validation');
-    const { getSession, resolveUserId } = await import('@/lib/auth');
+    const { getSession } = await import('@/lib/auth');
 
     const validation = validateCampaignInput(body);
     if (!validation.valid) {
@@ -149,12 +149,12 @@ export async function POST(request: Request) {
     const { trackTitle, trackUrl, cpmRate, budget, maxPayout, requirements, driveUrl, hashtags, coverArtUrl } = validation.sanitized!;
     const { requiredHashtags, requireFtc, minVideoLength, captionRequirements } = body;
 
-    const session = getSession(request);
+    const session = await getSession(request);
     if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const userId = session.id || await resolveUserId(session);
+    const userId = session.id;
 
     // Fetch display_name and genres for auto-generated defaults
     const profile = await sql`SELECT display_name, genres FROM users WHERE id = ${userId}`;

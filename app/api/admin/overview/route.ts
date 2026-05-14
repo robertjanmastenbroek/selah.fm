@@ -3,7 +3,7 @@ import sql from '@/lib/db';
 import { isAdminRequest } from '@/lib/auth';
 
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
     const [users, campaigns, submissions, payouts] = await Promise.all([

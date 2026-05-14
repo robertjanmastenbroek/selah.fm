@@ -17,7 +17,7 @@ function slugify(text: string): string {
 
 // ── POST /api/admin/blog/batch ────────────────────────────────────
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
 // ── GET /api/admin/blog/batch ────────────────────────────────────
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 

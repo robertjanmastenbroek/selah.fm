@@ -7,7 +7,7 @@ import { getSession } from '@/lib/auth';
  * GET /api/ratings?userId=X — Get all ratings for a user (with avg)
  */
 export async function POST(request: Request) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {

@@ -3,7 +3,7 @@ import sql from '@/lib/db';
 import { getSession, ADMIN_EMAILS } from '@/lib/auth';
 
 export async function POST(request: Request) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session || !ADMIN_EMAILS.includes(session.email)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }

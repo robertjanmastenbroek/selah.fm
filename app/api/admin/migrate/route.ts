@@ -7,7 +7,7 @@ import { isAdminRequest } from '@/lib/auth';
  * Only admins can trigger this.
  */
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   const results: string[] = [];
 

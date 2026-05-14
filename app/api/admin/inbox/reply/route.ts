@@ -7,7 +7,7 @@ import { emailSimple } from '@/lib/email-templates';
  * POST — Reply to an inbound email from admin
  */
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
     const { to, subject, body, from } = await request.json();

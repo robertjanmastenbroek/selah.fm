@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
 
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');

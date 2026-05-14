@@ -12,7 +12,7 @@ export const maxDuration = 180; // 3 minutes — 20 searches + up to 200 artist 
 // ── POST /api/admin/outreach ──────────────────────────────────────
 
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 
   // Allow repair with secret (like cron endpoints) or admin session
   const isRepairWithSecret = action === 'repair_campaign_images' && secret && secret === process.env.CRON_SECRET;
-  if (!isRepairWithSecret && !isAdminRequest(request)) {
+  if (!isRepairWithSecret && !(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 

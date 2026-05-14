@@ -3,7 +3,7 @@ import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function GET(request: Request) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {

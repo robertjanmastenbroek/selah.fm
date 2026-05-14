@@ -3,7 +3,7 @@ import sql from '@/lib/db';
 import { isAdminRequest } from '@/lib/auth';
 
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   const { searchParams } = new URL(request.url, 'https://selah.fm');
   const search = searchParams.get('search') || '';
   

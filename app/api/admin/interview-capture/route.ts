@@ -101,7 +101,7 @@ const TOPIC_QUESTIONS: Record<string, string[]> = {
 // ── API Routes ────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) {
+  if (!(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 

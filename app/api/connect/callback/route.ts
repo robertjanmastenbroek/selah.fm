@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   }
 
   // Get current user from session
-  const session = getSession(request);
+  const session = await getSession(request);
   if (!session) {
     return NextResponse.redirect(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/login`);
   }

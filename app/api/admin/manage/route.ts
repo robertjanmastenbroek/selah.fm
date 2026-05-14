@@ -13,7 +13,7 @@ import { isAdminRequest } from '@/lib/auth';
  */
 
 export async function PATCH(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
     const { searchParams } = new URL(request.url);
@@ -67,7 +67,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
     const { searchParams } = new URL(request.url);
@@ -99,7 +99,7 @@ export async function DELETE(request: Request) {
 
 // Also support GET for detailed views of individual records
 export async function GET(request: Request) {
-  if (!isAdminRequest(request)) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
     const { searchParams } = new URL(request.url);
