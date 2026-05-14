@@ -1,6 +1,5 @@
 import crypto from 'crypto';
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextResponse, NextRequest } from 'next/server';
 import { ADMIN_EMAILS } from './constants';
 
 // ── Session secret ───────────────────────────────────────────────
@@ -72,16 +71,19 @@ function parseSessionCookie(cookieValue: string): SessionUser | null {
 }
 
 // ── Public: get session from request ─────────────────────────────
-// Uses static import of next/headers cookies() — the canonical Next.js approach.
-// Falls back to raw Cookie header if cookies() throws (e.g. during build).
+// Uses NextRequest.cookies (Edge-compatible, same API the middleware uses
+// successfully) then falls back to raw Cookie header parsing.
 export function getSession(request?: Request): SessionUser | null {
   let cookieValue: string | undefined;
 
-  // Primary: Next.js cookies() — handles Railway/reverse-proxy correctly
-  try {
-    cookieValue = cookies().get('session')?.value;
-  } catch {
-    // cookies() throws outside request context — fall through to raw header
+  // Primary: NextRequest.cookies — same API middleware uses (works on Railway edge)
+  if (request) {
+    try {
+      const nextReq = request as NextRequest;
+      cookieValue = nextReq.cookies.get('session')?.value;
+    } catch {
+      // Not a NextRequest — fall through to raw header
+    }
   }
 
   // Fallback: parse raw Cookie header from the request object
