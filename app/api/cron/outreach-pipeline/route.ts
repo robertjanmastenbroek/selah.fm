@@ -107,7 +107,8 @@ export async function GET(request: Request) {
           // Extract Bandcamp URL from social_links if available
           const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
           const bandcampUrl = socialLinks.bandcamp || '';
-          const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl, socialLinks);
+          const genres = Array.isArray(artist.genres) ? artist.genres : (typeof artist.genres === 'string' ? JSON.parse(artist.genres) : []);
+          const audit = await auditArtist(artist.artist_name, artist.latest_track_name, genres, bandcampUrl, socialLinks);
 
           if (!audit) {
             log.push(`  ❌ Audit failed for ${artist.artist_name}`);

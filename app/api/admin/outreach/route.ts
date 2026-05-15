@@ -157,7 +157,8 @@ async function runAudit(artistId: string) {
   // Run audit via YouTube + Bandcamp social discovery
   const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
   const bandcampUrl = socialLinks.bandcamp || '';
-  const audit = await auditArtist(artist.artist_name, artist.latest_track_name || '', artist.genres || [], bandcampUrl, socialLinks);
+  const genres = Array.isArray(artist.genres) ? artist.genres : (typeof artist.genres === 'string' ? JSON.parse(artist.genres) : []);
+  const audit = await auditArtist(artist.artist_name, artist.latest_track_name || '', genres, bandcampUrl, socialLinks);
   if (!audit) return NextResponse.json({ error: 'Audit failed — could not gather artist data (Bandcamp unreachable or no data found)' }, { status: 500 });
 
   // Store audit (even without IG — campaign creation gate handles the IG check)
@@ -531,7 +532,8 @@ async function runBatchAudit(limit: number = 5) {
     try {
       const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
       const bandcampUrl = socialLinks.bandcamp || '';
-      const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl, socialLinks);
+      const genres = Array.isArray(artist.genres) ? artist.genres : (typeof artist.genres === 'string' ? JSON.parse(artist.genres) : []);
+      const audit = await auditArtist(artist.artist_name, artist.latest_track_name, genres, bandcampUrl, socialLinks);
 
       if (!audit) {
         await sql`UPDATE discovered_artists SET status = 'declined', updated_at = NOW() WHERE id = ${artist.id}`;
