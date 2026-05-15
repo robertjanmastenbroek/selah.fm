@@ -1,56 +1,62 @@
 import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import type { CookieOptionWithName } from './types';
 
-/**
- * Supabase server client — for use in:
- * - Server Components
- * - API Routes (Route Handlers)
- * - Server Actions
- */
 export function createClient() {
   const cookieStore = cookies();
-
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
+        getAll() { return cookieStore.getAll(); },
         setAll(cookiesToSet: CookieOptionWithName[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Server Components can't set cookies — middleware handles refresh
-          }
+          try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); } catch {}
         },
       },
     }
   );
 }
 
-/**
- * Get the current authenticated user from a server context.
- * Returns null if not authenticated.
- */
+/** Alternate client that reads cookies from raw headers (bypasses cookies() issues) */
+function createClientFromHeaders() {
+  try {
+    const cookieHeader = headers().get('cookie') || '';
+    const parsed: { name: string; value: string }[] = cookieHeader
+      .split(';')
+      .filter(Boolean)
+      .map(c => {
+        const [name, ...rest] = c.trim().split('=');
+        return { name: name.trim(), value: rest.join('=').trim() };
+      });
+
+    return createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return parsed; },
+          setAll() {}, // no-op in server components
+        },
+      }
+    );
+  } catch {
+    return createClient();
+  }
+}
+
 export async function getUser() {
   try {
-    const supabase = createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) return null;
-    return user;
+    // Try cookies() first, fall back to headers()
+    let supabase;
+    try { supabase = createClient(); } catch { supabase = createClientFromHeaders(); }
+    const { data: { user } } = await supabase.auth.getUser();
+    return user || null;
   } catch {
     return null;
   }
 }
 
-/**
- * Check if the current user is an admin.
- */
 export async function isAdmin(adminEmails: string[]): Promise<boolean> {
   const user = await getUser();
   if (!user?.email) return false;
