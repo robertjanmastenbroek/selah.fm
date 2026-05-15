@@ -192,14 +192,6 @@ export default function OutreachDashboard() {
             <Megaphone size={14} className="text-amber-400" />Ready for Campaign
             <span className="text-[10px] text-muted-foreground font-normal">{readyForCampaign.length} audited</span>
           </h2>
-          <div className="space-y-2">
-            {readyForCampaign.map((a: any) => (
-              <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
-                onAudit={runAudit} onCreateCampaign={createCampaign}
-                onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
-                onLogOutreach={logOutreach} onSkip={skipArtist} />
-            ))}
-          </div>
         </div>
       )}
 
@@ -225,13 +217,8 @@ export default function OutreachDashboard() {
           </div>
         </div>
         {artists.length === 0 ? <EmptyState onDiscover={runDiscovery} /> : (
-          <div className="space-y-2">
-            {artists.filter((a: any) => a.status !== 'audited').map((a: any) => (
-              <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
-                onAudit={runAudit} onCreateCampaign={createCampaign}
-                onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
-                onLogOutreach={logOutreach} onSkip={skipArtist} />
-            ))}
+          <div className="text-sm text-muted-foreground text-center py-8">
+            {artists.length} artists loaded (ArtistCard disabled for testing)
           </div>
         )}
       </div>
