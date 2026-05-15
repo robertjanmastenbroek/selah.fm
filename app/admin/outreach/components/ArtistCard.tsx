@@ -29,11 +29,6 @@ export default function ArtistCard({ artist, actionLoading, onAudit, onCreateCam
   return (
     <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] p-4 hover:bg-white/[0.04] transition-colors">
       <div className="flex items-start gap-4">
-        {artist.latest_track_cover_url ? (
-          <img src={artist.latest_track_cover_url} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 bg-white/[0.04]" loading="lazy" />
-        ) : (
-          <div className="w-12 h-12 rounded-xl shrink-0 bg-white/[0.04] flex items-center justify-center text-muted-foreground/20 text-lg">♪</div>
-        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="font-semibold text-sm">{artist.artist_name}</span>
