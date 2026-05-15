@@ -31,7 +31,12 @@ export default function OutreachDashboard() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...body }),
     });
-    if (!res.ok) throw new Error(`Server error (${res.status})`);
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      let msg = `Server error (${res.status})`;
+      try { const j = JSON.parse(text); if (j.error) msg = j.error; } catch {}
+      throw new Error(msg);
+    }
     return res.json();
   }, []);
 
