@@ -157,8 +157,8 @@ async function runAudit(artistId: string) {
   // Run audit via YouTube + Bandcamp social discovery
   const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
   const bandcampUrl = socialLinks.bandcamp || '';
-  const audit = await auditArtist(artist.artist_name, artist.latest_track_name, artist.genres || [], bandcampUrl, socialLinks);
-  if (!audit) return NextResponse.json({ error: 'Audit failed' }, { status: 500 });
+  const audit = await auditArtist(artist.artist_name, artist.latest_track_name || '', artist.genres || [], bandcampUrl, socialLinks);
+  if (!audit) return NextResponse.json({ error: 'Audit failed — could not gather artist data (Bandcamp unreachable or no data found)' }, { status: 500 });
 
   // Store audit (even without IG — campaign creation gate handles the IG check)
   await sql`
