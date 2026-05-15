@@ -48,13 +48,17 @@ export default function OutreachDashboard() {
 
   const fetchPipeline = useCallback(async () => {
     try {
-      const [data, rfc] = await Promise.all([
-        fetch('/api/admin/outreach', { credentials: 'include' }).then(r => r.json()),
-        fetch('/api/admin/outreach', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_ready_for_campaign' }) }).then(r => r.json()),
-      ]);
-      if (data.error) { addToast('error', 'Could not load pipeline', data.error); }
-      else { setPipeline(data); setArtists(data.recent || []); }
-      if (!rfc.error) setReadyForCampaign(Array.isArray(rfc) ? rfc : []);
+      const res = await fetch('/api/admin/outreach', { credentials: 'include' });
+      const data = await res.json();
+      if (data.error) { addToast('error', 'Could not load pipeline', data.error); setLoading(false); return; }
+      setPipeline(data);
+      setArtists(data.recent || []);
+
+      try {
+        const rfcRes = await fetch('/api/admin/outreach', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get_ready_for_campaign' }) });
+        const rfc = await rfcRes.json();
+        if (!rfc.error) setReadyForCampaign(Array.isArray(rfc) ? rfc : []);
+      } catch {}
     } catch {
       addToast('error', 'Could not load pipeline', 'Check your connection.');
     }
