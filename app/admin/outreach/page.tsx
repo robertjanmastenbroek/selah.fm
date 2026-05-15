@@ -49,7 +49,12 @@ export default function OutreachDashboard() {
   const fetchPipeline = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/outreach', { credentials: 'include' });
-      const data = await res.json();
+      let data: any;
+      try { data = await res.json(); } catch { 
+        const text = await res.text();
+        addToast('error', 'Invalid response', text.substring(0, 200));
+        setLoading(false); return;
+      }
       if (data.error) { addToast('error', 'Could not load pipeline', data.error); setLoading(false); return; }
       setPipeline(data);
       setArtists(data.recent || []);

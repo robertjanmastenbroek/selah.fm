@@ -54,6 +54,9 @@ export async function GET(request: Request) {
   const action = searchParams.get('action');
   const secret = searchParams.get('secret');
 
+  // Simple ping — no auth needed
+  if (action === 'ping') return NextResponse.json({ ok: true });
+
   // Allow repair with secret (like cron endpoints) or admin session
   const isRepairWithSecret = action === 'repair_campaign_images' && secret && secret === process.env.CRON_SECRET;
   if (!isRepairWithSecret && !(await isAdminRequest(request))) {
@@ -65,7 +68,12 @@ export async function GET(request: Request) {
   try {
     if (action === 'repair_campaign_images') return repairCampaignImages();
     if (artistId) return getArtistById(artistId);
-    return getPipelineOverview();
+    try {
+      return await getPipelineOverview();
+    } catch (e: any) {
+      console.error('Pipeline overview error:', e.message);
+      return NextResponse.json({ error: 'Pipeline query failed: ' + e.message, pipeline: { discovered: 0, awaiting_audit: 0, audited: 0, campaigns_created: 0, outreach_sent: 0, claimed: 0, declined: 0 }, outreach: { total_sent: 0, replies: 0 }, recent: [] });
+    }
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
