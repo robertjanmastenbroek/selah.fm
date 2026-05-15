@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Megaphone, Send, Check, Clock, BarChart3, Users, RefreshCw, Zap, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Megaphone, Send, Check, Clock, BarChart3, Users, RefreshCw, Zap, Loader2, Mail } from 'lucide-react';
 import StatCard from './components/StatCard';
 import { useToasts, ToastContainer } from './components/ToastBar';
+import ArtistCard from './components/ArtistCard';
+import EmptyState from './components/EmptyState';
 
 interface PipelineData {
   pipeline: {
@@ -18,7 +20,20 @@ interface PipelineData {
 export default function OutreachDashboard() {
   const [pipeline, setPipeline] = useState<PipelineData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState('');
   const { toasts, addToast, dismissToast } = useToasts();
+  const [artists, setArtists] = useState<any[]>([]);
+  const [readyForCampaign, setReadyForCampaign] = useState<any[]>([]);
+
+  const api = useCallback(async (action: string, body: any = {}) => {
+    const res = await fetch('/api/admin/outreach', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...body }),
+    });
+    if (!res.ok) throw new Error(`Server error (${res.status})`);
+    return res.json();
+  }, []);
 
   const fetchPipeline = useCallback(async () => {
     try {
@@ -26,13 +41,110 @@ export default function OutreachDashboard() {
       const data = await res.json();
       if (data.error) { addToast('error', data.error); setLoading(false); return; }
       setPipeline(data);
+      setArtists(data.recent || []);
+      try {
+        const rfcRes = await api('get_ready_for_campaign');
+        if (!rfcRes.error) setReadyForCampaign(Array.isArray(rfcRes) ? rfcRes : []);
+      } catch {}
     } catch (e: any) {
       addToast('error', e.message || 'Failed to load');
     }
     setLoading(false);
-  }, [addToast]);
+  }, [addToast, api]);
 
   useEffect(() => { fetchPipeline(); }, [fetchPipeline]);
+
+  const runDiscovery = async () => {
+    setActionLoading('discover');
+    try {
+      const data = await api('discover', { limit: 15 });
+      if (data.error) addToast('error', 'Discovery failed', data.error);
+      else if (data.discovered === 0) addToast('info', 'No artists found');
+      else { addToast('success', `Found ${data.discovered} artists`); fetchPipeline(); }
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const runAudit = async (artistId: string) => {
+    setActionLoading(`audit-${artistId}`);
+    try {
+      const data = await api('audit', { artistId });
+      if (data.error) addToast('error', 'Audit failed', data.error);
+      else addToast('success', `Audited ${data.artist?.artist_name}`);
+      fetchPipeline();
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const createCampaign = async (artistId: string) => {
+    setActionLoading(`campaign-${artistId}`);
+    try {
+      const data = await api('create_campaign', { artistId });
+      if (data.error) addToast('error', 'Campaign failed', data.error);
+      else { addToast('success', 'Campaign created', data.campaign_url); fetchPipeline(); }
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const sendEmail = async (artistId: string) => {
+    setActionLoading(`email-${artistId}`);
+    try {
+      const data = await api('send_email', { artistId });
+      if (data.error) addToast('error', 'Email failed', data.error);
+      else { addToast('success', 'Email sent'); fetchPipeline(); }
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const renderOutreach = async (artistId: string, igHandle?: string, ttHandle?: string) => {
+    setActionLoading(`outreach-${artistId}`);
+    try {
+      const data = await api('render_outreach', { artistId });
+      if (data.error) { addToast('error', data.error); setActionLoading(''); return; }
+      await navigator.clipboard.writeText(data.message);
+      if (data.instagram_handle) window.open(`https://ig.me/m/${data.instagram_handle}`, '_blank');
+      if (data.tiktok_handle) window.open(`https://www.tiktok.com/@${data.tiktok_handle}`, '_blank');
+      addToast('success', 'Message copied', data.artist_name);
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const renderFollowUp = async (artistId: string) => {
+    setActionLoading(`followup-${artistId}`);
+    try {
+      const data = await api('render_follow_up', { artistId });
+      if (data.error) addToast('error', data.error);
+      else { await navigator.clipboard.writeText(data.message); addToast('success', 'Follow-up copied'); }
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const logOutreach = async (artistId: string) => {
+    setActionLoading(`log-${artistId}`);
+    try {
+      await api('log_outreach', { artistId, channel: 'email', status: 'sent' });
+      addToast('success', 'Outreach logged');
+      fetchPipeline();
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const skipArtist = async (artistId: string) => {
+    setActionLoading(`skip-${artistId}`);
+    try { await api('decline', { artistId }); addToast('success', 'Artist skipped'); fetchPipeline(); }
+    catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const batchAudit = async () => {
+    setActionLoading('batch-audit');
+    try {
+      const data = await api('batch_audit', { limit: 5 });
+      addToast('success', `Audited ${data.audited || 0} artists`);
+      fetchPipeline();
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
 
   if (loading) {
     return (
@@ -52,8 +164,14 @@ export default function OutreachDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Outreach Pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-1">Discover → Audit → Campaign → Outreach → Claim</p>
+          <p className="text-sm text-muted-foreground mt-1">Discover → Audit → Campaign → Email → Claim</p>
         </div>
+        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          onClick={runDiscovery} disabled={actionLoading === 'discover'}
+          className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm
+                     hover:shadow-[0_0_30px_rgba(67,56,202,0.25)] disabled:opacity-50 transition-shadow duration-300">
+          {actionLoading === 'discover' ? <><Loader2 size={16} className="animate-spin" />Discovering…</> : <><Search size={16} />Discover Artists</>}
+        </motion.button>
       </div>
 
       <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
@@ -66,6 +184,56 @@ export default function OutreachDashboard() {
           { label: 'Claimed', value: p.claimed, icon: Check, color: 'text-emerald-400' },
           { label: 'Replies', value: o.replies, icon: BarChart3, color: 'text-pink-400' },
         ].map((s, i) => <StatCard key={s.label} {...s} delay={i} />)}
+      </div>
+
+      {readyForCampaign.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
+            <Megaphone size={14} className="text-amber-400" />Ready for Campaign
+            <span className="text-[10px] text-muted-foreground font-normal">{readyForCampaign.length} audited</span>
+          </h2>
+          <div className="space-y-2">
+            {readyForCampaign.map((a: any) => (
+              <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
+                onAudit={runAudit} onCreateCampaign={createCampaign}
+                onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
+                onLogOutreach={logOutreach} onSkip={skipArtist} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            <Users size={14} className="text-primary" />Discovered Artists
+            {artists.length > 0 && <span className="text-[10px] text-muted-foreground font-normal">{artists.length} showing</span>}
+          </h2>
+          <div className="flex items-center gap-2">
+            <button onClick={batchAudit} disabled={actionLoading === 'batch-audit'}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
+                         bg-purple-500/10 text-purple-400 border border-purple-500/20
+                         hover:bg-purple-500/20 disabled:opacity-40">
+              {actionLoading === 'batch-audit' ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}Audit 5
+            </button>
+            <button onClick={fetchPipeline} disabled={actionLoading === 'refresh'}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
+                         bg-white/[0.03] border border-white/[0.06] text-muted-foreground
+                         hover:text-foreground hover:border-white/[0.12] disabled:opacity-40">
+              <RefreshCw size={11} />Refresh
+            </button>
+          </div>
+        </div>
+        {artists.length === 0 ? <EmptyState onDiscover={runDiscovery} /> : (
+          <div className="space-y-2">
+            {artists.filter((a: any) => a.status !== 'audited').map((a: any) => (
+              <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
+                onAudit={runAudit} onCreateCampaign={createCampaign}
+                onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
+                onLogOutreach={logOutreach} onSkip={skipArtist} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
