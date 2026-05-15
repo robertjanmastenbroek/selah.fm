@@ -193,8 +193,8 @@ async function runCreateCampaign(artistId: string) {
   const [audit] = await sql`SELECT * FROM artist_audits WHERE discovered_artist_id = ${artist.id} ORDER BY audited_at DESC LIMIT 1`;
   if (!audit) return NextResponse.json({ error: 'No audit found — run audit first' }, { status: 400 });
 
-  if (!audit.instagram_handle && !audit.tiktok_handle && !audit.email_address) {
-    return NextResponse.json({ error: 'No Instagram, TikTok, or email — cannot reach this artist. Campaign not created.' }, { status: 400 });
+  if (!audit.email_address) {
+    return NextResponse.json({ error: 'No email address — cannot reach this artist. Campaign not created.' }, { status: 400 });
   }
 
   // Clean slug: artist-name-track-name-random4 (ASCII only, max 100 chars)
@@ -696,14 +696,14 @@ async function repairCampaignImages() {
   });
 }
 
-/** Returns audited artists with social handles — ready for campaign creation */
+/** Returns audited artists with email — ready for campaign creation */
 async function getReadyForCampaign() {
   const artists = await sql`
-    SELECT DISTINCT ON (da.id) da.*, aa.instagram_handle, aa.tiktok_handle
+    SELECT DISTINCT ON (da.id) da.*, aa.instagram_handle, aa.tiktok_handle, aa.email_address
     FROM discovered_artists da
     LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     WHERE da.status = 'audited'
-      AND (aa.instagram_handle IS NOT NULL OR aa.tiktok_handle IS NOT NULL)
+      AND aa.email_address IS NOT NULL
     ORDER BY da.id, aa.audited_at DESC
     LIMIT 50
   `;
@@ -801,17 +801,18 @@ async function getEmailQueue() {
   return NextResponse.json(artists);
 }
 
-/** Returns all artists with campaign_created status (ready for outreach) + their audit data */
+/** Returns all artists ready for outreach (prioritized by email) */
 async function getOutreachQueue() {
   const artists = await sql`
-    SELECT DISTINCT ON (da.id) da.*, aa.instagram_handle, aa.tiktok_handle, aa.personal_angle, aa.youtube_video_url,
+    SELECT DISTINCT ON (da.id) da.*, 
+           aa.instagram_handle, aa.tiktok_handle, aa.email_address, aa.personal_angle, aa.youtube_video_url,
            c.slug as campaign_slug, c.title as campaign_title
     FROM discovered_artists da
     JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
     JOIN campaigns c ON c.id = cc.campaign_id
     WHERE da.status = 'campaign_created'
-      AND (aa.instagram_handle IS NOT NULL OR aa.tiktok_handle IS NOT NULL)
+      AND aa.email_address IS NOT NULL
       AND NOT EXISTS (SELECT 1 FROM outreach_log ol WHERE ol.discovered_artist_id = da.id AND ol.status = 'sent')
     ORDER BY da.id, aa.audited_at DESC
     LIMIT 50
