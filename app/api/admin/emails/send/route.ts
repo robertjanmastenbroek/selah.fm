@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     // Try sending via Resend
     let sent = false;
-    if (process.env.RESEND_API_KEY && process.env.SMTP_FROM) {
+    if (process.env.RESEND_API_KEY) {
       try {
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: process.env.SMTP_FROM,
+            from: 'Selah.fm <info@selah.fm>',
             to: [to],
             subject,
             html: body.replace(/\n/g, '<br>'),
@@ -38,8 +38,8 @@ export async function POST(request: Request) {
     // Log to email_logs table
     try {
       await sql`
-        INSERT INTO email_logs (to_email, subject, body, sent, sent_by)
-        VALUES (${to}, ${subject}, ${body}, ${sent}, ${session.email})
+        INSERT INTO email_logs (recipient, subject, status, metadata)
+        VALUES (${to}, ${subject}, ${sent ? 'sent' : 'failed'}, ${JSON.stringify({ sent_by: session.email, body_preview: body.substring(0, 200) })})
       `;
     } catch {}
 

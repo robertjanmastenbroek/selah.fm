@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Sparkles, Megaphone, Send, Check, Clock, BarChart3, Users, RefreshCw, Zap, Loader2, Disc3 } from 'lucide-react';
+import { Search, Sparkles, Megaphone, Send, Check, Clock, BarChart3, Users, RefreshCw, Zap, Loader2, Mail } from 'lucide-react';
 import StatCard from './components/StatCard';
 import { useToasts, ToastContainer } from './components/ToastBar';
 import OutreachQueue from './components/OutreachQueue';
@@ -80,7 +80,7 @@ export default function OutreachDashboard() {
     try {
       const data = await api('audit', { artistId });
       if (data.error) { addToast('error', 'Audit failed', data.error); }
-      else if (data.status === 'declined') { addToast('info', `${data.artist?.artist_name} — No Instagram`, 'Auto-declined. Can\'t DM without IG.'); }
+      else if (data.status === 'declined') { addToast('info', `${data.artist?.artist_name} — No email`, 'Cannot reach without contact info.'); }
       else { addToast('success', `Audited ${data.artist?.artist_name}`, 'Ready to create campaign.'); }
       fetchPipeline();
     } catch (e: any) { addToast('error', 'Audit failed', e.message); }
@@ -140,9 +140,19 @@ export default function OutreachDashboard() {
     setActionLoading('');
   };
 
+  const sendEmail = async (artistId: string) => {
+    setActionLoading(`email-${artistId}`);
+    try {
+      const data = await api('send_email', { artistId });
+      if (data.error) { addToast('error', 'Email failed', data.error); }
+      else { addToast('success', 'Email sent', data.messageId ? `ID: ${data.messageId}` : ''); fetchPipeline(); }
+    } catch (e: any) { addToast('error', 'Email failed', e.message); }
+    setActionLoading('');
+  };
+
   const logOutreach = async (artistId: string) => {
     setActionLoading(`log-${artistId}`);
-    try { await api('log_outreach', { artistId, channel: 'instagram_dm', status: 'sent' }); addToast('success', 'Outreach logged', 'Marked as sent via Instagram DM.'); fetchPipeline(); }
+    try { await api('log_outreach', { artistId, channel: 'email', status: 'sent' }); addToast('success', 'Outreach logged'); fetchPipeline(); }
     catch (e: any) { addToast('error', 'Could not log outreach', e.message); }
     setActionLoading('');
   };
@@ -216,7 +226,7 @@ export default function OutreachDashboard() {
               {readyForCampaign.map((a: any) => (
                 <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
                   onAudit={runAudit} onCreateCampaign={createCampaign}
-                  onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
+                  onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
                   onLogOutreach={logOutreach} onSkip={skipArtist} />
               ))}
             </AnimatePresence>
@@ -284,7 +294,7 @@ export default function OutreachDashboard() {
               {artists.filter((a: any) => a.status !== 'audited').map((a: any) => (
                 <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
                   onAudit={runAudit} onCreateCampaign={createCampaign}
-                  onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
+                  onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
                   onLogOutreach={logOutreach} onSkip={skipArtist} />
               ))}
             </AnimatePresence>
