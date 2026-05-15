@@ -1,10 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { CookieOptionWithName } from './types';
+import { ADMIN_EMAILS } from '@/lib/constants';
 
 /**
  * Supabase middleware — refreshes the auth session and protects routes.
- * Replaces the old custom HMAC cookie middleware.
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -30,12 +30,11 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh session — don't block on this, it's fire-and-forget
   const { data: { user } } = await supabase.auth.getUser();
-
-  // Protected routes
-  const PROTECTED = ['/dashboard', '/review', '/earnings', '/settings', '/analytics', '/onboarding'];
   const { pathname } = request.nextUrl;
+
+  // Protected routes (require any login)
+  const PROTECTED = ['/dashboard', '/review', '/earnings', '/settings', '/analytics', '/onboarding'];
   const isProtected = PROTECTED.some(p => pathname === p || pathname.startsWith(p + '/'));
 
   if (isProtected && !user) {
@@ -43,6 +42,24 @@ export async function updateSession(request: NextRequest) {
     url.pathname = '/login';
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
+  }
+
+  // Admin routes (require admin email)
+  if (pathname.startsWith('/admin')) {
+    if (!user?.email) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(url);
+    }
+
+    const isAdmin = ADMIN_EMAILS.some(
+      (a) => a.toLowerCase() === user.email!.toLowerCase()
+    );
+
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
 
   return supabaseResponse;

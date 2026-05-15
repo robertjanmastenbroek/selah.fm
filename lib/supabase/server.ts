@@ -7,8 +7,6 @@ import type { CookieOptionWithName } from './types';
  * - Server Components
  * - API Routes (Route Handlers)
  * - Server Actions
- * 
- * Uses next/headers cookies() for session management.
  */
 export function createClient() {
   const cookieStore = cookies();
@@ -27,8 +25,7 @@ export function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing sessions.
+            // Server Components can't set cookies — middleware handles refresh
           }
         },
       },
@@ -41,15 +38,18 @@ export function createClient() {
  * Returns null if not authenticated.
  */
 export async function getUser() {
-  const supabase = createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return null;
-  return user;
+  try {
+    const supabase = createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return null;
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 /**
  * Check if the current user is an admin.
- * Compares user email against ADMIN_EMAILS constant.
  */
 export async function isAdmin(adminEmails: string[]): Promise<boolean> {
   const user = await getUser();
