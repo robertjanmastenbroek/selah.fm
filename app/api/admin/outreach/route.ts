@@ -470,19 +470,20 @@ async function getPipelineOverview() {
   const [totalOutreach] = await sql`SELECT COUNT(*)::int FROM outreach_log`;
   const [repliesReceived] = await sql`SELECT COUNT(*)::int FROM outreach_log WHERE status = 'replied'`;
 
-  // Recent discoveries — join with LATEST audit only to avoid duplicate rows
+  // Recent discoveries — only return essential fields, limit to 20
   const recent = await sql`
-    SELECT DISTINCT ON (da.id) da.*, aa.instagram_handle, aa.tiktok_handle
+    SELECT da.id, da.artist_name, da.latest_track_name, da.latest_track_cover_url,
+           da.status, da.genres, da.discovery_source, da.followers,
+           aa.instagram_handle, aa.tiktok_handle, aa.email_address
     FROM discovered_artists da
     LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
-    ORDER BY da.id, aa.audited_at DESC
+    WHERE da.id IN (
+      SELECT id FROM discovered_artists
+      ORDER BY CASE WHEN status = 'discovered' THEN 0 ELSE 1 END, discovered_at DESC
+      LIMIT 20
+    )
+    ORDER BY CASE WHEN da.status = 'discovered' THEN 0 ELSE 1 END, da.discovered_at DESC
   `;
-  // Sort undiscovered first, then by recency — so fresh artists always show
-  const sorted = recent.sort((a: any, b: any) => {
-    if (a.status === 'discovered' && b.status !== 'discovered') return -1;
-    if (a.status !== 'discovered' && b.status === 'discovered') return 1;
-    return new Date(b.discovered_at).getTime() - new Date(a.discovered_at).getTime();
-  }).slice(0, 20);
 
   return NextResponse.json({
     pipeline: {
@@ -498,7 +499,7 @@ async function getPipelineOverview() {
       total_sent: totalOutreach?.count || 0,
       replies: repliesReceived?.count || 0,
     },
-    recent: sorted,
+    recent,
   });
 }
 
