@@ -63,9 +63,12 @@ function LoginForm() {
   };
 
   const handleGoogleSignIn = async () => {
+    const next = redirect || '/browse';
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}${redirect || '/browse'}` },
+      options: { 
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     });
   };
 

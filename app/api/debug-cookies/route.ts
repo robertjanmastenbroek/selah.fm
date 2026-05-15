@@ -1,20 +1,22 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 
-/**
- * Temporary debug endpoint — shows all cookies and headers the server receives.
- * REMOVE after diagnosing the session cookie issue.
- */
-export async function GET(request: Request) {
-  const rawCookie = request.headers.get('cookie') || '(empty)';
-  
-  // Parse individual session cookie from raw header
-  const match = rawCookie.match(/(?:^|;\s*)session=([^;]+)/);
-  const sessionValue = match ? match[1].substring(0, 30) + '...' : '(not found)';
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  const cookieHeader = headers().get('cookie') || '';
+  const supabaseCookies = cookieHeader
+    .split(';')
+    .filter(c => c.includes('sb-') || c.includes('supabase') || c.includes('auth'))
+    .map(c => c.trim());
 
   return NextResponse.json({
-    rawCookieHeader: rawCookie.substring(0, 500),
-    sessionCookieFound: !!match,
-    sessionValuePreview: sessionValue,
-    allHeaders: Object.fromEntries(request.headers.entries()),
+    hasCookies: cookieHeader.length > 0,
+    totalCookies: cookieHeader.split(';').filter(Boolean).length,
+    supabaseCookies,
+    allCookieNames: cookieHeader
+      .split(';')
+      .filter(Boolean)
+      .map(c => c.trim().split('=')[0]),
   });
 }

@@ -1,10 +1,8 @@
 import { createServerClient, type CookieOptionsWithName } from '@supabase/ssr';
 import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
+import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 
-/**
- * Supabase server client — reads cookies directly from request headers.
- * This is more reliable than cookies() in server components on some deployments.
- */
 export function createClient() {
   const cookieHeader = headers().get('cookie') || '';
 
@@ -19,8 +17,30 @@ export function createClient() {
             return { name: name.trim(), value: rest.join('=').trim() };
           });
         },
-        setAll() {
-          // Server Components can't set cookies — middleware handles refresh
+        setAll() {},
+      },
+    }
+  );
+}
+
+export function createRouteClient(response: NextResponse) {
+  const cookieHeader = headers().get('cookie') || '';
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieHeader.split(';').filter(Boolean).map(c => {
+            const [name, ...rest] = c.trim().split('=');
+            return { name: name.trim(), value: rest.join('=').trim() };
+          });
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptionsWithName }[]) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options as Partial<ResponseCookie>);
+          });
         },
       },
     }
