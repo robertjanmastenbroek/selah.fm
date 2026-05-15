@@ -214,9 +214,9 @@ export default function OutreachDashboard() {
       </div>
 
       {/* Ready for Outreach */}
-      <OutreachQueue count={p.campaigns_created - p.outreach_sent}
+      {false && <OutreachQueue count={p.campaigns_created - p.outreach_sent}
         actionLoading={actionLoading} setActionLoading={setActionLoading} addToast={addToast}
-        fetchPipeline={fetchPipeline} onLogOutreach={logOutreach} />
+        fetchPipeline={fetchPipeline} onLogOutreach={logOutreach} />}
 
       {/* Ready for Campaign Creation — audited artists with social handles */}
       {readyForCampaign.length > 0 && (
