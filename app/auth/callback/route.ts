@@ -3,14 +3,15 @@ import { createRouteClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Auth callback — exchanges OAuth code for session and sets cookies.
- * Supabase redirects here after Google auth completes.
- */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const next = searchParams.get('next') || '/browse';
+
+  // Railway proxy forwards real host in x-forwarded-host header
+  const origin = request.headers.get('x-forwarded-host') 
+    ? `https://${request.headers.get('x-forwarded-host')}`
+    : process.env.NEXT_PUBLIC_URL || new URL(request.url).origin;
 
   if (code) {
     const response = NextResponse.redirect(`${origin}${next}`);
