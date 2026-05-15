@@ -167,16 +167,16 @@ export async function GET(request: Request) {
 
       const batchResults = await Promise.all(batch.map(async (artist: any) => {
         try {
-          // Skip artists without Instagram or TikTok — we can't reach them
+          // Skip artists without any reachable channel
           const auditCheck = await sql`
-            SELECT instagram_handle, tiktok_handle FROM artist_audits
+            SELECT instagram_handle, tiktok_handle, email_address FROM artist_audits
             WHERE discovered_artist_id = ${artist.id}
             ORDER BY audited_at DESC LIMIT 1
           `;
           const audit = auditCheck[0];
-          if (!audit?.instagram_handle && !audit?.tiktok_handle) {
-            log.push(`  ⚠️  No social handles for ${artist.artist_name} — skipping (can't DM)`);
-            return { artist, error: false, skipped: true, msg: 'no social handles' };
+          if (!audit?.instagram_handle && !audit?.tiktok_handle && !audit?.email_address) {
+            log.push(`  ⚠️  No reachable channel for ${artist.artist_name} — skipping`);
+            return { artist, error: false, skipped: true, msg: 'no reachable channel' };
           }
 
           // Prevent duplicate campaigns

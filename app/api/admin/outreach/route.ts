@@ -6,6 +6,8 @@ import { isAdminRequest } from '@/lib/auth';
 import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMessage, generateOutreachMessage } from '@/lib/outreach';
 import { generateArticle, findVoiceExamples } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
+import { renderArtistOutreachEmail, generateOutreachEmail, sendOutreachEmail } from '@/lib/email-outreach';
+import { emailWrapper } from '@/lib/email-templates';
 
 export const maxDuration = 180; // 3 minutes — 20 searches + up to 200 artist lookups
 
@@ -34,6 +36,9 @@ export async function POST(request: Request) {
       case 'get_outreach_queue':     return getOutreachQueue();
       case 'repair_campaign_images': return repairCampaignImages();
       case 'get_ready_for_campaign': return getReadyForCampaign();
+      case 'get_email_queue':        return getEmailQueue();
+      case 'render_email':           return runRenderEmail(body.artistId);
+      case 'send_email':             return runSendEmail(body.artistId);
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -188,8 +193,8 @@ async function runCreateCampaign(artistId: string) {
   const [audit] = await sql`SELECT * FROM artist_audits WHERE discovered_artist_id = ${artist.id} ORDER BY audited_at DESC LIMIT 1`;
   if (!audit) return NextResponse.json({ error: 'No audit found — run audit first' }, { status: 400 });
 
-  if (!audit.instagram_handle && !audit.tiktok_handle) {
-    return NextResponse.json({ error: 'No Instagram or TikTok handle — cannot DM this artist. Campaign not created.' }, { status: 400 });
+  if (!audit.instagram_handle && !audit.tiktok_handle && !audit.email_address) {
+    return NextResponse.json({ error: 'No Instagram, TikTok, or email — cannot reach this artist. Campaign not created.' }, { status: 400 });
   }
 
   // Clean slug: artist-name-track-name-random4 (ASCII only, max 100 chars)
@@ -699,6 +704,97 @@ async function getReadyForCampaign() {
     LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     WHERE da.status = 'audited'
       AND (aa.instagram_handle IS NOT NULL OR aa.tiktok_handle IS NOT NULL)
+    ORDER BY da.id, aa.audited_at DESC
+    LIMIT 50
+  `;
+  return NextResponse.json(artists);
+}
+
+// ── Email Outreach Handlers ────────────────────────────────────────
+
+/** Preview an email for an artist */
+async function runRenderEmail(artistId: string) {
+  const [artist] = await sql`SELECT * FROM discovered_artists WHERE id = ${artistId}`;
+  if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
+
+  const [audit] = await sql`SELECT * FROM artist_audits WHERE discovered_artist_id = ${artist.id} ORDER BY audited_at DESC LIMIT 1`;
+  if (!audit) return NextResponse.json({ error: 'No audit found' }, { status: 400 });
+  if (!audit.email_address) return NextResponse.json({ error: 'No email address for this artist' }, { status: 400 });
+
+  const [claim] = await sql`SELECT * FROM campaign_claims WHERE discovered_artist_id = ${artist.id} ORDER BY created_at DESC LIMIT 1`;
+  if (!claim) return NextResponse.json({ error: 'No campaign created yet' }, { status: 400 });
+
+  const [campaign] = await sql`SELECT slug FROM campaigns WHERE id = ${claim.campaign_id}`;
+  const campaignUrl = `https://selah.fm/c/${campaign?.slug || ''}`;
+
+  const genre = (audit.hashtags?.[0] || '').replace('#', '') || 'music';
+  const email = await generateOutreachEmail(artist.artist_name, artist.latest_track_name, genre, campaignUrl);
+
+  return NextResponse.json({
+    to: audit.email_address,
+    subject: email.subject,
+    body: email.body,
+    campaign_url: campaignUrl,
+  });
+}
+
+/** Send an outreach email to an artist */
+async function runSendEmail(artistId: string) {
+  const [artist] = await sql`SELECT * FROM discovered_artists WHERE id = ${artistId}`;
+  if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
+
+  const [audit] = await sql`SELECT * FROM artist_audits WHERE discovered_artist_id = ${artist.id} ORDER BY audited_at DESC LIMIT 1`;
+  if (!audit) return NextResponse.json({ error: 'No audit found' }, { status: 400 });
+  if (!audit.email_address) return NextResponse.json({ error: 'No email address for this artist' }, { status: 400 });
+
+  const [claim] = await sql`SELECT * FROM campaign_claims WHERE discovered_artist_id = ${artist.id} ORDER BY created_at DESC LIMIT 1`;
+  if (!claim) return NextResponse.json({ error: 'No campaign created yet' }, { status: 400 });
+
+  const [campaign] = await sql`SELECT slug FROM campaigns WHERE id = ${claim.campaign_id}`;
+  const campaignUrl = `https://selah.fm/c/${campaign?.slug || ''}`;
+
+  // Check if email was already sent
+  const [existing] = await sql`SELECT id FROM outreach_log WHERE discovered_artist_id = ${artist.id} AND channel = 'email' LIMIT 1`;
+  if (existing) return NextResponse.json({ error: 'Email already sent to this artist' }, { status: 409 });
+
+  const genre = (audit.hashtags?.[0] || '').replace('#', '') || 'music';
+  const email = await generateOutreachEmail(artist.artist_name, artist.latest_track_name, genre, campaignUrl);
+  
+  const htmlBody = emailWrapper({
+    title: `Your campaign page is live`,
+    body: email.body.replace(/\n/g, '<br>'),
+    cta: { text: 'View your campaign page →', url: campaignUrl },
+  });
+
+  const result = await sendOutreachEmail({
+    to: audit.email_address,
+    subject: email.subject,
+    htmlBody,
+  });
+
+  if (result.sent) {
+    await sql`
+      INSERT INTO outreach_log (discovered_artist_id, campaign_id, channel, message_type, message_text, status, delivered_at)
+      VALUES (${artist.id}, ${claim.campaign_id}, 'email', 'initial', ${email.body}, 'sent', NOW())
+    `;
+    await sql`UPDATE discovered_artists SET status = 'outreach_sent', updated_at = NOW() WHERE id = ${artist.id}`;
+  }
+
+  return NextResponse.json(result);
+}
+
+/** Get artists with email addresses — ready for email outreach */
+async function getEmailQueue() {
+  const artists = await sql`
+    SELECT DISTINCT ON (da.id) da.*, aa.email_address, aa.personal_angle,
+           c.slug as campaign_slug, c.title as campaign_title
+    FROM discovered_artists da
+    JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+    JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
+    JOIN campaigns c ON c.id = cc.campaign_id
+    WHERE da.status = 'campaign_created'
+      AND aa.email_address IS NOT NULL
+      AND NOT EXISTS (SELECT 1 FROM outreach_log ol WHERE ol.discovered_artist_id = da.id AND ol.channel = 'email')
     ORDER BY da.id, aa.audited_at DESC
     LIMIT 50
   `;

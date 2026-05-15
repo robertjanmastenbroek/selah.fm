@@ -59,6 +59,37 @@ export interface ArtistAudit {
 }
 
 /**
+ * Scrape contact email from Bandcamp profile page.
+ * Artists often list booking/contact emails in their Bandcamp bio sidebar.
+ */
+async function scrapeBandcampEmail(bandcampUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(bandcampUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // Look for mailto: links
+    const mailtoMatch = html.match(/mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if (mailtoMatch) return mailtoMatch[1].toLowerCase();
+
+    // Look for email patterns in the page text
+    const emailMatch = html.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if (emailMatch) {
+      const email = emailMatch[1].toLowerCase();
+      // Filter out common false positives (CDN URLs, image paths)
+      if (!email.includes('bcbits') && !email.includes('bandcamp.com')) {
+        return email;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Discover social handles for an artist.
  * Strategy: Bandcamp subdomain usually matches Instagram handle.
  * Bandcamp HTML is JS-rendered — social links are NOT in the page source.
@@ -174,6 +205,12 @@ export async function auditArtist(
       website_url = website_url || social.website_url;
     }
 
+    // Scrape email from Bandcamp profile
+    let email_address: string | null = null;
+    if (bandcampUrl) {
+      email_address = await scrapeBandcampEmail(bandcampUrl);
+    }
+
     // Personal angle
     const personalAngle = trackName
       ? `The way "${trackName}" hits — that's the moment I knew ${artistName} deserves way more ears.`
@@ -192,7 +229,7 @@ export async function auditArtist(
       instagram_followers: 0,
       tiktok_handle,
       tiktok_followers: 0,
-      email_address: null,
+      email_address,
       website_url,
       hashtags: genres.map((g: string) => `#${g.replace(/\s+/g, '')}`).slice(0, 5),
       personal_angle: personalAngle,
