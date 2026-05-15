@@ -29,7 +29,7 @@ function fmtGenres(g: any): string {
 
 export default function ArtistCard({ artist, actionLoading, onAudit, onCreateCampaign, onSendEmail, onRenderOutreach, onRenderFollowUp, onLogOutreach, onSkip }: Props) {
   const s = STATUS_MAP[artist.status] || STATUS_MAP.discovered;
-  const isBusy = actionLoading && actionLoading !== '';
+  const isBusy = !!(actionLoading && actionLoading !== '');
   const hasEmail = !!artist.email_address;
   const hasSocial = !!(artist.instagram_handle || artist.tiktok_handle);
 
