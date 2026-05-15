@@ -59,8 +59,8 @@ export default function OutreachDashboard() {
         const rfc = await rfcRes.json();
         if (!rfc.error) setReadyForCampaign(Array.isArray(rfc) ? rfc : []);
       } catch {}
-    } catch {
-      addToast('error', 'Could not load pipeline', 'Check your connection.');
+    } catch (e: any) {
+      addToast('error', 'Could not load pipeline', e.message || 'Check your connection.');
     }
     setLoading(false);
   }, [addToast]);
