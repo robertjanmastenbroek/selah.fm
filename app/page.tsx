@@ -51,12 +51,13 @@ export default async function HomePage() {
     totalActive = campaignCount?.count || 0;
 
     featuredCampaigns = await sql`
-      SELECT c.id, c.track_title, c.title, c.slug, c.cover_art_url, c.cpm_rate_cents, 
-             c.total_budget_cents, c.budget_remaining_cents, c.status, 
+      SELECT c.id, c.track_title, c.title, c.slug, 
+             COALESCE(c.cover_art_url, '/images/og-image.jpg') as cover_art_url,
+             c.cpm_rate_cents, c.total_budget_cents, c.budget_remaining_cents, c.status, 
              u.display_name as artist_name
       FROM campaigns c
       LEFT JOIN users u ON u.id = c.artist_id
-      WHERE c.status = 'active' AND c.cover_art_url IS NOT NULL
+      WHERE c.status = 'active'
       ORDER BY c.created_at DESC
       LIMIT 6
     `;
