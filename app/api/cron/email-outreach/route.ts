@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { generateOutreachEmail, sendOutreachEmail } from '@/lib/email-outreach';
 import { emailWrapper } from '@/lib/email-templates';
+import { verifyEmail } from '@/lib/email-verify';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes
@@ -50,6 +51,24 @@ export async function GET(request: Request) {
     for (const artist of artists) {
       const campaignUrl = `https://selah.fm/c/${artist.campaign_slug}`;
       const genre = (artist.genres?.[0] || 'music').toString();
+
+      // ── Pre-send verification ──────────────────────────────────
+      const verification = await verifyEmail(artist.email_address);
+      if (!verification.valid) {
+        // Mark as bounced so we don't retry
+        await sql`
+          UPDATE artist_audits 
+          SET bounced_at = NOW(), bounce_reason = ${verification.reason}
+          WHERE discovered_artist_id = ${artist.id}
+        `;
+        results.push({
+          artist: artist.artist_name,
+          email: artist.email_address,
+          sent: false,
+          error: `Pre-send verification failed: ${verification.reason}`,
+        });
+        continue;
+      }
 
       try {
         const email = await generateOutreachEmail(

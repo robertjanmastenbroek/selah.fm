@@ -8,6 +8,7 @@ import { generateArticle, findVoiceExamples } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
 import { renderArtistOutreachEmail, generateOutreachEmail, sendOutreachEmail } from '@/lib/email-outreach';
 import { emailWrapper } from '@/lib/email-templates';
+import { verifyEmail } from '@/lib/email-verify';
 
 export const maxDuration = 180; // 3 minutes — 20 searches + up to 200 artist lookups
 
@@ -771,6 +772,17 @@ async function runSendEmail(artistId: string) {
   // Check if email was already sent
   const [existing] = await sql`SELECT id FROM outreach_log WHERE discovered_artist_id = ${artist.id} AND channel = 'email' LIMIT 1`;
   if (existing) return NextResponse.json({ error: 'Email already sent to this artist' }, { status: 409 });
+
+  // ── Pre-send verification ────────────────────────────────────
+  const verification = await verifyEmail(audit.email_address);
+  if (!verification.valid) {
+    await sql`
+      UPDATE artist_audits 
+      SET bounced_at = NOW(), bounce_reason = ${verification.reason}
+      WHERE discovered_artist_id = ${artist.id}
+    `;
+    return NextResponse.json({ error: `Email verification failed: ${verification.reason}` }, { status: 400 });
+  }
 
   const genre = (audit.hashtags?.[0] || '').replace('#', '') || 'music';
   const email = await generateOutreachEmail(artist.artist_name, artist.latest_track_name, genre, campaignUrl);
