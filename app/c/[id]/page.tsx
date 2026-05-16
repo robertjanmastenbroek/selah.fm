@@ -255,7 +255,7 @@ export default async function CampaignPage({ params }: Props) {
   return (
     <>
       {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
-      <CampaignDetailClient id={params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} />
+      <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} />
     </>
   );
 }
