@@ -45,7 +45,7 @@ export async function GET(request: Request) {
           WHERE ol.discovered_artist_id = da.id AND ol.channel = 'email'
         )
       ORDER BY da.id, aa.audited_at DESC
-      LIMIT 30
+      LIMIT 3
     `;
 
     for (const artist of artists) {

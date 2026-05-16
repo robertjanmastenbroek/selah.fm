@@ -108,7 +108,16 @@ export async function GET(request: Request) {
           // Extract Bandcamp URL from social_links if available
           const socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {});
           const bandcampUrl = socialLinks.bandcamp || '';
-          const genres = Array.isArray(artist.genres) ? artist.genres : (typeof artist.genres === 'string' ? JSON.parse(artist.genres) : []);
+          let genres: string[] = [];
+          try {
+            if (Array.isArray(artist.genres)) genres = artist.genres;
+            else if (typeof artist.genres === 'string') {
+              const parsed = JSON.parse(artist.genres);
+              genres = Array.isArray(parsed) ? parsed : Object.keys(parsed);
+            } else if (artist.genres && typeof artist.genres === 'object') {
+              genres = Array.isArray(artist.genres) ? artist.genres : Object.keys(artist.genres);
+            }
+          } catch { genres = []; }
           const audit = await auditArtist(artist.artist_name, artist.latest_track_name, genres, bandcampUrl, socialLinks);
 
           if (!audit) {
@@ -122,13 +131,13 @@ export async function GET(request: Request) {
               youtube_video_url, youtube_video_views, spotify_embed_url, artist_bio,
               recommended_cpm_cents, recommended_budget_cents,
               instagram_handle, instagram_followers, tiktok_handle, tiktok_followers,
-              email_address, website_url, hashtags, personal_angle
+              email_address, email_source, email_confidence, website_url, hashtags, personal_angle
             ) VALUES (
               ${artist.id}, ${audit.spotify_monthly_listeners}, ${audit.spotify_track_streams},
               ${audit.youtube_video_url}, ${audit.youtube_video_views}, ${audit.spotify_embed_url}, ${audit.artist_bio},
               ${audit.recommended_cpm_cents}, ${audit.recommended_budget_cents},
               ${audit.instagram_handle}, ${audit.instagram_followers}, ${audit.tiktok_handle}, ${audit.tiktok_followers},
-              ${audit.email_address}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle}
+              ${audit.email_address}, ${audit.email_source}, ${audit.email_confidence}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle}
             )
           `;
 
@@ -154,7 +163,7 @@ export async function GET(request: Request) {
              aa.youtube_video_url, aa.hashtags
       FROM discovered_artists da
       JOIN artist_audits aa ON aa.discovered_artist_id = da.id
-      WHERE da.status = 'audited' AND aa.email_address IS NOT NULL
+      WHERE da.status = 'audited' AND aa.email_confidence = 'verified'
       ORDER BY aa.audited_at ASC
       LIMIT ${campaignBatchSize}
     `;
