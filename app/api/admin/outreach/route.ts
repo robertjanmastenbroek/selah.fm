@@ -61,9 +61,9 @@ export async function GET(request: Request) {
   // Simple ping — no auth needed
   if (action === 'ping') return NextResponse.json({ ok: true });
 
-  // Allow repair with secret (like cron endpoints) or admin session
-  const isRepairWithSecret = action === 'repair_campaign_images' && secret && secret === process.env.CRON_SECRET;
-  if (!isRepairWithSecret && !(await isAdminRequest(request))) {
+  // Allow certain actions with cron secret
+  const isCronAction = (action === 'repair_campaign_images' || action === 'enrich_streaming') && secret && secret === process.env.CRON_SECRET;
+  if (!isCronAction && !(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
@@ -71,6 +71,10 @@ export async function GET(request: Request) {
 
   try {
     if (action === 'repair_campaign_images') return repairCampaignImages();
+    if (action === 'enrich_streaming') {
+      const limit = parseInt(searchParams.get('limit') || '50');
+      return runEnrichStreaming(limit);
+    }
     if (artistId) return getArtistById(artistId);
     try {
       return await getPipelineOverview();
