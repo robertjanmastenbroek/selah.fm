@@ -70,6 +70,27 @@ export interface EmailResult {
   confidence: 'verified' | 'high' | 'medium' | 'low' | 'guess';
 }
 
+/**
+ * Clean Bandcamp HTML artifacts from scraped emails.
+ * Bandcamp sometimes wraps emails in HTML that leaves a leading 'n' character
+ * (e.g., "n<span>westelaken.band@gmail.com</span>" → "nwestelaken.band@gmail.com").
+ */
+function cleanBandcampEmail(email: string, artistName?: string): string {
+  if (!email.startsWith('n')) return email;
+  
+  const withoutN = email.substring(1);
+  const artistLower = (artistName || '').toLowerCase();
+  const artistWords = artistLower.split(/[^a-z0-9]+/);
+  const localPart = withoutN.split('@')[0];
+  
+  // Check if removing 'n' makes the email match the artist name
+  if (artistWords.some(w => w.length > 2 && (localPart.startsWith(w) || w.startsWith(localPart)))) {
+    return withoutN;
+  }
+  
+  return email;
+}
+
 export async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string | null, artistName?: string): Promise<EmailResult | null> {
   // Method 1: Bandcamp page HTML (bio text, sidebar)
   if (bandcampUrl) {
@@ -88,7 +109,7 @@ export async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: 
             !e.includes('sentry.io') && !e.includes('example.com') &&
             e.length < 50
           );
-          if (valid.length > 0) return { address: valid[0].toLowerCase(), source: 'bandcamp_text', confidence: 'verified' };
+          if (valid.length > 0) return { address: cleanBandcampEmail(valid[0].toLowerCase(), artistName), source: 'bandcamp_text', confidence: 'verified' };
         }
 
         // Look for external website link
@@ -105,7 +126,7 @@ export async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: 
               const siteMatch = siteText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
               if (siteMatch) {
                 const valid = [...new Set(siteMatch)].filter(e => !e.includes('example') && e.length < 50);
-                if (valid.length > 0) return { address: valid[0].toLowerCase(), source: 'artist_website', confidence: 'verified' };
+                if (valid.length > 0) return { address: cleanBandcampEmail(valid[0].toLowerCase(), artistName), source: 'artist_website', confidence: 'verified' };
               }
             }
           } catch {}
@@ -126,7 +147,7 @@ export async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: 
         const igMatch = igHtml.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
         if (igMatch) {
           const valid = [...new Set(igMatch)].filter(e => !e.includes('instagram') && e.length < 50);
-          if (valid.length > 0) return { address: valid[0].toLowerCase(), source: 'instagram_bio', confidence: 'verified' };
+          if (valid.length > 0) return { address: cleanBandcampEmail(valid[0].toLowerCase(), artistName), source: 'instagram_bio', confidence: 'verified' };
         }
       }
     } catch {}
@@ -149,7 +170,7 @@ export async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: 
             !e.includes('google') && !e.includes('example') && !e.includes('sentry') &&
             !e.includes('schema.org') && e.length < 50
           );
-          if (valid.length > 0) return { address: valid[0].toLowerCase(), source: 'google_search', confidence: 'medium' };
+          if (valid.length > 0) return { address: cleanBandcampEmail(valid[0].toLowerCase(), artistName), source: 'google_search', confidence: 'medium' };
         }
       }
     } catch {}
