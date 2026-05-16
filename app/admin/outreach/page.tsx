@@ -141,7 +141,7 @@ export default function OutreachDashboard() {
     setActionLoading('');
   };
 
-  const batchAudit = async (limit: number = 50) => {
+  const batchAudit = async (limit: number = 20) => {
     setActionLoading('batch-audit');
     try {
       const data = await api('batch_audit', { limit });
@@ -215,11 +215,11 @@ export default function OutreachDashboard() {
             {artists.length > 0 && <span className="text-[10px] text-muted-foreground font-normal">{artists.length} showing</span>}
           </h2>
           <div className="flex items-center gap-2">
-            <button onClick={() => batchAudit(50)} disabled={actionLoading === 'batch-audit'}
+            <button onClick={() => batchAudit(20)} disabled={actionLoading === 'batch-audit'}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
                          bg-purple-500/10 text-purple-400 border border-purple-500/20
                          hover:bg-purple-500/20 disabled:opacity-40">
-              {actionLoading === 'batch-audit' ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}Audit 50
+              {actionLoading === 'batch-audit' ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}Audit 20
             </button>
             <button onClick={fetchPipeline} disabled={actionLoading === 'refresh'}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium

@@ -62,7 +62,7 @@ export interface ArtistAudit {
  * Find artist email from multiple sources.
  * Strategy: Bandcamp page → Instagram bio → personal website.
  */
-async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string | null): Promise<string | null> {
+async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string | null, artistName?: string): Promise<string | null> {
   // Method 1: Bandcamp page HTML (bio text, sidebar)
   if (bandcampUrl) {
     try {
@@ -118,6 +118,29 @@ async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string 
         const igMatch = igHtml.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
         if (igMatch) {
           const valid = [...new Set(igMatch)].filter(e => !e.includes('instagram') && e.length < 50);
+          if (valid.length > 0) return valid[0].toLowerCase();
+        }
+      }
+    } catch {}
+  }
+
+  // Method 3: Google search for artist contact email
+  if (artistName) {
+    try {
+      const query = encodeURIComponent(`"${artistName}" email contact`);
+      const googleRes = await fetch(`https://www.google.com/search?q=${query}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (googleRes.ok) {
+        const html = await googleRes.text();
+        const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+        const match = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
+        if (match) {
+          const valid = [...new Set(match)].filter(e => 
+            !e.includes('google') && !e.includes('example') && !e.includes('sentry') &&
+            !e.includes('schema.org') && e.length < 50
+          );
           if (valid.length > 0) return valid[0].toLowerCase();
         }
       }
@@ -246,7 +269,7 @@ export async function auditArtist(
     // Scrape email from Bandcamp + Instagram
     let email_address: string | null = null;
     if (bandcampUrl || instagram_handle) {
-      email_address = await scrapeBandcampEmail(bandcampUrl || '', instagram_handle || null);
+      email_address = await scrapeBandcampEmail(bandcampUrl || '', instagram_handle || null, artistName);
     }
 
     // Personal angle
