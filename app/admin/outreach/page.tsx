@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Megaphone, Send, Check, Clock, BarChart3, Users, RefreshCw, Zap, Loader2, Mail } from 'lucide-react';
+import { Search, Megaphone, Send, Check, Clock, BarChart3, Users, RefreshCw, Zap, Loader2 } from 'lucide-react';
 import StatCard from './components/StatCard';
 import { useToasts, ToastContainer } from './components/ToastBar';
 import ArtistCard from './components/ArtistCard';
