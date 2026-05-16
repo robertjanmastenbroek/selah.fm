@@ -236,7 +236,7 @@ export default async function CampaignPage({ params }: Props) {
         name: `Join campaign — earn $${cpmDollars} per 1,000 verified views`,
         price: cpmDollars,
         priceCurrency: 'USD',
-        description: `Creators earn 80% of $${cpmDollars} CPM rate.${budget ? ` Total budget: $${budget}.` : ''}`,
+        description: `Creators earn the full $${cpmDollars} CPM rate. Artists pay CPM + 20% platform fee.${budget ? ` Total budget: $${budget}.` : ''}`,
         url: canonicalUrl,
       }] : []),
     ],

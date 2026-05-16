@@ -131,7 +131,7 @@ export default function ReviewPage() {
               let gross = (views / 1000) * cpm;
               const maxPayout = (s.max_payout_per_submission_cents || 0) / 100;
               if (maxPayout > 0 && gross > maxPayout) gross = maxPayout;
-              const net = gross * 0.80;
+              const net = gross; // Full CPM — creator earns the full amount
               return (
                 <Card key={s.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <CardContent className="p-5 space-y-4">
@@ -143,7 +143,7 @@ export default function ReviewPage() {
                       <Badge variant="secondary">{(s.views_verified || 0).toLocaleString()} views</Badge>
                     </div>
                     <Card className="bg-muted/50"><CardContent className="p-3 text-sm text-muted-foreground">
-                      {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> → <span className="text-foreground font-semibold">${net.toFixed(2)}</span> creator earns
+                      {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> creator earns (full CPM)
                     </CardContent></Card>
                     <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-accent-foreground hover:underline">Watch on {s.platform} →</a>
                     {(s.content_url) && <VideoEmbed url={s.content_url} className="mt-2" />}

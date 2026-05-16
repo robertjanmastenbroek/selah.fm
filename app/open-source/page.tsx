@@ -135,7 +135,7 @@ export default function OpenSourcePage() {
           <div className="rounded-2xl bg-primary/[0.04] backdrop-blur-xl border border-primary/10 p-8 text-center">
             <h2 className="text-2xl font-bold mb-4">Our business model</h2>
             <p className="text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              We charge a <strong className="text-foreground">20% service fee</strong> on creator payouts to keep the platform running and improving. This covers hosting, support, payment processing, and the managed service at selah.fm.
+              We add a <strong className="text-foreground">20% platform fee</strong> on top of the artist's CPM rate to keep the platform running and improving. Creators earn the full CPM. This covers hosting, support, payment processing, and the managed service at selah.fm.
             </p>
           </div>
         </motion.div>
@@ -150,7 +150,7 @@ export default function OpenSourcePage() {
           <h2 className="text-2xl font-bold mb-6 text-center">FAQ</h2>
           <div className="space-y-3">
             {[
-              { q: 'Does open source mean I don\'t have to pay the fee?', a: 'No. The 20% service fee applies to the managed platform at selah.fm. The code is free to use, study, and modify, but the hosted service has operating costs.' },
+              { q: 'Does open source mean I don\'t have to pay the fee?', a: 'No. The 20% platform fee (added to artist CPM) applies to the managed platform at selah.fm. The code is free to use, study, and modify, but the hosted service has operating costs.' },
               { q: 'Can I host my own version?', a: 'Yes. The MIT license allows you to fork the code and run your own instance. You\'ll need your own Stripe account, database, and Google OAuth credentials.' },
               { q: 'How do I contribute?', a: 'Fork the repo, make your changes, and open a pull request. Check CONTRIBUTING.md for guidelines. We welcome bug fixes, features, documentation, and design improvements.' },
               { q: 'Is my data safe?', a: 'Absolutely. The code is public for transparency, but your data on selah.fm is private and protected. Database credentials and API keys are never exposed — they live in Railway environment variables.' },

@@ -91,7 +91,7 @@ export default function AdminOverviewPage() {
           <h3 className="font-semibold text-sm mb-4 flex items-center gap-2"><Banknote size={16} className="text-primary/60"/>Revenue</h3>
           <div className="space-y-3">
             <div className="flex justify-between"><span className="text-sm text-muted-foreground">Total paid to creators</span><span className="font-semibold">${totalPaid.toFixed(2)}</span></div>
-            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Platform revenue (20%)</span><span className="font-semibold text-primary">${platformRev.toFixed(2)}</span></div>
+            <div className="flex justify-between"><span className="text-sm text-muted-foreground">Platform revenue (20% on artist CPM)</span><span className="font-semibold text-primary">${platformRev.toFixed(2)}</span></div>
             <div className="flex justify-between"><span className="text-sm text-muted-foreground">Total campaigns</span><span className="font-semibold">{campaignCount}</span></div>
             <div className="flex justify-between"><span className="text-sm text-muted-foreground">Total submissions</span><span className="font-semibold">{submissionCount}</span></div>
           </div>

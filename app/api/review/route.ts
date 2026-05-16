@@ -34,13 +34,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'You can only review submissions on your own campaigns' }, { status: 403 });
     }
 
-    // If undoing (setting back to pending), restore gross amount to budget
+    // If undoing (setting back to pending), restore full artist charge to budget
+    // payout_amount_cents is the creator's full earnings (no fee deduction).
+    // Artist was charged 1.20x that amount (CPM + 20% platform fee).
     if (status === 'pending' && sub.payout_amount_cents && sub.payout_amount_cents > 0) {
-      // payout_amount_cents is net (creator's 80% share). Restore gross = net / 0.8
-      const grossRestore = Math.round(sub.payout_amount_cents / 0.8);
+      const artistChargeCents = Math.round(sub.payout_amount_cents * 1.20);
       await sql`
         UPDATE campaigns
-        SET budget_remaining_cents = budget_remaining_cents + ${grossRestore},
+        SET budget_remaining_cents = budget_remaining_cents + ${artistChargeCents},
             updated_at = NOW()
         WHERE id = ${sub.campaign_id}
       `;
@@ -56,21 +57,22 @@ export async function POST(request: Request) {
         grossCents = sub.max_payout_per_submission_cents;
       }
       
-      // Deduct 20% platform fee
-      const platformFeeCents = Math.round(grossCents * 0.20);
-      const netCents = grossCents - platformFeeCents;
+      // Creator earns the FULL CPM amount (no 20% deduction).
+      // Artist is charged 1.20x = CPM + 20% platform fee.
+      const creatorEarnsCents = grossCents;
+      const artistChargeCents = Math.round(grossCents * 1.20);
 
-      // Check budget remaining (use gross, not net — campaign pays full amount)
-      if (sub.budget_remaining_cents < grossCents) {
+      // Check budget remaining against the artist's charge (CPM + fee)
+      if (sub.budget_remaining_cents < artistChargeCents) {
         return NextResponse.json({ 
-          error: `Insufficient budget. Remaining: $${(sub.budget_remaining_cents / 100).toFixed(2)}, payout: $${(grossCents / 100).toFixed(2)}` 
+          error: `Insufficient budget. Remaining: $${(sub.budget_remaining_cents / 100).toFixed(2)}, needed: $${(artistChargeCents / 100).toFixed(2)}` 
         }, { status: 400 });
       }
 
-      // Deduct gross from campaign budget (platform fee is taken from gross)
+      // Deduct full artist charge from campaign budget
       await sql`
         UPDATE campaigns
-        SET budget_remaining_cents = budget_remaining_cents - ${grossCents},
+        SET budget_remaining_cents = budget_remaining_cents - ${artistChargeCents},
             updated_at = NOW()
         WHERE id = ${sub.campaign_id}
       `;
@@ -78,21 +80,21 @@ export async function POST(request: Request) {
       const result = await sql`
         UPDATE submissions
         SET review_status = 'approved', reviewed_at = NOW(), reviewed_by = ${session.id},
-            payout_amount_cents = ${netCents}, payout_status = 'processing'
+            payout_amount_cents = ${creatorEarnsCents}, payout_status = 'processing'
         WHERE id = ${submissionId}
         RETURNING *
       `;
 
-      // Notify the creator + send email
+      // Notify the creator
       try {
-        const netDollars = (netCents / 100).toFixed(2);
+        const earningsDollars = (creatorEarnsCents / 100).toFixed(2);
         await sql`
           INSERT INTO notifications (user_id, type, message, link, metadata)
           VALUES (
             ${sub.creator_id}, 'approval',
-            ${`Your submission on "${sub.track_title}" was approved — $${netDollars} earned (${views.toLocaleString()} views)`},
+            ${`Your submission on "${sub.track_title}" was approved — $${earningsDollars} earned (${views.toLocaleString()} views)`},
             '/earnings',
-            ${JSON.stringify({ submission_id: submissionId, amount_cents: netCents })}
+            ${JSON.stringify({ submission_id: submissionId, amount_cents: creatorEarnsCents })}
           )
         `;
         const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;

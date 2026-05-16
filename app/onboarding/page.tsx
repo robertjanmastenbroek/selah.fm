@@ -195,7 +195,7 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <div className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-4 text-sm text-muted-foreground">
-                At ${cpm} CPM, you&apos;d earn <span className="text-foreground font-semibold">${(cpm*0.8).toFixed(2)}</span> per 1,000 views after the 20% platform fee.
+                At ${cpm} CPM, you&apos;d earn the full <span className="text-foreground font-semibold">$${cpm.toFixed(2)}</span> per 1,000 views — nothing deducted.
               </div>
               <button onClick={save} disabled={saving||!name} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                 {saving?'Setting up...':"I'm ready to earn →"}

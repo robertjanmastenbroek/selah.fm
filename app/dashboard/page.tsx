@@ -389,7 +389,7 @@ function DashboardContent() {
                   </div>
                 </div>
                 <Card className="bg-muted/50"><CardContent className="p-4 text-sm text-muted-foreground space-y-2">
-                  <p>Creators earn 80% of your CPM rate after the 20% platform fee.</p>
+                  <p>Creators earn your full CPM rate. A 20% platform fee is added on top (your cost = CPM × 1.20).</p>
                   <p className="text-xs">After launching, you'll be prompted to make your first deposit to fund the campaign.</p>
                 </CardContent></Card>
 

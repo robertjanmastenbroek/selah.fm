@@ -54,7 +54,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
       },
       {
         q: 'How much does it cost?',
-        a: 'You decide your budget (minimum $5). The platform takes a 20% fee from creator payouts. Stripe takes 2.9% + $0.30 on deposits. There are no setup fees, monthly fees, or hidden costs.',
+        a: 'You decide your budget (minimum $5). The platform adds a 20% fee on top of your CPM rate. Example: $1.00 CPM → you pay $1.20 per 1K views, creator gets the full $1.00. Stripe takes 2.9% + $0.30 on deposits. No setup fees, monthly fees, or hidden costs.',
         section: 'For Artists',
       },
       {
@@ -84,7 +84,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
       },
       {
         q: 'How much can I earn?',
-        a: 'You earn 80% of the CPM rate per 1,000 verified views. For example, at a $2.00 CPM rate, 50,000 views would earn you $80. Top creators earn $50–500+ per campaign.',
+        a: 'You earn the full CPM rate per 1,000 verified views. For example, at a $2.00 CPM rate, 50,000 views would earn you $100. Top creators earn $50–500+ per campaign. No deductions — the 20% platform fee is on the artist side.',
         section: 'For Creators',
       },
       {
@@ -124,7 +124,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
       },
       {
         q: 'Are there any fees to join?',
-        a: 'No. Signing up and creating campaigns is free. You only pay when you deposit funds into a campaign budget (for artists) or earn money from content (for creators, minus the 20% platform fee).',
+        a: 'No. Signing up and creating campaigns is free. Artists pay a 20% platform fee on top of their CPM rate when campaigns run. Creators earn the full CPM — no deductions.',
         section: 'Account & Billing',
       },
       {

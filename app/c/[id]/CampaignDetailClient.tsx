@@ -403,7 +403,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 <p className="text-[10px] font-semibold text-[#4338CA]/60 uppercase tracking-wider mb-3">⚡ Essentials</p>
                 <div className="grid sm:grid-cols-2 gap-2 text-[11px]">
                   {[
-                    `Earn $${cpm.toFixed(2)} per 1K verified views (creator cut: $${(cpm * 0.8).toFixed(2)})`,
+                    `Earn $${cpm.toFixed(2)} per 1K verified views`,
                     'Use the official audio — no screen recordings',
                     'Vertical 9:16 video, 15–60 seconds',
                     'Public account (private videos cannot be verified)',
@@ -423,7 +423,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 {[
                   { step: '1', title: campaign.content_assets_url ? 'Download the audio' : 'Find the audio', desc: campaign.content_assets_url ? `Get the master track from the Google Drive above (you can also search "${trackTitle}" on TikTok, IG, or YouTube).` : `Search "${trackTitle}" on TikTok, Instagram, or YouTube. Use the official audio.` },
                   { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Dance, react, duet — be creative. Make it public so views count.' },
-                  { step: '3', title: 'Submit & earn', desc: `Post publicly, paste the link here. Earn $${cpm.toFixed(2)} per 1K verified views (creators receive 80% — $${(cpm * 0.8).toFixed(2)}).` },
+                  { step: '3', title: 'Submit & earn', desc: `Post publicly, paste the link here. Earn the full $${cpm.toFixed(2)} per 1K verified views — nothing deducted.` },
                 ].map(s => (
                   <div key={s.step} className="flex gap-3">
                     <div className="w-8 h-8 rounded-lg bg-[#4338CA]/10 flex items-center justify-center text-[11px] font-bold text-[#4338CA] shrink-0">{s.step}</div>

@@ -55,7 +55,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
   }, [open]);
 
   const cpmDollars = cpmCents / 100;
-  const creatorEarnings = (cpmDollars * 0.8).toFixed(2);
+  const creatorEarnings = cpmDollars.toFixed(2); // Full CPM — platform fee is on artist side
 
   const handleSubmit = async () => {
     if (!url || !session) return;
@@ -190,7 +190,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-foreground/80">Paste your link &amp; get paid</p>
                           <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">
-                            Post publicly, paste the link below. Earn <span className="text-[#22C55E] font-semibold">${creatorEarnings}</span> per 1K verified views (80% of ${cpmDollars.toFixed(2)} CPM). Paid via Stripe.
+                            Post publicly, paste the link below. Earn the full <span className="text-[#22C55E] font-semibold">${creatorEarnings}</span> per 1K verified views. Paid via Stripe.
                           </p>
                         </div>
                       </div>
