@@ -25,7 +25,7 @@
     "lucide-react": "^1.14.0",
     "next": "^14.2.0",
     "pg": "^8.20.0",
-    "puppeteer": "^25.0.2",
+    "puppeteer-core": "^25.0.2",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "shadcn": "^4.7.0",

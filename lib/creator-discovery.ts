@@ -41,9 +41,9 @@ export interface DiscoveredCreator {
 export async function discoverTikTokCreators(limit: number = 50): Promise<DiscoveredCreator[]> {
   let puppeteer: any;
   try {
-    puppeteer = require('puppeteer');
+    puppeteer = require('puppeteer-core');
   } catch {
-    try { puppeteer = require('puppeteer-core'); } catch { return []; }
+    try { puppeteer = require('puppeteer'); } catch { return []; }
   }
 
   let launchOptions: Record<string, any> = {
