@@ -16,13 +16,22 @@ function formatMoney(cents: number): string {
   return '$' + (cents / 100).toFixed(0);
 }
 
-export default function RootPage() {
+export default function RootPage({ 
+  initialStats = { artists: 0, creators: 0, activeCampaigns: 0, totalPaidCents: 0, totalViews: 0, donors: 0, totalDonatedCents: 0, totalDepositedCents: 0 },
+  initialFeatured = [],
+  initialTotalActive = 0,
+}: {
+  initialStats?: any;
+  initialFeatured?: any[];
+  initialTotalActive?: number;
+}) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [stats, setStats] = useState({ artists: 0, creators: 0, activeCampaigns: 0, totalPaidCents: 0, totalViews: 0, donors: 0, totalDonatedCents: 0, totalDepositedCents: 0 });
-  const [featuredCampaigns, setFeaturedCampaigns] = useState<any[]>([]);
-  const [totalActive, setTotalActive] = useState(0);
+  const [stats, setStats] = useState(initialStats);
+  const [featuredCampaigns, setFeaturedCampaigns] = useState<any[]>(initialFeatured);
+  const [totalActive, setTotalActive] = useState(initialTotalActive);
 
   useEffect(() => {
+    // Refresh stats on client-side for latest data
     fetch('/api/stats').then(r => r.json()).then(d => {
       setStats(d);
       setTotalActive(d.activeCampaigns || 0);
