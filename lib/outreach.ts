@@ -70,7 +70,7 @@ export interface EmailResult {
   confidence: 'verified' | 'high' | 'medium' | 'low' | 'guess';
 }
 
-async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string | null, artistName?: string): Promise<EmailResult | null> {
+export async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string | null, artistName?: string): Promise<EmailResult | null> {
   // Method 1: Bandcamp page HTML (bio text, sidebar)
   if (bandcampUrl) {
     try {

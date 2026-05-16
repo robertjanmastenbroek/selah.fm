@@ -3,7 +3,7 @@ import path from 'path';
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { isAdminRequest } from '@/lib/auth';
-import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMessage, generateOutreachMessage } from '@/lib/outreach';
+import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMessage, generateOutreachMessage, scrapeBandcampEmail } from '@/lib/outreach';
 import { generateArticle, findVoiceExamples } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
 import { renderArtistOutreachEmail, generateOutreachEmail, sendOutreachEmail } from '@/lib/email-outreach';
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       case 'get_email_queue':        return getEmailQueue();
       case 'render_email':           return runRenderEmail(body.artistId);
       case 'send_email':             return runSendEmail(body.artistId);
+      case 'reaudit_emails':         return runReauditEmails(body.limit || 50);
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -826,6 +827,50 @@ async function getEmailQueue() {
     LIMIT 50
   `;
   return NextResponse.json(artists);
+}
+
+/** Re-audit emails only: scrape Bandcamp/Instagram/Google for artists with no email */
+async function runReauditEmails(limit: number = 50) {
+  const artists = await sql`
+    SELECT da.id, da.artist_name, da.social_links,
+           aa.instagram_handle, aa.id as audit_id
+    FROM discovered_artists da
+    JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+    WHERE aa.email_address IS NULL 
+      AND aa.bounced_at IS NULL
+      AND da.status IN ('audited', 'campaign_created')
+    ORDER BY aa.audited_at DESC
+    LIMIT ${limit}
+  `;
+
+  let found = 0;
+  const results: any[] = [];
+
+  for (const artist of artists) {
+    try {
+      const socialLinks = typeof artist.social_links === 'string' 
+        ? JSON.parse(artist.social_links) 
+        : (artist.social_links || {});
+      const bandcampUrl = socialLinks.bandcamp || '';
+      const igHandle = artist.instagram_handle || null;
+
+      const result = await scrapeBandcampEmail(bandcampUrl, igHandle, artist.artist_name);
+      
+      if (result) {
+        await sql`
+          UPDATE artist_audits 
+          SET email_address = ${result.address}, 
+              email_source = ${result.source}, 
+              email_confidence = ${result.confidence}
+          WHERE id = ${artist.audit_id}
+        `;
+        found++;
+        results.push({ artist: artist.artist_name, email: result.address, source: result.source });
+      }
+    } catch {}
+  }
+
+  return NextResponse.json({ processed: artists.length, found, results });
 }
 
 /** Returns all artists ready for outreach (prioritized by email) */
