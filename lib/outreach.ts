@@ -124,7 +124,16 @@ async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string 
     } catch {}
   }
 
-  // Method 3: Google search for artist contact email
+  // Method 3: Common email patterns from Bandcamp subdomain
+  if (bandcampUrl) {
+    const subdomain = bandcampUrl.match(/https?:\/\/([^.]+)\.bandcamp\.com/)?.[1];
+    if (subdomain && subdomain.length > 3 && /^[a-zA-Z0-9_-]+$/.test(subdomain)) {
+      // Many artists use their band/artist name @gmail.com
+      return `${subdomain.toLowerCase()}@gmail.com`;
+    }
+  }
+
+  // Method 4: Google search for artist contact email
   if (artistName) {
     try {
       const query = encodeURIComponent(`"${artistName}" email contact`);
