@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
-import { trackSignUp, trackLogin } from '@/lib/analytics';
+
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -36,7 +36,7 @@ function LoginForm() {
       if (mode === 'login') {
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
         if (authError) { setError(authError.message); setLoading(false); return; }
-        trackLogin('email');
+        // trackLogin('email');
         setTimeout(() => { window.location.href = redirect || '/browse'; }, 300);
       } else {
         const { error: authError } = await supabase.auth.signUp({
@@ -52,7 +52,7 @@ function LoginForm() {
           },
         });
         if (authError) { setError(authError.message); setLoading(false); return; }
-        trackSignUp('email');
+        // trackSignUp('email');
         setSuccess('Account created! Check your email to verify.');
         setLoading(false);
       }

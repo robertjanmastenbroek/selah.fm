@@ -1,7 +1,5 @@
-import { createServerClient, type CookieOptionsWithName } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies, headers } from 'next/headers';
-import { NextResponse } from 'next/server';
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 
 function getCookiePairs(): { name: string; value: string }[] {
   // Primary: headers() — works in edge runtime
@@ -33,25 +31,6 @@ export function createClient() {
       cookies: {
         getAll() { return pairs; },
         setAll() {},
-      },
-    }
-  );
-}
-
-export function createRouteClient(response: NextResponse) {
-  const pairs = getCookiePairs();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return pairs; },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptionsWithName }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options as Partial<ResponseCookie>);
-          });
-        },
       },
     }
   );
