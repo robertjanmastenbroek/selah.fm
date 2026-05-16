@@ -46,6 +46,31 @@ async function getPuppeteer() {
   return puppeteer;
 }
 
+/** Find Chrome/Chromium binary path for different environments */
+function getChromePath(): string | undefined {
+  // Railway / Debian-based Linux
+  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
+  // Common Linux paths
+  const linuxPaths = [
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+  ];
+  for (const p of linuxPaths) {
+    try { require('fs').accessSync(p, require('fs').constants.X_OK); return p; } catch {}
+  }
+  // macOS
+  const macPaths = [
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    '/Applications/Chromium.app/Contents/MacOS/Chromium',
+  ];
+  for (const p of macPaths) {
+    try { require('fs').accessSync(p, require('fs').constants.X_OK); return p; } catch {}
+  }
+  return undefined;
+}
+
 /**
  * Scrape TikTok hashtag pages for creator profiles.
  * Returns up to `limit` unique creators with bios.
@@ -54,9 +79,26 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
   const pt = await getPuppeteer();
   if (!pt) return [];
 
+  let chromePath = getChromePath();
+
+  // Fallback: use @sparticuz/chromium for serverless environments (Railway)
+  if (!chromePath) {
+    try {
+      const sparticuz = await import('@sparticuz/chromium');
+      chromePath = await sparticuz.default.executablePath();
+    } catch {}
+  }
+
   const browser = await pt.default.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'],
+    executablePath: chromePath || undefined,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--disable-blink-features=AutomationControlled',
+    ],
   });
 
   const allCreators = new Map<string, DiscoveredCreator>();
