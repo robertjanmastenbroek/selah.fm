@@ -62,7 +62,7 @@ export async function GET(request: Request) {
   if (action === 'ping') return NextResponse.json({ ok: true });
 
   // Allow certain actions with cron secret
-  const isCronAction = (action === 'repair_campaign_images' || action === 'enrich_streaming') && secret && secret === process.env.CRON_SECRET;
+  const isCronAction = (action === 'repair_campaign_images' || action === 'enrich_streaming' || action === 'reaudit_emails') && secret && secret === process.env.CRON_SECRET;
   if (!isCronAction && !(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
@@ -74,6 +74,10 @@ export async function GET(request: Request) {
     if (action === 'enrich_streaming') {
       const limit = parseInt(searchParams.get('limit') || '50');
       return runEnrichStreaming(limit);
+    }
+    if (action === 'reaudit_emails') {
+      const limit = parseInt(searchParams.get('limit') || '50');
+      return runReauditEmails(limit);
     }
     if (artistId) return getArtistById(artistId);
     try {
