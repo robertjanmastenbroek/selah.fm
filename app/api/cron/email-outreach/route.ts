@@ -5,7 +5,7 @@ import { emailWrapper } from '@/lib/email-templates';
 import { verifyEmail } from '@/lib/email-verify';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes
+export const maxDuration = 600; // 10 minutes
 
 /**
  * Automated email outreach cron.
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
           WHERE ol.discovered_artist_id = da.id AND ol.channel = 'email'
         )
       ORDER BY da.id, aa.audited_at DESC
-      LIMIT 10
+      LIMIT 30
     `;
 
     for (const artist of artists) {

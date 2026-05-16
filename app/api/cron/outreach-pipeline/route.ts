@@ -4,7 +4,7 @@ import { discoverArtists, auditArtist } from '@/lib/outreach';
 import { resolveStreamingLinks } from '@/lib/streaming-links';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes for full pipeline run
+export const maxDuration = 600; // 10 minutes for full pipeline run
 
 /**
  * Autonomous outreach pipeline — runs discovery → audit → campaign creation.
@@ -31,8 +31,8 @@ export async function GET(request: Request) {
     const genres = ['indie', 'alternative', 'electronic', 'hip-hop', 'r-n-b', 'pop', 'rock', 'folk', 'metal'];
     const shuffled = [...genres].sort(() => Math.random() - 0.5);
     
-    const discoveryLimit = parseInt(searchParams.get('limit') || '10');
-    const auditBatchSize = parseInt(searchParams.get('audit') || '50');
+    const discoveryLimit = parseInt(searchParams.get('limit') || '100');
+    const auditBatchSize = parseInt(searchParams.get('audit') || '200');
     const campaignBatchSize = parseInt(searchParams.get('campaigns') || '50');
 
     log.push(`Pipeline config: discover=${discoveryLimit}, audit=${auditBatchSize}, campaigns=${campaignBatchSize}`);
