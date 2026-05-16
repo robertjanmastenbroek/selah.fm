@@ -33,65 +33,21 @@ export interface DiscoveredCreator {
 
 // ── TikTok scraper (Puppeteer) ──────────────────────────────────
 
-let puppeteer: any = null;
-async function getPuppeteer() {
-  if (!puppeteer) {
-    try {
-      puppeteer = await import('puppeteer');
-    } catch {
-      console.error('Puppeteer not available. Install with: npm install puppeteer');
-      return null;
-    }
-  }
-  return puppeteer;
-}
-
-/** Find Chrome/Chromium binary path for different environments */
-function getChromePath(): string | undefined {
-  // Railway / Debian-based Linux
-  if (process.env.CHROME_PATH) return process.env.CHROME_PATH;
-  // Common Linux paths
-  const linuxPaths = [
-    '/usr/bin/chromium-browser',
-    '/usr/bin/chromium',
-    '/usr/bin/google-chrome',
-    '/usr/bin/google-chrome-stable',
-  ];
-  for (const p of linuxPaths) {
-    try { require('fs').accessSync(p, require('fs').constants.X_OK); return p; } catch {}
-  }
-  // macOS
-  const macPaths = [
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/Applications/Chromium.app/Contents/MacOS/Chromium',
-  ];
-  for (const p of macPaths) {
-    try { require('fs').accessSync(p, require('fs').constants.X_OK); return p; } catch {}
-  }
-  return undefined;
-}
-
 /**
  * Scrape TikTok hashtag pages for creator profiles.
  * Returns up to `limit` unique creators with bios.
+ * Uses system Chrome, @sparticuz/chromium, or bundled Puppeteer Chrome.
  */
 export async function discoverTikTokCreators(limit: number = 50): Promise<DiscoveredCreator[]> {
-  const pt = await getPuppeteer();
-  if (!pt) return [];
-
-  let chromePath = getChromePath();
-
-  // Fallback: use @sparticuz/chromium for serverless environments (Railway)
-  if (!chromePath) {
-    try {
-      const sparticuz = await import('@sparticuz/chromium');
-      chromePath = await sparticuz.default.executablePath();
-    } catch {}
+  let puppeteer: any;
+  try {
+    puppeteer = require('puppeteer');
+  } catch {
+    try { puppeteer = require('puppeteer-core'); } catch { return []; }
   }
 
-  const browser = await pt.default.launch({
+  let launchOptions: Record<string, any> = {
     headless: true,
-    executablePath: chromePath || undefined,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -99,7 +55,33 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
       '--disable-gpu',
       '--disable-blink-features=AutomationControlled',
     ],
-  });
+  };
+
+  // Try @sparticuz/chromium for production (Railway, serverless)
+  try {
+    const chromium = require('@sparticuz/chromium');
+    if (typeof chromium.executablePath === 'function') {
+      launchOptions.executablePath = await chromium.executablePath();
+      launchOptions.args = chromium.args || launchOptions.args;
+      launchOptions.headless = true; // chromium.headless is not exported in v148
+    }
+  } catch {}
+
+  // Try system Chrome as fallback
+  if (!launchOptions.executablePath) {
+    const paths = [
+      process.env.CHROME_PATH,
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium',
+      '/usr/bin/google-chrome-stable',
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    ].filter(Boolean);
+    for (const p of paths) {
+      try { require('fs').accessSync(p!, require('fs').constants.X_OK); launchOptions.executablePath = p; break; } catch {}
+    }
+  }
+
+  const browser = await puppeteer.launch(launchOptions);
 
   const allCreators = new Map<string, DiscoveredCreator>();
 
