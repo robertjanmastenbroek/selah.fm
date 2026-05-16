@@ -168,13 +168,13 @@ async function runAudit(artistId: string) {
       youtube_video_url, youtube_video_views, spotify_embed_url, artist_bio,
       recommended_cpm_cents, recommended_budget_cents,
       instagram_handle, instagram_followers, tiktok_handle, tiktok_followers,
-      email_address, website_url, hashtags, personal_angle
+      email_address, email_source, email_confidence, website_url, hashtags, personal_angle
     ) VALUES (
       ${artist.id}, ${audit.spotify_monthly_listeners}, ${audit.spotify_track_streams},
       ${audit.youtube_video_url}, ${audit.youtube_video_views}, ${audit.spotify_embed_url}, ${audit.artist_bio},
       ${audit.recommended_cpm_cents}, ${audit.recommended_budget_cents},
       ${audit.instagram_handle}, ${audit.instagram_followers}, ${audit.tiktok_handle}, ${audit.tiktok_followers},
-      ${audit.email_address}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle}
+      ${audit.email_address}, ${audit.email_source}, ${audit.email_confidence}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle}
     )
   `;
 
@@ -327,6 +327,8 @@ async function runRenderOutreach(artistId: string) {
     tiktok_handle: audit.tiktok_handle,
     tiktok_followers: audit.tiktok_followers,
     email_address: audit.email_address,
+    email_source: audit.email_source || null,
+    email_confidence: audit.email_confidence || null,
     website_url: audit.website_url,
     hashtags: audit.hashtags || [],
     personal_angle: audit.personal_angle,
@@ -443,6 +445,8 @@ async function runLogOutreach(artistId: string, channel: string, status: string)
       tiktok_handle: audit.tiktok_handle,
       tiktok_followers: audit.tiktok_followers,
       email_address: audit.email_address,
+      email_source: audit.email_source || null,
+      email_confidence: audit.email_confidence || null,
       website_url: audit.website_url,
       hashtags: audit.hashtags || [],
       personal_angle: audit.personal_angle,
@@ -542,8 +546,8 @@ async function runBatchAudit(limit: number = 5) {
       }
 
       await sql`
-        INSERT INTO artist_audits (discovered_artist_id, spotify_monthly_listeners, spotify_track_streams, youtube_video_url, youtube_video_views, spotify_embed_url, artist_bio, recommended_cpm_cents, recommended_budget_cents, instagram_handle, instagram_followers, tiktok_handle, tiktok_followers, email_address, website_url, hashtags, personal_angle)
-        VALUES (${artist.id}, ${audit.spotify_monthly_listeners}, ${audit.spotify_track_streams}, ${audit.youtube_video_url}, ${audit.youtube_video_views}, ${audit.spotify_embed_url}, ${audit.artist_bio}, ${audit.recommended_cpm_cents}, ${audit.recommended_budget_cents}, ${audit.instagram_handle}, ${audit.instagram_followers}, ${audit.tiktok_handle}, ${audit.tiktok_followers}, ${audit.email_address}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle})
+        INSERT INTO artist_audits (discovered_artist_id, spotify_monthly_listeners, spotify_track_streams, youtube_video_url, youtube_video_views, spotify_embed_url, artist_bio, recommended_cpm_cents, recommended_budget_cents, instagram_handle, instagram_followers, tiktok_handle, tiktok_followers, email_address, email_source, email_confidence, website_url, hashtags, personal_angle)
+        VALUES (${artist.id}, ${audit.spotify_monthly_listeners}, ${audit.spotify_track_streams}, ${audit.youtube_video_url}, ${audit.youtube_video_views}, ${audit.spotify_embed_url}, ${audit.artist_bio}, ${audit.recommended_cpm_cents}, ${audit.recommended_budget_cents}, ${audit.instagram_handle}, ${audit.instagram_followers}, ${audit.tiktok_handle}, ${audit.tiktok_followers}, ${audit.email_address}, ${audit.email_source}, ${audit.email_confidence}, ${audit.website_url}, ${audit.hashtags}, ${audit.personal_angle})
       `;
       await sql`UPDATE discovered_artists SET status = 'audited', updated_at = NOW() WHERE id = ${artist.id}`;
       audited++;

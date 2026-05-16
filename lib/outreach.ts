@@ -53,6 +53,8 @@ export interface ArtistAudit {
   tiktok_handle: string | null;
   tiktok_followers: number;
   email_address: string | null;
+  email_source: string | null;
+  email_confidence: string | null;
   website_url: string | null;
   hashtags: string[];
   personal_angle: string;
@@ -62,7 +64,13 @@ export interface ArtistAudit {
  * Find artist email from multiple sources.
  * Strategy: Bandcamp page → Instagram bio → personal website.
  */
-async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string | null, artistName?: string): Promise<string | null> {
+export interface EmailResult {
+  address: string;
+  source: string;
+  confidence: 'verified' | 'high' | 'medium' | 'low' | 'guess';
+}
+
+async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string | null, artistName?: string): Promise<EmailResult | null> {
   // Method 1: Bandcamp page HTML (bio text, sidebar)
   if (bandcampUrl) {
     try {
@@ -80,7 +88,7 @@ async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string 
             !e.includes('sentry.io') && !e.includes('example.com') &&
             e.length < 50
           );
-          if (valid.length > 0) return valid[0].toLowerCase();
+          if (valid.length > 0) return { address: valid[0].toLowerCase(), source: 'bandcamp_text', confidence: 'verified' };
         }
 
         // Look for external website link
@@ -97,7 +105,7 @@ async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string 
               const siteMatch = siteText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
               if (siteMatch) {
                 const valid = [...new Set(siteMatch)].filter(e => !e.includes('example') && e.length < 50);
-                if (valid.length > 0) return valid[0].toLowerCase();
+                if (valid.length > 0) return { address: valid[0].toLowerCase(), source: 'artist_website', confidence: 'verified' };
               }
             }
           } catch {}
@@ -118,19 +126,10 @@ async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string 
         const igMatch = igHtml.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
         if (igMatch) {
           const valid = [...new Set(igMatch)].filter(e => !e.includes('instagram') && e.length < 50);
-          if (valid.length > 0) return valid[0].toLowerCase();
+          if (valid.length > 0) return { address: valid[0].toLowerCase(), source: 'instagram_bio', confidence: 'verified' };
         }
       }
     } catch {}
-  }
-
-  // Method 3: Common email patterns from Bandcamp subdomain
-  if (bandcampUrl) {
-    const subdomain = bandcampUrl.match(/https?:\/\/([^.]+)\.bandcamp\.com/)?.[1];
-    if (subdomain && subdomain.length > 3 && /^[a-zA-Z0-9_-]+$/.test(subdomain)) {
-      // Many artists use their band/artist name @gmail.com
-      return `${subdomain.toLowerCase()}@gmail.com`;
-    }
   }
 
   // Method 4: Google search for artist contact email
@@ -150,7 +149,7 @@ async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: string 
             !e.includes('google') && !e.includes('example') && !e.includes('sentry') &&
             !e.includes('schema.org') && e.length < 50
           );
-          if (valid.length > 0) return valid[0].toLowerCase();
+          if (valid.length > 0) return { address: valid[0].toLowerCase(), source: 'google_search', confidence: 'medium' };
         }
       }
     } catch {}
@@ -277,8 +276,15 @@ export async function auditArtist(
 
     // Scrape email from Bandcamp + Instagram
     let email_address: string | null = null;
+    let email_source: string | null = null;
+    let email_confidence: string | null = null;
     if (bandcampUrl || instagram_handle) {
-      email_address = await scrapeBandcampEmail(bandcampUrl || '', instagram_handle || null, artistName);
+      const result = await scrapeBandcampEmail(bandcampUrl || '', instagram_handle || null, artistName);
+      if (result) {
+        email_address = result.address;
+        email_source = result.source;
+        email_confidence = result.confidence;
+      }
     }
 
     // Personal angle
@@ -300,6 +306,8 @@ export async function auditArtist(
       tiktok_handle,
       tiktok_followers: 0,
       email_address,
+      email_source,
+      email_confidence,
       website_url,
       hashtags: genres.map((g: string) => `#${g.replace(/\s+/g, '')}`).slice(0, 5),
       personal_angle: personalAngle,
