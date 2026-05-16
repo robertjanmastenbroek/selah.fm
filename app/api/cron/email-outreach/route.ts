@@ -38,6 +38,7 @@ export async function GET(request: Request) {
         AND aa.email_address IS NOT NULL
         AND aa.email_address != ''
         AND (aa.email_confidence = 'verified' OR aa.email_confidence = 'high')
+        AND (aa.bounced_at IS NULL)
         AND NOT EXISTS (
           SELECT 1 FROM outreach_log ol 
           WHERE ol.discovered_artist_id = da.id AND ol.channel = 'email'
