@@ -57,8 +57,8 @@ export async function POST(request: Request) {
     const creatorLastInitial = creatorName.split(' ').slice(1).join(' ')[0] || '';
     const platformLabel = platform === 'instagram' ? 'Instagram Reels' : platform === 'youtube' ? 'YouTube Shorts' : platform === 'facebook' ? 'Facebook' : 'TikTok';
     await sql`
-      INSERT INTO live_ticker_events (campaign_id, event_type, payload)
-      VALUES (${campaignId}, 'video_submitted', ${JSON.stringify({
+      INSERT INTO live_ticker_events (campaign_id, event_type, message, metadata)
+      VALUES (${campaignId}, 'video_submitted', ${`${creatorFirst} submitted a ${platformLabel}`}, ${JSON.stringify({
         first_name: creatorFirst,
         last_initial: creatorLastInitial ? creatorLastInitial + '.' : '',
         platform: platformLabel,
