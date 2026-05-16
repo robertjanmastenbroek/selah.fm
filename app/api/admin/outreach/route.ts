@@ -43,6 +43,9 @@ export async function POST(request: Request) {
       case 'send_email':             return runSendEmail(body.artistId);
       case 'reaudit_emails':         return runReauditEmails(body.limit || 50);
       case 'enrich_streaming':       return runEnrichStreaming(body.limit || 20);
+      case 'discover_creators':      return runDiscoverCreators(body.limit || 50);
+      case 'send_creator_email':     return runSendCreatorEmail(body.creatorId);
+      case 'get_creator_queue':      return getCreatorQueue();
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -823,6 +826,82 @@ async function runSendEmail(artistId: string) {
 }
 
 /** Get artists with email addresses — ready for email outreach */
+// ── Creator Pipeline Handlers ────────────────────────────────────
+
+async function runDiscoverCreators(limit: number) {
+  const { discoverTikTokCreators } = await import('@/lib/creator-discovery');
+  const creators = await discoverTikTokCreators(limit);
+
+  let stored = 0;
+  let withEmail = 0;
+
+  for (const c of creators) {
+    try {
+      const emailConfidence = c.email_address ? 'medium' : 'low';
+      await sql`
+        INSERT INTO discovered_creators (username, platform, display_name, bio, follower_count, profile_url, email_address, email_source, email_confidence, discovery_hashtag, status)
+        VALUES (${c.username}, ${c.platform}, ${c.display_name}, ${c.bio}, ${c.follower_count}, ${c.profile_url}, ${c.email_address || null}, ${c.email_source || null}, ${emailConfidence}, ${c.hashtag || null}, 'discovered')
+        ON CONFLICT DO NOTHING
+      `;
+      stored++;
+      if (c.email_address) withEmail++;
+    } catch {}
+  }
+
+  return NextResponse.json({ discovered: creators.length, stored, with_email: withEmail, creators: creators.filter(c => c.email_address).slice(0, 10) });
+}
+
+async function runSendCreatorEmail(creatorId: string) {
+  const [creator] = await sql`SELECT * FROM discovered_creators WHERE id = ${creatorId}`;
+  if (!creator) return NextResponse.json({ error: 'Creator not found' }, { status: 404 });
+  if (!creator.email_address) return NextResponse.json({ error: 'No email address for this creator' }, { status: 400 });
+
+  const [existing] = await sql`SELECT id FROM creator_outreach_log WHERE discovered_creator_id = ${creator.id} LIMIT 1`;
+  if (existing) return NextResponse.json({ error: 'Already emailed this creator' }, { status: 409 });
+
+  const { generateCreatorOutreachEmail } = await import('@/lib/creator-email-outreach');
+  const email = await generateCreatorOutreachEmail(
+    creator.display_name || creator.username,
+    creator.bio?.substring(0, 60) || 'content creator',
+    'https://selah.fm/browse'
+  );
+
+  const htmlBody = emailWrapper({
+    title: 'Get paid for your content',
+    body: email.body.replace(/\n/g, '<br>'),
+    cta: { text: 'Browse campaigns →', url: 'https://selah.fm/browse' },
+  });
+
+  const { sendOutreachEmail } = await import('@/lib/email-outreach');
+  const result = await sendOutreachEmail({
+    to: creator.email_address,
+    subject: email.subject,
+    htmlBody,
+  });
+
+  if (result.sent) {
+    await sql`
+      INSERT INTO creator_outreach_log (discovered_creator_id, channel, message_text, status)
+      VALUES (${creator.id}, 'email', ${email.body}, 'sent')
+    `;
+    await sql`UPDATE discovered_creators SET status = 'emailed', updated_at = NOW() WHERE id = ${creator.id}`;
+  }
+
+  return NextResponse.json(result);
+}
+
+async function getCreatorQueue() {
+  const creators = await sql`
+    SELECT * FROM discovered_creators
+    WHERE email_address IS NOT NULL
+      AND status = 'discovered'
+      AND NOT EXISTS (SELECT 1 FROM creator_outreach_log WHERE discovered_creator_id = discovered_creators.id)
+    ORDER BY follower_count DESC
+    LIMIT 50
+  `;
+  return NextResponse.json(creators);
+}
+
 async function getEmailQueue() {
   const artists = await sql`
     SELECT DISTINCT ON (da.id) da.*, aa.email_address, aa.personal_angle,
