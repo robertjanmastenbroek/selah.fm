@@ -6,7 +6,7 @@ import { isAdminRequest } from '@/lib/auth';
 import { discoverArtists, auditArtist, renderOutreachMessage, renderFollowUpMessage, generateOutreachMessage, scrapeBandcampEmail } from '@/lib/outreach';
 import { generateArticle, findVoiceExamples } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
-import { renderArtistOutreachEmail, generateOutreachEmail, sendOutreachEmail } from '@/lib/email-outreach';
+import { renderArtistOutreachEmail, generateOutreachEmail, sendOutreachEmail, addToAudience } from '@/lib/email-outreach';
 import { emailWrapper } from '@/lib/email-templates';
 import { verifyEmail } from '@/lib/email-verify';
 import { enrichCampaignStreamingLinks } from '@/lib/streaming-links';
@@ -816,6 +816,7 @@ async function runSendEmail(artistId: string) {
       VALUES (${artist.id}, ${claim.campaign_id}, 'email', 'initial', ${email.body}, 'sent', NOW())
     `;
     await sql`UPDATE discovered_artists SET status = 'outreach_sent', updated_at = NOW() WHERE id = ${artist.id}`;
+    addToAudience(audit.email_address, artist.artist_name).catch(() => {});
   }
 
   return NextResponse.json(result);

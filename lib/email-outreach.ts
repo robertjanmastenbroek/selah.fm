@@ -114,6 +114,33 @@ export async function generateOutreachEmail(
   }
 }
 
+// ── Resend Audience ──────────────────────────────────────────────
+
+/**
+ * Add a delivered email to a Resend audience for future marketing.
+ * No-op if RESEND_AUDIENCE_ID is not configured.
+ */
+export async function addToAudience(email: string, artistName: string): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const audienceId = process.env.RESEND_AUDIENCE_ID;
+  if (!apiKey || !audienceId) return;
+
+  try {
+    await fetch(`https://api.resend.com/audiences/${audienceId}/contacts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        email,
+        first_name: artistName,
+        unsubscribed: false,
+      }),
+    });
+  } catch {}
+}
+
 // ── Email sending via Resend ─────────────────────────────────────
 
 export async function sendOutreachEmail(params: {
