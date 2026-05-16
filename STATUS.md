@@ -1,15 +1,20 @@
 # Selah.fm — Status & Reference
-**Version:** 1.2 · **Live:** https://selah.fm · **Updated:** 2026-05-14
+**Version:** 2.0 · **Live:** https://selah.fm · **Updated:** 2026-05-16
 
 ---
 
-## Current Focus: Platform Polish & Conversion
+## Current State (May 2026)
 
-The outbound pipeline is running autonomously. Focus has shifted to:
-1. **Campaign page UX** — Creator-primary, one dominant CTA, scannable instructions
-2. **Homepage conversion** — Apple-grade visual quality, clear value prop, live stats
-3. **Persistent auth** — Sessions no longer drop unexpectedly
-4. **Image reliability** — Campaign images stored in DB (survives Railway deploys)
+| Area | Status |
+|------|--------|
+| Auth | Supabase Auth (Google OAuth + email/password) |
+| Database | Supabase PostgreSQL (27 tables, 1,800+ artists) |
+| Outreach | Automated email pipeline (Resend, 100 emails/day capacity) |
+| Campaigns | 1,238 active campaigns (auto-generated from Bandcamp) |
+| Fee model | 20% added on artist CPM, creators earn full CPM |
+| Email verification | MX record check + disposable domain filter + Resend webhook |
+| Streaming links | Spotify/Apple Music/YouTube links on every campaign page |
+| Homepage | Server-rendered stats (1.2K active campaigns, 6 creators) |
 
 ---
 
@@ -17,85 +22,32 @@ The outbound pipeline is running autonomously. Focus has shifted to:
 
 | Table | Rows | Notes |
 |-------|------|-------|
-| discovered_artists | 1,800+ | Multi-channel discovery (Bandcamp + YouTube + Reddit) |
-| artist_audits | 111+ | YouTube video search + social scraping |
-| campaigns (active) | 54 | Mix of claimed + unclaimed auto-generated |
-| campaign_claims | 50+ | UUID claim codes, cumulative count |
+| discovered_artists | 1,877 | Multi-channel: Bandcamp (14 genres, 5 pages) + Reddit + YouTube |
+| artist_audits | 3,192 | Email scraping (Bandcamp, Instagram, SoundCloud, Twitter/X, Google) |
+| campaigns (active) | 1,238 | All auto-generated, unclaimed |
+| campaign_claims | 708 | UUID claim codes |
+| outreach_log (email) | 111 | Sent via Resend, bounce-tracked via webhook |
+| verified emails | 67 | Real emails found on artist pages (2% hit rate) |
 
-**Cron schedule:** Pipeline 02:00 + 14:00 UTC, Follow-up 18:00 UTC
-**DM channels:** Instagram + TikTok (both handles supported, IG prioritized)
-
----
-
-## Recent Changes (2026-05-14)
-
-### Campaign Page v2 (3 files, 2 commits)
-| Change | Details |
-|--------|---------|
-| P0: CPM consistency | All displays read from `campaign.cpm_rate_cents`. Creator cut shown as "80% — $X" in parentheses. |
-| P0: Loading state fix | LiveTicker 8-second safety timeout → "Be the first creator on this track." |
-| P1: Dominant creator CTA | Full-width "Join campaign" button. Donate demoted to small text link. |
-| P1: Single donation panel | Removed duplicates. One panel below creator flow, visually de-emphasized. |
-| P1: Scannable instructions | Essentials block (6 bullets) + collapsible Full Guidelines. |
-| P1: Asset download first | Google Drive moved above How to Participate. Step 1 leads with download. |
-| P2: Submission confirmation | "You're in!" + 3-step timeline (review → verify → payout). |
-
-### Homepage v2 (`components/HomePageClient.tsx`)
-- Deeper `#080817` background + SVG grain texture + softer ambient light
-- 3-line hero headline ("Your music / real creators / real views")
-- Live campaign count from API total (not LIMITed page)
-- Open source badge in hero
-- Equal-height campaign cards with reserved title space
-- Problem/Solution comparison with more visceral copy
-- Trust pillars row (Verified views, You own everything, Open source, Built by musicians)
-
-### Equal-Height Campaign Cards (`BrowseClient.tsx` + `HomePageClient.tsx`)
-- `h-full flex flex-col` with `flex-1 justify-between` on card body
-- `min-h-[2.5rem]` on titles — all cards same height regardless of title length
-- Bottom section (budget bar + CPM) pinned to card bottom
-
-### Persistent Auth (`lib/auth.ts`)
-- Replaced `require('next/headers')` with static `import { cookies }`
-- Fixed cookie header regex: `/(?:^|;\s*)session=([^;]+)/`
-- Added `.selah.fm` cookie domain (works on www + root domain)
-- `secure` flag checks both `NODE_ENV` and `NEXT_PUBLIC_URL`
-
-### Image Storage — campaign_images table
-- Images stored as `BYTEA` in DB (survives Railway ephemeral filesystem)
-- Serving route: `/images/campaigns/[filename]`
-- Download function with browser headers + magic byte validation + Bandcamp page scraping
-- All 4 campaign creation paths store images: admin API, cron pipeline, POST /api/campaigns, PATCH /api/campaigns/[id]
-
-### TikTok DM Support
-- Campaigns created for artists with TikTok handles (not just Instagram)
-- `discoverSocialLinks` validates TikTok handle existence (rejects "Couldn't find this account")
-- Outreach DM opens TikTok tab alongside Instagram when both exist
-
-### Browse Page
-- Campaign cards show artist name above track title
-- Equal-height card grid with reserved title space
-- `campaigns_created` stat from `campaign_claims` (cumulative, never decreases)
-
----
-
-## Design System
-
-- **Style:** Dark, premium — `#080817` base
-- **Colors:** Primary `#4338CA` (indigo), Accent `#22C55E` (green)
-- **Fonts:** Righteous (headings) + Poppins (body)
-- **Homepage:** Grain texture, glass-morphism cards, 1px subtle borders, wide ambient glow shadows
+**Cron schedule:** Pipeline every 30 min, Email every 30 min (offset 5 min)
+**Email channel:** Resend (100/day free tier, 3 per run × 48 runs)
+**Pipeline defaults:** 100 discovery, 200 audit, 50 campaigns per run
 
 ---
 
 ## Key Architecture Decisions
 
-- **Creator-primary campaign pages** — One dominant CTA (Join), donation is secondary
-- **Instagram + TikTok DM** — Both handles supported. No IG = campaign blocked at creation.
-- **AI outreach messages** — DeepSeek API, founder voice, genre-specific, anti-spam guardrails
-- **$0 budget auto-campaigns** — Artists can fund after claiming
-- **DB image storage** — `campaign_images` table (BYTEA). Filesystem is ephemeral on Railway.
-- **Spotify removed** — Bandcamp API provides all needed artist data
-- **Stateless sessions** — HMAC-signed cookies, 7-day expiry, no DB tokens needed
+- **Supabase Auth** — Google OAuth + email/password, HMAC cookies removed
+- **Direct pg Pool** — `lib/db.ts` connects to Supabase PostgreSQL via pooler
+- **Email-first outreach** — Resend for delivery, DeepSeek V3 for content
+- **Artist-side fee** — 20% added on top of CPM, creators earn 100%
+- **Email confidence scoring** — verified/high/medium/low/guess, only verified auto-send
+- **Pre-send verification** — MX record + disposable domain + syntax check
+- **Bounce tracking** — Resend webhook → auto-blocks bounced addresses
+- **Bandcamp subdomain → email** — Scraped from page text, websites, Instagram, SoundCloud, Twitter/X, Google
+- **Streaming links** — Spotify API + Apple Music iTunes API → direct links
+- **Server-rendered homepage** — Stats and campaign grid from DB (no JS needed)
+- **`n` artifact fix** — Bandcamp HTML artifact stripping from scraped emails
 
 ---
 
@@ -103,37 +55,33 @@ The outbound pipeline is running autonomously. Focus has shifted to:
 
 | File | Purpose |
 |------|---------|
-| `app/c/[id]/page.tsx` | Campaign detail page (metadata + server component) |
-| `app/c/[id]/CampaignDetailClient.tsx` | Campaign page client (all UI + flows) |
-| `components/HomePageClient.tsx` | Homepage v2 (hero, campaigns, problem/solution, etc.) |
-| `app/browse/BrowseClient.tsx` | Browse page with equal-height campaign cards |
-| `app/api/admin/outreach/route.ts` | All outreach API actions + repair |
-| `app/api/cron/outreach-pipeline/route.ts` | Autonomous pipeline (cron) |
-| `app/api/cron/outreach-followup/route.ts` | Day-7 follow-up system (cron) |
-| `lib/auth.ts` | Session management (HMAC cookies, domain support) |
-| `lib/outreach.ts` | Artist audit + AI outreach messages |
-| `lib/discovery.ts` | Multi-channel artist discovery |
-| `components/EarnModal.tsx` | Creator submission flow with confirmation |
-| `components/LiveTicker.tsx` | Activity ticker with empty-state handling |
+| `app/c/[id]/page.tsx` | Campaign detail — metadata, JSON-LD, server component, streaming links |
+| `app/c/[id]/CampaignDetailClient.tsx` | Campaign page client — hero, CTAs, how-to, donations, listen links |
+| `components/HomePageClient.tsx` | Homepage — hero, campaigns grid, problem/solution, testimonials |
+| `app/api/admin/outreach/route.ts` | All outreach actions (discover, audit, create_campaign, email, reaudit, enrich) |
+| `app/api/cron/outreach-pipeline/route.ts` | Autonomous pipeline (discover → audit → campaign → enrich) |
+| `app/api/cron/email-outreach/route.ts` | Email sending cron (3 per run, verification, audience sync) |
+| `lib/outreach.ts` | Artist audit + email scraping + AI outreach messages |
+| `lib/discovery.ts` | Multi-channel discovery (Bandcamp API + Reddit + YouTube) |
+| `lib/email-outreach.ts` | Email generation (DeepSeek + template) + Resend sending + audience sync |
+| `lib/email-verify.ts` | MX record check + disposable domain + syntax validation |
+| `lib/streaming-links.ts` | Spotify/Apple Music API search → exact track links |
+| `lib/fees.ts` | Fee calculations (20% artist-side, 100% creator) |
+| `lib/supabase/server.ts` | Supabase server client + getUser/isAdmin |
+| `lib/supabase/middleware.ts` | Session refresh middleware |
+| `lib/supabase/client.ts` | Browser client for client components |
+| `app/auth/callback/route.ts` | OAuth code exchange (x-forwarded-host for Railway) |
+| `app/api/webhooks/resend/route.ts` | Resend bounce/complaint webhook handler |
 
 ---
 
 ## Important Rules
 
-- **CPM source of truth:** `campaign.cpm_rate_cents` only — never hardcode rate strings
-- **Creator-primary pages:** One dominant Join CTA, donation is secondary link
-- **Donations panel:** ONE instance, below creator flow, visually de-emphasized
-- **Image fallback chain:** DB binary → external URL → og-image.jpg
-- **Campaign count:** Uses `campaign_claims` table (cumulative)
+- **CPM source of truth:** `campaign.cpm_rate_cents` — never hardcode
+- **Creator earnings:** Full CPM, no deduction (fee is artist-side `CPM × 1.20`)
+- **Email sending:** Only verified-confidence emails, MX check pre-send
+- **Campaign count:** `campaign_claims` table (cumulative)
 - **OG images:** Root layout must NOT set `openGraph.images`
-- **UI safety:** All buttons disable during loading, global actions lock all cards
-- **Session cookies:** `.selah.fm` domain, 7-day maxAge, secure in prod
-
----
-
-## Testing
-
-```bash
-npx tsc --noEmit     # zero errors
-node e2e/test.js     # 44 tests, 100% passing
-```
+- **Image fallback:** DB binary → external URL → `/images/og-image.jpg`
+- **Session cookies:** Supabase manages via `@supabase/ssr`
+- **TypeScript:** `npx tsc --noEmit` must pass with zero errors before commit
