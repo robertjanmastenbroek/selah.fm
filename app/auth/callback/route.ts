@@ -14,18 +14,29 @@ function parseCookies(header: string) {
     });
 }
 
+/**
+ * Get the real origin, accounting for Railway's reverse proxy.
+ * Railway forwards x-forwarded-host and x-forwarded-proto headers.
+ */
+function getOrigin(request: Request): string {
+  const host = request.headers.get('x-forwarded-host') || new URL(request.url).host;
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  return `${proto}://${host}`;
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const next = requestUrl.searchParams.get('next') || '/browse';
+  const origin = getOrigin(request);
 
   if (!code) {
-    return NextResponse.redirect(new URL('/login?error=no_code', request.url));
+    return NextResponse.redirect(new URL('/login?error=no_code', origin));
   }
 
   try {
-    const redirectUrl = new URL(next, request.url);
-    const response = NextResponse.redirect(redirectUrl);
+    const redirectUrl = new URL(next, origin);
+    const response = NextResponse.redirect(redirectUrl, 302);
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,12 +59,12 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Auth callback error:', error.message);
-      return NextResponse.redirect(new URL('/login?error=auth_failed', request.url));
+      return NextResponse.redirect(new URL('/login?error=auth_failed', origin));
     }
 
     return response;
   } catch (err: any) {
     console.error('Auth callback exception:', err.message);
-    return NextResponse.redirect(new URL('/login?error=auth_error', request.url));
+    return NextResponse.redirect(new URL('/login?error=auth_error', origin));
   }
 }
