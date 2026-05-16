@@ -24,31 +24,6 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://selah.fm' },
 };
 
-export default async function HomePage() {
-  // Fetch stats server-side from the API (avoids DB connection issues in server components)
-  let initialStats = { artists: 0, creators: 0, activeCampaigns: 0, totalPaidCents: 0, totalViews: 0, donors: 0, totalDonatedCents: 0, totalDepositedCents: 0 };
-  let featuredCampaigns: any[] = [];
-  let totalActive = 0;
-
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
-    const [statsRes, campaignsRes] = await Promise.all([
-      fetch(`${baseUrl}/api/stats`, { next: { revalidate: 60 } }),
-      fetch(`${baseUrl}/api/campaigns?limit=6&sort=recent`, { next: { revalidate: 60 } }),
-    ]);
-
-    if (statsRes.ok) {
-      const stats = await statsRes.json();
-      initialStats = stats;
-      totalActive = stats.activeCampaigns || 0;
-    }
-
-    if (campaignsRes.ok) {
-      const campaigns = await campaignsRes.json();
-      featuredCampaigns = campaigns.campaigns || [];
-      if (campaigns.total) totalActive = campaigns.total;
-    }
-  } catch {}
-
-  return <HomePageClient initialStats={initialStats} initialFeatured={featuredCampaigns} initialTotalActive={totalActive} />;
+export default function HomePage() {
+  return <HomePageClient />;
 }
