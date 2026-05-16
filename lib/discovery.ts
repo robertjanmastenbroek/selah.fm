@@ -152,7 +152,7 @@ async function discoverFromReddit(): Promise<{ candidates: RawArtistCandidate[];
 // CHANNEL 2: BANDCAMP (API-based, all independent)
 // ══════════════════════════════════════════════════════════════════
 
-const BANDCAMP_GENRES = ['electronic', 'hiphop-rap', 'rock', 'pop', 'folk', 'metal', 'punk', 'experimental', 'ambient', 'indie', 'alternative', 'r-b-soul', 'jazz', 'country'];
+const BANDCAMP_GENRES = ['electronic', 'hiphop-rap', 'rock', 'pop', 'folk', 'metal', 'punk', 'experimental', 'ambient', 'indie', 'alternative', 'r-b-soul', 'jazz', 'country', 'blues', 'reggae', 'singer-songwriter', 'classical', 'world', 'soundtrack'];
 
 async function fetchBandcampGenre(genre: string, page: number = 0): Promise<RawArtistCandidate[]> {
   // Rotate sort order — 'new', 'top', 'rec' give different artists
@@ -223,8 +223,8 @@ async function discoverFromBandcamp(): Promise<{ candidates: RawArtistCandidate[
   const allCandidates: RawArtistCandidate[] = [];
   const seen = new Set<string>();
   const shuffled = [...BANDCAMP_GENRES].sort(() => Math.random() - 0.5);
-  const genres = shuffled.slice(0, 6);
-  const pagesToFetch = 3; // Pages 0, 1, 2 — ~48 items each = ~144 per genre
+  const genres = shuffled.slice(0, 12);
+  const pagesToFetch = 5; // Pages 0-4 — ~48 items each = ~240 per genre
 
   for (const genre of genres) {
     let genreTotal = 0;
