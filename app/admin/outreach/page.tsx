@@ -18,12 +18,14 @@ interface PipelineData {
 }
 
 export default function OutreachDashboard() {
+  const [tab, setTab] = useState<'artists' | 'creators'>('artists');
   const [pipeline, setPipeline] = useState<PipelineData | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
   const { toasts, addToast, dismissToast } = useToasts();
   const [artists, setArtists] = useState<any[]>([]);
   const [readyForCampaign, setReadyForCampaign] = useState<any[]>([]);
+  const [creators, setCreators] = useState<any[]>([]);
 
   const api = useCallback(async (action: string, body: any = {}) => {
     const res = await fetch('/api/admin/outreach', {
@@ -151,6 +153,39 @@ export default function OutreachDashboard() {
     setActionLoading('');
   };
 
+  const fetchCreators = async () => {
+    setLoading(true);
+    try {
+      const data = await api('get_creator_queue');
+      if (!data.error) setCreators(Array.isArray(data) ? data : []);
+    } catch {}
+    setLoading(false);
+  };
+
+  const discoverCreators = async () => {
+    setActionLoading('discover-creators');
+    try {
+      const data = await api('discover_creators', { limit: 50 });
+      if (data.error) addToast('error', 'Discovery failed', data.error);
+      else { addToast('success', `Found ${data.discovered} creators, ${data.with_email} with email`); fetchCreators(); }
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  const sendCreatorEmail = async (creatorId: string) => {
+    setActionLoading(`creator-email-${creatorId}`);
+    try {
+      const data = await api('send_creator_email', { creatorId });
+      if (data.error) addToast('error', 'Email failed', data.error);
+      else { addToast('success', 'Email sent'); fetchCreators(); }
+    } catch (e: any) { addToast('error', e.message); }
+    setActionLoading('');
+  };
+
+  useEffect(() => {
+    if (tab === 'creators') fetchCreators();
+  }, [tab]);
+
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -166,80 +201,151 @@ export default function OutreachDashboard() {
     <div className="space-y-6 pb-12">
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
+      {/* Header + Tab Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Outreach Pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-1">Discover → Audit → Campaign → Email → Claim</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {tab === 'artists' ? 'Discover → Audit → Campaign → Email → Claim' : 'Discover → Scrape → Email → Earn'}
+          </p>
         </div>
-        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-          onClick={runDiscovery} disabled={actionLoading === 'discover'}
-          className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm
-                     hover:shadow-[0_0_30px_rgba(67,56,202,0.25)] disabled:opacity-50 transition-shadow duration-300">
-          {actionLoading === 'discover' ? <><Loader2 size={16} className="animate-spin" />Discovering…</> : <><Search size={16} />Discover Artists</>}
-        </motion.button>
-      </div>
-
-      <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
-        {[
-          { label: 'Discovered', value: p.discovered, icon: Search, color: 'text-blue-400' },
-          { label: 'Awaiting', value: p.awaiting_audit, icon: Clock, color: 'text-gray-400' },
-          { label: 'Audited', value: p.audited, icon: ({ size }: any) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>, color: 'text-purple-400' },
-          { label: 'Campaigns', value: p.campaigns_created, icon: Megaphone, color: 'text-amber-400' },
-          { label: 'Outreach', value: p.outreach_sent, icon: Send, color: 'text-green-400' },
-          { label: 'Claimed', value: p.claimed, icon: Check, color: 'text-emerald-400' },
-          { label: 'Replies', value: o.replies, icon: BarChart3, color: 'text-pink-400' },
-        ].map((s, i) => <StatCard key={s.label} {...s} delay={i} />)}
-      </div>
-
-      {readyForCampaign.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <Megaphone size={14} className="text-amber-400" />Ready for Campaign
-            <span className="text-[10px] text-muted-foreground font-normal">{readyForCampaign.length} audited</span>
-          </h2>
-          <div className="space-y-2">
-            {readyForCampaign.map((a: any) => (
-              <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
-                onAudit={runAudit} onCreateCampaign={createCampaign}
-                onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
-                onLogOutreach={logOutreach} onSkip={skipArtist} />
-            ))}
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-xl bg-white/[0.03] border border-white/[0.06] p-0.5">
+            <button onClick={() => { setTab('artists'); fetchPipeline(); }}
+              className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${tab === 'artists' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+              🎵 Artists
+            </button>
+            <button onClick={() => setTab('creators')}
+              className={`px-4 py-2 rounded-lg text-xs font-medium transition-all ${tab === 'creators' ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+              📱 Creators
+            </button>
           </div>
+          {tab === 'artists' ? (
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+              onClick={runDiscovery} disabled={actionLoading === 'discover'}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm hover:shadow-[0_0_30px_rgba(67,56,202,0.25)] disabled:opacity-50 transition-shadow duration-300">
+              {actionLoading === 'discover' ? <><Loader2 size={16} className="animate-spin" />Discovering…</> : <><Search size={16} />Discover Artists</>}
+            </motion.button>
+          ) : (
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+              onClick={discoverCreators} disabled={actionLoading === 'discover-creators'}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-emerald-600 text-white font-bold text-sm hover:shadow-[0_0_30px_rgba(22,163,74,0.25)] disabled:opacity-50 transition-shadow duration-300">
+              {actionLoading === 'discover-creators' ? <><Loader2 size={16} className="animate-spin" />Discovering…</> : <><Search size={16} />Discover Creators</>}
+            </motion.button>
+          )}
         </div>
+      </div>
+
+      {/* Artist Tab */}
+      {tab === 'artists' && (
+        <>
+          <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+            {[
+              { label: 'Discovered', value: p.discovered, icon: Search, color: 'text-blue-400' },
+              { label: 'Awaiting', value: p.awaiting_audit, icon: Clock, color: 'text-gray-400' },
+              { label: 'Audited', value: p.audited, icon: ({ size }: any) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>, color: 'text-purple-400' },
+              { label: 'Campaigns', value: p.campaigns_created, icon: Megaphone, color: 'text-amber-400' },
+              { label: 'Outreach', value: p.outreach_sent, icon: Send, color: 'text-green-400' },
+              { label: 'Claimed', value: p.claimed, icon: Check, color: 'text-emerald-400' },
+              { label: 'Replies', value: o.replies, icon: BarChart3, color: 'text-pink-400' },
+            ].map((s, i) => <StatCard key={s.label} {...s} delay={i} />)}
+          </div>
+
+          {readyForCampaign.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                <Megaphone size={14} className="text-amber-400" />Ready for Campaign
+                <span className="text-[10px] text-muted-foreground font-normal">{readyForCampaign.length} audited</span>
+              </h2>
+              <div className="space-y-2">
+                {readyForCampaign.map((a: any) => (
+                  <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
+                    onAudit={runAudit} onCreateCampaign={createCampaign}
+                    onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
+                    onLogOutreach={logOutreach} onSkip={skipArtist} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <Users size={14} className="text-primary" />Discovered Artists
+                {artists.length > 0 && <span className="text-[10px] text-muted-foreground font-normal">{artists.length} showing</span>}
+              </h2>
+              <div className="flex items-center gap-2">
+                <button onClick={() => batchAudit(20)} disabled={actionLoading === 'batch-audit'}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 disabled:opacity-40">
+                  {actionLoading === 'batch-audit' ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}Audit 20
+                </button>
+                <button onClick={fetchPipeline} disabled={actionLoading === 'refresh'}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium bg-white/[0.03] border border-white/[0.06] text-muted-foreground hover:text-foreground hover:border-white/[0.12] disabled:opacity-40">
+                  <RefreshCw size={11} />Refresh
+                </button>
+              </div>
+            </div>
+            {artists.length === 0 ? <EmptyState onDiscover={runDiscovery} /> : (
+              <div className="space-y-2">
+                {artists.filter((a: any) => a.status !== 'audited').map((a: any) => (
+                  <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
+                    onAudit={runAudit} onCreateCampaign={createCampaign}
+                    onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
+                    onLogOutreach={logOutreach} onSkip={skipArtist} />
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold flex items-center gap-2">
-            <Users size={14} className="text-primary" />Discovered Artists
-            {artists.length > 0 && <span className="text-[10px] text-muted-foreground font-normal">{artists.length} showing</span>}
-          </h2>
-          <div className="flex items-center gap-2">
-            <button onClick={() => batchAudit(20)} disabled={actionLoading === 'batch-audit'}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
-                         bg-purple-500/10 text-purple-400 border border-purple-500/20
-                         hover:bg-purple-500/20 disabled:opacity-40">
-              {actionLoading === 'batch-audit' ? <Loader2 size={11} className="animate-spin" /> : <Zap size={11} />}Audit 20
-            </button>
-            <button onClick={fetchPipeline} disabled={actionLoading === 'refresh'}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-medium
-                         bg-white/[0.03] border border-white/[0.06] text-muted-foreground
-                         hover:text-foreground hover:border-white/[0.12] disabled:opacity-40">
-              <RefreshCw size={11} />Refresh
-            </button>
+      {/* Creator Tab */}
+      {tab === 'creators' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: 'Discovered', value: creators.length },
+              { label: 'With Email', value: creators.filter((c: any) => c.email_address).length },
+              { label: 'Emailed', value: creators.filter((c: any) => c.status === 'emailed').length },
+            ].map((s, i) => <StatCard key={s.label} {...s} icon={Search} color="text-emerald-400" delay={i} />)}
           </div>
+
+          {creators.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="text-sm">No creators discovered yet.</p>
+              <p className="text-xs mt-1">Click "Discover Creators" to scrape TikTok.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {creators.map((c: any) => (
+                <div key={c.id} className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4 flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium truncate">{c.display_name || c.username}</span>
+                      <span className="text-[10px] text-muted-foreground">@{c.username}</span>
+                      {c.follower_count > 0 && <span className="text-[10px] text-muted-foreground/60">{c.follower_count.toLocaleString()} followers</span>}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      {c.email_address ? (
+                        <span className="text-[10px] text-emerald-400">{c.email_address}</span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground/40">No email</span>
+                      )}
+                      {c.status === 'emailed' && <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">Emailed</span>}
+                    </div>
+                  </div>
+                  {c.email_address && c.status !== 'emailed' && (
+                    <button onClick={() => sendCreatorEmail(c.id)} disabled={actionLoading === `creator-email-${c.id}`}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 disabled:opacity-40 shrink-0 ml-3">
+                      {actionLoading === `creator-email-${c.id}` ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}Email
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        {artists.length === 0 ? <EmptyState onDiscover={runDiscovery} /> : (
-          <div className="space-y-2">
-            {artists.filter((a: any) => a.status !== 'audited').map((a: any) => (
-              <ArtistCard key={a.id} artist={a} actionLoading={actionLoading}
-                onAudit={runAudit} onCreateCampaign={createCampaign}
-                onSendEmail={sendEmail} onRenderOutreach={renderOutreach} onRenderFollowUp={renderFollowUp}
-                onLogOutreach={logOutreach} onSkip={skipArtist} />
-            ))}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

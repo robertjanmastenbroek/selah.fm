@@ -8,8 +8,6 @@
  * Hit rate: ~32% of TikTok bios contain emails
  */
 
-import { verifyEmail } from '@/lib/email-verify';
-
 // ── Hashtags to search ──────────────────────────────────────────
 
 const TIKTOK_HASHTAGS = [
