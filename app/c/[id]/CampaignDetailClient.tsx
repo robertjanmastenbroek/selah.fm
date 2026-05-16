@@ -128,7 +128,9 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
 // ════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ════════════════════════════════════════════════════════════════
-export default function CampaignDetailClient({ id, initialCampaign }: { id: string; initialCampaign: any }) {
+interface ListenLink { platform: string; url: string; icon: string; }
+
+export default function CampaignDetailClient({ id, initialCampaign, listenLinks = [] }: { id: string; initialCampaign: any; listenLinks?: ListenLink[] }) {
   const [campaign, setCampaign] = useState<any>(initialCampaign);
   const [loading, setLoading] = useState(!initialCampaign);
   const { addToast } = useToast();
@@ -275,6 +277,24 @@ export default function CampaignDetailClient({ id, initialCampaign }: { id: stri
                 <span className="text-[8px] font-medium text-muted-foreground">Share</span>
               </button>
             </div>
+
+            {/* ── Listen on ── */}
+            {listenLinks.length > 0 && (
+              <div className="mb-4">
+                <p className="text-[9px] uppercase tracking-wider text-muted-foreground/40 mb-2">Listen on</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {listenLinks.map((link, i) => (
+                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] 
+                               text-[11px] text-muted-foreground hover:text-white hover:bg-white/[0.06] hover:border-white/[0.12] 
+                               transition-all active:scale-[0.96]">
+                      <span className="text-xs">{link.icon}</span>
+                      {link.platform}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* CTA — single dominant creator action */}
             <button onClick={() => setJoinOpen(true)}

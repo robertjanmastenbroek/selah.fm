@@ -13,21 +13,31 @@ async function getCampaign(id: string) {
     const campaigns = isUuid
       ? await sql`
           SELECT c.*, COALESCE(c.title, c.track_title) as title,
-            COALESCE(u.display_name, da.artist_name) as artist_name
+            COALESCE(u.display_name, da.artist_name) as artist_name,
+            da.social_links, da.artist_name as da_artist_name,
+            aa.youtube_video_url as audit_youtube_url,
+            aa.spotify_embed_url
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+          LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
           WHERE c.id = ${id}::uuid
+          ORDER BY aa.audited_at DESC LIMIT 1
         `
       : await sql`
           SELECT c.*, COALESCE(c.title, c.track_title) as title,
-            COALESCE(u.display_name, da.artist_name) as artist_name
+            COALESCE(u.display_name, da.artist_name) as artist_name,
+            da.social_links, da.artist_name as da_artist_name,
+            aa.youtube_video_url as audit_youtube_url,
+            aa.spotify_embed_url
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+          LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
           WHERE c.slug = ${id}
+          ORDER BY aa.audited_at DESC LIMIT 1
         `;
     return campaigns[0] || null;
   } catch {
@@ -123,6 +133,52 @@ function stripBase64Images(data: any): any {
   return data;
 }
 
+interface ListenLink {
+  platform: string;
+  url: string;
+  icon: string; // emoji or simple label
+}
+
+function buildListenLinks(campaign: any): ListenLink[] {
+  const links: ListenLink[] = [];
+  const socialLinks = typeof campaign?.social_links === 'string' 
+    ? JSON.parse(campaign.social_links) 
+    : (campaign?.social_links || {});
+  const artistName = campaign?.artist_name || campaign?.da_artist_name || '';
+  const trackTitle = campaign?.track_title || campaign?.title || '';
+  const query = encodeURIComponent(`${artistName} ${trackTitle}`);
+
+  // Bandcamp
+  if (socialLinks.bandcamp) {
+    links.push({ platform: 'Bandcamp', url: socialLinks.bandcamp, icon: '🎵' });
+  } else if (campaign?.track_url?.includes('bandcamp.com')) {
+    links.push({ platform: 'Bandcamp', url: campaign.track_url, icon: '🎵' });
+  }
+
+  // YouTube
+  const ytUrl = campaign?.youtube_video_url || campaign?.audit_youtube_url;
+  if (ytUrl) {
+    links.push({ platform: 'YouTube', url: ytUrl, icon: '▶️' });
+  } else {
+    links.push({ platform: 'YouTube', url: `https://www.youtube.com/results?search_query=${query}`, icon: '▶️' });
+  }
+
+  // Spotify
+  if (campaign?.spotify_embed_url) {
+    links.push({ platform: 'Spotify', url: campaign.spotify_embed_url, icon: '🟢' });
+  } else {
+    links.push({ platform: 'Spotify', url: `https://open.spotify.com/search/${query}`, icon: '🟢' });
+  }
+
+  // Apple Music
+  links.push({ platform: 'Apple Music', url: `https://music.apple.com/search?term=${query}`, icon: '🍎' });
+
+  // SoundCloud
+  links.push({ platform: 'SoundCloud', url: `https://soundcloud.com/search?q=${query}`, icon: '☁️' });
+
+  return links;
+}
+
 export default async function CampaignPage({ params }: Props) {
   const campaign = await getCampaign(params.id);
   const lightweightCampaign = stripBase64Images(campaign);
@@ -189,7 +245,7 @@ export default async function CampaignPage({ params }: Props) {
   return (
     <>
       {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
-      <CampaignDetailClient id={params.id} initialCampaign={lightweightCampaign} />
+      <CampaignDetailClient id={params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} />
     </>
   );
 }
