@@ -140,7 +140,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     {[
                       { emoji: '👀', text: 'The artist reviews your video (usually within 48 hours).' },
                       { emoji: '✅', text: 'Once approved, we start tracking verified views.' },
-                      { emoji: '💰', text: `You earn $${creatorEarnings} per 1K verified views — paid via Stripe.` },
+                      { emoji: '💰', text: `You earn $${(parseFloat(creatorEarnings) * 1000).toFixed(0)} per 1M verified views — paid via Stripe.` },
                     ].map((s, i) => (
                       <div key={i} className="flex gap-2.5 text-[11px]"><span className="shrink-0">{s.emoji}</span><span className="text-muted-foreground leading-relaxed">{s.text}</span></div>
                     ))}
@@ -190,7 +190,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                         <div className="min-w-0">
                           <p className="text-xs font-semibold text-foreground/80">Paste your link &amp; get paid</p>
                           <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">
-                            Post publicly, paste the link below. Earn the full <span className="text-[#22C55E] font-semibold">${creatorEarnings}</span> per 1K verified views. Paid via Stripe.
+                            Post publicly, paste the link below. Earn the full <span className="text-[#22C55E] font-semibold">${(parseFloat(creatorEarnings) * 1000).toFixed(0)}</span> per 1M verified views. Paid via Stripe.
                           </p>
                         </div>
                       </div>
@@ -202,7 +202,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     {/* Earnings badge — compact inline */}
                     <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-[#22C55E]/[0.04] border border-[#22C55E]/10">
                       <DollarSign size={14} className="text-[#22C55E]" />
-                      <span className="text-xs text-[#22C55E] font-medium">You&apos;ll earn <strong>${creatorEarnings}</strong> per 1,000 verified views</span>
+                      <span className="text-xs text-[#22C55E] font-medium">You&apos;ll earn <strong>${(parseFloat(creatorEarnings) * 1000).toFixed(0)}</strong> per 1M verified views</span>
                     </div>
 
                     {/* Platform selector */}

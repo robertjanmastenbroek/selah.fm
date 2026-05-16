@@ -86,7 +86,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Meta description — keep under ~200 chars for WhatsApp/Instagram crawlers
   const desc = cpm
-    ? `Join ${artistName}'s campaign for "${trackTitle}". Submit your video and earn $${cpm} per 1K verified views on Selah.fm.`
+    ? `Join ${artistName}'s campaign for "${trackTitle}". Submit your video and earn $${(parseFloat(cpm) * 1000).toFixed(0)} per 1M verified views on Selah.fm.`
     : `Join ${artistName}'s campaign for "${trackTitle}". Submit your video and earn per view on Selah.fm.`;
 
   return {
@@ -222,7 +222,7 @@ export default async function CampaignPage({ params }: Props) {
         '@type': 'EventSeries',
         name: `${trackTitle} Video Contest`,
         description: cpmDollars
-          ? `Join this campaign and earn $${cpmDollars} per 1K views, or donate to support ${artistName}.`
+          ? `Join this campaign and earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M views, or donate to support ${artistName}.`
           : `Join this campaign and earn, or donate to support ${artistName}.`,
         url: canonicalUrl,
         startDate: createdAt,
@@ -243,10 +243,10 @@ export default async function CampaignPage({ params }: Props) {
       // Offer
       ...(cpmDollars ? [{
         '@type': 'Offer',
-        name: `Join campaign — earn $${cpmDollars} per 1,000 verified views`,
+        name: `Join campaign — earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M verified views`,
         price: cpmDollars,
         priceCurrency: 'USD',
-        description: `Creators earn the full $${cpmDollars} CPM rate. Artists pay CPM + 20% platform fee.${budget ? ` Total budget: $${budget}.` : ''}`,
+        description: `Creators earn the full $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M views. Artists pay CPM + 20% platform fee.${budget ? ` Total budget: $${budget}.` : ''}`,
         url: canonicalUrl,
       }] : []),
     ],

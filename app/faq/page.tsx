@@ -44,7 +44,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
       },
       {
         q: 'What is CPM and how do I set it?',
-        a: 'CPM stands for Cost Per Mille (1,000 views). You choose how much you want to pay per 1,000 verified views on a creator\'s video. A higher CPM attracts more creators. Typical rates range from $0.50 to $5.00 per 1,000 views.',
+        a: 'CPM stands for Cost Per Mille (1,000 views). You choose how much you want to pay per 1M verified views on a creator\'s video. A higher CPM attracts more creators. Typical rates range from $500 to $5,000 per 1M views.',
         section: 'For Artists',
       },
       {
@@ -54,7 +54,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
       },
       {
         q: 'How much does it cost?',
-        a: 'You decide your budget (minimum $5). The platform adds a 20% fee on top of your CPM rate. Example: $1.00 CPM → you pay $1.20 per 1K views, creator gets the full $1.00. Stripe takes 2.9% + $0.30 on deposits. No setup fees, monthly fees, or hidden costs.',
+        a: 'You decide your budget (minimum $5). The platform adds a 20% fee on top of your CPM rate. Example: $1,000 CPM → you pay $1,200 per 1M views, creator gets the full $1,000. Stripe takes 2.9% + $0.30 on deposits. No setup fees, monthly fees, or hidden costs.',
         section: 'For Artists',
       },
       {
@@ -84,7 +84,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
       },
       {
         q: 'How much can I earn?',
-        a: 'You earn the full CPM rate per 1,000 verified views. For example, at a $2.00 CPM rate, 50,000 views would earn you $100. Top creators earn $50–500+ per campaign. No deductions — the 20% platform fee is on the artist side.',
+        a: 'You earn the full CPM rate per 1M verified views. For example, at a $2,000 CPM rate, 1M views would earn you $2,000. Top creators earn $50–500+ per campaign. No deductions — the 20% platform fee is on the artist side.',
         section: 'For Creators',
       },
       {

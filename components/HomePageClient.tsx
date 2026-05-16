@@ -175,7 +175,7 @@ export default function RootPage() {
                       {/* Overlay badges */}
                       <div className="absolute inset-x-0 top-0 p-3 flex justify-between">
                         <span className="px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-md text-[10px] font-semibold text-[#22C55E] border border-white/[0.04]">
-                          ${cpm.toFixed(2)} <span className="text-white/40 font-normal">/1K views</span>
+                          ${(cpm * 1000).toFixed(0)} <span className="text-white/40 font-normal">/1M views</span>
                         </span>
                         {budget > 0 && (
                           <span className="px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-md text-[10px] font-medium text-white/70 border border-white/[0.04]">
@@ -375,7 +375,7 @@ export default function RootPage() {
           {[
             { q: 'Is this legit? How are views verified?', a: 'Yes. We verify views through each platform\'s public view counts. Creators connect their real TikTok, Instagram, or YouTube accounts. We cross-check automatically.' },
             { q: 'What if I don\'t like a video?', a: 'You approve every video before it goes live. Reject it — costs you nothing. You only pay for approved videos after they get verified views.' },
-            { q: 'How much does it cost?', a: 'Nothing upfront. You set a CPM rate (e.g. $10 per 1,000 views) and a budget. Creators earn the full CPM. We add a 20% platform fee (your cost = CPM × 1.20). Stripe fees are separate.' },
+            { q: 'How much does it cost?', a: 'Nothing upfront. You set a CPM rate (e.g. $10,000 per 1M views) and a budget. Creators earn the full CPM. We add a 20% platform fee (your cost = CPM × 1.20). Stripe fees are separate.' },
           ].map((faq, i) => (
             <motion.div key={i} className="rounded-xl border border-white/[0.04] p-5 backdrop-blur-sm" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.01) 0%, transparent 100%)' }} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.4 }}>
               <h4 className="font-semibold text-sm text-white/70 mb-2">{faq.q}</h4>

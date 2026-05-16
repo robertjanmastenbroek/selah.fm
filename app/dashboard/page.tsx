@@ -380,7 +380,7 @@ function DashboardContent() {
                 {/* CPM & max payout */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-muted-foreground mb-1.5 block">CPM ($/1K views)</label>
+                    <label className="text-sm text-muted-foreground mb-1.5 block">CPM ($/1M views)</label>
                     <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} />
                   </div>
                   <div>

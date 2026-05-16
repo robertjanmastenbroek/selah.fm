@@ -11,7 +11,7 @@ Key facts about Selah.fm:
 - Artists approve/reject submissions, creators get paid for verified views
 - CPM rates are LOCKED once a campaign receives submissions. This protects creators.
   Artists must create a new campaign to change their CPM rate.
-- 20% platform fee added on top of artist CPM (creators earn full CPM), Stripe takes 2.9% + $0.30 on deposits
+- 20% platform fee added on top of artist CPM (creators earn full CPM, displayed per 1M views), Stripe takes 2.9% + $0.30 on deposits
 - YouTube views auto-verified via API, TikTok/Instagram via oEmbed
 - Google OAuth + email/password signup at selah.fm/login
 - Dashboard: selah.fm/dashboard | Browse: selah.fm/browse
@@ -115,13 +115,13 @@ function keywordMatch(msg: string): string | null {
     return "To create a campaign: go to your Dashboard, click New, choose a track, set your CPM rate and budget, and launch. Creators will find it on the Browse page and start making content!";
   }
   if (/(cpm|rate|budget|cost|price|pricing)/.test(m)) {
-    return "You set your own CPM rate (cost per 1,000 views). Once a campaign has submissions, the CPM is locked to protect creators. To change your rate, create a new campaign. A 20% platform fee is added on top — you pay CPM × 1.20. Creators earn the full CPM.";
+    return "You set your own CPM rate (displayed per 1M views). Once a campaign has submissions, the CPM is locked to protect creators. To change your rate, create a new campaign. A 20% platform fee is added on top — you pay CPM × 1.20. Creators earn the full CPM.";
   }
   if (/(fee|fees|charge|commission)/.test(m)) {
-    return "Selah.fm adds a 20% platform fee on top of the artist's CPM rate. Creators earn the full CPM — no deductions. Example: $1.00 CPM → artist pays $1.20, creator gets $1.00.";
+    return "Selah.fm adds a 20% platform fee on top of the artist's CPM rate. Creators earn the full CPM — no deductions. Example: $1,000/1M CPM → artist pays $1,200, creator gets $1,000.";
   }
   if (/(earn|payout|get paid|money|cash)/.test(m)) {
-    return "Creators earn the full CPM rate per 1,000 verified views — nothing deducted. The 20% platform fee is added on the artist side. Payouts via Stripe Connect. Set up in the Earnings page.";
+    return "Creators earn the full CPM rate per 1M verified views — nothing deducted. The 20% platform fee is added on the artist side. Payouts via Stripe Connect. Set up in the Earnings page.";
   }
   if (/(stripe|payment|bank|payout|connect)/.test(m)) {
     return "We use Stripe for all payments. Artists deposit via Stripe Checkout. Creators connect via Stripe Connect. Works in 40+ countries.";

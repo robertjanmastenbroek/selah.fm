@@ -4,8 +4,8 @@
  * 
  * Fee structure (2026-05):
  * - Platform fee: 20% added ON TOP of the artist's CPM rate
- *   Artist sets CPM = $1.00/1K views → artist is charged $1.20/1K views
- *   Creator earns the FULL $1.00/1K views (no deduction)
+ *   Artist sets CPM = $1,000/1M views → artist is charged $1,200/1M views
+ *   Creator earns the FULL $1,000/1M views (no deduction)
  * 
  * - Stripe processing: 2.9% + $0.30 on deposits (paid by artist)
  * - Stripe payout fee: $0.25 per payout to creator
@@ -44,7 +44,7 @@ export function netAfterStripe(grossAmount: number): number {
  * Calculate artist cost per campaign: CPM + 20% platform fee.
  * Artist sets CPM = X, platform charges X * 1.20.
  * 
- * Returns the total amount the artist is charged per 1K views.
+ * Returns the total amount the artist is charged per 1M views.
  */
 export function artistCostPer1KViews(cpmCents: number): number {
   return Math.round(cpmCents * (1 + PLATFORM_FEE_RATE));

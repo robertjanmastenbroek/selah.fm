@@ -61,7 +61,7 @@ function ShareModal({ open, onClose, url, title, imageUrl, artistName, cpmDollar
   const artistLine = artistName ? `${artistName} — ` : '';
   const shareTitle = `${artistLine}"${trackTitle || title}" on Selah.fm`;
   const shareBody = cpmDollars
-    ? `Join to earn $${cpmDollars.toFixed(2)} per 1K verified views. Selah.fm — music meets creators.`
+    ? `Join to earn $${(cpmDollars * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} per 1M verified views. Selah.fm — music meets creators.`
     : 'Join a campaign, create content, and earn per verified view on Selah.fm';
   const fullShareText = `${shareTitle}\n\n${shareBody}\n\n${url}`;
   const encodedShare = encodeURIComponent(fullShareText);
@@ -300,7 +300,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
             <button onClick={() => setJoinOpen(true)}
               className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#6366F1] text-white
                 active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)]">
-              Join campaign — earn ${cpm.toFixed(2)}/1K views
+              Join campaign — earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
             </button>
             <Link href={`/checkout?type=donation&campaignId=${id}`}
               className="block text-center mt-2 text-[11px] text-muted-foreground hover:text-[#22C55E] transition-colors">
@@ -403,7 +403,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 <p className="text-[10px] font-semibold text-[#4338CA]/60 uppercase tracking-wider mb-3">⚡ Essentials</p>
                 <div className="grid sm:grid-cols-2 gap-2 text-[11px]">
                   {[
-                    `Earn $${cpm.toFixed(2)} per 1K verified views`,
+                    `Earn $${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} per 1M verified views`,
                     'Use the official audio — no screen recordings',
                     'Vertical 9:16 video, 15–60 seconds',
                     'Public account (private videos cannot be verified)',
@@ -423,7 +423,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 {[
                   { step: '1', title: campaign.content_assets_url ? 'Download the audio' : 'Find the audio', desc: campaign.content_assets_url ? `Get the master track from the Google Drive above (you can also search "${trackTitle}" on TikTok, IG, or YouTube).` : `Search "${trackTitle}" on TikTok, Instagram, or YouTube. Use the official audio.` },
                   { step: '2', title: 'Create your video', desc: 'Record a video using the official audio. Dance, react, duet — be creative. Make it public so views count.' },
-                  { step: '3', title: 'Submit & earn', desc: `Post publicly, paste the link here. Earn the full $${cpm.toFixed(2)} per 1K verified views — nothing deducted.` },
+                  { step: '3', title: 'Submit & earn', desc: `Post publicly, paste the link here. Earn the full $${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} per 1M verified views — nothing deducted.` },
                 ].map(s => (
                   <div key={s.step} className="flex gap-3">
                     <div className="w-8 h-8 rounded-lg bg-[#4338CA]/10 flex items-center justify-center text-[11px] font-bold text-[#4338CA] shrink-0">{s.step}</div>
@@ -506,7 +506,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 </button>
               </div>
               <button onClick={() => setJoinOpen(true)} className="w-full py-3.5 text-sm font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#6366F1] text-white active:scale-[0.97]">
-                Join campaign — earn ${cpm.toFixed(2)}/1K views
+                Join campaign — earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
               </button>
               {isUnclaimed && claimCode && (
                 <Link href={`/claim/${claimCode}`} className="block w-full py-3 rounded-xl text-center font-bold text-sm bg-amber-500 text-black hover:bg-amber-400 transition-all active:scale-[0.98]">

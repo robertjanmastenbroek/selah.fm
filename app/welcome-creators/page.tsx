@@ -80,7 +80,7 @@ export default function WelcomeCreatorsPage() {
         <div className="max-w-4xl mx-auto px-6 grid md:grid-cols-3 gap-6">
           {[
             { icon: Zap, title: 'No Brand Deals Needed', desc: 'Stop cold-DMing 50 brands for a $50 offer. Browse campaigns that already have budgets and start earning immediately.' },
-            { icon: Shield, title: 'Stable, Transparent Pay', desc: 'You know exactly what you\'ll earn per 1,000 views before you even start. No algorithm changes, no monetization policy updates.' },
+            { icon: Shield, title: 'Stable, Transparent Pay', desc: 'You know exactly what you\'ll earn per 1M views before you even start. No algorithm changes, no monetization policy updates.' },
             { icon: Wallet, title: 'You Keep 100%', desc: 'The full CPM rate goes to you. Selah adds a 20% fee on the artist\'s side. No deductions from your earnings — ever.' },
           ].map((item, i) => {
             const I = item.icon;
@@ -103,14 +103,14 @@ export default function WelcomeCreatorsPage() {
         </motion.div>
         <div className="max-w-4xl mx-auto px-6 grid md:grid-cols-4 gap-4">
           {[
-            { cpm: '$0.50', views: '10K', earn: '$5.00', label: 'One solid video' },
-            { cpm: '$1.00', views: '25K', earn: '$25.00', label: 'A trending post' },
-            { cpm: '$1.50', views: '50K', earn: '$75.00', label: 'Weekly side hustle' },
-            { cpm: '$2.00', views: '100K', earn: '$200.00', label: 'Viral hit' },
+            { cpm: '$500', views: '1M', earn: '$500', label: 'One solid video' },
+            { cpm: '$1,000', views: '1M', earn: '$1,000', label: 'A trending post' },
+            { cpm: '$1,500', views: '1M', earn: '$1,500', label: 'Weekly side hustle' },
+            { cpm: '$2,000', views: '1M', earn: '$2,000', label: 'Viral hit' },
           ].map((e, i) => (
             <motion.div key={i} variants={fadeUp} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6 text-center" whileHover={{y:-2,borderColor:'rgba(34,197,94,0.2)'}}>
               <div className="text-3xl font-bold text-accent mb-2">{e.earn}</div>
-              <div className="text-xs text-muted-foreground mb-1">{e.cpm} CPM · {e.views} views</div>
+              <div className="text-xs text-muted-foreground mb-1">{e.cpm}/1M views · {e.views} views</div>
               <div className="text-[10px] text-muted-foreground/60">{e.label}</div>
             </motion.div>
           ))}

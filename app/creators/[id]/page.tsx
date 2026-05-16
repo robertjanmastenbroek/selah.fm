@@ -122,8 +122,8 @@ export default function CreatorProfilePage() {
           </div>
           <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
             <h3 className="text-sm font-semibold mb-3">CPM Rate</h3>
-            <div className="text-2xl font-bold text-primary">${(creator.preferred_cpm_cents/100).toFixed(2)}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">per 1,000 views</div>
+            <div className="text-2xl font-bold text-primary">${((creator.preferred_cpm_cents/100) * 1000).toFixed(0)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">per 1M views</div>
           </div>
         </motion.div>
 

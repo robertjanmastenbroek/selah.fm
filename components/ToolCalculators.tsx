@@ -14,10 +14,10 @@ export function CpmCalculator({ avgCpm }: { avgCpm: number }) {
   const estimatedBudget = cpmCents > 0 ? ((desiredViews * cpmCents) / 100) : 0;
 
   const platformRates = [
-    { platform: 'TikTok Creator Fund', cpm: 0.02, note: '~$0.02–0.04 per 1,000 views' },
-    { platform: 'YouTube Partner', cpm: 2.50, note: '~$1–5 per 1,000 views (varies by niche)' },
-    { platform: 'Instagram Reels Bonus', cpm: 0.50, note: '~$0.10–1.00 per 1,000 views (invite only)' },
-    { platform: 'Selah.fm Marketplace', cpm: avgCpm, note: `Artists set rates — current average $${avgCpm.toFixed(2)}`, highlight: true },
+    { platform: 'TikTok Creator Fund', cpm: 0.02, note: '~$20–40 per 1M views' },
+    { platform: 'YouTube Partner', cpm: 2.50, note: '~$1,000–5,000 per 1M views (varies by niche)' },
+    { platform: 'Instagram Reels Bonus', cpm: 0.50, note: '~$100–1,000 per 1M views (invite only)' },
+    { platform: 'Selah.fm Marketplace', cpm: avgCpm, note: `Artists set rates — current average $${(avgCpm * 1000).toFixed(0)}/1M`, highlight: true },
   ];
 
   return (
@@ -26,7 +26,7 @@ export function CpmCalculator({ avgCpm }: { avgCpm: number }) {
       <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden">
         <div className="p-5 border-b border-white/[0.06]">
           <h2 className="font-semibold">CPM Rate Comparison</h2>
-          <p className="text-xs text-muted-foreground mt-1">What platforms pay creators per 1,000 views</p>
+          <p className="text-xs text-muted-foreground mt-1">What platforms pay creators per 1M views</p>
         </div>
         <div className="divide-y divide-white/[0.04]">
           {platformRates.map((p, i) => (
@@ -37,7 +37,7 @@ export function CpmCalculator({ avgCpm }: { avgCpm: number }) {
                 <p className="text-[10px] text-muted-foreground mt-0.5">{p.note}</p>
               </div>
               <span className={`text-lg font-bold ${p.highlight ? 'text-primary' : 'text-foreground'}`}>
-                ${p.cpm.toFixed(2)}
+                ${(p.cpm * 1000).toFixed(0)}
               </span>
             </div>
           ))}
@@ -72,7 +72,7 @@ export function CpmCalculator({ avgCpm }: { avgCpm: number }) {
             </div>
             <div className="p-4 rounded-xl bg-primary/[0.06] border border-primary/10 text-center">
               <p className="text-2xl font-bold">{estimatedViews.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">estimated views at ${avgCpm.toFixed(2)} CPM</p>
+              <p className="text-xs text-muted-foreground mt-1">estimated views at ${(avgCpm * 1000).toFixed(0)}/1M</p>
             </div>
           </div>
         ) : (
@@ -89,7 +89,7 @@ export function CpmCalculator({ avgCpm }: { avgCpm: number }) {
             </div>
             <div className="p-4 rounded-xl bg-primary/[0.06] border border-primary/10 text-center">
               <p className="text-2xl font-bold">${estimatedBudget.toFixed(2)}</p>
-              <p className="text-xs text-muted-foreground mt-1">estimated budget at ${avgCpm.toFixed(2)} CPM</p>
+              <p className="text-xs text-muted-foreground mt-1">estimated budget at ${(avgCpm * 1000).toFixed(0)}/1M</p>
             </div>
           </div>
         )}
@@ -184,7 +184,7 @@ export function PromotionBudgetPlanner({ avgCpm }: { avgCpm: number }) {
       <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden">
         <div className="p-5 border-b border-white/[0.06]">
           <h2 className="font-semibold">What Your Budget Buys</h2>
-          <p className="text-xs text-muted-foreground mt-1">Estimated views at ${avgCpm.toFixed(2)} CPM</p>
+          <p className="text-xs text-muted-foreground mt-1">Estimated views at ${(avgCpm * 1000).toFixed(0)}/1M</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-y divide-white/[0.04]">
           {tiers.map((t, i) => (
@@ -229,7 +229,7 @@ export function PromotionBudgetPlanner({ avgCpm }: { avgCpm: number }) {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">TikTok Spark Ads</span>
-            <span>~$0.02–0.06 per view</span>
+            <span>~$20–60 per 1M views</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Playlist pitching services</span>

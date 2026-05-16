@@ -186,7 +186,7 @@ export default function OnboardingPage() {
           {step===4&&role==='creator'&&(
             <motion.div key="s4c" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
               <h2 className="text-2xl font-bold">Set your rate</h2>
-              <p className="text-muted-foreground text-sm">This is your preferred CPM — what you&apos;d like to earn per 1,000 views. Artists see this when they browse creators.</p>
+              <p className="text-muted-foreground text-sm">This is your preferred CPM — what you&apos;d like to earn per 1M views. Artists see this when they browse creators.</p>
               <div className="grid grid-cols-4 gap-2">
                 {cpmPresets.map(b=>(
                   <button key={b} onClick={()=>setCpm(b)} className={`p-3 rounded-xl border-2 text-center transition-all ${cpm===b?'border-primary bg-primary/[0.04]':'border-white/[0.06] bg-white/[0.02] hover:border-primary/20'}`}>
@@ -195,7 +195,7 @@ export default function OnboardingPage() {
                 ))}
               </div>
               <div className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-4 text-sm text-muted-foreground">
-                At ${cpm} CPM, you&apos;d earn the full <span className="text-foreground font-semibold">$${cpm.toFixed(2)}</span> per 1,000 views — nothing deducted.
+                At ${cpm} CPM, you&apos;d earn the full <span className="text-foreground font-semibold">$${(cpm * 1000).toFixed(0)}</span> per 1M views — nothing deducted.
               </div>
               <button onClick={save} disabled={saving||!name} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                 {saving?'Setting up...':"I'm ready to earn →"}
