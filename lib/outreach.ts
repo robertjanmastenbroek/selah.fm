@@ -176,6 +176,54 @@ export async function scrapeBandcampEmail(bandcampUrl: string, instagramHandle: 
     } catch {}
   }
 
+  // Method 5: SoundCloud profile (if we can derive handle)
+  if (bandcampUrl) {
+    const subdomain = bandcampUrl.match(/https?:\/\/([^.]+)\.bandcamp\.com/)?.[1];
+    if (subdomain) {
+      try {
+        const scRes = await fetch(`https://soundcloud.com/${subdomain}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (scRes.ok) {
+          const scHtml = await scRes.text();
+          const scText = scHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+          const scMatch = scText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
+          if (scMatch) {
+            const valid = [...new Set(scMatch)].filter(e => 
+              !e.includes('soundcloud') && !e.includes('example') && e.length < 50
+            );
+            if (valid.length > 0) return { address: cleanBandcampEmail(valid[0].toLowerCase(), artistName), source: 'soundcloud', confidence: 'verified' };
+          }
+        }
+      } catch {}
+    }
+  }
+
+  // Method 6: Twitter/X profile (if we can derive handle)
+  if (bandcampUrl) {
+    const subdomain = bandcampUrl.match(/https?:\/\/([^.]+)\.bandcamp\.com/)?.[1];
+    if (subdomain) {
+      try {
+        const xRes = await fetch(`https://x.com/${subdomain}`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (xRes.ok) {
+          const xHtml = await xRes.text();
+          const xText = xHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+          const xMatch = xText.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
+          if (xMatch) {
+            const valid = [...new Set(xMatch)].filter(e => 
+              !e.includes('twitter') && !e.includes('x.com') && e.length < 50
+            );
+            if (valid.length > 0) return { address: cleanBandcampEmail(valid[0].toLowerCase(), artistName), source: 'twitter_bio', confidence: 'verified' };
+          }
+        }
+      } catch {}
+    }
+  }
+
   return null;
 }
 
