@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { discoverArtists, auditArtist } from '@/lib/outreach';
+import { resolveStreamingLinks } from '@/lib/streaming-links';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes for full pipeline run
@@ -278,6 +279,26 @@ export async function GET(request: Request) {
           if (fbToken) {
             fetch(`https://graph.facebook.com/v18.0/?id=${encodeURIComponent(`https://selah.fm/c/${campaign.slug}`)}&scrape=true&access_token=${fbToken}`, { method: 'POST' }).catch(() => {});
           }
+
+          // Enrich streaming links (Spotify/Apple Music) — fire-and-forget
+          const artistName = artist.artist_name;
+          const trackName = artist.latest_track_name;
+          resolveStreamingLinks(artistName, trackName, {
+            spotifyUrl: artist.latest_track_spotify_url,
+            youtubeUrl: artist.youtube_video_url,
+            bandcampUrl: socialLinks.bandcamp,
+          }).then(links => {
+            sql`
+              UPDATE discovered_artists
+              SET social_links = social_links || ${JSON.stringify({
+                spotify: links.spotify,
+                apple_music: links.appleMusic,
+                youtube: links.youtube,
+                soundcloud: links.soundcloud,
+              })}::jsonb
+              WHERE id = ${artist.id}
+            `.catch(() => {});
+          }).catch(() => {});
 
           return { artist, error: false, skipped: false, msg: campaign.title };
         } catch (e: any) {

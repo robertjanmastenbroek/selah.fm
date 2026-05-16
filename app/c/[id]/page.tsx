@@ -148,33 +148,43 @@ function buildListenLinks(campaign: any): ListenLink[] {
   const trackTitle = campaign?.track_title || campaign?.title || '';
   const query = encodeURIComponent(`${artistName} ${trackTitle}`);
 
-  // Bandcamp
-  if (socialLinks.bandcamp) {
-    links.push({ platform: 'Bandcamp', url: socialLinks.bandcamp, icon: '🎵' });
-  } else if (campaign?.track_url?.includes('bandcamp.com')) {
-    links.push({ platform: 'Bandcamp', url: campaign.track_url, icon: '🎵' });
+  // Helper: push a link if it's a direct URL, otherwise fall back to search
+  const addLink = (platform: string, icon: string, directUrl: string | null | undefined, searchUrl: string) => {
+    if (directUrl && (directUrl.startsWith('https://') || directUrl.startsWith('http://'))) {
+      // Only use direct links that are actual streaming URLs (not search pages)
+      if (!directUrl.includes('/search') && !directUrl.includes('/results?')) {
+        links.push({ platform, url: directUrl, icon });
+        return;
+      }
+    }
+    links.push({ platform, url: searchUrl, icon });
+  };
+
+  // Bandcamp — always direct from social_links or track_url
+  const bcUrl = socialLinks.bandcamp || (campaign?.track_url?.includes('bandcamp.com') ? campaign.track_url : null);
+  if (bcUrl) {
+    links.push({ platform: 'Bandcamp', url: bcUrl, icon: '🎵' });
   }
 
-  // YouTube
-  const ytUrl = campaign?.youtube_video_url || campaign?.audit_youtube_url;
-  if (ytUrl) {
-    links.push({ platform: 'YouTube', url: ytUrl, icon: '▶️' });
-  } else {
-    links.push({ platform: 'YouTube', url: `https://www.youtube.com/results?search_query=${query}`, icon: '▶️' });
-  }
+  // Spotify — from enriched social_links or search
+  addLink('Spotify', '🟢',
+    socialLinks.spotify || campaign?.latest_track_spotify_url || campaign?.spotify_embed_url,
+    `https://open.spotify.com/search/${query}`);
 
-  // Spotify
-  if (campaign?.spotify_embed_url) {
-    links.push({ platform: 'Spotify', url: campaign.spotify_embed_url, icon: '🟢' });
-  } else {
-    links.push({ platform: 'Spotify', url: `https://open.spotify.com/search/${query}`, icon: '🟢' });
-  }
+  // YouTube — from enriched social_links or campaign or search
+  addLink('YouTube', '▶️',
+    socialLinks.youtube || campaign?.youtube_video_url || campaign?.audit_youtube_url,
+    `https://www.youtube.com/results?search_query=${query}`);
 
-  // Apple Music
-  links.push({ platform: 'Apple Music', url: `https://music.apple.com/search?term=${query}`, icon: '🍎' });
+  // Apple Music — from enriched social_links or search
+  addLink('Apple Music', '🍎',
+    socialLinks.apple_music,
+    `https://music.apple.com/search?term=${query}`);
 
-  // SoundCloud
-  links.push({ platform: 'SoundCloud', url: `https://soundcloud.com/search?q=${query}`, icon: '☁️' });
+  // SoundCloud — from enriched social_links or search
+  addLink('SoundCloud', '☁️',
+    socialLinks.soundcloud,
+    `https://soundcloud.com/search?q=${query}`);
 
   return links;
 }

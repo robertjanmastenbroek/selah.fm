@@ -9,6 +9,7 @@ import { fetchBlogImage } from '@/lib/blog-images';
 import { renderArtistOutreachEmail, generateOutreachEmail, sendOutreachEmail } from '@/lib/email-outreach';
 import { emailWrapper } from '@/lib/email-templates';
 import { verifyEmail } from '@/lib/email-verify';
+import { enrichCampaignStreamingLinks } from '@/lib/streaming-links';
 
 export const maxDuration = 180; // 3 minutes — 20 searches + up to 200 artist lookups
 
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
       case 'render_email':           return runRenderEmail(body.artistId);
       case 'send_email':             return runSendEmail(body.artistId);
       case 'reaudit_emails':         return runReauditEmails(body.limit || 50);
+      case 'enrich_streaming':       return runEnrichStreaming(body.limit || 20);
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -827,6 +829,24 @@ async function getEmailQueue() {
     LIMIT 50
   `;
   return NextResponse.json(artists);
+}
+
+/** Enrich streaming links (Spotify, Apple Music) for campaigns */
+async function runEnrichStreaming(limit: number = 20) {
+  const campaigns = await sql`
+    SELECT c.id FROM campaigns c
+    JOIN campaign_claims cc ON cc.campaign_id = c.id
+    JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+    WHERE da.social_links->>'spotify' IS NULL
+       OR da.social_links->>'apple_music' IS NULL
+    ORDER BY c.created_at DESC
+    LIMIT ${limit}
+  `;
+
+  const ids = campaigns.map((c: any) => c.id);
+  const enriched = await enrichCampaignStreamingLinks(ids);
+
+  return NextResponse.json({ processed: ids.length, enriched });
 }
 
 /** Re-audit emails only: scrape Bandcamp/Instagram/Google for artists with no email */
