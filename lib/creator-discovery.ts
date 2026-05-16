@@ -1,11 +1,12 @@
 /**
  * Creator Discovery — TikTok + Instagram creator email scraping.
- * Uses Puppeteer (headless Chrome) to scrape TikTok hashtag pages
- * and extract creator bios with email addresses.
  * 
- * Cost: $0 (Puppeteer is free, already installed)
- * Rate: ~50 profiles/minute with 1.5s delay between profiles
- * Hit rate: ~32% of TikTok bios contain emails
+ * Two modes:
+ * 1. Local dev: Uses puppeteer-core (must be installed separately)
+ * 2. Production: Returns empty until puppeteer-core is available
+ * 
+ * Lightweight — no native dependencies required at build time.
+ * The heavy Puppeteer/Chromium packages are loaded at runtime only.
  */
 
 // ── Hashtags to search ──────────────────────────────────────────
@@ -31,22 +32,39 @@ export interface DiscoveredCreator {
   hashtag?: string;
 }
 
-// ── TikTok scraper (Puppeteer) ──────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────────
+
+function parseFollowerCount(text: string): number {
+  if (!text) return 0;
+  const cleaned = text.replace(/,/g, '').trim();
+  if (cleaned.endsWith('K'))
+    return Math.round(parseFloat(cleaned.replace('K', '')) * 1000);
+  if (cleaned.endsWith('M'))
+    return Math.round(parseFloat(cleaned.replace('M', '')) * 1000000);
+  return parseInt(cleaned) || 0;
+}
+
+// ── Main discovery (loads heavy deps at runtime) ────────────────
 
 /**
  * Scrape TikTok hashtag pages for creator profiles.
- * Returns up to `limit` unique creators with bios.
- * Uses system Chrome, @sparticuz/chromium, or bundled Puppeteer Chrome.
+ * Loads puppeteer-core and Chromium at runtime — not bundled at build time.
+ * Returns empty array if dependencies aren't available (e.g. Railway without Chromium).
  */
 export async function discoverTikTokCreators(limit: number = 50): Promise<DiscoveredCreator[]> {
+  // Load Puppeteer at runtime — not a build dependency
   let puppeteer: any;
   try {
     puppeteer = require('puppeteer-core');
   } catch {
-    try { puppeteer = require('puppeteer'); } catch { return []; }
+    try { puppeteer = require('puppeteer'); } catch {
+      console.log('Creator discovery: puppeteer not available. Install with: npm install puppeteer-core');
+      return [];
+    }
   }
 
-  let launchOptions: Record<string, any> = {
+  // Set up launch options — try system Chrome, then @sparticuz/chromium
+  const launchOptions: Record<string, any> = {
     headless: true,
     args: [
       '--no-sandbox',
@@ -57,17 +75,16 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
     ],
   };
 
-  // Try @sparticuz/chromium for production (Railway, serverless)
+  // Try @sparticuz/chromium
   try {
     const chromium = require('@sparticuz/chromium');
     if (typeof chromium.executablePath === 'function') {
       launchOptions.executablePath = await chromium.executablePath();
       launchOptions.args = chromium.args || launchOptions.args;
-      launchOptions.headless = true; // chromium.headless is not exported in v148
     }
   } catch {}
 
-  // Try system Chrome as fallback
+  // Try system Chrome
   if (!launchOptions.executablePath) {
     const paths = [
       process.env.CHROME_PATH,
@@ -81,8 +98,8 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
     }
   }
 
+  // Fallback: let puppeteer use its bundled browser (if available)
   const browser = await puppeteer.launch(launchOptions);
-
   const allCreators = new Map<string, DiscoveredCreator>();
 
   try {
@@ -91,7 +108,6 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
     );
 
-    // Shuffle hashtags for variety across runs
     const tags = [...TIKTOK_HASHTAGS].sort(() => Math.random() - 0.5);
 
     for (const tag of tags) {
@@ -136,9 +152,7 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
               const followers = followersEl?.textContent?.trim() || '';
 
               const emailMatch = bio.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-              const email = emailMatch
-                ? emailMatch[1].toLowerCase()
-                : null;
+              const email = emailMatch ? emailMatch[1].toLowerCase() : null;
 
               return { bio, displayName, followers, email };
             });
@@ -162,9 +176,7 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
               allCreators.set(username, creator);
               scraped++;
             }
-          } catch {
-            // Profile page failed — skip this user
-          }
+          } catch {}
 
           await new Promise(r => setTimeout(r, 1500));
         }
@@ -183,7 +195,6 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
 
 /**
  * Scrape Instagram profile bio for email.
- * Falls back to HTTP scraping (less reliable than TikTok Puppeteer).
  */
 export async function scrapeInstagramBio(username: string): Promise<string | null> {
   try {
@@ -210,16 +221,4 @@ export async function scrapeInstagramBio(username: string): Promise<string | nul
   } catch {
     return null;
   }
-}
-
-// ── Helpers ─────────────────────────────────────────────────────
-
-function parseFollowerCount(text: string): number {
-  if (!text) return 0;
-  const cleaned = text.replace(/,/g, '').trim();
-  if (cleaned.endsWith('K'))
-    return Math.round(parseFloat(cleaned.replace('K', '')) * 1000);
-  if (cleaned.endsWith('M'))
-    return Math.round(parseFloat(cleaned.replace('M', '')) * 1000000);
-  return parseInt(cleaned) || 0;
 }
