@@ -737,7 +737,7 @@ async function getReadyForCampaign() {
     FROM discovered_artists da
     LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     WHERE da.status = 'audited'
-      AND aa.email_confidence IN ('verified', 'high', 'medium')
+      AND aa.email_confidence IS NOT NULL
     ORDER BY da.id, aa.audited_at DESC
     LIMIT 50
   `;
