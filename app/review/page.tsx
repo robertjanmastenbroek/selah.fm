@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/States';
 import VideoEmbed from '@/components/VideoEmbed';
 import RatingPrompt from '@/components/RatingPrompt';
-import { Play, ExternalLink, DollarSign, Eye, Check, X } from 'lucide-react';
+import { Play, ExternalLink, DollarSign, Eye, Check, X, RefreshCw } from 'lucide-react';
 
 interface Submission {
   id: string; creator_name: string; track_title: string; platform: string;
@@ -181,12 +181,34 @@ export default function ReviewPage() {
                       <div className="w-10 h-10 rounded-lg bg-[#22C55E]/10 flex items-center justify-center shrink-0">
                         <DollarSign size={18} className="text-[#22C55E]" />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold">${gross.toFixed(2)} payout</p>
                         <p className="text-[10px] text-muted-foreground">
                           {(s.views_verified || 0).toLocaleString()} views × ${(cpm * 1000).toFixed(0)}/1M = ${gross.toFixed(2)} (creator earns full amount)
                         </p>
                       </div>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const res = await fetch('/api/cron/update-views', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ submissionId: s.id }),
+                            });
+                            const data = await res.json();
+                            if (data.updated) {
+                              addToast(`Views updated: ${data.previous_views} → ${data.current_views}`, 'success');
+                              mutate();
+                            } else {
+                              addToast(`Could not fetch views (${s.platform})`, 'info');
+                            }
+                          } catch { addToast('Failed to refresh views', 'error'); }
+                        }}
+                        className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-medium bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-all"
+                        title="Refresh view count from platform"
+                      >
+                        <RefreshCw size={12} className="inline mr-1" />Refresh
+                      </button>
                     </div>
 
                     {/* ── Actions ── */}
