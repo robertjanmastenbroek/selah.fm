@@ -22,7 +22,7 @@ const nextConfig = {
   },
   // Allow larger body for image uploads (base64 data URLs)
   experimental: {
-    serverComponentsExternalPackages: ['pg', 'puppeteer-core', 'puppeteer'],
+    serverComponentsExternalPackages: ['pg', 'puppeteer-core', 'puppeteer', '@sparticuz/chromium'],
     serverActions: {
       bodySizeLimit: '10mb',
     },
