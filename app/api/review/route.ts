@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { trackApproveSubmission } from '@/lib/analytics-server';
+import { ADMIN_EMAILS } from '@/lib/constants';
 
 export async function POST(request: Request) {
   const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
@@ -29,8 +30,9 @@ export async function POST(request: Request) {
 
     const sub = subs[0];
 
-    // Ownership check: only the campaign artist can review
-    if (sub.artist_id !== session.id) {
+    // Ownership check: campaign artist OR admin can review
+    const isAdmin = ADMIN_EMAILS.includes(session.email || '');
+    if (sub.artist_id !== session.id && !isAdmin) {
       return NextResponse.json({ error: 'You can only review submissions on your own campaigns' }, { status: 403 });
     }
 
@@ -63,19 +65,22 @@ export async function POST(request: Request) {
       const artistChargeCents = Math.round(grossCents * 1.20);
 
       // Check budget remaining against the artist's charge (CPM + fee)
-      if (sub.budget_remaining_cents < artistChargeCents) {
+      // Skip budget check for $0-budget campaigns (auto-generated, pre-funded externally)
+      if (sub.budget_remaining_cents > 0 && sub.budget_remaining_cents < artistChargeCents) {
         return NextResponse.json({ 
           error: `Insufficient budget. Remaining: $${(sub.budget_remaining_cents / 100).toFixed(2)}, needed: $${(artistChargeCents / 100).toFixed(2)}` 
         }, { status: 400 });
       }
 
-      // Deduct full artist charge from campaign budget
-      await sql`
-        UPDATE campaigns
-        SET budget_remaining_cents = budget_remaining_cents - ${artistChargeCents},
-            updated_at = NOW()
-        WHERE id = ${sub.campaign_id}
-      `;
+      // Deduct full artist charge from campaign budget (skip for $0-budget campaigns)
+      if (sub.budget_remaining_cents > 0) {
+        await sql`
+          UPDATE campaigns
+          SET budget_remaining_cents = budget_remaining_cents - ${artistChargeCents},
+              updated_at = NOW()
+          WHERE id = ${sub.campaign_id}
+        `;
+      }
 
       const result = await sql`
         UPDATE submissions
