@@ -1,3 +1,0 @@
-# Railway config — installs Chromium for Puppeteer
-[phases.setup]
-nixPkgs = ["chromium"]

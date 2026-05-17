@@ -91,6 +91,8 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
       '/usr/bin/chromium-browser',
       '/usr/bin/chromium',
       '/usr/bin/google-chrome-stable',
+      '/usr/bin/google-chrome',
+      '/nix/var/nix/profiles/default/bin/chromium',
       '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     ].filter(Boolean);
     for (const p of paths) {
