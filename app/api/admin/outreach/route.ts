@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       case 'discover_creators':      return runDiscoverCreators(body.limit || 50);
       case 'send_creator_email':     return runSendCreatorEmail(body.creatorId);
       case 'get_creator_queue':      return getCreatorQueue();
+      case 'repair_blog_images':     return repairBlogImages();
       default: return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (e: any) {
@@ -888,6 +889,57 @@ async function runSendCreatorEmail(creatorId: string) {
   }
 
   return NextResponse.json(result);
+}
+
+/** Repair blog images — fetch new Pexels images for posts with missing featured_image */
+async function repairBlogImages() {
+  const { fetchBlogImage } = await import('@/lib/blog-images');
+  
+  const posts = await sql`
+    SELECT id, title, image_suggestions
+    FROM blog_posts
+    WHERE featured_image IS NULL AND image_suggestions IS NOT NULL
+    LIMIT 20
+  `;
+
+  if (posts.length === 0) {
+    return NextResponse.json({ message: 'No posts need image repair', repaired: 0 });
+  }
+
+  let repaired = 0;
+  const results: any[] = [];
+
+  for (const post of posts) {
+    try {
+      // Extract search query from image_suggestions description
+      let query = post.title || '';
+      if (post.image_suggestions) {
+        const suggestions = typeof post.image_suggestions === 'string'
+          ? JSON.parse(post.image_suggestions)
+          : post.image_suggestions;
+        if (Array.isArray(suggestions) && suggestions[0]?.description) {
+          query = suggestions[0].description;
+        }
+      }
+
+      const imageUrl = await fetchBlogImage(query);
+      if (imageUrl && imageUrl !== '/images/og-image.jpg') {
+        await sql`
+          UPDATE blog_posts
+          SET featured_image = ${imageUrl}, featured_image_url = ${imageUrl}
+          WHERE id = ${post.id}
+        `;
+        repaired++;
+        results.push({ title: post.title?.substring(0, 60), image: imageUrl.substring(0, 60), ok: true });
+      } else {
+        results.push({ title: post.title?.substring(0, 60), ok: false, reason: 'No Pexels results' });
+      }
+    } catch (e: any) {
+      results.push({ title: post.title?.substring(0, 60), ok: false, reason: e.message });
+    }
+  }
+
+  return NextResponse.json({ repaired, total: posts.length, results });
 }
 
 async function getCreatorQueue() {
