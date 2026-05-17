@@ -38,7 +38,7 @@ export async function GET(request: Request) {
       WHERE da.status = 'campaign_created'
         AND aa.email_address IS NOT NULL
         AND aa.email_address != ''
-        AND (aa.email_confidence IN ('verified', 'high', 'medium'))
+        AND (aa.email_confidence IS NOT NULL)  /* Send to any email — MX check filters bad ones */
         AND (aa.bounced_at IS NULL)
         AND NOT EXISTS (
           SELECT 1 FROM outreach_log ol 
