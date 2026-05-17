@@ -12,11 +12,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/States';
 import VideoEmbed from '@/components/VideoEmbed';
 import RatingPrompt from '@/components/RatingPrompt';
+import { Play, ExternalLink, DollarSign, Eye, Check, X } from 'lucide-react';
 
 interface Submission {
   id: string; creator_name: string; track_title: string; platform: string;
   content_url: string; views_verified: number; cpm_rate_cents: number;
   max_payout_per_submission_cents: number; review_status: string; campaign_id: string;
+}
+
+function platformColor(platform: string) {
+  switch (platform) {
+    case 'tiktok': return { bg: 'bg-[#ff0050]/10', text: 'text-[#ff0050]', border: 'border-[#ff0050]/20' };
+    case 'instagram': return { bg: 'bg-[#E1306C]/10', text: 'text-[#E1306C]', border: 'border-[#E1306C]/20' };
+    case 'youtube': return { bg: 'bg-[#FF0000]/10', text: 'text-[#FF0000]', border: 'border-[#FF0000]/20' };
+    default: return { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/20' };
+  }
 }
 
 export default function ReviewPage() {
@@ -35,26 +45,24 @@ export default function ReviewPage() {
   const [undoState, setUndoState] = useState<{ id: string; status: string; timer: any } | null>(null);
 
   const handleAction = async (id: string, status: string) => {
-    // Optimistic update: remove from local list
     mutate(
       (currentData: any) => {
         if (!Array.isArray(currentData)) return currentData;
         return currentData.filter((s: Submission) => s.id !== id);
       },
-      false // Don't revalidate immediately — wait for the API call
+      false
     );
 
     try {
       await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
       addToast(status === 'approved' ? 'Submission approved — creator will be paid' : 'Submission rejected', status === 'approved' ? 'success' : 'info');
-      mutate(); // Revalidate after API call
+      mutate();
     } catch {
       addToast('Failed to update — try again', 'error');
-      mutate(); // Revert optimistic update
+      mutate();
       return;
     }
 
-    // Show undo option
     const timer = setTimeout(() => setUndoState(null), 4000);
     setUndoState({ id, status, timer });
   };
@@ -76,7 +84,6 @@ export default function ReviewPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="page-container">
-        {/* Undo banner */}
         {undoState && (
           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-popover border rounded-xl shadow-xl px-5 py-3 flex items-center gap-3 animate-slide-up">
             <span className="text-sm">{undoState.status === 'approved' ? 'Submission approved' : 'Submission rejected'}</span>
@@ -131,27 +138,74 @@ export default function ReviewPage() {
               let gross = (views / 1000) * cpm;
               const maxPayout = (s.max_payout_per_submission_cents || 0) / 100;
               if (maxPayout > 0 && gross > maxPayout) gross = maxPayout;
-              const net = gross; // Full CPM — creator earns the full amount
+              const net = gross;
+              const colors = platformColor(s.platform);
+              
               return (
-                <Card key={s.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
-                  <CardContent className="p-5 space-y-4">
+                <Card key={s.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
+                  {/* ── Video Preview Area ── */}
+                  <div className="relative bg-black/40 border-b border-white/[0.04]">
+                    <VideoEmbed url={s.content_url} />
+                    
+                    {/* Always show Watch button as fallback/primary action */}
+                    <div className="p-6 flex flex-col items-center gap-3">
+                      <a
+                        href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2.5 px-6 py-4 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.97] ${colors.bg} ${colors.text} ${colors.border} border`}
+                      >
+                        <Play size={18} fill="currentColor" />
+                        Watch on {s.platform.charAt(0).toUpperCase() + s.platform.slice(1)}
+                        <ExternalLink size={14} />
+                      </a>
+                      <p className="text-[10px] text-muted-foreground/40">Opens in new tab — review the video before approving</p>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-5 space-y-3">
+                    {/* ── Submission Info ── */}
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold">{s.creator_name || 'Creator'}</h3>
-                        <p className="text-muted-foreground text-sm">{s.track_title} · {s.platform}</p>
+                        <p className="text-muted-foreground text-sm">{s.track_title}</p>
                       </div>
-                      <Badge variant="secondary">{(s.views_verified || 0).toLocaleString()} views</Badge>
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Eye size={12} />
+                        {(s.views_verified || 0).toLocaleString()} views
+                      </Badge>
                     </div>
-                    <Card className="bg-muted/50"><CardContent className="p-3 text-sm text-muted-foreground">
-                      {(s.views_verified || 0).toLocaleString()} views × ${cpm} CPM = <span className="text-foreground font-semibold">${gross.toFixed(2)}</span> creator earns (full CPM)
-                    </CardContent></Card>
-                    <a href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-accent-foreground hover:underline">Watch on {s.platform} →</a>
-                    {(s.content_url) && <VideoEmbed url={s.content_url} className="mt-2" />}
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => handleAction(s.id, 'rejected')} className="flex-1">Reject</Button>
-                      <Button onClick={() => handleAction(s.id, 'approved')} className="flex-1">Approve</Button>
+
+                    {/* ── Payout Summary ── */}
+                    <div className="rounded-xl bg-muted/30 p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-[#22C55E]/10 flex items-center justify-center shrink-0">
+                        <DollarSign size={18} className="text-[#22C55E]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold">${gross.toFixed(2)} payout</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {(s.views_verified || 0).toLocaleString()} views × ${(cpm * 1000).toFixed(0)}/1M = ${gross.toFixed(2)} (creator earns full amount)
+                        </p>
+                      </div>
                     </div>
-                    {/* Rating prompt for paid submissions */}
+
+                    {/* ── Actions ── */}
+                    <div className="flex gap-2 pt-1">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleAction(s.id, 'rejected')}
+                        className="flex-1 flex items-center gap-1.5"
+                      >
+                        <X size={14} /> Reject
+                      </Button>
+                      <Button
+                        onClick={() => handleAction(s.id, 'approved')}
+                        className="flex-1 flex items-center gap-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                      >
+                        <Check size={14} /> Approve & Pay
+                      </Button>
+                    </div>
+
                     {statusFilter === 'approved' && (
                       <RatingPrompt
                         submissionId={s.id}
