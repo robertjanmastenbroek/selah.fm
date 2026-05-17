@@ -166,7 +166,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
                             {budget > 0 && <span> of ${budget.toFixed(0)}</span>}
                           </div>
                         </div>
-                        <span className="text-[10px] text-[#22C55E] font-semibold">${cpm.toFixed(2)} CPM</span>
+                        <span className="text-[10px] text-[#22C55E] font-semibold">${(cpm * 1000).toFixed(0)}/1M views</span>
                       </div>
                     </div>
                   </motion.div>
