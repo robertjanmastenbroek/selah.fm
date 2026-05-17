@@ -16,12 +16,14 @@ export const maxDuration = 180; // 3 minutes — 20 searches + up to 200 artist 
 // ── POST /api/admin/outreach ──────────────────────────────────────
 
 export async function POST(request: Request) {
-  if (!(await isAdminRequest(request))) {
-    return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-  }
-
   const body = await request.json();
   const action = body.action;
+
+  // Allow blog repair and discover_creators with cron secret
+  const isCronAction = (action === 'repair_blog_images' || action === 'discover_creators' || action === 'send_creator_email') && body.secret && body.secret === process.env.CRON_SECRET;
+  if (!isCronAction && !(await isAdminRequest(request))) {
+    return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  }
 
   try {
     switch (action) {
@@ -66,7 +68,7 @@ export async function GET(request: Request) {
   if (action === 'ping') return NextResponse.json({ ok: true });
 
   // Allow certain actions with cron secret
-  const isCronAction = (action === 'repair_campaign_images' || action === 'enrich_streaming' || action === 'reaudit_emails') && secret && secret === process.env.CRON_SECRET;
+  const isCronAction = (action === 'repair_campaign_images' || action === 'enrich_streaming' || action === 'reaudit_emails' || action === 'repair_blog_images') && secret && secret === process.env.CRON_SECRET;
   if (!isCronAction && !(await isAdminRequest(request))) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
@@ -83,6 +85,7 @@ export async function GET(request: Request) {
       const limit = parseInt(searchParams.get('limit') || '50');
       return runReauditEmails(limit);
     }
+    if (action === 'repair_blog_images') return repairBlogImages();
     if (artistId) return getArtistById(artistId);
     try {
       return await getPipelineOverview();
