@@ -9,8 +9,8 @@
     "healthcheckTimeout": 30,
     "cron": [
       {
-        "schedule": "0 2,8,14,20 * * *",
-        "path": "/api/cron/outreach-pipeline?limit=30&audit=60&campaigns=30",
+        "schedule": "0 0,3,6,9,12,15,18,21 * * *",
+        "path": "/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30",
         "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
       },
       {

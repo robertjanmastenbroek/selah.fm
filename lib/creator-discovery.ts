@@ -196,6 +196,127 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
 }
 
 /**
+ * Lightweight TikTok profile scraper — extracts embedded JSON data.
+ * No browser required. Uses TikTok's internal page data.
+ */
+export async function scrapeTikTokProfileHTTP(username: string): Promise<{
+  bio: string;
+  displayName: string;
+  followers: number;
+  email: string | null;
+} | null> {
+  try {
+    const res = await fetch(`https://www.tiktok.com/@${username}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      signal: AbortSignal.timeout(12000),
+    });
+
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // Extract embedded JSON data (TikTok's __UNIVERSAL_DATA_FOR_REHYDRATION__)
+    const jsonMatch = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([^<]+)<\/script>/);
+    if (!jsonMatch) return null;
+
+    const data = JSON.parse(jsonMatch[1]);
+    const userModule = data?.__DEFAULT_SCOPE__?.['webapp.user-detail'];
+    if (!userModule) return null;
+
+    const userInfo = userModule.userInfo;
+    const user = userInfo?.user;
+    const stats = userInfo?.stats;
+
+    if (!user) return null;
+
+    const bio = user.signature || '';
+    const displayName = user.nickname || username;
+    const followers = stats?.followerCount || 0;
+
+    // Extract email from bio
+    const emailMatch = bio.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    const email = emailMatch ? emailMatch[1].toLowerCase() : null;
+
+    return { bio, displayName, followers, email };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Discover TikTok creators via HTTP (no Puppeteer).
+ * Uses TikTok's unofficial API + embedded data approach.
+ */
+export async function discoverTikTokCreatorsHTTP(limit: number = 50): Promise<DiscoveredCreator[]> {
+  const tags = [...TIKTOK_HASHTAGS].sort(() => Math.random() - 0.5);
+  const allCreators = new Map<string, DiscoveredCreator>();
+
+  for (const tag of tags) {
+    if (allCreators.size >= limit) break;
+
+    try {
+      // TikTok tag page — extract usernames from embedded data
+      const res = await fetch(`https://www.tiktok.com/tag/${tag}`, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          'Accept': 'text/html,application/xhtml+xml',
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (!res.ok) continue;
+      const html = await res.text();
+
+      // Extract unique usernames from the page
+      const usernameMatches = html.match(/@"([a-zA-Z0-9._]+)"/g) || [];
+      const usernames = [...new Set(usernameMatches.map(m => m.replace(/@"|"/g, '')))];
+
+      let scraped = 0;
+      for (const username of usernames) {
+        if (allCreators.size >= limit) break;
+        if (allCreators.has(username)) continue;
+        if (scraped >= 10) break;
+
+        const profile = await scrapeTikTokProfileHTTP(username);
+        if (!profile) continue;
+
+        if (profile.bio || profile.displayName) {
+          const creator: DiscoveredCreator = {
+            username,
+            platform: 'tiktok',
+            display_name: profile.displayName,
+            bio: profile.bio,
+            follower_count: profile.followers,
+            profile_url: `https://www.tiktok.com/@${username}`,
+            hashtag: tag,
+          };
+
+          if (profile.email) {
+            creator.email_address = profile.email;
+            creator.email_source = 'tiktok_bio_http';
+          }
+
+          allCreators.set(username, creator);
+          scraped++;
+        }
+
+        // Rate limit between profile fetches
+        await new Promise(r => setTimeout(r, 500));
+      }
+    } catch (e: any) {
+      console.error(`HTTP hashtag ${tag} error:`, e.message);
+    }
+
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  return [...allCreators.values()];
+}
+
+/**
  * Scrape Instagram profile bio for email.
  */
 export async function scrapeInstagramBio(username: string): Promise<string | null> {
