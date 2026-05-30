@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { discoverTikTokCreators, discoverTikTokCreatorsHTTP } from '@/lib/creator-discovery';
+import { discoverTikTokCreators, discoverTikTokCreatorsHTTP, discoverRedditCreators } from '@/lib/creator-discovery';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600; // 10 minutes for Puppeteer scraping
@@ -28,12 +28,17 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '50');
     log.push(`Discovering up to ${limit} TikTok creators...`);
 
-    // Try Puppeteer first, fall back to HTTP scraping
+    // Try Puppeteer → HTTP TikTok → Reddit (most reliable fallback)
     let creators = await discoverTikTokCreators(limit);
     if (creators.length === 0) {
       log.push('Puppeteer returned 0 — falling back to HTTP scraping...');
       creators = await discoverTikTokCreatorsHTTP(limit);
-      log.push(`HTTP fallback: ${creators.length} profiles scraped`);
+      log.push(`HTTP TikTok: ${creators.length} profiles`);
+    }
+    if (creators.length === 0) {
+      log.push('TikTok HTTP returned 0 — falling back to Reddit...');
+      creators = await discoverRedditCreators(limit);
+      log.push(`Reddit: ${creators.length} creators found`);
     }
     results.discovered = creators.length;
     results.with_email = creators.filter(c => c.email_address).length;

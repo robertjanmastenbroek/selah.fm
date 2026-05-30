@@ -196,6 +196,115 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
   return [...allCreators.values()];
 }
 
+// ── Reddit-based creator discovery ──────────────────────────────
+
+const CREATOR_SUBREDDITS = [
+  'UGCcreators', 'contentcreators', 'influencermarketing',
+  'TikTokCreators', 'CreatorAdvice', 'smallinfluencers',
+  'SocialMediaMarketing', 'Creator',
+];
+
+/**
+ * Discover content creators via Reddit — reliable, no API key needed.
+ * Searches creator subreddits for people promoting their content creation services.
+ * Extracts TikTok/Instagram handles and any emails in their profiles/posts.
+ */
+export async function discoverRedditCreators(limit: number = 50): Promise<DiscoveredCreator[]> {
+  const creators = new Map<string, DiscoveredCreator>();
+  
+  const subs = [...CREATOR_SUBREDDITS].sort(() => Math.random() - 0.5);
+  
+  for (const sub of subs) {
+    if (creators.size >= limit) break;
+    
+    try {
+      const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=25&t=week`, {
+        headers: { 'User-Agent': 'SelahFM/1.0 (creator discovery)' },
+        signal: AbortSignal.timeout(10000),
+      });
+      
+      if (!res.ok) continue;
+      const data = await res.json();
+      const posts = (data.data?.children || []).map((c: any) => ({
+        title: c.data.title,
+        selftext: c.data.selftext || '',
+        author: c.data.author,
+        permalink: `https://reddit.com${c.data.permalink}`,
+        flair: c.data.link_flair_text || '',
+      }));
+      
+      for (const post of posts) {
+        if (creators.size >= limit) break;
+        
+        const text = (post.title + ' ' + post.selftext + ' ' + post.flair).toLowerCase();
+        
+        // Look for TikTok/Instagram handles
+        const tiktokMatch = text.match(/(?:tiktok|tt)\s*[:@]\s*@?([a-zA-Z0-9._]{3,30})/i) 
+          || text.match(/@([a-zA-Z0-9._]{3,30})\s*(?:on|at)\s*(?:tiktok|tt)/i);
+        const igMatch = text.match(/(?:instagram|ig)\s*[:@]\s*@?([a-zA-Z0-9._]{3,30})/i)
+          || text.match(/@([a-zA-Z0-9._]{3,30})\s*(?:on|at)\s*(?:instagram|ig)/i);
+        
+        if (!tiktokMatch && !igMatch) continue;
+        
+        // Extract email from text
+        const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+        const email = emailMatch ? emailMatch[1].toLowerCase() : null;
+        
+        // Determine platform and username
+        const platform: 'tiktok' | 'instagram' = tiktokMatch ? 'tiktok' : 'instagram';
+        const username = (tiktokMatch || igMatch)?.[1]?.toLowerCase() || '';
+        const handle = platform === 'tiktok' ? `@${username}` : `@${username}`;
+        
+        // Skip bots, mods, deleted
+        if (username === 'automoderator' || username === 'deleted' || username.length < 3) continue;
+        if (creators.has(username)) continue;
+        
+        // Extract follower count mentions
+        const followerMatch = text.match(/(\d+[kKmM]?)\s*(?:followers|fans|follows)/i);
+        let followerCount = 0;
+        if (followerMatch) {
+          const f = followerMatch[1].toUpperCase();
+          if (f.endsWith('K')) followerCount = Math.round(parseFloat(f) * 1000);
+          else if (f.endsWith('M')) followerCount = Math.round(parseFloat(f) * 1000000);
+          else followerCount = parseInt(f) || 0;
+        }
+        
+        // Extract niche from flair or text
+        const nicheMatch = text.match(/(?:niche|focus|specialize)[:\s]+([^.]+)/i);
+        const niche = nicheMatch ? nicheMatch[1].trim().slice(0, 50) : '';
+        
+        const profileUrl = platform === 'tiktok' 
+          ? `https://www.tiktok.com/@${username}`
+          : `https://www.instagram.com/${username}/`;
+        
+        const creator: DiscoveredCreator = {
+          username,
+          platform,
+          display_name: post.author !== '[deleted]' ? post.author : handle,
+          bio: post.selftext?.slice(0, 200) || '',
+          follower_count: followerCount,
+          profile_url: profileUrl,
+          niche,
+          hashtag: `reddit_r_${sub}`,
+        };
+        
+        if (email) {
+          creator.email_address = email;
+          creator.email_source = 'reddit_post';
+        }
+        
+        creators.set(username, creator);
+      }
+    } catch (e: any) {
+      console.error(`Reddit r/${sub} error:`, e.message);
+    }
+    
+    await new Promise(r => setTimeout(r, 500));
+  }
+  
+  return [...creators.values()];
+}
+
 /**
  * Lightweight TikTok profile scraper — extracts embedded JSON data.
  * No browser required. Uses TikTok's internal page data.
