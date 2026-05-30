@@ -52,13 +52,14 @@ function parseFollowerCount(text: string): number {
  * Returns empty array if dependencies aren't available (e.g. Railway without Chromium).
  */
 export async function discoverTikTokCreators(limit: number = 50): Promise<DiscoveredCreator[]> {
-  // Load Puppeteer at runtime — not a build dependency
+  // Load Puppeteer at runtime — try dynamic import first (ESM), then require (CJS)
   let puppeteer: any;
   try {
-    puppeteer = require('puppeteer-core');
+    const mod = await import('puppeteer-core');
+    puppeteer = mod.default || mod;
   } catch {
-    try { puppeteer = require('puppeteer'); } catch {
-      console.log('Creator discovery: puppeteer not available. Install with: npm install puppeteer-core');
+    try { puppeteer = require('puppeteer-core'); } catch {
+      console.log('Creator discovery: puppeteer-core not available.');
       return [];
     }
   }
@@ -75,9 +76,9 @@ export async function discoverTikTokCreators(limit: number = 50): Promise<Discov
     ],
   };
 
-  // Try @sparticuz/chromium
+  // Try @sparticuz/chromium (ESM package)
   try {
-    const chromium = require('@sparticuz/chromium');
+    const chromium = (await import('@sparticuz/chromium')).default || (await import('@sparticuz/chromium'));
     if (typeof chromium.executablePath === 'function') {
       launchOptions.executablePath = await chromium.executablePath();
       launchOptions.args = chromium.args || launchOptions.args;
