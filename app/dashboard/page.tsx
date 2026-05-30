@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
+import ActionTracker from '@/components/ActionTracker';
 import ImageUpload from '@/components/ImageUpload';
 import GalleryUpload, { type GalleryItem } from '@/components/GalleryUpload';
 import CampaignCover from '@/components/CampaignCover';
@@ -241,6 +242,7 @@ function DashboardContent() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="page-container">
+        <ActionTracker userType={profile?.type} />
         {step === 'wizard' ? (
           <>
             {hireCreatorName && wizardStep === 2 && (

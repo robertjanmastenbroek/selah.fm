@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
 import CampaignSearch from '@/components/CampaignSearch';
 import CampaignCover from '@/components/CampaignCover';
+import OnboardingBanner from '@/components/OnboardingBanner';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,6 +76,7 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
       <Header />
+      <OnboardingBanner />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12">
         {/* ── Hero + search ── */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">

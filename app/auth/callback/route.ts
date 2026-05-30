@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,11 +56,34 @@ export async function GET(request: Request) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
       console.error('Auth callback error:', error.message);
       return NextResponse.redirect(new URL('/login?error=auth_failed', origin));
+    }
+
+    // Detect new users — redirect to onboarding if never completed
+    const user = data?.user;
+    if (user) {
+      try {
+        const rows = await sql`SELECT onboarded_at FROM users WHERE id = ${user.id}`;
+        const existing = rows[0];
+        
+        // New user or never completed onboarding → onboarding flow
+        if (!existing || !existing.onboarded_at) {
+          const onboardUrl = new URL('/onboarding', origin);
+          // Don't overwrite explicit next param (e.g. from campaign links)
+          if (next === '/browse') {
+            return NextResponse.redirect(onboardUrl, 302);
+          }
+        }
+      } catch {
+        // DB query failed — still redirect to onboarding to be safe
+        if (next === '/browse') {
+          return NextResponse.redirect(new URL('/onboarding', origin), 302);
+        }
+      }
     }
 
     return response;

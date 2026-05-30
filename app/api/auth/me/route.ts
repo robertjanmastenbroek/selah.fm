@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUser } from '@/lib/supabase/server';
 import { ADMIN_EMAILS } from '@/lib/constants';
+import { markOnboarded, sendWelcomeEmail } from '@/lib/engagement';
 
 /**
  * GET /api/auth/me — returns current user session (Supabase-backed).
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
     if (!user) return NextResponse.json({ user: null, isAdmin: false });
 
     const rows = await sql`
-      SELECT display_name, user_type, is_artist, is_creator, stripe_connect_id
+      SELECT display_name, user_type, is_artist, is_creator, stripe_connect_id, onboarded_at
       FROM users WHERE id = ${user.id}
     `;
     const profile = rows[0];
@@ -28,6 +29,7 @@ export async function GET(request: Request) {
         is_creator: profile?.is_creator ?? true,
         stripe_connect_id: profile?.stripe_connect_id,
       },
+      onboarded: !!profile?.onboarded_at,
       isAdmin: ADMIN_EMAILS.includes(user.email || ''),
     });
   } catch (e: any) {
@@ -69,7 +71,24 @@ export async function PATCH(request: Request) {
       values
     );
 
-    return NextResponse.json({ ok: true });
+    // Trigger welcome email on first onboarding save
+    try {
+      const [profile] = await sql`SELECT onboarded_at, display_name, email FROM users WHERE id = ${user.id}`;
+      if (profile && !profile.onboarded_at) {
+        const role: 'artist' | 'creator' = type === 'artist' ? 'artist' : 'creator';
+        const displayName = name || profile.display_name || 'there';
+        
+        // Mark as onboarded
+        await markOnboarded(user.id, role);
+        
+        // Send welcome email #1 (fire-and-forget — don't block response)
+        sendWelcomeEmail(user.id, user.email || '', displayName, role, 0).catch(() => {});
+      }
+    } catch {
+      // Non-critical — onboarding still succeeds even if welcome email fails
+    }
+
+    return NextResponse.json({ ok: true, onboarded: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

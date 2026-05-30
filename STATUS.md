@@ -1,5 +1,5 @@
 # Selah.fm — Status & Reference
-**Version:** 2.0 · **Live:** https://selah.fm · **Updated:** 2026-05-16
+**Version:** 2.1 · **Live:** https://selah.fm · **Updated:** 2026-05-30
 
 ---
 
@@ -9,8 +9,9 @@
 |------|--------|
 | Auth | Supabase Auth (Google OAuth + email/password) |
 | Database | Supabase PostgreSQL (27 tables, 1,800+ artists) |
-| Outreach | Automated email pipeline (Resend, 100 emails/day capacity) |
-| Campaigns | 1,238 active campaigns (auto-generated from Bandcamp) |
+| Outreach | Automated email pipeline (Resend, 100 emails/day, artist + creator) |
+| Campaigns | 2,561 auto-generated campaigns (Bandcamp + Reddit + YouTube) |
+| Engagement | Onboarding flow, welcome email sequence, re-engagement cron |
 | Fee model | 20% added on artist CPM, creators earn full CPM |
 | Email verification | MX record check + disposable domain filter + Resend webhook |
 | Streaming links | Spotify/Apple Music/YouTube links on every campaign page |
@@ -22,16 +23,30 @@
 
 | Table | Rows | Notes |
 |-------|------|-------|
-| discovered_artists | 1,877 | Multi-channel: Bandcamp (14 genres, 5 pages) + Reddit + YouTube |
+| discovered_artists | 2,095 | Multi-channel: Bandcamp + Reddit + YouTube |
 | artist_audits | 3,192 | Email scraping (Bandcamp, Instagram, SoundCloud, Twitter/X, Google) |
-| campaigns (active) | 1,238 | All auto-generated, unclaimed |
-| campaign_claims | 708 | UUID claim codes |
-| outreach_log (email) | 111 | Sent via Resend, bounce-tracked via webhook |
-| verified emails | 67 | Real emails found on artist pages (2% hit rate) |
+| campaigns | 2,562 | 2,561 unclaimed, 1 claimed (auto-generated) |
+| campaign_claims | 2,561 | UUID claim codes, 0 user-claimed |
+| outreach_log (email) | 331 | Sent via Resend, bounce-tracked via webhook |
+| creator_outreach_log | 13 | Creator emails sent |
+| verified emails | 71 | Verified emails on artist pages |
+| discovered_creators | 20 | TikTok scraping + Reddit creator discovery |
+| submissions | 3 | Test submissions (pending review) |
+| users | 10 | 9 creators, 0 active |
 
-**Cron schedule:** Pipeline every 30 min, Email every 30 min (offset 5 min)
-**Email channel:** Resend (100/day free tier, 3 per run × 48 runs)
-**Pipeline defaults:** 100 discovery, 200 audit, 50 campaigns per run
+**Cron schedule (all times UTC):**
+- Pipeline (discover→audit→campaign): every 3h (0,3,6,9,12,15,18,21) — 8x/day
+- Artist email outreach: 4x/day (3,9,15,21)
+- Creator discovery: 4x/day (5,11,17,23) — TikTok + Reddit
+- Creator email outreach: 4x/day (6,12,18,0)
+- Welcome email sequence: daily 09:00
+- Re-engagement: daily 11:00
+- Re-audit emails: daily 22:00
+- Follow-up: daily 10:00
+- Blog publish: daily 10:00
+
+**Email channel:** Resend (100/day free tier, 50 per run)
+**Pipeline defaults:** 50 discovery, 80 audit, 30 campaigns per run
 
 ---
 
@@ -41,7 +56,7 @@
 - **Direct pg Pool** — `lib/db.ts` connects to Supabase PostgreSQL via pooler
 - **Email-first outreach** — Resend for delivery, DeepSeek V3 for content
 - **Artist-side fee** — 20% added on top of CPM, creators earn 100%
-- **Email confidence scoring** — verified/high/medium/low/guess, only verified auto-send
+- **Email confidence scoring** — verified/high/medium, all three tiers auto-send (MX-verified pre-send)
 - **Pre-send verification** — MX record + disposable domain + syntax check
 - **Bounce tracking** — Resend webhook → auto-blocks bounced addresses
 - **Bandcamp subdomain → email** — Scraped from page text, websites, Instagram, SoundCloud, Twitter/X, Google
@@ -70,7 +85,17 @@
 | `lib/supabase/server.ts` | Supabase server client + getUser/isAdmin |
 | `lib/supabase/middleware.ts` | Session refresh middleware |
 | `lib/supabase/client.ts` | Browser client for client components |
-| `app/auth/callback/route.ts` | OAuth code exchange (x-forwarded-host for Railway) |
+| `app/auth/callback/route.ts` | OAuth code exchange + new user → onboarding redirect |
+| `app/onboarding/page.tsx` | Role selection + profile setup (artist/creator flow) |
+| `app/api/auth/me/route.ts` | Session + profile GET/PATCH, triggers welcome email #1 |
+| `app/api/me/action/route.ts` | Record user action (claim, submit) for re-engagement |
+| `app/api/cron/welcome-sequence/route.ts` | Welcome email #2-3 sequence (day 2, day 5) |
+| `app/api/cron/reengage/route.ts` | Re-engagement emails for dormant users (3+ days) |
+| `components/OnboardingBanner.tsx` | Browse page banner for non-onboarded users |
+| `components/ActionTracker.tsx` | Dashboard progress tracker (onboard→create→submit→earn) |
+| `lib/engagement.ts` | Welcome emails, re-engagement, action tracking |
+| `app/api/cron/creator-discovery/route.ts` | Creator discovery (TikTok Puppeteer → HTTP → Reddit) |
+| `lib/creator-discovery.ts` | TikTok + Reddit creator discovery (Puppeteer + HTTP) |
 | `app/api/webhooks/resend/route.ts` | Resend bounce/complaint webhook handler |
 
 ---

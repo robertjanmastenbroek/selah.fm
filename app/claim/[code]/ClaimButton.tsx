@@ -45,6 +45,8 @@ export default function ClaimButton({ claimCode, artistName, campaignSlug }: {
         setError(data.error);
       } else {
         setClaimed(true);
+        // Record action for re-engagement system
+        fetch('/api/me/action', { method: 'POST', credentials: 'include' }).catch(() => {});
         // Redirect to their new campaign page after a brief celebration
         setTimeout(() => {
           router.push(`/c/${campaignSlug}`);
