@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         AND status = 'discovered'
         AND NOT EXISTS (SELECT 1 FROM creator_outreach_log WHERE discovered_creator_id = discovered_creators.id)
       ORDER BY follower_count DESC
-      LIMIT 5
+      LIMIT 13
     `;
 
     for (const creator of creators) {

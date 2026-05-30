@@ -9,18 +9,33 @@
     "healthcheckTimeout": 30,
     "cron": [
       {
-        "schedule": "0 2 * * *",
-        "path": "/api/cron/outreach-pipeline?limit=10&audit=30&campaigns=30",
+        "schedule": "0 2,8,14,20 * * *",
+        "path": "/api/cron/outreach-pipeline?limit=30&audit=60&campaigns=30",
         "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
       },
       {
-        "schedule": "0 14 * * *",
-        "path": "/api/cron/outreach-pipeline?limit=10&audit=30&campaigns=30",
+        "schedule": "0 3,9,15,21 * * *",
+        "path": "/api/cron/email-outreach",
         "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
       },
       {
-        "schedule": "0 18 * * *",
+        "schedule": "0 5,11,17,23 * * *",
+        "path": "/api/cron/creator-discovery",
+        "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
+      },
+      {
+        "schedule": "0 6,12,18,0 * * *",
+        "path": "/api/cron/creator-outreach",
+        "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
+      },
+      {
+        "schedule": "0 10 * * *",
         "path": "/api/cron/outreach-followup",
+        "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
+      },
+      {
+        "schedule": "0 22 * * *",
+        "path": "/api/admin/outreach?action=reaudit_emails&limit=100",
         "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" }
       },
       {

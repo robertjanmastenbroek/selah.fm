@@ -12,8 +12,8 @@ export const maxDuration = 600; // 10 minutes
  * Finds audited artists with email addresses and pending campaigns,
  * generates personalized emails, and sends them via Resend.
  * 
- * Rate limited: sends max 10 emails per run to stay under Resend free tier.
- * Runs every 6 hours via Railway cron.
+ * Sends up to 50 emails per run. Runs 4x/day via Railway cron (03,09,15,21 UTC).
+ * Pre-send MX verification filters bounces. Verified+high+medium confidence only.
  */
 export async function GET(request: Request) {
   const secret = new URL(request.url).searchParams.get('secret');
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
       WHERE da.status = 'campaign_created'
         AND aa.email_address IS NOT NULL
         AND aa.email_address != ''
-        AND (aa.email_confidence = 'verified')
+        AND (aa.email_confidence IN ('verified', 'high', 'medium'))
         AND (aa.bounced_at IS NULL)
         AND NOT EXISTS (
           SELECT 1 FROM outreach_log ol 
