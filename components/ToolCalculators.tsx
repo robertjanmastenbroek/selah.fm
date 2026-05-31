@@ -15,7 +15,7 @@ export function CpmCalculator({ avgCpm }: { avgCpm: number }) {
 
   const platformRates = [
     { platform: 'TikTok Creator Fund', cpm: 0.02, note: '~$20–40 per 1M views' },
-    { platform: 'YouTube Partner', cpm: 2.50, note: '~$1,000–5,000 per 1M views (varies by niche)' },
+    { platform: 'YouTube Shorts', cpm: 0.05, note: '~$10–100 per 1M views (Shorts Fund)' },
     { platform: 'Instagram Reels Bonus', cpm: 0.50, note: '~$100–1,000 per 1M views (invite only)' },
     { platform: 'Selah.fm Marketplace', cpm: avgCpm, note: `Artists set rates — current average $${(avgCpm * 1000).toFixed(0)}/1M`, highlight: true },
   ];

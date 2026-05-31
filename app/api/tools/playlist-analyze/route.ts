@@ -17,25 +17,60 @@ export async function POST(request: Request) {
 
     const playlistId = match[1];
 
-    // Try to get public playlist data via Spotify's embed API (no auth needed)
-    const embedRes = await fetch(`https://open.spotify.com/embed/playlist/${playlistId}`, {
+    // Strategy 1: Spotify oEmbed API (returns follower count for public playlists)
+    let followers = 0;
+    let trackCount = 0;
+    let title = '';
+
+    try {
+      const oembedRes = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/playlist/${playlistId}`, {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (oembedRes.ok) {
+        const oembed = await oembedRes.json();
+        title = oembed.title || '';
+        // oEmbed doesn't include follower/track count — try page scraping
+      }
+    } catch {}
+
+    // Strategy 2: Scrape the public playlist page for embedded JSON-LD data
+    const pageRes = await fetch(`https://open.spotify.com/playlist/${playlistId}`, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(10000),
     });
 
-    if (!embedRes.ok) {
+    if (!pageRes.ok) {
       return NextResponse.json({ error: 'Could not access this playlist. It may be private.' }, { status: 404 });
     }
 
-    const html = await embedRes.text();
+    const html = await pageRes.text();
 
-    // Extract follower count
-    const followerMatch = html.match(/([\d,]+)\s*(?:likes|followers|saves)/i);
-    const followers = followerMatch ? parseInt(followerMatch[1].replace(/,/g, '')) : 0;
+    // Extract from JSON-LD structured data
+    const ldMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/);
+    if (ldMatch) {
+      try {
+        const ld = JSON.parse(ldMatch[1]);
+        if (ld.numTracks) trackCount = ld.numTracks;
+        if (ld.numFollowers) followers = ld.numFollowers;
+      } catch {}
+    }
 
-    // Extract track count
-    const trackMatches = html.match(/track-count[^>]*>(\d+)/i) || html.match(/(\d+)\s*songs/);
-    const trackCount = trackMatches ? parseInt(trackMatches[1]) : 0;
+    // Fallback: look for follower count in page text
+    if (followers === 0) {
+      const followerMatch = html.match(/([\d,]+)\s*(?:likes|followers|saves)/i);
+      followers = followerMatch ? parseInt(followerMatch[1].replace(/,/g, '')) : 0;
+    }
+
+    // Fallback: look for track count
+    if (trackCount === 0) {
+      const trackMatches = html.match(/"numTracks":(\d+)/) || html.match(/(\d+)\s*(?:songs|tracks)/i);
+      if (trackMatches) trackCount = parseInt(trackMatches[1]);
+    }
+
+    if (!title) {
+      const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+      title = titleMatch ? titleMatch[1].replace(' - playlist by', '').trim() : 'Unknown Playlist';
+    }
 
     // Bot detection heuristics
     const flags: string[] = [];
