@@ -5,12 +5,12 @@ export const maxDuration = 300;
 
 /**
  * Unified cron dispatcher — one cron entry to rule them all.
- * Railway doesn't support */N or comma-separated hours. This single
+ * Railway does not support interval or comma-separated cron hours.
  * endpoint dispatches to the correct worker based on the current UTC hour.
  * 
  * Runs every hour at :00. Routes based on hour:
  */
-const SCHEDULE: Record<number, { name: string; path: string }[]> = {
+const SCHEDULE: any = {
   0:  [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'creator-outreach', path: '/api/cron/creator-outreach' }],
   3:  [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'email-outreach', path: '/api/cron/email-outreach' }],
   5:  [{ name: 'creator-discovery', path: '/api/cron/creator-discovery' }],
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm';
 
   // Fire ALL sub-cron jobs in parallel, non-blocking
-  const promises = queue.map(async (job) => {
+  const promises = queue.map(async (job: { name: string; path: string }) => {
     try {
       const url = `${baseUrl}${job.path}${job.path.includes('?') ? '&' : '?'}secret=${encodeURIComponent(secret)}`;
       // Fire and forget — don't wait for the response body
