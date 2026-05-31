@@ -140,7 +140,7 @@ export async function GET(request: Request) {
             status, author_id
           ) VALUES (
             ${iv.id}, ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
-            ${article.title}, ${article.meta_description || article.excerpt}, ${JSON.stringify(article.tags || [])},
+            ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
             ${article.primary_keyword || null},
             ${JSON.stringify(article.internal_links || [])},
             ${JSON.stringify(article.faq_schema || null)},
