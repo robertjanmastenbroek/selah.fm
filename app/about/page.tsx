@@ -25,7 +25,7 @@ export default function AboutPage() {
         <div className="space-y-8">
           <Section
             title="The Record Deal I Walked Away From"
-            content="At 17, I got what most musicians dream of — a record deal. Then I read the contract. The label took 98% of revenue. I'd get pennies while they owned my music forever. I walked away. That moment shaped everything I believe about artists owning their work."
+            content="At 21, I got what most musicians dream of — a record deal. Then I read the contract. The label took 98% of revenue. I'd get pennies while they owned my music forever. I walked away. That moment shaped everything I believe about artists owning their work."
           />
 
           <Section
