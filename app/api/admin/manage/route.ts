@@ -53,7 +53,7 @@ export async function PATCH(request: Request) {
         if (body.payout_status !== undefined) await sql`UPDATE submissions SET payout_status = ${body.payout_status} WHERE id = ${id}`;
         if (body.payout_amount_cents !== undefined) await sql`UPDATE submissions SET payout_amount_cents = ${body.payout_amount_cents} WHERE id = ${id}`;
         if (body.views_verified !== undefined) await sql`UPDATE submissions SET views_verified = ${body.views_verified} WHERE id = ${id}`;
-        if (body.rejection_feedback !== undefined) await sql`UPDATE submissions SET rejection_feedback = ${body.rejection_feedback} WHERE id = ${id}`;
+        if (body.rejection_reason !== undefined) await sql`UPDATE submissions SET rejection_reason = ${body.rejection_reason} WHERE id = ${id}`;
         return NextResponse.json({ ok: true });
       }
 

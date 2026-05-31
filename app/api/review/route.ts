@@ -132,7 +132,7 @@ export async function POST(request: Request) {
     const result = await sql`
       UPDATE submissions
       SET review_status = ${status}, reviewed_at = NOW(), reviewed_by = ${session.id},
-          rejection_feedback = ${feedback || null}
+          rejection_reason = ${feedback || null}
       WHERE id = ${submissionId}
       RETURNING *
     `;
