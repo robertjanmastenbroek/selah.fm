@@ -75,7 +75,7 @@ export async function GET(request: Request) {
     const pending = await sql`
       SELECT id, generated_questions FROM batch_interviews
       WHERE batch_id = ${batchId} AND status = 'pending' AND generated_questions IS NOT NULL
-      LIMIT 2
+      LIMIT 4
     `;
     for (const iv of pending) {
       try {
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
       WHERE batch_id = ${batchId} AND status = 'answered' AND transcript IS NOT NULL
         AND NOT EXISTS (SELECT 1 FROM blog_posts bp WHERE bp.interview_id = batch_interviews.id)
       ORDER BY created_at DESC
-      LIMIT 1
+      LIMIT 2
     `;
     for (const iv of answered) {
       try {
@@ -178,17 +178,20 @@ export async function GET(request: Request) {
     }
     log.push(`${results.posts} posts`);
 
-    // Step 5: Schedule one post
+    // Step 5: Schedule all generated posts (1 per day, starting tomorrow)
     if (results.posts > 0) {
-      const [draft] = await sql`SELECT id FROM blog_posts WHERE status = 'draft' ORDER BY created_at DESC LIMIT 1`;
-      if (draft) {
-        const existingDates = await sql`SELECT publish_at::date as d FROM blog_posts WHERE status = 'scheduled' AND publish_at::date >= CURRENT_DATE ORDER BY d`;
-        const taken = new Set(existingDates.map((r: any) => typeof r.d === 'string' ? r.d : new Date(r.d).toISOString().slice(0, 10)));
-        let next = new Date(); next.setDate(next.getDate() + 1); next.setUTCHours(9, 0, 0, 0);
+      const drafts = await sql`SELECT id FROM blog_posts WHERE status = 'draft' ORDER BY created_at DESC LIMIT ${results.posts}`;
+      const existingDates = await sql`SELECT publish_at::date as d FROM blog_posts WHERE status = 'scheduled' AND publish_at::date >= CURRENT_DATE ORDER BY d`;
+      const taken = new Set(existingDates.map((r: any) => typeof r.d === 'string' ? r.d : new Date(r.d).toISOString().slice(0, 10)));
+      let next = new Date(); next.setDate(next.getDate() + 1); next.setUTCHours(9, 0, 0, 0);
+      
+      for (const draft of drafts) {
         while (taken.has(next.toISOString().slice(0, 10))) next.setDate(next.getDate() + 1);
         await sql`UPDATE blog_posts SET status = 'scheduled', publish_at = ${next.toISOString()} WHERE id = ${draft.id}`;
+        taken.add(next.toISOString().slice(0, 10));
         results.scheduled++;
-        log.push(`Scheduled for ${next.toISOString().slice(0, 10)}`);
+        log.push(`Scheduled: ${next.toISOString().slice(0, 10)}`);
+        next.setDate(next.getDate() + 1);
       }
     }
 
