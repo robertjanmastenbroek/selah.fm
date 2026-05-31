@@ -280,31 +280,43 @@ export default function ReviewPage() {
                           </button>
                         </div>
 
-                        {/* ── Actions ── */}
+                        {/* ── Actions or Status ── */}
                         <div className="flex gap-2 pt-1">
-                          <Button
-                            variant="outline"
-                            onClick={() => handleAction(s.id, 'rejected')}
-                            disabled={actionLoading === s.id}
-                            className="flex-1 flex items-center gap-1.5 h-10 text-xs font-medium transition-all duration-200 hover:border-red-500/30 hover:text-red-400"
-                          >
-                            {actionLoading === s.id ? (
-                              <motion.div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full" animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }} />
-                            ) : (
-                              <><X size={14} /> Reject</>
-                            )}
-                          </Button>
-                          <Button
-                            onClick={() => handleAction(s.id, 'approved')}
-                            disabled={actionLoading === s.id}
-                            className="flex-1 flex items-center gap-1.5 h-10 text-xs font-medium bg-[#22C55E] hover:bg-[#16A34A] text-white disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]"
-                          >
-                            {actionLoading === s.id ? (
-                              <motion.div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }} />
-                            ) : (
-                              <><Check size={14} /> Approve & Pay</>
-                            )}
-                          </Button>
+                          {s.review_status === 'pending' ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleAction(s.id, 'rejected')}
+                                disabled={actionLoading === s.id}
+                                className="flex-1 flex items-center gap-1.5 h-10 text-xs font-medium transition-all duration-200 hover:border-red-500/30 hover:text-red-400"
+                              >
+                                {actionLoading === s.id ? (
+                                  <motion.div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full" animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }} />
+                                ) : (
+                                  <><X size={14} /> Reject</>
+                                )}
+                              </Button>
+                              <Button
+                                onClick={() => handleAction(s.id, 'approved')}
+                                disabled={actionLoading === s.id}
+                                className="flex-1 flex items-center gap-1.5 h-10 text-xs font-medium bg-[#22C55E] hover:bg-[#16A34A] text-white disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                              >
+                                {actionLoading === s.id ? (
+                                  <motion.div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }} />
+                                ) : (
+                                  <><Check size={14} /> Approve & Pay</>
+                                )}
+                              </Button>
+                            </>
+                          ) : s.review_status === 'approved' ? (
+                            <div className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg bg-[#22C55E]/5 border border-[#22C55E]/10 text-xs font-medium text-[#22C55E]">
+                              <Check size={14} /> Approved — ${((s.payout_amount_cents || 0) / 100).toFixed(2)} paid
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex items-center justify-center gap-2 h-10 rounded-lg bg-red-500/5 border border-red-500/10 text-xs font-medium text-red-400">
+                              <X size={14} /> Rejected
+                            </div>
+                          )}
                         </div>
 
                         {statusFilter === 'approved' && (
