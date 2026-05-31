@@ -83,9 +83,9 @@ export async function POST(request: Request) {
     }
 
     // Check for playlist name red flags
-    const titleMatch = html.match(/<title>([^<]+)<\/title>/);
-    const title = titleMatch ? titleMatch[1] : '';
-    if (/bot|fake|stream|buy|follow|click/i.test(title)) {
+    const pageTitleMatch = html.match(/<title>([^<]+)<\/title>/);
+    const pageTitle = pageTitleMatch ? pageTitleMatch[1] : title;
+    if (/bot|fake|stream|buy|follow|click/i.test(pageTitle)) {
       flags.push('Playlist name contains suspicious keywords commonly associated with stream manipulation.');
       botScore += 20;
     }
