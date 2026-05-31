@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { trackSubmitContent } from '@/lib/analytics-server';
+import { normalizeUrl, extractVideoId } from '@/lib/url-normalize';
 
 export async function POST(request: Request) {
   const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
@@ -18,15 +19,33 @@ export async function POST(request: Request) {
 
     const creatorId = session.id;
 
-    // Dedup: block duplicate submissions by same creator to same campaign with same URL
-    const [existing] = await sql`
-      SELECT id FROM submissions
-      WHERE campaign_id = ${campaignId}
-        AND creator_id = ${creatorId}
-        AND content_url = ${contentUrl}
-      LIMIT 1
-    `;
-    if (existing) {
+    // Normalize URL for storage (strips tracking params, resolves short URLs)
+    const normalizedUrl = normalizeUrl(contentUrl);
+    
+    // Extract unique video ID for cross-URL dedup
+    const videoId = extractVideoId(contentUrl, platform);
+    
+    // Dedup: block duplicate submissions using video ID + normalize URL
+    // Check by video ID first (catches short URL variants)
+    let dupCheck;
+    if (videoId.platform !== 'unknown') {
+      dupCheck = await sql`
+        SELECT id FROM submissions WHERE campaign_id = ${campaignId}
+          AND creator_id = ${creatorId}
+          AND content_url LIKE ${'%' + videoId.id + '%'}
+        LIMIT 1
+      `;
+    }
+    // Fallback: check normalized URL
+    if (!dupCheck || dupCheck.length === 0) {
+      dupCheck = await sql`
+        SELECT id FROM submissions WHERE campaign_id = ${campaignId}
+          AND creator_id = ${creatorId}
+          AND content_url = ${normalizedUrl}
+        LIMIT 1
+      `;
+    }
+    if (dupCheck && dupCheck.length > 0) {
       return NextResponse.json({ error: 'You already submitted this video to this campaign', duplicate: true }, { status: 409 });
     }
 
@@ -56,7 +75,7 @@ export async function POST(request: Request) {
 
     const result = await sql`
       INSERT INTO submissions (campaign_id, creator_id, content_url, platform, views_at_submit, views_verified)
-      VALUES (${campaignId}, ${creatorId}, ${contentUrl}, ${platform}, ${initialViews}, ${initialViews})
+      VALUES (${campaignId}, ${creatorId}, ${normalizedUrl}, ${platform}, ${initialViews}, ${initialViews})
       RETURNING *
     `;
 
