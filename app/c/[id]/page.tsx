@@ -79,7 +79,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const trackTitle = campaign.track_title;
   const cpm = campaign.cpm_rate_cents ? (campaign.cpm_rate_cents / 100).toFixed(2) : null;
   const imageUrl = absoluteUrl(campaign.cover_art_url);
-  const canonicalUrl = `https://selah.fm/c/${params.id}`;
+  // Use slug as canonical (not UUID) to prevent duplicate canonical issues
+  const canonicalSlug = campaign.slug || params.id;
+  const canonicalUrl = `https://selah.fm/c/${canonicalSlug}`;
 
   // Tiered title templates — balanced default
   const title = `Join this campaign for ${artistName}'s "${trackTitle}" — Selah.fm`;
@@ -197,7 +199,8 @@ export default async function CampaignPage({ params }: Props) {
   const artistName = campaign?.artist_name || 'an artist';
   const trackTitle = campaign?.track_title || '';
   const imageUrl = absoluteUrl(campaign?.cover_art_url);
-  const canonicalUrl = `https://selah.fm/c/${params.id}`;
+  const canonicalSlug = campaign?.slug || params.id;
+  const canonicalUrl = `https://selah.fm/c/${canonicalSlug}`;
   const createdAt = campaign?.created_at || new Date().toISOString();
   const cpmDollars = campaign?.cpm_rate_cents ? (campaign.cpm_rate_cents / 100).toFixed(2) : null;
   const budget = campaign?.total_budget_cents ? (campaign.total_budget_cents / 100).toFixed(0) : null;
