@@ -70,8 +70,17 @@ export async function GET(request: Request) {
     const user = data?.user;
     if (user) {
       try {
-        const rows = await sql`SELECT onboarded_at FROM users WHERE id = ${user.id}`;
+        const rows = await sql`SELECT onboarded_at, profile_image_url FROM users WHERE id = ${user.id}`;
         const existing = rows[0];
+        
+        // Save Google avatar if user doesn't have a profile image yet
+        const googleAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+        if (googleAvatar && (!existing || !existing.profile_image_url)) {
+          await sql`
+            UPDATE users SET profile_image_url = ${googleAvatar}, updated_at = NOW()
+            WHERE id = ${user.id}
+          `;
+        }
         
         // New user or never completed onboarding → onboarding flow
         if ((!existing || !existing.onboarded_at) && next === '/browse') {
