@@ -15,6 +15,7 @@
       { "schedule": "0 10 * * *", "path": "/api/cron/outreach-followup", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } },
       { "schedule": "0 22 * * *", "path": "/api/admin/outreach?action=reaudit_emails&limit=100", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } },
       { "schedule": "0 10 * * *", "path": "/api/cron/blog-publish", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } },
+      { "schedule": "0 8 * * *", "path": "/api/cron/blog-pipeline", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } },
       { "schedule": "0 9 * * *", "path": "/api/cron/welcome-sequence", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } },
       { "schedule": "0 11 * * *", "path": "/api/cron/reengage", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } }
     ]
