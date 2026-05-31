@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
+import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
@@ -45,16 +46,29 @@ export default function ReviewPage() {
   const [undoState, setUndoState] = useState<{ id: string; status: string; timer: any } | null>(null);
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
 
   const handleAction = async (id: string, status: string) => {
     setActionLoading(id);
-    mutate(
-      (currentData: any) => {
-        if (!Array.isArray(currentData)) return currentData;
-        return currentData.filter((s: Submission) => s.id !== id);
-      },
-      false
-    );
+    
+    // Start exit animation — shrink + slide out
+    setExitingIds(prev => new Set(prev).add(id));
+    
+    // Remove from data after animation completes
+    setTimeout(() => {
+      mutate(
+        (currentData: any) => {
+          if (!Array.isArray(currentData)) return currentData;
+          return currentData.filter((s: Submission) => s.id !== id);
+        },
+        false
+      );
+      setExitingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 400);
 
     try {
       const res = await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
@@ -63,10 +77,10 @@ export default function ReviewPage() {
         addToast(data.error || 'Failed to update', 'error');
         mutate();
         setActionLoading(null);
+        setExitingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
         return;
       }
       
-      // If approved, auto-reject duplicates (same URL, same campaign)
       if (status === 'approved' && data.content_url) {
         await fetch('/api/review/reject-duplicates', {
           method: 'POST', credentials: 'include',
@@ -80,6 +94,7 @@ export default function ReviewPage() {
     } catch {
       addToast('Failed to update — try again', 'error');
       mutate();
+      setExitingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
     }
     setActionLoading(null);
 
@@ -104,26 +119,44 @@ export default function ReviewPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="page-container">
-        {undoState && (
-          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-popover border rounded-xl shadow-xl px-5 py-3 flex items-center gap-3 animate-slide-up">
-            <span className="text-sm">{undoState.status === 'approved' ? 'Submission approved' : 'Submission rejected'}</span>
-            <button onClick={handleUndo} className="text-sm font-semibold text-accent-foreground hover:underline">Undo</button>
-            <span className="text-xs text-muted-foreground">(auto-dismisses)</span>
-          </div>
-        )}
+        <AnimatePresence>
+          {undoState && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1A1A2E] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl px-5 py-3.5 flex items-center gap-4"
+            >
+              <span className="text-sm font-medium text-white/80">
+                {undoState.status === 'approved' ? 'Submission approved' : 'Submission rejected'}
+              </span>
+              <span className="w-px h-4 bg-white/[0.08]" />
+              <button onClick={handleUndo} className="text-sm font-semibold text-[#818CF8] hover:text-[#A5B4FC] transition-colors">
+                Undo
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="section-title mb-1">Review</h1>
-            <p className="text-muted-foreground text-sm">{isLoading ? 'Loading...' : `${subs.length} ${statusFilter}`}</p>
+            <h1 className="text-2xl font-bold tracking-tight mb-1">Review</h1>
+            <p className="text-muted-foreground text-sm">
+              {isLoading ? 'Loading...' : `${subs.length} ${statusFilter} submission${subs.length !== 1 ? 's' : ''}`}
+            </p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex rounded-lg border overflow-hidden">
+            <div className="flex rounded-xl bg-white/[0.03] border border-white/[0.06] p-0.5 gap-0.5">
               {['pending', 'approved', 'rejected'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setStatusFilter(tab)}
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === tab ? 'bg-foreground text-background' : 'hover:bg-muted'}`}
+                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                    statusFilter === tab 
+                      ? 'bg-white text-black shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
@@ -152,116 +185,142 @@ export default function ReviewPage() {
           <EmptyState icon={<span className="text-4xl">✓</span>} title="All caught up" description="No submissions waiting for review. Check back when creators submit videos." />
         ) : (
           <div className="space-y-4">
-            {subs.map((s, i) => {
-              const cpm = s.cpm_rate_cents / 100;
-              const views = s.views_verified || 0;
-              let gross = (views / 1000) * cpm;
-              const maxPayout = (s.max_payout_per_submission_cents || 0) / 100;
-              if (maxPayout > 0 && gross > maxPayout) gross = maxPayout;
-              const net = gross;
-              const colors = platformColor(s.platform);
-              
-              return (
-                <Card key={s.id} className="animate-slide-up overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
-                  {/* ── Video Preview Area ── */}
-                  <div className="relative bg-black/40 border-b border-white/[0.04]">
-                    <VideoEmbed url={s.content_url} />
-                    
-                    {/* Always show Watch button as fallback/primary action */}
-                    <div className="p-6 flex flex-col items-center gap-3">
-                      <a
-                        href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`inline-flex items-center gap-2.5 px-6 py-4 rounded-2xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.97] ${colors.bg} ${colors.text} ${colors.border} border`}
-                      >
-                        <Play size={18} fill="currentColor" />
-                        Watch on {s.platform.charAt(0).toUpperCase() + s.platform.slice(1)}
-                        <ExternalLink size={14} />
-                      </a>
-                      <p className="text-[10px] text-muted-foreground/40">Opens in new tab — review the video before approving</p>
-                    </div>
-                  </div>
-
-                  <CardContent className="p-5 space-y-3">
-                    {/* ── Submission Info ── */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold">{s.creator_name || 'Creator'}</h3>
-                        <p className="text-muted-foreground text-sm">{s.track_title}</p>
+            <AnimatePresence mode="popLayout">
+              {subs.map((s, i) => {
+                const cpm = s.cpm_rate_cents / 100;
+                const views = s.views_verified || 0;
+                let gross = (views / 1000) * cpm;
+                const maxPayout = (s.max_payout_per_submission_cents || 0) / 100;
+                if (maxPayout > 0 && gross > maxPayout) gross = maxPayout;
+                const colors = platformColor(s.platform);
+                const isExiting = exitingIds.has(s.id);
+                
+                return (
+                  <motion.div
+                    key={s.id}
+                    layout
+                    initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                    animate={isExiting 
+                      ? { opacity: 0, y: -8, scale: 0.96, height: 0 }
+                      : { opacity: 1, y: 0, scale: 1, height: 'auto' }
+                    }
+                    exit={{ opacity: 0, y: -8, scale: 0.96, height: 0 }}
+                    transition={{ 
+                      duration: 0.35, 
+                      ease: [0.25, 0.1, 0.25, 1],
+                      layout: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }
+                    }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <Card className="overflow-hidden border-white/[0.06] transition-shadow duration-300 hover:shadow-[0_0_30px_rgba(67,56,202,0.06)]">
+                      {/* ── Video Preview Area ── */}
+                      <div className="relative bg-black/40 border-b border-white/[0.04]">
+                        <VideoEmbed url={s.content_url} />
+                        
+                        <div className="p-6 flex flex-col items-center gap-3">
+                          <a
+                            href={s.content_url?.startsWith('http') ? s.content_url : `https://${s.content_url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`inline-flex items-center gap-2.5 px-6 py-4 rounded-2xl font-bold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-[0.97] ${colors.bg} ${colors.text} ${colors.border} border`}
+                          >
+                            <Play size={18} fill="currentColor" />
+                            Watch on {s.platform.charAt(0).toUpperCase() + s.platform.slice(1)}
+                            <ExternalLink size={14} />
+                          </a>
+                          <p className="text-[10px] text-muted-foreground/40">Opens in new tab — review the video before approving</p>
+                        </div>
                       </div>
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Eye size={12} />
-                        {(s.views_verified || 0).toLocaleString()} views
-                      </Badge>
-                    </div>
 
-                    {/* ── Payout Summary ── */}
-                    <div className="rounded-xl bg-muted/30 p-3 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-[#22C55E]/10 flex items-center justify-center shrink-0">
-                        <DollarSign size={18} className="text-[#22C55E]" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold">${gross.toFixed(2)} payout</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {(s.views_verified || 0).toLocaleString()} views × ${(cpm * 1000).toFixed(0)}/1M = ${gross.toFixed(2)} (creator earns full amount)
-                        </p>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          try {
-                            const res = await fetch('/api/cron/update-views', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ submissionId: s.id }),
-                            });
-                            const data = await res.json();
-                            if (data.updated) {
-                              addToast(`Views updated: ${data.previous_views} → ${data.current_views}`, 'success');
-                              mutate();
-                            } else {
-                              addToast(`Could not fetch views (${s.platform})`, 'info');
-                            }
-                          } catch { addToast('Failed to refresh views', 'error'); }
-                        }}
-                        className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-medium bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-all"
-                        title="Refresh view count from platform"
-                      >
-                        <RefreshCw size={12} className="inline mr-1" />Refresh
-                      </button>
-                    </div>
+                      <CardContent className="p-5 space-y-3">
+                        {/* ── Submission Info ── */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-semibold text-sm">{s.creator_name || 'Creator'}</h3>
+                            <p className="text-muted-foreground text-xs">{s.track_title}</p>
+                          </div>
+                          <Badge variant="secondary" className="flex items-center gap-1 text-[10px]">
+                            <Eye size={11} />
+                            {(s.views_verified || 0).toLocaleString()} views
+                          </Badge>
+                        </div>
 
-                    {/* ── Actions ── */}
-                    <div className="flex gap-2 pt-1">
-                      <Button
-                        variant="outline"
-                        onClick={() => handleAction(s.id, 'rejected')}
-                        disabled={actionLoading === s.id}
-                        className="flex-1 flex items-center gap-1.5"
-                      >
-                        {actionLoading === s.id ? '...' : <><X size={14} /> Reject</>}
-                      </Button>
-                      <Button
-                        onClick={() => handleAction(s.id, 'approved')}
-                        disabled={actionLoading === s.id}
-                        className="flex-1 flex items-center gap-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-white disabled:opacity-50"
-                      >
-                        {actionLoading === s.id ? 'Processing...' : <><Check size={14} /> Approve & Pay</>}
-                      </Button>
-                    </div>
+                        {/* ── Payout Summary ── */}
+                        <div className="rounded-xl bg-muted/30 p-3 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-[#22C55E]/10 flex items-center justify-center shrink-0">
+                            <DollarSign size={18} className="text-[#22C55E]" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold">${gross.toFixed(2)} payout</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {(s.views_verified || 0).toLocaleString()} views × ${(cpm * 1000).toFixed(0)}/1M = ${gross.toFixed(2)} (creator earns full amount)
+                            </p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              try {
+                                const res = await fetch('/api/cron/update-views', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ submissionId: s.id }),
+                                });
+                                const data = await res.json();
+                                if (data.updated) {
+                                  addToast(`Views updated: ${data.previous_views} → ${data.current_views}`, 'success');
+                                  mutate();
+                                } else {
+                                  addToast(`Could not fetch views (${s.platform})`, 'info');
+                                }
+                              } catch { addToast('Failed to refresh views', 'error'); }
+                            }}
+                            className="shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-medium bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-white/[0.15] transition-all"
+                            title="Refresh view count from platform"
+                          >
+                            <RefreshCw size={12} className="inline mr-1" />Refresh
+                          </button>
+                        </div>
 
-                    {statusFilter === 'approved' && (
-                      <RatingPrompt
-                        submissionId={s.id}
-                        role="artist"
-                        targetName={s.creator_name || 'Creator'}
-                        onRated={() => {}}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+                        {/* ── Actions ── */}
+                        <div className="flex gap-2 pt-1">
+                          <Button
+                            variant="outline"
+                            onClick={() => handleAction(s.id, 'rejected')}
+                            disabled={actionLoading === s.id}
+                            className="flex-1 flex items-center gap-1.5 h-10 text-xs font-medium transition-all duration-200 hover:border-red-500/30 hover:text-red-400"
+                          >
+                            {actionLoading === s.id ? (
+                              <motion.div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full" animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }} />
+                            ) : (
+                              <><X size={14} /> Reject</>
+                            )}
+                          </Button>
+                          <Button
+                            onClick={() => handleAction(s.id, 'approved')}
+                            disabled={actionLoading === s.id}
+                            className="flex-1 flex items-center gap-1.5 h-10 text-xs font-medium bg-[#22C55E] hover:bg-[#16A34A] text-white disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+                          >
+                            {actionLoading === s.id ? (
+                              <motion.div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" animate={{ rotate: 360 }} transition={{ duration: 0.6, repeat: Infinity, ease: 'linear' }} />
+                            ) : (
+                              <><Check size={14} /> Approve & Pay</>
+                            )}
+                          </Button>
+                        </div>
+
+                        {statusFilter === 'approved' && (
+                          <RatingPrompt
+                            submissionId={s.id}
+                            role="artist"
+                            targetName={s.creator_name || 'Creator'}
+                            onRated={() => {}}
+                          />
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
         )}
       </main>
