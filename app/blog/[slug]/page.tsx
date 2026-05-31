@@ -63,13 +63,32 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23' }}>
-      {/* JSON-LD Schema */}
+      {/* JSON-LD Schema (Article + FAQ) */}
       {post.schema_markup && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: typeof post.schema_markup === 'string' ? post.schema_markup : JSON.stringify(post.schema_markup) }}
         />
       )}
+      {/* FAQ Schema (separate — Google prefers it standalone) */}
+      {post.faq_schema && (() => {
+        try {
+          const faq = typeof post.faq_schema === 'string' ? JSON.parse(post.faq_schema) : post.faq_schema;
+          if (Array.isArray(faq) && faq.length > 0) {
+            const faqLD = {
+              '@context': 'https://schema.org',
+              '@type': 'FAQPage',
+              mainEntity: faq.map((item: any) => ({
+                '@type': 'Question',
+                name: item.question,
+                acceptedAnswer: { '@type': 'Answer', text: item.answer },
+              })),
+            };
+            return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLD) }} />;
+          }
+        } catch {}
+        return null;
+      })()}
 
       <article className="max-w-3xl mx-auto px-4 py-16 md:py-24">
         <a href="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
