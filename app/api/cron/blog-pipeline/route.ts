@@ -85,13 +85,13 @@ export async function GET(request: Request) {
     `;
     for (const iv of pending) {
       try {
-        const qs = (iv.questions || []).map((q: any) => q.question).filter(Boolean);
-        if (!qs.length) continue;
+        const qObjs = (iv.questions || []).filter((q: any) => q.question).map((q: any) => ({ question: q.question }));
+        if (!qObjs.length) continue;
         
         const voiceChunks = await sql`SELECT chunk_text FROM voice_chunks ORDER BY created_at DESC LIMIT 5`;
         const examples = voiceChunks.map((r: any) => r.chunk_text).filter(Boolean);
         
-        const answers = await generateFounderAnswers(qs, examples);
+        const answers = await generateFounderAnswers(qObjs, examples);
         const transcript = answers.map((a: any) => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n');
         
         await sql`
