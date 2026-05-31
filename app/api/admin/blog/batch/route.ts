@@ -289,7 +289,7 @@ async function generateInterviews(batchId: string) {
   for (const q of questions) {
     const generatedQs = await generateInterviewQuestions(q.raw_question);
     const [interview] = await sql`
-      INSERT INTO batch_interviews (batch_id, question_id, generated_questions, status)
+      INSERT INTO batch_interviews (batch_id, source_question_id, generated_questions, status)
       VALUES (${batchId}, ${q.id}, ${JSON.stringify(generatedQs.map(q => ({ question: q })))}, 'pending')
       RETURNING *
     `;
@@ -676,7 +676,7 @@ async function getBatch(batchId: string) {
   const questions = await sql`SELECT * FROM batch_questions WHERE batch_id = ${batchId} ORDER BY created_at`;
   const interviews = await sql`
     SELECT bi.*, bq.raw_question, bq.source_url, bq.platform, bq.category
-    FROM batch_interviews bi JOIN batch_questions bq ON bq.id = bi.question_id
+    FROM batch_interviews bi JOIN batch_questions bq ON bq.id = bi.source_question_id
     WHERE bi.batch_id = ${batchId} ORDER BY bi.created_at
   `;
   const posts = await sql`

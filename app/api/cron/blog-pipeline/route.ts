@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       const qs = await sql`
         SELECT bq.id, bq.raw_question FROM batch_questions bq
         WHERE bq.batch_id = ${batchId}
-          AND NOT EXISTS (SELECT 1 FROM batch_interviews bi WHERE bi.question_id = bq.id)
+          AND NOT EXISTS (SELECT 1 FROM batch_interviews bi WHERE bi.source_question_id = bq.id)
         LIMIT 5
       `;
       for (const q of qs) {
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
           const generatedQs = await generateInterviewQuestions(q.raw_question);
           if (generatedQs?.length) {
             await sql`
-              INSERT INTO batch_interviews (batch_id, question_id, generated_questions, status)
+              INSERT INTO batch_interviews (batch_id, source_question_id, generated_questions, status)
               VALUES (${batchId}, ${q.id}, ${JSON.stringify(generatedQs.map(q => ({ question: q })))}, 'pending')
             `;
             results.interviews++;
