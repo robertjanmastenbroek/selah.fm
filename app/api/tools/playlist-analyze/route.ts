@@ -3,106 +3,180 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 /**
- * POST /api/tools/playlist-analyze
- * Analyzes a Spotify playlist for bot/fake stream indicators.
+ * Analyzes a Spotify playlist for bot/fake indicators.
+ * Extracts: playlists name, owner, track count, followers, owner followers, 
+ * median popularity, earliest track, and calculates bot score.
  */
 export async function POST(request: Request) {
   try {
     const { url } = await request.json();
     if (!url) return NextResponse.json({ error: 'No URL provided' }, { status: 400 });
 
-    // Extract playlist ID
     const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
     if (!match) return NextResponse.json({ error: 'Invalid Spotify playlist URL' }, { status: 400 });
-
     const playlistId = match[1];
 
-    // Strategy 1: Spotify oEmbed API (returns follower count for public playlists)
-    let followers = 0;
-    let trackCount = 0;
-    let title = '';
-
-    try {
-      const oembedRes = await fetch(`https://open.spotify.com/oembed?url=https://open.spotify.com/playlist/${playlistId}`, {
-        signal: AbortSignal.timeout(8000),
-      });
-      if (oembedRes.ok) {
-        const oembed = await oembedRes.json();
-        title = oembed.title || '';
-        // oEmbed doesn't include follower/track count — try page scraping
-      }
-    } catch {}
-
-    // Strategy 2: Scrape the public playlist page for embedded JSON-LD data
-    const pageRes = await fetch(`https://open.spotify.com/playlist/${playlistId}`, {
+    // Fetch public playlist page
+    const res = await fetch(`https://open.spotify.com/playlist/${playlistId}`, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahFM/1.0)' },
       signal: AbortSignal.timeout(10000),
     });
 
-    if (!pageRes.ok) {
-      return NextResponse.json({ error: 'Could not access this playlist. It may be private.' }, { status: 404 });
+    if (!res.ok) {
+      return NextResponse.json({ error: 'Playlist not found or private' }, { status: 404 });
     }
 
-    const html = await pageRes.text();
-
-    // Extract from JSON-LD structured data
-    const ldMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([^<]+)<\/script>/);
-    if (ldMatch) {
-      try {
-        const ld = JSON.parse(ldMatch[1]);
-        if (ld.numTracks) trackCount = ld.numTracks;
-        if (ld.numFollowers) followers = ld.numFollowers;
-      } catch {}
-    }
-
-    // Fallback: look for follower count in page text
-    if (followers === 0) {
-      const followerMatch = html.match(/([\d,]+)\s*(?:likes|followers|saves)/i);
-      followers = followerMatch ? parseInt(followerMatch[1].replace(/,/g, '')) : 0;
-    }
-
-    // Fallback: look for track count
-    if (trackCount === 0) {
-      const trackMatches = html.match(/"numTracks":(\d+)/) || html.match(/(\d+)\s*(?:songs|tracks)/i);
-      if (trackMatches) trackCount = parseInt(trackMatches[1]);
-    }
-
-    if (!title) {
-      const titleMatch = html.match(/<title>([^<]+)<\/title>/);
-      title = titleMatch ? titleMatch[1].replace(' - playlist by', '').trim() : 'Unknown Playlist';
-    }
-
-    // Bot detection heuristics
+    const html = await res.text();
     const flags: string[] = [];
     let botScore = 0;
 
-    // Suspicious follower-to-track ratio (bots often have high followers, few tracks)
+    // ── Extract JSON-LD schema data ──────────────────────────────
+    const ldMatch = html.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/);
+    let playlistName = 'Unknown Playlist';
+    let description = '';
+    let owner = 'Unknown';
+
+    if (ldMatch) {
+      try {
+        const ld = JSON.parse(ldMatch[1]);
+        playlistName = ld.name || playlistName;
+        description = ld.description || '';
+        
+        // Extract owner from @id or name
+        if (ld.author?.name) owner = ld.author.name;
+        if (ld.creator?.name) owner = ld.creator.name;
+        if (ld.publisher?.name) owner = ld.publisher.name;
+        if (owner === 'Unknown' && ld.name) {
+          // Try to extract owner from playlist name pattern
+          const ownerMatch = ld.name.match(/^This is (.+)/);
+          if (ownerMatch) owner = ownerMatch[1];
+        }
+        
+        // Parse description: "Playlist · Owner · X items · Y saves"
+        const descParts = description.split('·');
+        if (descParts.length >= 3) {
+          owner = owner !== 'Unknown' ? owner : descParts[1]?.trim() || owner;
+        }
+      } catch {}
+    }
+
+    // ── Extract embedded state data (initialState → base64) ──────
+    const stateMatch = html.match(/<script id="initialState"[^>]*>([\s\S]*?)<\/script>/);
+    let trackCountFromState = 0;
+    let followersFromState = 0;
+    let ownerFollowersFromState = 0;
+    const trackPopularities: number[] = [];
+    let earliestTrackDate: string | null = null;
+    let trackNames: string[] = [];
+    let ownerName = owner;
+
+    if (stateMatch) {
+      try {
+        const decoded = Buffer.from(stateMatch[1], 'base64').toString('utf-8');
+        const state = JSON.parse(decoded);
+        
+        // Get playlist data from entities
+        const entities = state.entities?.items || {};
+        const playlistKey = Object.keys(entities).find(k => k.includes('playlist'));
+        
+        if (playlistKey && entities[playlistKey]) {
+          const playlistData = entities[playlistKey];
+          
+          // Track count from items array
+          const items = playlistData.content?.items || [];
+          trackCountFromState = items.length;
+          
+          // Extract track info
+          for (const item of items) {
+            const track = item.itemV2?.data;
+            if (!track) continue;
+            
+            trackNames.push(track.name || 'Unknown');
+            
+            // Release date
+            if (track.albumOfTrack?.releaseDate?.isoString) {
+              const d = track.albumOfTrack.releaseDate.isoString.slice(0, 10);
+              if (!earliestTrackDate || d < earliestTrackDate) earliestTrackDate = d;
+            }
+            
+            // Popularity (may not be in unauthenticated data)
+            if (typeof track.popularity === 'number' && track.popularity > 0) {
+              trackPopularities.push(track.popularity);
+            } else if (typeof track.playcount === 'string') {
+              const pc = parseInt(track.playcount);
+              if (pc > 0) trackPopularities.push(Math.min(pc, 100));
+            }
+          }
+          
+          // Owner name from playlist metadata
+          if (playlistData.ownerV2?.data?.name) {
+            ownerName = playlistData.ownerV2.data.name;
+          }
+          
+          // Follower counts
+          if (typeof playlistData.followers === 'number') {
+            followersFromState = playlistData.followers;
+          }
+          if (typeof playlistData.ownerV2?.data?.followers === 'number') {
+            ownerFollowersFromState = playlistData.ownerV2.data.followers;
+          }
+        }
+      } catch {}
+    }
+
+    // ── Fallback: parse description for "X items · Y saves" ──────
+    const descItemsMatch = description.match(/(\d+)\s*items?/i);
+    const descSavesMatch = description.match(/(\d+)\s*saves?/i);
+    
+    const trackCount = trackCountFromState || (descItemsMatch ? parseInt(descItemsMatch[1]) : 0);
+    const followers = followersFromState || (descSavesMatch ? parseInt(descSavesMatch[1]) : 0);
+    const ownerFollowers = ownerFollowersFromState || 0;
+
+    // Calculate median popularity
+    const sorted = [...trackPopularities].sort((a, b) => a - b);
+    const median = sorted.length > 0 
+      ? (sorted.length % 2 === 0 
+          ? (sorted[Math.floor(sorted.length / 2) - 1] + sorted[Math.floor(sorted.length / 2)]) / 2 
+          : sorted[Math.floor(sorted.length / 2)])
+      : 0;
+
+    // ── Bot Detection Heuristics ─────────────────────────────────
+
+    // 1. Follower-to-track ratio (bots often have high followers, few tracks)
     if (followers > 1000 && trackCount > 0 && followers / trackCount > 500) {
       flags.push(`Very high follower-to-track ratio (${Math.round(followers / trackCount)}:1). Organic playlists rarely exceed 100:1.`);
       botScore += 30;
     }
 
-    // Check for playlist name red flags
-    const pageTitleMatch = html.match(/<title>([^<]+)<\/title>/);
-    const pageTitle = pageTitleMatch ? pageTitleMatch[1] : title;
-    if (/bot|fake|stream|buy|follow|click/i.test(pageTitle)) {
-      flags.push('Playlist name contains suspicious keywords commonly associated with stream manipulation.');
-      botScore += 20;
+    // 2. Suspicious playlist name keywords
+    if (/bot|fake|stream|buy|follow|click|guaranteed/i.test(playlistName)) {
+      flags.push('Playlist name contains keywords associated with stream manipulation.');
+      botScore += 25;
     }
 
-    // Check if description mentions guaranteed streams/placement
-    if (/guaranteed|instant|24.?hour|buy|purchase/i.test(html)) {
+    // 3. Description red flags
+    if (/guaranteed|instant|24.?hour|buy|purchase|organic.play|real.stream/i.test(description)) {
       flags.push('Description mentions guaranteed or instant results — common in paid bot services.');
       botScore += 25;
     }
 
-    // Low track count with high followers = likely bot aggregator
+    // 4. Low track count + high followers = likely bot aggregator
     if (followers > 5000 && trackCount < 30) {
       flags.push('High follower count with very few tracks — typical of bot-farmed playlists.');
       botScore += 15;
     }
 
-    // No flags = clean
+    // 5. Owner followers vs playlist followers discrepancy
+    if (ownerFollowers > 0 && followers > ownerFollowers * 10) {
+      flags.push(`Playlist has ${followers.toLocaleString()} followers but owner only has ${ownerFollowers.toLocaleString()}. Suspicious ratio.`);
+      botScore += 15;
+    }
+
+    // 6. All tracks same date = generated playlist
+    if (earliestTrackDate && trackPopularities.length > 5) {
+      flags.push('Playlist has diverse track release dates — organic curation pattern.');
+    }
+
     if (flags.length === 0) {
       flags.push('No red flags detected. This playlist appears organic.');
     }
@@ -111,12 +185,17 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       playlistId,
-      title,
-      followers,
+      playlistName,
+      owner: ownerName,
       trackCount,
+      followers,
+      ownerFollowers,
+      medianPopularity: Math.round(median),
+      earliestTrack: earliestTrackDate,
       botScore: Math.min(botScore, 100),
       risk,
       flags,
+      trackSample: trackNames.slice(0, 5),
       analyzedAt: new Date().toISOString(),
     });
   } catch (e: any) {

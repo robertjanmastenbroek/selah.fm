@@ -80,12 +80,52 @@ export default function PlaylistAnalyzerPage() {
               </p>
             </div>
 
+            {/* Playlist Info */}
+            <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Playlist Name</span>
+                <span className="font-medium">{result.playlistName || 'Unknown'}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Owner</span>
+                <span className="font-medium">{result.owner || 'Unknown'}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Track Count</span>
+                <span className="font-medium">{result.trackCount?.toLocaleString() || '0'}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Playlist Followers</span>
+                <span className="font-medium">{result.followers?.toLocaleString() || '0'}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Owner Followers</span>
+                <span className="font-medium">{result.ownerFollowers?.toLocaleString() || '0'}</span>
+              </div>
+              {result.medianPopularity > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Median Popularity</span>
+                  <span className="font-medium">{result.medianPopularity}</span>
+                </div>
+              )}
+              {result.earliestTrack && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Earliest Track</span>
+                  <span className="font-medium">{result.earliestTrack}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Scan Time</span>
+                <span className="font-mono text-[10px]">{new Date(result.analyzedAt).toLocaleString()}</span>
+              </div>
+            </div>
+
             {/* Metrics */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: 'Followers', value: result.followers?.toLocaleString() || '?', icon: Users },
-                { label: 'Tracks', value: result.trackCount || '?', icon: Music },
                 { label: 'Bot Score', value: `${result.botScore || 0}/100`, icon: BarChart3 },
+                { label: 'Tracks', value: result.trackCount || '0', icon: Music },
+                { label: 'Followers', value: result.followers?.toLocaleString() || '0', icon: Users },
               ].map(m => (
                 <div key={m.label} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
                   <m.icon size={16} className="mx-auto mb-1 text-muted-foreground/40" />
