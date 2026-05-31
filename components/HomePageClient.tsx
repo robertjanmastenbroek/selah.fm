@@ -28,13 +28,10 @@ export default function RootPage() {
       setStats(d);
       setTotalActive(d.activeCampaigns || 0);
     }).catch(() => {});
-    // Fetch featured campaigns (second fetch overrides totalActive with the campaign API total)
+    // Fetch featured campaigns for the grid (stats API handles the count)
     fetch('/api/campaigns?limit=6&sort=recent').then(r => r.json()).then(d => {
       if (Array.isArray(d.campaigns) && d.campaigns.length > 0) {
         setFeaturedCampaigns(d.campaigns);
-      }
-      if (typeof d.total === 'number' && d.total > 0) {
-        setTotalActive(d.total);
       }
     }).catch(() => {});
   }, []);
