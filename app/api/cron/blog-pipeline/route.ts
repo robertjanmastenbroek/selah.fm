@@ -146,6 +146,58 @@ export async function GET(request: Request) {
       }
     }
 
+    // ── Step 6: Internal linking ─────────────────────────
+    if (results.posts > 0) {
+      try {
+        const [latest] = await sql`SELECT id, title, tags FROM blog_posts ORDER BY created_at DESC LIMIT 1`;
+        if (latest) {
+          const tags = latest.tags || [];
+          const titleWords = latest.title.toLowerCase().split(/\s+/).filter((w: string) => w.length > 4);
+          
+          // Find related posts by tag or title word overlap
+          const related = await sql`
+            SELECT id, title, slug FROM blog_posts
+            WHERE id != ${latest.id} AND status = 'published'
+            ORDER BY created_at DESC LIMIT 20
+          `;
+          
+          const scored = related.map((p: any) => {
+            let score = 0;
+            const pTitle = (p.title || '').toLowerCase();
+            for (const w of titleWords) { if (pTitle.includes(w)) score++; }
+            if (tags.length > 0) {
+              const pTags = p.tags || [];
+              for (const t of tags) { if (pTags.includes(t)) score += 2; }
+            }
+            return { ...p, score };
+          }).filter((p: any) => p.score > 0).sort((a: any, b: any) => b.score - a.score).slice(0, 5);
+          
+          if (scored.length > 0) {
+            const links = scored.map((p: any) => ({
+              title: p.title,
+              url: `/blog/${p.slug}`,
+            }));
+            
+            await sql`
+              UPDATE blog_posts SET internal_links = ${JSON.stringify(links)} WHERE id = ${latest.id}
+            `;
+            
+            // Also back-link: add this post to related posts' internal links
+            for (const p of scored.slice(0, 3)) {
+              const [existing] = await sql`SELECT internal_links FROM blog_posts WHERE id = ${p.id}`;
+              const existingLinks = existing?.internal_links || [];
+              const alreadyLinked = Array.isArray(existingLinks) && existingLinks.some((l: any) => l.url === `/blog/${latest.slug}`);
+              if (!alreadyLinked) {
+                const newLinks = [{ title: latest.title, url: `/blog/${latest.slug}` }, ...(Array.isArray(existingLinks) ? existingLinks : []).slice(0, 4)];
+                await sql`UPDATE blog_posts SET internal_links = ${JSON.stringify(newLinks)} WHERE id = ${p.id}`;
+              }
+            }
+            log.push(`Internal links: ${scored.length} related posts linked`);
+          }
+        }
+      } catch (e: any) { log.push(`Link err: ${e.message}`); }
+    }
+
     log.push(`Done: ${results.sourced}Q ${results.interviews}I ${results.answered}A ${results.posts}P ${results.scheduled}S`);
     return NextResponse.json({ results, log });
   } catch (e: any) {

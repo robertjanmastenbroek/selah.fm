@@ -84,9 +84,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Data-driven tools (high-value, unique data, interactive)
   const toolPages: MetadataRoute.Sitemap = [
-    { url: `${baseUrl}/tools/cpm-calculator`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
-    { url: `${baseUrl}/tools/creator-earnings`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    { url: `${baseUrl}/tools/cpm-calculator`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
+    { url: `${baseUrl}/tools/creator-earnings`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
     { url: `${baseUrl}/tools/promotion-budget`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    { url: `${baseUrl}/tools/playlist-analyzer`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
   ];
 
   return [...staticPages, ...toolPages, ...blogPages, ...campaignPages, ...artistPages, ...creatorPages];

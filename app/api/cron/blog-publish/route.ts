@@ -32,6 +32,22 @@ export async function GET(request: Request) {
       WHERE id = ${nextPost.id}
     `;
 
+    // ── Auto-post to social media (fire-and-forget) ──────────
+    const postUrl = `https://selah.fm/blog/${nextPost.slug}`;
+    const tweetText = `${nextPost.title}\n\n${postUrl}\n\n#musicpromotion #indiemusic #musicians`;
+    
+    // X/Twitter
+    if (process.env.X_BEARER_TOKEN) {
+      fetch('https://api.x.com/2/tweets', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.X_BEARER_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: tweetText.slice(0, 280) }),
+      }).catch(() => {});
+    }
+
     console.log(`Blog post published: "${nextPost.title}" (${nextPost.slug})`);
 
     return NextResponse.json({
