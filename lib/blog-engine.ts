@@ -13,7 +13,7 @@ interface DeepSeekMessage {
   content: string;
 }
 
-async function chat(messages: DeepSeekMessage[], options: { temperature?: number; max_tokens?: number } = {}) {
+async function chat(messages: DeepSeekMessage[], options: { temperature?: number; max_tokens?: number; frequency_penalty?: number; presence_penalty?: number; top_p?: number } = {}) {
   if (!DEEPSEEK_API_KEY) throw new Error('DEEPSEEK_API_KEY not configured');
 
   const res = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
@@ -27,6 +27,9 @@ async function chat(messages: DeepSeekMessage[], options: { temperature?: number
       messages,
       temperature: options.temperature ?? 0.7,
       max_tokens: options.max_tokens ?? 2000,
+      frequency_penalty: options.frequency_penalty ?? 0,
+      presence_penalty: options.presence_penalty ?? 0,
+      top_p: options.top_p ?? 1,
     }),
   });
 
@@ -97,6 +100,7 @@ VOICE GUIDELINES:
 - Use personal anecdotes naturally ("When I had my record deal..." or "After losing everything...")
 - Avoid corporate jargon — you're a barefoot guy on a beach, not a Silicon Valley CEO
 - Include concrete examples, specific numbers, and actionable steps from your own experience
+- EVERY section must include at least ONE of: a named place (Los Cristianos, Tenerife), a real date ("in 2019", "last summer"), a specific amount ("€6M", "$25K per weekend"), or a named person/event ("the Mercadona outside the bus station")
 
 ANTI-AI-DETECTION GUARDRAILS (CRITICAL — these override everything above):
 Your writing MUST pass AI detection. AI detectors measure perplexity (unpredictable word choice = human), burstiness (sentence length variation = human), and structural fingerprints. Break all AI patterns.
@@ -289,11 +293,54 @@ export async function generateArticle(
       ? `Write a blog post targeting the keyword "${keyword}". This should answer the question someone typing "${keyword}" into Google would ask. Use the interview transcript as source material but make the post a definitive answer to that query.`
       : 'Write the blog post based on this interview.'
     },
-  ], { temperature: 0.7, max_tokens: 4000 });
+  ], { 
+    temperature: 0.85, 
+    max_tokens: 4000, 
+    frequency_penalty: 0.3,
+    presence_penalty: 0.2,
+    top_p: 0.92,
+  });
 
   try {
     const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    if (jsonMatch) {
+      const raw = JSON.parse(jsonMatch[0]);
+      
+      // ── Multi-Pass Self-Critique ──────────────────────────────
+      // Have the AI evaluate its own output for detection patterns and rewrite
+      try {
+        const critiquePrompt = `You are an AI detection expert. Analyze this blog post content for machine-written patterns and rewrite ANY sections that would trigger AI detectors.
+
+AI DETECTION CHECKLIST — rewrite EVERY section that fails these:
+1. Sentence length variation: Are there groups of 3+ sentences of similar length? Rewrite them to vary from 3 words to 30 words.
+2. Predictable transitions: "Furthermore", "Additionally", "Moreover" → replace with "And", "So", "But", "Plus", "What's more", or fragment sentences
+3. Uniform paragraph structure: Same number of sentences per paragraph → break up with 1-sentence paragraphs and longer flowing ones
+4. Lack of personal specifics: "I learned this the hard way" → add a REAL specific detail (place, name, amount, date)
+5. Emotional flatness: Does the tone stay the same? → inject vulnerability, frustration, excitement shifts
+6. Over-structured lists: Are bullet points too neat? → make one item longer, add an informal aside
+
+Rewrite the content_html field ONLY. Keep the JSON structure. Return the full JSON object with content_html rewritten to pass ALL checks. Do NOT change any other fields.
+
+Original JSON: ${JSON.stringify(raw).slice(0, 8000)}`;
+
+        const critiqueRes = await chat([
+          { role: 'system', content: 'You rewrite blog posts to pass AI detection. Return ONLY valid JSON with the content_html field rewritten. Never change other fields.' },
+          { role: 'user', content: critiquePrompt },
+        ], { temperature: 0.9, max_tokens: 4000, frequency_penalty: 0.4, presence_penalty: 0.3 });
+        
+        const critiqueJson = critiqueRes.match(/\{[\s\S]*\}/);
+        if (critiqueJson) {
+          const improved = JSON.parse(critiqueJson[0]);
+          if (improved.content_html && improved.content_html.length > 500) {
+            raw.content_html = improved.content_html;
+          }
+        }
+      } catch {
+        // Self-critique is optional — fall through to original
+      }
+      
+      return raw;
+    }
     throw new Error('No JSON found in response');
   } catch {
     // Fallback: extract what we can
@@ -340,7 +387,12 @@ export async function generateFounderAnswers(
   const response = await chat([
     { role: 'system', content: AUTO_ANSWER_PROMPT + voiceContext },
     { role: 'user', content: `Answer these questions as Robert-Jan:\n\n${questionsText}` },
-  ], { temperature: 0.9, max_tokens: 2000 });
+  ], { 
+    temperature: 0.9, 
+    max_tokens: 2000,
+    frequency_penalty: 0.25,
+    presence_penalty: 0.15,
+  });
 
   try {
     const jsonMatch = response.match(/\[[\s\S]*\]/);
