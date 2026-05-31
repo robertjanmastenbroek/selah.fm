@@ -19,6 +19,7 @@ interface Submission {
   id: string; creator_name: string; track_title: string; platform: string;
   content_url: string; views_verified: number; cpm_rate_cents: number;
   max_payout_per_submission_cents: number; review_status: string; campaign_id: string;
+  payout_amount_cents?: number; payout_status?: string;
 }
 
 function platformColor(platform: string) {
