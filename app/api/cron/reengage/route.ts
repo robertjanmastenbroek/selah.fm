@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     const candidates = await sql`
       SELECT u.id, u.email, u.display_name, u.created_at
       FROM users u
-      WHERE u.email != 'info@selah.fm'
+      WHERE u.email NOT IN ('info@selah.fm', 'motomotosings@gmail.com', 'mastenbroekrobertjan@gmail.com')
         AND u.email IS NOT NULL
         AND u.created_at < NOW() - INTERVAL '3 days'
         AND (u.onboarded_at IS NULL)
