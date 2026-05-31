@@ -47,33 +47,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ message: `No crons scheduled for hour ${hour} UTC` });
   }
 
-  const results: Record<string, any> = {};
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm';
 
-  for (const job of queue) {
+  // Fire ALL sub-cron jobs in parallel, non-blocking
+  const promises = queue.map(async (job) => {
     try {
       const url = `${baseUrl}${job.path}${job.path.includes('?') ? '&' : '?'}secret=${encodeURIComponent(secret)}`;
-      const res = await fetch(url, {
+      // Fire and forget — don't wait for the response body
+      await fetch(url, {
         headers: { 'X-Cron-Secret': secret },
-        signal: AbortSignal.timeout(120000),
+        signal: AbortSignal.timeout(5000), // Just need to connect, not wait for completion
       });
-      
-      let body: any = {};
-      try { body = await res.json(); } catch {}
-      
-      results[job.name] = {
-        status: res.status,
-        ok: res.ok,
-        summary: body.results || body.message || body.error || 'ok',
-      };
+      return { name: job.name, status: 'dispatched' };
     } catch (e: any) {
-      results[job.name] = { error: e.message };
+      return { name: job.name, status: 'timeout-ok', note: e.message.slice(0, 60) };
     }
-  }
+  });
+
+  const dispatched = await Promise.all(promises);
 
   return NextResponse.json({ 
     hour_utc: hour, 
-    dispatched: queue.length,
-    results 
+    dispatched: dispatched.length,
+    jobs: dispatched 
   });
 }
