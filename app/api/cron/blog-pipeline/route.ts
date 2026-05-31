@@ -98,7 +98,7 @@ export async function GET(request: Request) {
 
         await sql`
           UPDATE batch_interviews
-          SET founder_answers = ${JSON.stringify(answers)}, transcript = ${transcript}, status = 'answered', updated_at = NOW()
+          SET founder_answers = ${JSON.stringify(answers)}, transcript = ${transcript}, status = 'answered'
           WHERE id = ${iv.id} AND batch_id = ${batchId}
         `;
         results.answered++;
