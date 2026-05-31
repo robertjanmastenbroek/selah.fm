@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     
     // Verify the submission exists and get campaign ownership
     const subs = await sql`
-      SELECT s.id, s.campaign_id, s.creator_id, s.views_verified, s.payout_amount_cents,
+      SELECT s.id, s.campaign_id, s.creator_id, s.content_url, s.views_verified, s.payout_amount_cents,
              c.artist_id, c.cpm_rate_cents, c.max_payout_per_submission_cents, c.track_title, c.budget_remaining_cents, c.status as campaign_status
       FROM submissions s
       JOIN campaigns c ON c.id = s.campaign_id

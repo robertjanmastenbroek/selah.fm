@@ -18,6 +18,18 @@ export async function POST(request: Request) {
 
     const creatorId = session.id;
 
+    // Dedup: block duplicate submissions by same creator to same campaign with same URL
+    const [existing] = await sql`
+      SELECT id FROM submissions
+      WHERE campaign_id = ${campaignId}
+        AND creator_id = ${creatorId}
+        AND content_url = ${contentUrl}
+      LIMIT 1
+    `;
+    if (existing) {
+      return NextResponse.json({ error: 'You already submitted this video to this campaign', duplicate: true }, { status: 409 });
+    }
+
     // Try to get initial view count
     let initialViews = 0;
     try {

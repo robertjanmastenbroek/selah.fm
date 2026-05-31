@@ -44,7 +44,10 @@ export default function ReviewPage() {
 
   const [undoState, setUndoState] = useState<{ id: string; status: string; timer: any } | null>(null);
 
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
   const handleAction = async (id: string, status: string) => {
+    setActionLoading(id);
     mutate(
       (currentData: any) => {
         if (!Array.isArray(currentData)) return currentData;
@@ -54,14 +57,31 @@ export default function ReviewPage() {
     );
 
     try {
-      await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
+      const res = await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
+      const data = await res.json();
+      if (!res.ok) {
+        addToast(data.error || 'Failed to update', 'error');
+        mutate();
+        setActionLoading(null);
+        return;
+      }
+      
+      // If approved, auto-reject duplicates (same URL, same campaign)
+      if (status === 'approved' && data.content_url) {
+        await fetch('/api/review/reject-duplicates', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ submissionId: id, content_url: data.content_url, campaign_id: data.campaign_id }),
+        }).catch(() => {});
+      }
+      
       addToast(status === 'approved' ? 'Submission approved — creator will be paid' : 'Submission rejected', status === 'approved' ? 'success' : 'info');
       mutate();
     } catch {
       addToast('Failed to update — try again', 'error');
       mutate();
-      return;
     }
+    setActionLoading(null);
 
     const timer = setTimeout(() => setUndoState(null), 4000);
     setUndoState({ id, status, timer });
@@ -216,15 +236,17 @@ export default function ReviewPage() {
                       <Button
                         variant="outline"
                         onClick={() => handleAction(s.id, 'rejected')}
+                        disabled={actionLoading === s.id}
                         className="flex-1 flex items-center gap-1.5"
                       >
-                        <X size={14} /> Reject
+                        {actionLoading === s.id ? '...' : <><X size={14} /> Reject</>}
                       </Button>
                       <Button
                         onClick={() => handleAction(s.id, 'approved')}
-                        className="flex-1 flex items-center gap-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-white"
+                        disabled={actionLoading === s.id}
+                        className="flex-1 flex items-center gap-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-white disabled:opacity-50"
                       >
-                        <Check size={14} /> Approve & Pay
+                        {actionLoading === s.id ? 'Processing...' : <><Check size={14} /> Approve & Pay</>}
                       </Button>
                     </div>
 
