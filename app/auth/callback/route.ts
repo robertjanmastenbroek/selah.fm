@@ -36,8 +36,11 @@ export async function GET(request: Request) {
   }
 
   try {
-    const redirectUrl = new URL(next, origin);
-    const response = NextResponse.redirect(redirectUrl, 302);
+    // Determine final redirect URL after auth exchange + new-user check
+    let finalUrl = new URL(next, origin);
+
+    // Collect auth cookies into array since we don't have response object yet
+    const pendingCookies: { name: string; value: string; options: Record<string, any> }[] = [];
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,7 +52,7 @@ export async function GET(request: Request) {
           },
           setAll(cookiesToSet: { name: string; value: string; options: Record<string, any> }[]) {
             cookiesToSet.forEach(({ name, value, options }) => {
-              response.cookies.set(name, value, options);
+              pendingCookies.push({ name, value, options });
             });
           },
         },
@@ -71,19 +74,21 @@ export async function GET(request: Request) {
         const existing = rows[0];
         
         // New user or never completed onboarding → onboarding flow
-        if (!existing || !existing.onboarded_at) {
-          const onboardUrl = new URL('/onboarding', origin);
-          // Don't overwrite explicit next param (e.g. from campaign links)
-          if (next === '/browse') {
-            return NextResponse.redirect(onboardUrl, 302);
-          }
+        if ((!existing || !existing.onboarded_at) && next === '/browse') {
+          finalUrl = new URL('/onboarding', origin);
         }
       } catch {
         // DB query failed — still redirect to onboarding to be safe
         if (next === '/browse') {
-          return NextResponse.redirect(new URL('/onboarding', origin), 302);
+          finalUrl = new URL('/onboarding', origin);
         }
       }
+    }
+
+    // Create a SINGLE redirect response with both cookies and correct URL
+    const response = NextResponse.redirect(finalUrl, 302);
+    for (const c of pendingCookies) {
+      response.cookies.set(c.name, c.value, c.options);
     }
 
     return response;
