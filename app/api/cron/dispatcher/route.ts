@@ -1,74 +1,57 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300;
+export const maxDuration = 600;
 
 /**
- * Unified cron dispatcher — one cron entry to rule them all.
- * Railway does not support interval or comma-separated cron hours.
- * endpoint dispatches to the correct worker based on the current UTC hour.
- * 
- * Runs every hour at :00. Routes based on hour:
+ * Cron dispatcher — single Railway cron entry at 0 * * * * routes to all workers.
+ * Railway does not support interval or comma-separated cron hours, and limits entries.
+ * This dispatcher solves both: 1 entry → 10 workers.
  */
-const SCHEDULE: any = {
-  0:  [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'creator-outreach', path: '/api/cron/creator-outreach' }],
-  3:  [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'email-outreach', path: '/api/cron/email-outreach' }],
-  5:  [{ name: 'creator-discovery', path: '/api/cron/creator-discovery' }],
-  6:  [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'creator-outreach', path: '/api/cron/creator-outreach' }],
-  8:  [{ name: 'blog-pipeline', path: '/api/cron/blog-pipeline' }],
-  9:  [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'email-outreach', path: '/api/cron/email-outreach' }, { name: 'welcome-sequence', path: '/api/cron/welcome-sequence' }],
-  10: [{ name: 'outreach-followup', path: '/api/cron/outreach-followup' }, { name: 'blog-publish', path: '/api/cron/blog-publish' }],
-  11: [{ name: 'creator-discovery', path: '/api/cron/creator-discovery' }, { name: 'reengage', path: '/api/cron/reengage' }],
-  12: [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'creator-outreach', path: '/api/cron/creator-outreach' }],
-  15: [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'email-outreach', path: '/api/cron/email-outreach' }],
-  17: [{ name: 'creator-discovery', path: '/api/cron/creator-discovery' }],
-  18: [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'creator-outreach', path: '/api/cron/creator-outreach' }],
-  21: [{ name: 'pipeline', path: '/api/cron/outreach-pipeline?limit=50&audit=80&campaigns=30' }, { name: 'email-outreach', path: '/api/cron/email-outreach' }],
-  22: [{ name: 'reaudit-emails', path: '/api/admin/outreach?action=reaudit_emails&limit=100' }],
-  23: [{ name: 'creator-discovery', path: '/api/cron/creator-discovery' }],
+
+const WORKERS: Record<number, { path: string; params?: string }[]> = {
+  0:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }, { path: '/api/cron/creator-outreach' }],
+  3:  [{ path: '/api/cron/email-outreach' }],
+  5:  [{ path: '/api/cron/creator-discovery' }],
+  6:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
+  8:  [{ path: '/api/cron/blog-pipeline' }],
+  9:  [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/welcome-sequence' }],
+  10: [{ path: '/api/cron/blog-publish' }, { path: '/api/cron/outreach-followup' }],
+  11: [{ path: '/api/cron/creator-outreach' }, { path: '/api/cron/reengage' }],
+  12: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
+  15: [{ path: '/api/cron/email-outreach' }],
+  17: [{ path: '/api/cron/creator-discovery' }],
+  18: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
+  21: [{ path: '/api/cron/email-outreach' }],
+  22: [{ path: '/api/admin/outreach', params: 'action=reaudit_emails&limit=100' }],
+  23: [{ path: '/api/cron/creator-outreach' }],
 };
 
-/**
- * GET /api/cron/dispatcher
- * Dispatches to the correct cron worker(s) for the current UTC hour.
- */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get('secret') || request.headers.get('X-Cron-Secret') || '';
-  const hour = new Date().getUTCHours();
-
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && secret !== cronSecret) {
+  if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Invalid secret' }, { status: 401 });
   }
 
-  const queue = SCHEDULE[hour];
-  if (!queue || queue.length === 0) {
-    return NextResponse.json({ message: `No crons scheduled for hour ${hour} UTC` });
+  const utcHour = new Date().getUTCHours();
+  const workers = WORKERS[utcHour] || [];
+  const results: { path: string; status: number; response?: any; error?: string }[] = [];
+
+  const origin = 'https://selah.fm';
+
+  for (const w of workers) {
+    const url = w.params 
+      ? `${origin}${w.path}?${w.params}&secret=${secret}`
+      : `${origin}${w.path}?secret=${secret}`;
+    
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(300000) });
+      results.push({ path: w.path, status: res.status, response: await res.json().catch(() => null) });
+    } catch (e: any) {
+      results.push({ path: w.path, status: 500, error: e.message });
+    }
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm';
-
-  // Fire ALL sub-cron jobs in parallel, non-blocking
-  const promises = queue.map(async (job: { name: string; path: string }) => {
-    try {
-      const url = `${baseUrl}${job.path}${job.path.includes('?') ? '&' : '?'}secret=${encodeURIComponent(secret)}`;
-      // Fire and forget — don't wait for the response body
-      await fetch(url, {
-        headers: { 'X-Cron-Secret': secret },
-        signal: AbortSignal.timeout(5000), // Just need to connect, not wait for completion
-      });
-      return { name: job.name, status: 'dispatched' };
-    } catch (e: any) {
-      return { name: job.name, status: 'timeout-ok', note: e.message.slice(0, 60) };
-    }
-  });
-
-  const dispatched = await Promise.all(promises);
-
-  return NextResponse.json({ 
-    hour_utc: hour, 
-    dispatched: dispatched.length,
-    jobs: dispatched 
-  });
+  return NextResponse.json({ utcHour, workers: workers.length, results });
 }
