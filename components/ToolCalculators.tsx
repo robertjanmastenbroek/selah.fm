@@ -9,9 +9,9 @@ export function CpmCalculator({ avgCpm }: { avgCpm: number }) {
   const [mode, setMode] = useState<'budget'|'views'>('budget');
   const [desiredViews, setDesiredViews] = useState(10000);
 
-  const cpmCents = Math.round(avgCpm * 100);
-  const estimatedViews = cpmCents > 0 ? Math.round((budget * 100) / cpmCents) : 0;
-  const estimatedBudget = cpmCents > 0 ? ((desiredViews * cpmCents) / 100) : 0;
+  // CPM is $ per 1,000 views. budget / CPM * 1,000 = views
+  const estimatedViews = avgCpm > 0 ? Math.round((budget / avgCpm) * 1000) : 0;
+  const estimatedBudget = avgCpm > 0 ? (desiredViews / 1000) * avgCpm : 0;
 
   const platformRates = [
     { platform: 'TikTok Creator Fund', cpm: 0.02, note: '~$20–40 per 1M views' },
@@ -107,7 +107,7 @@ export function CreatorEarningsEstimator({ avgCpm }: { avgCpm: number }) {
   const totalViews = viewsPerVideo * videosPerMonth;
   const selahEarnings = (totalViews / 1000) * avgCpm;
   const tiktokEarnings = (totalViews / 1000) * 0.03;
-  const youtubeEarnings = (totalViews / 1000) * 2.50;
+  const shortsEarnings = (totalViews / 1000) * 0.05;
 
   return (
     <div className="space-y-8">
@@ -140,7 +140,7 @@ export function CreatorEarningsEstimator({ avgCpm }: { avgCpm: number }) {
               <p className="text-[10px] text-muted-foreground mt-0.5">Selah.fm</p>
             </div>
             <div className="p-3 rounded-lg bg-white/[0.04]">
-              <p className="text-lg font-bold text-foreground/70">${youtubeEarnings.toFixed(2)}</p>
+              <p className="text-lg font-bold text-foreground/70">${shortsEarnings.toFixed(2)}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">YouTube</p>
             </div>
             <div className="p-3 rounded-lg bg-white/[0.04]">
@@ -149,8 +149,8 @@ export function CreatorEarningsEstimator({ avgCpm }: { avgCpm: number }) {
             </div>
           </div>
           <p className="text-[10px] text-muted-foreground mt-2">
-            {selahEarnings > youtubeEarnings ? (
-              <>Selah.fm pays <span className="text-primary font-medium">{((selahEarnings / Math.max(youtubeEarnings, 0.01)) - 1).toFixed(0)}x more</span> than YouTube for the same views</>
+            {selahEarnings > shortsEarnings ? (
+              <>Selah.fm pays <span className="text-primary font-medium">{((selahEarnings / Math.max(shortsEarnings, 0.01)) - 1).toFixed(0)}x more</span> than YouTube Shorts for the same views</>
             ) : (
               <>Results vary by campaign CPM. Higher-quality content can earn higher rates.</>
             )}
@@ -166,16 +166,17 @@ export function CreatorEarningsEstimator({ avgCpm }: { avgCpm: number }) {
 export function PromotionBudgetPlanner({ avgCpm }: { avgCpm: number }) {
   const [budget, setBudget] = useState(50);
 
-  const cpmCents = Math.round(avgCpm * 100);
-  const estimatedViews = cpmCents > 0 ? Math.round((budget * 100) / cpmCents) : 0;
+  // CPM is $ per 1,000 views. budget / CPM * 1,000 = views
+  const estimatedViews = avgCpm > 0 ? Math.round((budget / avgCpm) * 1000) : 0;
 
+  const calcViews = (b: number) => avgCpm > 0 ? Math.round((b / avgCpm) * 1000) : 0;
   const tiers = [
-    { budget: 10, views: cpmCents > 0 ? Math.round((10 * 100) / cpmCents) : 0 },
-    { budget: 25, views: cpmCents > 0 ? Math.round((25 * 100) / cpmCents) : 0 },
-    { budget: 50, views: cpmCents > 0 ? Math.round((50 * 100) / cpmCents) : 0 },
-    { budget: 100, views: cpmCents > 0 ? Math.round((100 * 100) / cpmCents) : 0 },
-    { budget: 250, views: cpmCents > 0 ? Math.round((250 * 100) / cpmCents) : 0 },
-    { budget: 500, views: cpmCents > 0 ? Math.round((500 * 100) / cpmCents) : 0 },
+    { budget: 10, views: calcViews(10) },
+    { budget: 25, views: calcViews(25) },
+    { budget: 50, views: calcViews(50) },
+    { budget: 100, views: calcViews(100) },
+    { budget: 250, views: calcViews(250) },
+    { budget: 500, views: calcViews(500) },
   ];
 
   return (
