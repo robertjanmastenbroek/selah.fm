@@ -112,8 +112,9 @@ export async function GET(request: Request) {
     // Step 4: Generate post (inline from admin route)
     const answered = await sql`
       SELECT id, transcript FROM batch_interviews
-      WHERE batch_id = ${batchId} AND status = 'answered'
+      WHERE batch_id = ${batchId} AND status = 'answered' AND transcript IS NOT NULL
         AND NOT EXISTS (SELECT 1 FROM blog_posts bp WHERE bp.interview_id = batch_interviews.id)
+      ORDER BY created_at DESC
       LIMIT 1
     `;
     for (const iv of answered) {
