@@ -67,13 +67,17 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ campaignId, contentUrl: url, platform }),
       });
+      const data = await res.json();
       if (res.ok) {
         trackSubmitContent(platform);
         setSubmitted(true);
         addToast('Submitted! The artist will review your video.', 'success');
+      } else if (res.status === 409) {
+        // Duplicate submission
+        addToast('You already submitted this exact video to this campaign. Check your earnings page for status.', 'info');
+        setSubmitted(true); // Show success screen to prevent re-submission
       } else {
-        const err = await res.json();
-        addToast(err.error || 'Failed to submit', 'error');
+        addToast(data.error || 'Failed to submit', 'error');
       }
     } catch { addToast('Network error — try again', 'error'); }
     setSubmitting(false);
