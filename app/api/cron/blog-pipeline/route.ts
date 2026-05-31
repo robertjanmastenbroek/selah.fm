@@ -67,7 +67,7 @@ export async function GET(request: Request) {
           const generatedQs = await generateInterviewQuestions(q.raw_question);
           if (generatedQs?.length) {
             await sql`
-              INSERT INTO batch_interviews (batch_id, source_question_id, generated_questions, status)
+              INSERT INTO batch_interviews (batch_id, source_question_id, questions, status)
               VALUES (${batchId}, ${q.id}, ${JSON.stringify(generatedQs.map(q => ({ question: q })))}, 'pending')
             `;
             results.interviews++;
@@ -79,13 +79,13 @@ export async function GET(request: Request) {
 
     // Step 3: Auto-answer
     const pending = await sql`
-      SELECT id, generated_questions FROM batch_interviews
-      WHERE batch_id = ${batchId} AND status = 'pending' AND generated_questions IS NOT NULL
+      SELECT id, questions FROM batch_interviews
+      WHERE batch_id = ${batchId} AND status = 'pending' AND questions IS NOT NULL
       LIMIT 2
     `;
     for (const iv of pending) {
       try {
-        const qs = (iv.generated_questions || []).map((q: any) => q.question).filter(Boolean);
+        const qs = (iv.questions || []).map((q: any) => q.question).filter(Boolean);
         if (!qs.length) continue;
         
         const voiceChunks = await sql`SELECT chunk_text FROM voice_chunks ORDER BY created_at DESC LIMIT 5`;
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
         
         await sql`
           UPDATE batch_interviews 
-          SET founder_answers = ${JSON.stringify(answers)}, transcript = ${transcript}, status = 'answered'
+          SET answers = ${JSON.stringify(answers)}, transcript = ${transcript}, status = 'answered'
           WHERE id = ${iv.id}
         `;
         results.answered++;
