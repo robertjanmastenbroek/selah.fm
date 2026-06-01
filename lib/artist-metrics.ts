@@ -36,6 +36,7 @@ export interface ArtistMetrics {
   platform: string;
   metrics: { name: string; value: number; displayName: string }[];
   imageUrl?: string;
+  spotifyId?: string;
 }
 
 export async function fetchSpotifyMetrics(artistName: string, trackName?: string): Promise<ArtistMetrics | null> {
@@ -125,7 +126,7 @@ export async function storeMetrics(artistId: string, platform: string, metrics: 
   }
 }
 
-export async function updateArtistProfile(artistId: string, spotifyImageUrl?: string) {
+export async function updateArtistProfile(artistId: string, spotifyImageUrl?: string, spotifyId?: string) {
   const [{ count }] = await sql`SELECT COUNT(DISTINCT platform)::int as count FROM artist_metrics WHERE artist_id = ${artistId}`;
   const latest = await sql`
     SELECT metric_name, value FROM artist_metrics WHERE artist_id = ${artistId}
@@ -162,7 +163,7 @@ export async function refreshArtistMetrics(artistId: string, artistName: string,
   if (deezer?.metrics) { await storeMetrics(artistId, 'deezer', deezer.metrics); updated++; }
   if (youtube?.metrics) { await storeMetrics(artistId, 'youtube', youtube.metrics); updated++; }
 
-  await updateArtistProfile(artistId, spotify?.imageUrl);
+  await updateArtistProfile(artistId, spotify?.imageUrl, spotify?.spotifyId);
   return updated;
 }
 
