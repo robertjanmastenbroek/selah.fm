@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { Suspense } from 'react';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PageTransition from '@/components/PageTransition';
@@ -37,29 +38,22 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-
   return (
     <html lang="en" className={cn("font-sans", poppins.variable, righteous.variable)}>
       <head>
         <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
-        {/* Preconnect external domains to resolve DNS + TLS early */}
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="dns-prefetch" href="https://accounts.google.com" />
         <link rel="dns-prefetch" href="https://api.stripe.com" />
         <link rel="dns-prefetch" href="https://js.stripe.com" />
-        {/* Preload critical above-fold assets */}
         <link rel="preload" as="image" href="/images/selah-nav-logo.png" fetchPriority="high" />
       </head>
       <body className="min-h-screen bg-background overflow-x-hidden">
-        {/* Skip to content */}
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium focus:outline-none">
           Skip to content
         </a>
-
-        {/* ARIA live region for dynamic announcements */}
         <div id="aria-live" aria-live="polite" aria-atomic="true" className="sr-only" />
-
         <ErrorBoundary>
           <PageTransition>
             <main id="main-content" tabIndex={-1}>
@@ -67,10 +61,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </PageTransition>
         </ErrorBoundary>
-        {/* Footer */}
         <footer className="border-t border-white/[0.04] py-5 px-4">
           <div className="flex items-center justify-center gap-5 flex-wrap">
-            {/* Social links */}
             <a href="https://instagram.com/selahfm" target="_blank" rel="noopener noreferrer" className="text-muted-foreground/40 hover:text-muted-foreground transition-colors" title="Instagram">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
             </a>
@@ -89,12 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <span className="text-muted-foreground/15 select-none">·</span>
             <a href="/tos" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">Terms</a>
             <span className="text-muted-foreground/15 select-none">·</span>
-            <a
-              href="https://github.com/robertjanmastenbroek/selah.fm"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-            >
+            <a href="https://github.com/robertjanmastenbroek/selah.fm" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="opacity-50">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
               </svg>
@@ -102,7 +89,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </a>
           </div>
         </footer>
-        <Analytics />
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
       </body>
     </html>
   );
