@@ -104,7 +104,66 @@ export default async function BlogPage() {
             ))}
           </div>
         )}
+
+        {/* FAQ Section — keyword-rich, captures "People Also Ask" for blog-related queries */}
+        <section className="mt-20 pt-12 border-t border-white/[0.06]">
+          <h2 className="text-2xl font-bold mb-8">Frequently asked questions</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            {[
+              { q: 'How do independent artists promote music without a label?', a: 'Independent artists promote music by working directly with content creators on platforms like TikTok, Instagram Reels, and YouTube Shorts. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views — no label required.' },
+              { q: "What's the most cost-effective way to promote a new single?", a: "Creator-driven promotion on short-form video platforms is currently the most cost-effective approach. Instead of paying for ads that people scroll past, you pay creators to make engaging content featuring your music. You set the budget and only pay for verified views — so every dollar goes to actual exposure." },
+              { q: 'How much do content creators earn promoting music?', a: "It varies by platform. TikTok's Creator Fund pays $0.02–0.04 per 1,000 views. YouTube Shorts pays $0.01–0.06. On Selah.fm, creators earn whatever CPM the artist sets — typically $5–30 per 1,000 verified views. That's 100x more than platform funds for the same content." },
+              { q: 'Is CPM-based promotion better than paying for playlist placements?', a: 'Yes, for most artists. Playlist placements put your song in a list where you hope people listen. Creator promotion puts your song in videos that people watch because the content is entertaining. 80% of new music discovery now happens through short-form video. Creators help you build real fans, not just passive streams.' },
+              { q: 'Do I need a big following to earn as a music content creator?', a: 'No. CPM-based promotion pays per view, not per follower. A creator with 2,000 followers who consistently gets 10,000 views per video can earn more than someone with 100,000 followers making low-engagement content. Quality and consistency matter more than follower count.' },
+              { q: 'How do I start promoting my music with creators?', a: 'Create a free Selah.fm artist account, set a CPM rate and budget, write a clear campaign brief describing what kind of videos you want, and creators will submit videos for your approval. You only pay when you approve the video and the views are verified.' },
+            ].map((faq, i) => (
+              <div key={i} className="rounded-xl bg-white/[0.02] border border-white/[0.05] p-5">
+                <h3 className="font-semibold text-sm mb-2">{faq.q}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
+
+      {/* FAQ structured data — Google "People Also Ask" rich results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              { '@type': 'Question', name: 'How do independent artists promote music without a label?', acceptedAnswer: { '@type': 'Answer', text: 'Independent artists promote music by working directly with content creators on platforms like TikTok, Instagram Reels, and YouTube Shorts. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views.' } },
+              { '@type': 'Question', name: "What's the most cost-effective way to promote a new single?", acceptedAnswer: { '@type': 'Answer', text: 'Creator-driven promotion on short-form video platforms is currently the most cost-effective approach. Instead of paying for ads, you pay creators to make engaging content featuring your music. You set the budget and only pay for verified views.' } },
+              { '@type': 'Question', name: 'How much do content creators earn promoting music?', acceptedAnswer: { '@type': 'Answer', text: "TikTok's Creator Fund pays $0.02–0.04 per 1,000 views. YouTube Shorts pays $0.01–0.06. On Selah.fm, creators earn $5–30 CPM — 100x more than platform funds for the same content." } },
+              { '@type': 'Question', name: 'Do I need a big following to earn as a music content creator?', acceptedAnswer: { '@type': 'Answer', text: 'No. CPM-based promotion pays per view, not per follower. A creator with 2,000 followers getting 10,000 views per video can earn more than someone with 100,000 followers making low-engagement content.' } },
+              { '@type': 'Question', name: 'How do I start promoting my music with creators?', acceptedAnswer: { '@type': 'Answer', text: 'Create a free Selah.fm artist account, set a CPM rate and budget, write a clear campaign brief, and creators will submit videos for your approval. You only pay when you approve the video and the views are verified.' } },
+            ],
+          }),
+        }}
+      />
+
+      {/* Blog listing structured data — helps Google understand site structure */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: 'Selah.fm Blog — Music Promotion Tips & Creator Insights',
+            description: 'Practical advice for music artists and content creators. CPM strategies, video monetization, audience growth, and the future of music promotion.',
+            url: 'https://selah.fm/blog',
+            hasPart: posts.map((post: any) => ({
+              '@type': 'BlogPosting',
+              headline: post.title,
+              url: `https://selah.fm/blog/${post.slug}`,
+              description: post.meta_description || post.excerpt,
+              datePublished: post.published_at,
+            })),
+          }),
+        }}
+      />
     </div>
   );
 }

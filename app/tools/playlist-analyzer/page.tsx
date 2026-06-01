@@ -33,6 +33,22 @@ export default function PlaylistAnalyzerPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* FAQ Schema — Google "People Also Ask" rich results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+              { '@type': 'Question', name: 'How does the Spotify playlist analyzer work?', acceptedAnswer: { '@type': 'Answer', text: 'The analyzer scans a Spotify playlist in real time. It checks the playlist follower count, owner follower count, track popularity distribution, and follower-to-track ratios. Bot playlists typically have inflated follower counts but tracks with very low popularity.' } },
+              { '@type': 'Question', name: 'What are bot playlists on Spotify?', acceptedAnswer: { '@type': 'Answer', text: 'Bot playlists artificially inflate follower counts using fake accounts or paid services. They prey on artists desperate for streams — charging money to add songs, then delivering streams from bots instead of real listeners.' } },
+              { '@type': 'Question', name: 'Is playlist pitching worth it for independent artists?', acceptedAnswer: { '@type': 'Answer', text: 'Editorial playlist pitching (Spotify for Artists) is free and worth doing. But paying third-party services for playlist placement is risky — many use bot-driven playlists. A better approach: short-form video promotion through platforms like Selah.fm.' } },
+              { '@type': 'Question', name: "What's better for music promotion — playlists or content creators?", acceptedAnswer: { '@type': 'Answer', text: 'Playlists give passive streams but you don\'t own the audience. Creator promotion builds your own fanbase. When a creator\'s video takes off, people search for your music and follow you. Most artists combine both for the best results.' } },
+            ],
+          }),
+        }}
+      />
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-12">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
@@ -159,6 +175,34 @@ export default function PlaylistAnalyzerPage() {
             </div>
           </motion.div>
         )}
+
+        {/* FAQ Section — answers what people search for after using the tool */}
+        <section className="mt-16 pt-12 border-t border-white/[0.06]">
+          <h2 className="text-2xl font-bold mb-8">Frequently asked questions</h2>
+          <div className="space-y-6">
+            {[
+              { q: 'How does the Spotify playlist analyzer work?', a: 'The analyzer scans a Spotify playlist in real time. It checks the playlist follower count, owner follower count, track popularity distribution, and follower-to-track ratios. Bot playlists typically have inflated follower counts but tracks with very low popularity. The analyzer gives a bot score from 0–100 and flags suspicious patterns like sudden follower spikes or mismatched ratios.' },
+              { q: 'What are bot playlists on Spotify?', a: "Bot playlists are playlists that artificially inflate their follower counts using fake accounts or paid services. They prey on artists desperate for streams — charging money to add songs, then delivering streams from bots instead of real listeners. Spotify actively removes these, and getting caught in one can hurt your artist profile. That's why verification tools like this analyzer matter." },
+              { q: 'Is playlist pitching worth it for independent artists?', a: "It depends. Editorial playlist pitching (Spotify for Artists) is free and worth doing. But paying third-party services for playlist placement is risky — many use bot-driven playlists that can get your music removed. A better approach in 2025: short-form video promotion. 80% of new music is discovered through TikTok, Reels, and Shorts. Creator promotion gives you real fans, not fake streams." },
+              { q: 'How do I know if a playlist has real followers?', a: "Look at the ratio of playlist followers to track popularity. A playlist with 100,000 followers but tracks with 0–20 popularity scores is suspicious — real followers correlate with real streams. Also check the growth pattern: organic playlists grow gradually. Sudden 50,000 follower jumps in a week are a red flag. This analyzer checks all these signals automatically." },
+              { q: "What's better for music promotion — playlists or content creators?", a: "Both serve different purposes. Playlists can give you passive streams, but you don't own the audience — the playlist curator does. Creator promotion (paying TikTok/Reels/Shorts creators to use your song) builds your own fanbase. When a creator's video takes off, people search for your music, follow you, and add you to their personal playlists. That's organic growth that compounds. Most artists using Selah.fm combine creator promotion with organic playlist growth for the best results." },
+            ].map((faq, i) => (
+              <div key={i} className="rounded-xl bg-white/[0.02] border border-white/[0.05] p-5">
+                <h3 className="font-semibold text-sm mb-2">{faq.q}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Read more on the blog */}
+        <div className="mt-8 pt-8 border-t border-white/[0.06]">
+          <h2 className="text-sm font-semibold text-muted-foreground/60 mb-4">Read more on our blog</h2>
+          <div className="flex flex-wrap gap-3">
+            <a href="/blog" className="text-sm text-primary hover:underline">Playlist pitching vs creator promotion →</a>
+            <a href="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How to promote music without bots →</a>
+          </div>
+        </div>
       </main>
     </div>
   );

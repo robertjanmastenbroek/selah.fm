@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { generateInterviewQuestions, generateArticle, generateFounderAnswers, findVoiceExamples, getFallbackQuestions } from '@/lib/blog-engine';
+import { generateInterviewQuestions, generateArticle, generateFounderAnswers, findVoiceExamples, getFallbackQuestions, sourceQuestionsFromReddit } from '@/lib/blog-engine';
 import { fetchBlogImage } from '@/lib/blog-images';
 
 export const dynamic = 'force-dynamic';
@@ -70,15 +70,34 @@ export async function GET(request: Request) {
     const questionCount = await sql`SELECT COUNT(*)::int FROM batch_questions WHERE batch_id = ${batchId}`;
     if (questionCount[0].count < 5) {
       log.push('Sourcing questions...');
-      const fallback = getFallbackQuestions(10).map(q => ({ question: q, url: '', category: 'general' as const }));
-      let stored = 0;
-      for (const q of fallback) {
-        await sql`INSERT INTO batch_questions (batch_id, raw_question, source_url, platform, category) VALUES (${batchId}, ${q.question}, ${q.url}, 'curated', ${q.category})`;
-        stored++;
+      
+      // Try Reddit first — real questions people are asking right now
+      const redditQs = await sourceQuestionsFromReddit();
+      if (redditQs.length > 0) {
+        let stored = 0;
+        for (const q of redditQs.slice(0, 5)) {
+          await sql`INSERT INTO batch_questions (batch_id, raw_question, source_url, platform, category) VALUES (${batchId}, ${q.question}, ${q.url}, 'reddit', ${q.category})`;
+          stored++;
+        }
+        results.questions += stored;
+        log.push(`Sourced ${stored} questions from Reddit`);
       }
-      results.questions = stored;
+      
+      // Fill remaining slots with curated fallback questions
+      const remaining = 10 - results.questions;
+      if (remaining > 0) {
+        const fallback = getFallbackQuestions(remaining).map(q => ({ question: q, url: '', category: 'general' as const }));
+        let fbStored = 0;
+        for (const q of fallback) {
+          await sql`INSERT INTO batch_questions (batch_id, raw_question, source_url, platform, category) VALUES (${batchId}, ${q.question}, ${q.url}, 'curated', ${q.category})`;
+          fbStored++;
+        }
+        results.questions += fbStored;
+        log.push(`Sourced ${fbStored} fallback questions`);
+      }
+      
       await sql`UPDATE batches SET status = 'interviewing' WHERE id = ${batchId}`;
-      log.push(`Sourced ${stored} questions`);
+      log.push(`Total sourced: ${results.questions} questions`);
     }
 
     // Step 2: Generate interviews
