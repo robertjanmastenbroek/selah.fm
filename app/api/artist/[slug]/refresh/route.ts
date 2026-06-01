@@ -20,34 +20,33 @@ export async function GET(request: Request, { params }: { params: { slug: string
     // 1. Refresh API-based metrics (Spotify, Deezer, YouTube)
     await refreshArtistMetrics(artist.id, artist.artist_name, artist.latest_track_name);
 
-    // 2. Spotify fallback: if API returned 0 followers, try scraping via crawl4ai
-    const cardData = await getArtistCardData(artist.id);
-    const spotifyFollowers = cardData?.metrics?.spotify?.find((m: any) => m.metric_name === 'followers')?.value || 0;
-    if (spotifyFollowers === 0) {
-      try {
-        const [da] = await sql`SELECT spotify_id FROM discovered_artists WHERE id = ${artist.id}`;
-        if (da?.spotify_id) {
-          const res = await fetch(`${CRAWL4AI}/crawl`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              urls: [`https://open.spotify.com/artist/${da.spotify_id}`],
-              stealth_mode: true,
-            }),
-            signal: AbortSignal.timeout(15000),
-          });
-          if (res.ok) {
-            const data = await res.json();
-            const text = JSON.stringify(data).toLowerCase();
-            const match = text.match(/([\d,.]+)\s*followers/);
-            if (match) {
-              const n = parseInt(match[1].replace(/[,.]/g, ''));
-              if (n > 0) await storeMetrics(artist.id, 'spotify', [{ name: 'followers', value: n, displayName: 'Followers' }]);
+    // 2. Spotify followers via crawl4ai (API doesn't return follower counts with client credentials)
+    try {
+      const [da] = await sql`SELECT spotify_id FROM discovered_artists WHERE id = ${artist.id}`;
+      if (da?.spotify_id) {
+        const res = await fetch(`${CRAWL4AI}/crawl`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            urls: [`https://open.spotify.com/artist/${da.spotify_id}`],
+            stealth_mode: true,
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (res.ok) {
+          const crawlData = await res.json();
+          const text = JSON.stringify(crawlData).toLowerCase();
+          // Spotify pages show: "1,234,567 monthly listeners" and "12,345 followers"
+          const match = text.match(/([\d,.]+)\s*followers/);
+          if (match) {
+            const n = parseInt(match[1].replace(/[,\.]/g, ''));
+            if (n > 0) {
+              await storeMetrics(artist.id, 'spotify', [{ name: 'followers', value: n, displayName: 'Followers' }]);
             }
           }
         }
-      } catch {}
-    }
+      }
+    } catch {}
 
     // 3. Scrape Instagram/TikTok followers (on-demand, only if never scraped)
     const [audit] = await sql`

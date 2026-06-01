@@ -41,18 +41,17 @@ export interface ArtistMetrics {
 
 export async function fetchSpotifyMetrics(artistName: string, trackName?: string): Promise<ArtistMetrics | null> {
   const token = await getSpotifyToken();
-  if (!token) { console.log('[spotify] No token — SPOTIFY_CLIENT_ID/SECRET not set?'); return null; }
+  if (!token) return null;
 
   try {
-    // Step 1: Search for the artist to find their Spotify ID
+    // Search for the artist to find their Spotify ID + image (search doesn't return followers)
     const queries = trackName ? [artistName, `${artistName} ${trackName}`] : [artistName];
-    let bestId: string | null = null;
-    let bestImage: string | null = null;
-    let bestName = '';
+    let bestId: string | undefined;
+    let bestImage: string | undefined;
 
     for (const q of queries) {
       const res = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=artist&limit=5`,
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=artist&limit=3`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) continue;
@@ -60,32 +59,22 @@ export async function fetchSpotifyMetrics(artistName: string, trackName?: string
       const items = data.artists?.items || [];
       if (items.length === 0) continue;
 
-      const sorted = [...items].sort((a: any, b: any) => (b.followers?.total || 0) - (a.followers?.total || 0));
-      bestId = sorted[0].id;
-      bestImage = sorted[0].images?.[0]?.url || null;
-      bestName = sorted[0].name;
+      // Pick exact name match first, then first result
+      const exact = items.find((a: any) => a.name.toLowerCase() === artistName.toLowerCase());
+      const pick = exact || items[0];
+      bestId = pick.id;
+      bestImage = pick.images?.[0]?.url || null;
       break;
     }
 
     if (!bestId) return null;
 
-    // Step 2: Get full artist details via bulk endpoint (more reliable data)
-    const artistRes = await fetch(
-      `https://api.spotify.com/v1/artists?ids=${bestId}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (!artistRes.ok) return null;
-    const bulkData = await artistRes.json();
-    const artist = bulkData.artists?.[0];
-    if (!artist) return null;
-
-    console.log('[spotify] Artist endpoint:', artist.name, '| followers:', artist.followers?.total, '| popularity:', artist.popularity);
-
+    // Return image + ID only. Followers come from crawl4ai scraping.
     return {
       platform: 'spotify',
-      imageUrl: artist.images?.[0]?.url || bestImage,
+      imageUrl: bestImage,
       metrics: [
-        { name: 'followers', value: artist.followers?.total || 0, displayName: 'Followers' },
+        { name: 'followers', value: 0, displayName: 'Followers' },
       ],
       spotifyId: bestId,
     };
