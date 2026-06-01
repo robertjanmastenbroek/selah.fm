@@ -50,10 +50,13 @@ export async function GET(request: Request) {
   const results = { questions: 0, interviews: 0, answered: 0, posts: 0, scheduled: 0 };
 
   try {
-    // Rate limit: only generate once per day (prevent manual trigger spam)
-    const [recentPost] = await sql`SELECT id FROM blog_posts WHERE created_at > NOW() - INTERVAL '23 hours' ORDER BY created_at DESC LIMIT 1`;
-    if (recentPost) {
-      return NextResponse.json({ message: 'Already generated posts in the last 23 hours. Skipping to avoid duplicates.' });
+    // Rate limit: only generate once per day unless force=true
+    const force = searchParams.get('force') === 'true';
+    if (!force) {
+      const [recentPost] = await sql`SELECT id FROM blog_posts WHERE created_at > NOW() - INTERVAL '23 hours' ORDER BY created_at DESC LIMIT 1`;
+      if (recentPost) {
+        return NextResponse.json({ message: 'Already generated posts in the last 23 hours. Skipping to avoid duplicates.' });
+      }
     }
 
     // Find or create batch
