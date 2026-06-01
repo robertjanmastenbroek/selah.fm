@@ -163,7 +163,7 @@ export async function GET(request: Request) {
              aa.youtube_video_url, aa.hashtags
       FROM discovered_artists da
       JOIN artist_audits aa ON aa.discovered_artist_id = da.id
-      WHERE da.status = 'audited' AND aa.email_confidence IN ('verified', 'high', 'medium', 'low')
+      WHERE da.status = 'audited' AND aa.email_address IS NOT NULL AND aa.email_address != '' AND aa.email_confidence IN ('verified', 'high', 'medium', 'low')
       ORDER BY aa.audited_at ASC
       LIMIT ${campaignBatchSize}
     `;

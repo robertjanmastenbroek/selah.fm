@@ -47,7 +47,7 @@ export async function GET(request: Request) {
         const email = await generateCreatorOutreachEmail(
           creator.display_name || creator.username,
           creator.bio?.substring(0, 60) || 'content creator',
-          'https://selah.fm/browse'
+          'https://selah.fm/browse?utm_source=email&utm_medium=outreach&utm_campaign=creator_invite'
         );
 
         const htmlBody = emailWrapper({

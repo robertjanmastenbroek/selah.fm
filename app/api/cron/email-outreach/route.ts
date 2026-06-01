@@ -49,7 +49,7 @@ export async function GET(request: Request) {
     `;
 
     for (const artist of artists) {
-      const campaignUrl = `https://selah.fm/c/${artist.campaign_slug}`;
+      const campaignUrl = `https://selah.fm/c/${artist.campaign_slug}?utm_source=email&utm_medium=outreach&utm_campaign=artist_welcome`;
       const genre = (artist.genres?.[0] || 'music').toString();
 
       // ── Pre-send verification ──────────────────────────────────
