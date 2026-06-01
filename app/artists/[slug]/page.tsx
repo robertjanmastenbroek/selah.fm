@@ -1,0 +1,53 @@
+import { notFound } from 'next/navigation';
+import sql from '@/lib/db';
+import { getArtistCardData } from '@/lib/artist-metrics';
+import ArtistCardClient from './ArtistCardClient';
+
+export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const [artist] = await sql`
+    SELECT da.artist_name, ap.spotify_image_url
+    FROM artist_profiles ap
+    JOIN discovered_artists da ON da.id = ap.artist_id
+    WHERE ap.slug = ${params.slug}
+    LIMIT 1
+  `;
+  if (!artist) return { title: 'Artist not found — Selah.fm' };
+
+  return {
+    title: `${artist.artist_name} Stats — Spotify Listeners, Social Followers & Streaming Data | Selah.fm`,
+    description: `See ${artist.artist_name}'s complete music & social stats: Spotify monthly listeners, Instagram followers, TikTok followers, and more. Updated daily. Free by Selah.fm.`,
+    openGraph: {
+      title: `${artist.artist_name} — Artist Dashboard | Selah.fm`,
+      description: `All ${artist.artist_name}'s stats in one place. Spotify, Instagram, TikTok, YouTube + more.`,
+      images: artist.spotify_image_url ? [{ url: artist.spotify_image_url }] : [],
+    },
+  };
+}
+
+export default async function ArtistCardPage({ params }: { params: { slug: string } }) {
+  const [artist] = await sql`
+    SELECT da.id, da.artist_name, da.latest_track_name, da.genres,
+           ap.slug, ap.spotify_image_url, ap.last_refreshed_at, ap.total_followers,
+           c.slug as campaign_slug
+    FROM artist_profiles ap
+    JOIN discovered_artists da ON da.id = ap.artist_id
+    LEFT JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
+    LEFT JOIN campaigns c ON c.id = cc.campaign_id
+    WHERE ap.slug = ${params.slug}
+    LIMIT 1
+  `;
+
+  if (!artist) notFound();
+
+  const data = await getArtistCardData(artist.id);
+
+  return (
+    <ArtistCardClient
+      artist={artist}
+      profile={data?.profile || { spotify_image_url: artist.spotify_image_url, last_refreshed_at: artist.last_refreshed_at }}
+      metrics={data?.metrics || {}}
+    />
+  );
+}
