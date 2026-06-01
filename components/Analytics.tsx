@@ -9,6 +9,23 @@ export default function Analytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  // Track pageview in our DB for real-time analytics
+  useEffect(() => {
+    try {
+      fetch('/api/analytics/pageview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: pathname,
+          referrer: document.referrer,
+          utm_source: searchParams.get('utm_source'),
+          utm_medium: searchParams.get('utm_medium'),
+          utm_campaign: searchParams.get('utm_campaign'),
+        }),
+      }).catch(() => {}); // Fire-and-forget, never blocks rendering
+    } catch {}
+  }, [pathname]);
+
   // Track UTM params on page load
   useEffect(() => {
     if (!gaId || typeof window === 'undefined') return;
