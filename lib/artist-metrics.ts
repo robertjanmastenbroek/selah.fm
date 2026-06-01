@@ -41,37 +41,37 @@ export interface ArtistMetrics {
 
 export async function fetchSpotifyMetrics(artistName: string, trackName?: string): Promise<ArtistMetrics | null> {
   const token = await getSpotifyToken();
-  if (!token) { console.log('[spotify] No token — SPOTIFY_CLIENT_ID/SECRET not set?'); return null; }
-  try {
-    // Try exact name first, then artist+track
-    const queries = trackName ? [artistName, `${artistName} ${trackName}`] : [artistName];
-    let artist: any = null;
-    
-    for (const q of queries) {
-      const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=artist&limit=5`, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const artists = data.artists?.items || [];
-    if (!artist) artist = artists[0];
-      // Find exact or close match
-      artist = artists.find((a: any) => a.name.toLowerCase() === artistName.toLowerCase());
-      if (!artist && artists.length > 0 && artists[0].followers?.total > 0) {
-        // Fallback: use the result with the most followers
-        artist = artists.sort((a: any, b: any) => (b.followers?.total || 0) - (a.followers?.total || 0))[0];
-      } else if (!artist && artists.length > 0) {
-        artist = artists[0];
-      }
-      if (artist) break;
-    }
-    if (!artist) return null;
+  if (!token) { console.log('[spotify] No token — credentials missing?'); return null; }
 
-    return {
-      platform: 'spotify',
-      imageUrl: artist.images?.[0]?.url || artist.images?.[1]?.url,
-      metrics: [
-        { name: 'followers', value: artist.followers?.total || 0, displayName: 'Spotify Followers' },
-      ],
-    };
+  try {
+    const queries = trackName ? [artistName, `${artistName} ${trackName}`] : [artistName];
+
+    for (const q of queries) {
+      const res = await fetch(
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=artist&limit=5`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) continue;
+
+      const data = await res.json();
+      const items = data.artists?.items || [];
+      if (items.length === 0) continue;
+
+      // Pick the result with the most followers (Spotify can return duplicates)
+      const sorted = [...items].sort((a: any, b: any) => (b.followers?.total || 0) - (a.followers?.total || 0));
+      const best = sorted[0];
+      console.log('[spotify] Query:', q, '| Best:', best.name, '| Followers:', best.followers?.total, '| ID:', best.id);
+
+      return {
+        platform: 'spotify',
+        imageUrl: best.images?.[0]?.url || best.images?.[1]?.url,
+        metrics: [
+          { name: 'followers', value: best.followers?.total || 0, displayName: 'Followers' },
+        ],
+        spotifyId: best.id,
+      };
+    }
+    return null;
   } catch { return null; }
 }
 
