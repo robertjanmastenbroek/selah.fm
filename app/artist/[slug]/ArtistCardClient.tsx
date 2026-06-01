@@ -91,26 +91,14 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
   let socialLinks: any = {};
   try { socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {}); } catch {}
 
-  // Social platforms: show follower count from metrics if available, otherwise show handle
+  // Social platforms: always show handle cards, follower counts shown in metrics when scraped
   const socialCards: { platform: string; handle: string; color: string }[] = [];
   
-  // Instagram
   if (artist.instagram_handle) {
-    const igFollowers = metrics.instagram?.[0]?.value || artist.instagram_followers || 0;
-    if (igFollowers > 0) {
-      // Instagram has been scraped — shown in metrics grid above
-    } else {
-      socialCards.push({ platform: 'Instagram', handle: '@' + artist.instagram_handle, color: platformMeta.instagram?.color || '#E4405F' });
-    }
+    socialCards.push({ platform: 'Instagram', handle: '@' + artist.instagram_handle, color: '#E4405F' });
   }
-  // TikTok
   if (artist.tiktok_handle) {
-    const ttFollowers = metrics.tiktok?.[0]?.value || artist.tiktok_followers || 0;
-    if (ttFollowers > 0) {
-      // TikTok has been scraped — shown in metrics grid above
-    } else {
-      socialCards.push({ platform: 'TikTok', handle: '@' + artist.tiktok_handle, color: platformMeta.tiktok?.color || '#00F2EA' });
-    }
+    socialCards.push({ platform: 'TikTok', handle: '@' + artist.tiktok_handle, color: '#00F2EA' });
   }
   // Facebook, SoundCloud, Apple Music, Amazon Music — from social_links
   if (socialLinks.facebook) socialCards.push({ platform: 'Facebook', handle: socialLinks.facebook, color: platformMeta.facebook?.color || '#1877F2' });

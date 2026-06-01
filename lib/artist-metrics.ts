@@ -41,10 +41,14 @@ export interface ArtistMetrics {
 
 export async function fetchSpotifyMetrics(artistName: string, trackName?: string): Promise<ArtistMetrics | null> {
   const token = await getSpotifyToken();
-  if (!token) { console.log('[spotify] No token — credentials missing?'); return null; }
+  if (!token) { console.log('[spotify] No token — SPOTIFY_CLIENT_ID/SECRET not set?'); return null; }
 
   try {
+    // Step 1: Search for the artist to find their Spotify ID
     const queries = trackName ? [artistName, `${artistName} ${trackName}`] : [artistName];
+    let bestId: string | null = null;
+    let bestImage: string | null = null;
+    let bestName = '';
 
     for (const q of queries) {
       const res = await fetch(
@@ -52,26 +56,37 @@ export async function fetchSpotifyMetrics(artistName: string, trackName?: string
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) continue;
-
       const data = await res.json();
       const items = data.artists?.items || [];
       if (items.length === 0) continue;
 
-      // Pick the result with the most followers (Spotify can return duplicates)
       const sorted = [...items].sort((a: any, b: any) => (b.followers?.total || 0) - (a.followers?.total || 0));
-      const best = sorted[0];
-      console.log('[spotify] Query:', q, '| Best:', best.name, '| Followers:', best.followers?.total, '| ID:', best.id);
-
-      return {
-        platform: 'spotify',
-        imageUrl: best.images?.[0]?.url || best.images?.[1]?.url,
-        metrics: [
-          { name: 'followers', value: best.followers?.total || 0, displayName: 'Followers' },
-        ],
-        spotifyId: best.id,
-      };
+      bestId = sorted[0].id;
+      bestImage = sorted[0].images?.[0]?.url || null;
+      bestName = sorted[0].name;
+      break;
     }
-    return null;
+
+    if (!bestId) return null;
+
+    // Step 2: Get full artist details (more reliable follower count)
+    const artistRes = await fetch(
+      `https://api.spotify.com/v1/artists/${bestId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!artistRes.ok) return null;
+    const artist = await artistRes.json();
+
+    console.log('[spotify] Artist endpoint:', artist.name, '| followers:', artist.followers?.total, '| popularity:', artist.popularity);
+
+    return {
+      platform: 'spotify',
+      imageUrl: artist.images?.[0]?.url || bestImage,
+      metrics: [
+        { name: 'followers', value: artist.followers?.total || 0, displayName: 'Followers' },
+      ],
+      spotifyId: bestId,
+    };
   } catch { return null; }
 }
 
