@@ -29,35 +29,25 @@ const platformMeta: Record<string, { label: string; color: string }> = {
   spotify: { label: 'Spotify', color: '#1DB954' },
   deezer: { label: 'Deezer', color: '#A238FF' },
   youtube: { label: 'YouTube', color: '#FF0000' },
-  soundcloud: { label: 'SoundCloud', color: '#FF5500' },
   instagram: { label: 'Instagram', color: '#E4405F' },
   tiktok: { label: 'TikTok', color: '#00F2EA' },
+  soundcloud: { label: 'SoundCloud', color: '#FF5500' },
 };
 
-function MetricCard({ platform, label, value, deltas, color, delay, period }: any) {
+function MetricCard({ platform, label, value, handle, color, delay }: { platform: string; label: string; value: number; handle?: string; color: string; delay: number }) {
   const [visible, setVisible] = useState(false);
   const countUp = useCountUp(value, 1500, visible);
   useEffect(() => { const t = setTimeout(() => setVisible(true), delay); return () => clearTimeout(t); }, [delay]);
 
-  const delta = deltas?.[period];
-  const deltaPct = deltas?.[`${period}_pct`];
-
   return (
     <div className={`bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{platform}</div>
-      <div className="text-2xl font-bold tabular-nums" style={{ color }}>{fmt(visible ? countUp : 0)}</div>
+      {handle ? (
+        <div className="text-sm font-medium" style={{ color }}>{handle}</div>
+      ) : (
+        <div className="text-2xl font-bold tabular-nums" style={{ color }}>{fmt(visible ? countUp : 0)}</div>
+      )}
       <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
-      {delta != null && delta !== 0 && (
-        <div className={`text-[11px] mt-1 font-medium ${delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
-          {delta > 0 ? '+' : ''}{fmt(Math.abs(delta))}
-          {deltaPct != null && <span className="ml-1 opacity-60">({deltaPct > 0 ? '+' : ''}{deltaPct}%)</span>}
-        </div>
-      )}
-      {period === 'all' && deltas?.['28d_pct'] != null && deltas['28d_pct'] !== 0 && (
-        <div className={`text-[10px] mt-1 ${deltas['28d_pct'] > 0 ? 'text-green-400/60' : 'text-red-400/60'}`}>
-          {deltas['28d_pct'] > 0 ? '↗' : '↘'} {Math.abs(deltas['28d_pct'])}% this month
-        </div>
-      )}
     </div>
   );
 }
@@ -66,37 +56,61 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
   const [data, setData] = useState(initialData);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshed, setRefreshed] = useState(false);
-  const [period, setPeriod] = useState<'28d' | '1y' | 'all'>('28d');
 
   const profile = data?.profile || {};
   const metrics = data?.metrics || {};
-  const cacheMsg = data?.cached ? data.message : null;
 
-  // Build metric cards with deltas
+  // Build all metric cards — streaming platforms from metrics, social from artist props
   const cards: any[] = [];
+
+  // Streaming platforms from metrics
   Object.entries(metrics).forEach(([platform, metricList]: [string, any]) => {
     const meta = platformMeta[platform] || { label: platform, color: '#6B7280' };
     const list = Array.isArray(metricList) ? metricList : [];
     const best = [...list].sort((a: any, b: any) => (b.value || 0) - (a.value || 0));
     const top = best[0];
-    if (top && top.value > 0) {
+    if (top) {
       cards.push({
         platform: meta.label,
         label: (top.metric_name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-        value: top.value,
-        deltas: top.deltas || {},
+        value: top.value || 0,
         color: meta.color,
         delay: 100 + cards.length * 120,
-        period,
       });
     }
   });
 
-  // Presence badges
-  const presences: { platform: string; handle: string; url: string }[] = [];
-  if (artist.instagram_handle) presences.push({ platform: 'Instagram', handle: `@${artist.instagram_handle}`, url: `https://instagram.com/${artist.instagram_handle}` });
-  if (artist.tiktok_handle) presences.push({ platform: 'TikTok', handle: `@${artist.tiktok_handle}`, url: `https://tiktok.com/@${artist.tiktok_handle}` });
-  if (artist.youtube_url) presences.push({ platform: 'YouTube', handle: 'Channel', url: artist.youtube_url });
+  // Social platforms from artist audit data
+  if (artist.instagram_handle) {
+    cards.push({
+      platform: 'Instagram',
+      label: '@' + artist.instagram_handle,
+      value: 0,
+      handle: '@' + artist.instagram_handle,
+      color: platformMeta.instagram?.color || '#E4405F',
+      delay: 100 + cards.length * 120,
+    });
+  }
+  if (artist.tiktok_handle) {
+    cards.push({
+      platform: 'TikTok',
+      label: '@' + artist.tiktok_handle,
+      value: 0,
+      handle: '@' + artist.tiktok_handle,
+      color: platformMeta.tiktok?.color || '#00F2EA',
+      delay: 100 + cards.length * 120,
+    });
+  }
+  if (artist.youtube_url) {
+    cards.push({
+      platform: 'YouTube',
+      label: 'Channel',
+      value: 0,
+      handle: 'Channel',
+      color: platformMeta.youtube?.color || '#FF0000',
+      delay: 100 + cards.length * 120,
+    });
+  }
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -108,13 +122,10 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
     setRefreshing(false);
   }
 
+  // Auto-refresh if no data at all
   useEffect(() => {
-    if (cards.length === 0 && presences.length === 0 && !refreshing) handleRefresh();
+    if (cards.length === 0 && !refreshing) handleRefresh();
   }, []);
-
-  const totalNow = cards.reduce((sum, c) => sum + c.value, 0);
-  const totalMonthAgo = cards.reduce((sum, c) => sum + (c.value - (c.deltas?.['28d'] || 0)), 0);
-  const monthlyGrowth = totalNow - totalMonthAgo;
 
   return (
     <div className="min-h-screen bg-[#0A0A0F]">
@@ -132,28 +143,6 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
             {profile?.last_refreshed_at && ` · Updated ${new Date(profile.last_refreshed_at).toLocaleDateString()}`}
           </p>
 
-          {/* Time period selector */}
-          <div className="inline-flex gap-1 mt-4 bg-white/[0.03] border border-white/[0.06] rounded-xl p-1">
-            {[{ key: '28d', label: '28 Days' }, { key: '1y', label: '1 Year' }, { key: 'all', label: 'All Time' }].map(p => (
-              <button key={p.key} onClick={() => setPeriod(p.key as any)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors ${period === p.key ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {totalNow > 0 && (
-            <div className="mt-4">
-              <div className="text-4xl font-bold text-primary">{useCountUp(totalNow, 2000).toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">total {period === '28d' ? 'followers' : period === '1y' ? 'followers' : 'followers'}</div>
-              {monthlyGrowth !== 0 && (
-                <div className={`text-xs mt-1 ${monthlyGrowth > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {monthlyGrowth > 0 ? '+' : ''}{fmt(Math.abs(monthlyGrowth))} this month
-                </div>
-              )}
-            </div>
-          )}
-
           <button onClick={handleRefresh} disabled={refreshing}
             className={`mt-4 px-5 py-2 rounded-xl text-sm font-medium transition-all ${
               refreshed ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
@@ -167,28 +156,13 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         {cards.length > 0 && (
           <section>
-            <h2 className="text-xs font-semibold text-muted-foreground/40 uppercase tracking-wider mb-3">Streaming</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {cards.map((card, i) => <MetricCard key={`${card.platform}-${card.label}`} {...card} period={period} />)}
+              {cards.map((card, i) => <MetricCard key={`${card.platform}-${card.label}`} {...card} />)}
             </div>
           </section>
         )}
 
-        {presences.length > 0 && (
-          <section>
-            <h2 className="text-xs font-semibold text-muted-foreground/40 uppercase tracking-wider mb-3">Also On</h2>
-            <div className="flex flex-wrap gap-2">
-              {presences.map(p => (
-                <a key={p.platform} href={p.url} target="_blank"
-                  className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-xs text-muted-foreground hover:border-white/[0.12] transition-colors">
-                  {p.platform}: {p.handle}
-                </a>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {cards.length === 0 && presences.length === 0 && !refreshing && (
+        {cards.length === 0 && !refreshing && (
           <div className="text-center py-16 text-muted-foreground">
             <p className="text-lg mb-2">No data yet</p>
             <p className="text-sm">Click &quot;Refresh&quot; to fetch live stats</p>

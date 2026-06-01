@@ -42,21 +42,33 @@ export async function fetchSpotifyMetrics(artistName: string, trackName?: string
   const token = await getSpotifyToken();
   if (!token) return null;
   try {
-    const query = trackName ? `${artistName} ${trackName}` : artistName;
-    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=3`, { headers: { Authorization: `Bearer ${token}` } });
+    // Try exact name first, then artist+track
+    const queries = trackName ? [artistName, `${artistName} ${trackName}`] : [artistName];
+    let artist: any = null;
+    
+    for (const q of queries) {
+      const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=artist&limit=5`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) return null;
     const data = await res.json();
     const artists = data.artists?.items || [];
-    let artist = artists.find((a: any) => a.name.toLowerCase() === artistName.toLowerCase());
     if (!artist) artist = artists[0];
+      // Find exact or close match
+      artist = artists.find((a: any) => a.name.toLowerCase() === artistName.toLowerCase());
+      if (!artist && artists.length > 0 && artists[0].followers?.total > 0) {
+        // Fallback: use the result with the most followers
+        artist = artists.sort((a: any, b: any) => (b.followers?.total || 0) - (a.followers?.total || 0))[0];
+      } else if (!artist && artists.length > 0) {
+        artist = artists[0];
+      }
+      if (artist) break;
+    }
     if (!artist) return null;
 
     return {
       platform: 'spotify',
       imageUrl: artist.images?.[0]?.url || artist.images?.[1]?.url,
       metrics: [
-        { name: 'followers', value: artist.followers?.total || 0, displayName: 'Followers' },
-        { name: 'monthly_listeners', value: artist.popularity ? Math.round(artist.popularity * 50) : 0, displayName: 'Monthly Listeners' },
+        { name: 'followers', value: artist.followers?.total || 0, displayName: 'Spotify Followers' },
       ],
     };
   } catch { return null; }
