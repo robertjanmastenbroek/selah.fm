@@ -474,48 +474,53 @@ export async function findVoiceExamples(
 // Organized by content pillar with primary keyword targets
 
 const FALLBACK_QUESTIONS = [
-  // PILLAR 1: Music Promotion for Independent Artists
-  // Keywords: "promote music without label", "independent artist promotion", "music marketing"
+  // LOW-HANGING FRUIT (high traffic + low competition — targeted first by pipeline)
+  
+  // PILLAR 1: Creator Marketplace (med traffic, ZERO competition, direct product fit)
+  "How does a creator marketplace for music promotion work?",
+  "What should artists look for when hiring content creators to promote music?",
+  "How much does it cost to hire a TikTok creator for music promotion?",
+  "What's the difference between UGC promotion and influencer marketing?",
+  "How do you verify that video views are real and not bought?",
+  
+  // PILLAR 2: CPM Mechanics (med traffic, very low competition, we own this niche)
+  "How does CPM-based music promotion work compared to traditional advertising?",
+  "What's a good CPM rate to offer creators for promoting your music?",
+  "How do you calculate the ROI of a CPM-based music promotion campaign?",
+  "How do you set a campaign budget that protects you from overspending?",
+  
+  // PILLAR 3: Platform Strategy (med-high traffic, low competition on specific Qs)
+  "Why do my TikTok videos get 200 views then stop?",
+  "Is my music content shadowbanned on Instagram?",
+  "How do I repurpose TikTok content for Reels and Shorts?",
+  "What's the best time to post music content for maximum views?",
+  
+  // PILLAR 4: Creator Income (very high traffic, medium competition, ChatGPT cites)
+  "How much money can you realistically make creating short-form videos for musicians?",
+  "How many views do you need on TikTok to start earning real money?",
+  "Can you make a living as a short-form video creator without millions of followers?",
+  "What CPM rates do content creators actually earn promoting music?",
+  
+  // PILLAR 5: Music Promotion (high traffic, medium competition, core product)
   "How can independent artists promote their music without a record label in 2025?",
   "What's the most cost-effective way to market a new single on a $500 budget?",
   "How do I get my music heard by real people (not bots) on social media?",
   "What music promotion strategies actually work for unknown artists starting from zero?",
   "How do I find content creators who will make TikToks using my song?",
   
-  // PILLAR 2: Creator Earnings & Monetization
-  // Keywords: "get paid for TikTok views", "creator CPM rates", "earn making short videos"
-  "How much money can you realistically make creating short-form videos for musicians?",
-  "What CPM rates do content creators actually earn promoting music in 2025?",
-  "How many views do you need on TikTok to start earning real money?",
-  "Can you make a living as a short-form video creator without millions of followers?",
-  "What's the difference between brand deals and CPM-based creator earnings?",
+  // PILLAR 6: AI Music (exploding search volume, medium competition)
+  "Can AI-generated music be promoted on streaming platforms?",
+  "What's the best AI tool for creating music in 2025?",
+  "How are independent artists using AI for music promotion?",
+  "Is AI mastering better than human mastering for independent artists?",
   
-  // PILLAR 3: Platform Strategy
-  // Keywords: "TikTok vs Reels for music", "YouTube Shorts monetization"
-  "Is TikTok, Instagram Reels, or YouTube Shorts best for music promotion?",
-  "How do the algorithms differ for music content on TikTok vs Instagram?",
-  "Should independent artists focus on one platform or be everywhere at once?",
-  "Do YouTube Shorts pay creators better than TikTok for music content?",
-  "What's the best time to post music content for maximum views?",
+  // PILLAR 7: Fan Engagement (medium traffic, low competition)
+  "How do I build a fan community as an independent artist?",
+  "Should musicians use Discord for fan engagement?",
+  "How to grow an email list as a musician?",
+  "How do I convert casual listeners into superfans?",
   
-  // PILLAR 4: CPM & Campaign Mechanics
-  // Keywords: "CPM music promotion", "cost per view music", "pay per view marketing"
-  "How does CPM-based music promotion work compared to traditional advertising?",
-  "What's a good CPM rate to offer creators for promoting your music?",
-  "How do you calculate the ROI of a CPM-based music promotion campaign?",
-  "Is pay-per-view music promotion better than paying for playlist placement?",
-  "How do you set a campaign budget that protects you from overspending?",
-  
-  // PILLAR 5: Creator Marketplace Model
-  // Keywords: "UGC music promotion", "creator marketplace for artists", "hire creators"
-  "How does a creator marketplace for music promotion actually work?",
-  "What should artists look for when hiring content creators to promote music?",
-  "How do you write campaign requirements that attract high-quality creators?",
-  "What's the difference between UGC promotion and influencer marketing?",
-  "How do you verify that video views are real and not bought?",
-  
-  // PILLAR 6: Faith, Purpose & Independent Music Business
-  // Keywords: "faith music business", "christian electronic music", "purpose driven music"
+  // PILLAR 8: Faith, Purpose & Independent Music Business
   "How do you balance making money with making meaningful music?",
   "What does it look like to build a music career around faith and purpose?",
   "Can independent Christian/electronic artists find real audiences online?",

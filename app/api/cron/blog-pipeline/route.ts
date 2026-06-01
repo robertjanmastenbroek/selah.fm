@@ -86,7 +86,20 @@ export async function GET(request: Request) {
       // Fill from AI-generated question pool — weighted by traffic priority
       const aiRemaining = 10 - results.questions;
       if (aiRemaining > 0) {
-        const priorityOrder = ['creator_income', 'music_promotion', 'platform_strategy', 'creator_marketplace', 'cpm_mechanics', 'ai_music', 'youtube_musicians', 'fan_engagement', 'paid_ads', 'spotify_artists', 'artist_business', 'live_streaming'];
+        const priorityOrder = [
+          'creator_marketplace',  // med traffic, ZERO competition, direct product alignment
+          'cpm_mechanics',        // med traffic, very low competition, we own this niche
+          'platform_strategy',    // med-high traffic, low competition on specific questions
+          'creator_income',       // very high traffic, medium competition, ChatGPT cites
+          'music_promotion',      // high traffic, medium competition, core product
+          'ai_music',             // high traffic (exploding), medium competition, less saturated
+          'fan_engagement',       // medium traffic, low competition
+          'paid_ads',             // medium traffic, medium competition
+          'youtube_musicians',    // medium traffic, medium competition
+          'artist_business',      // medium traffic, high competition (many finance blogs)
+          'spotify_artists',      // med-high traffic, high competition (Spotify's own docs)
+          'live_streaming',       // low-med traffic, low competition
+        ];
         let aiStored = 0;
         
         for (const cat of priorityOrder) {
