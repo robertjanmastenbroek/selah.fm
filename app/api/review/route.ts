@@ -119,6 +119,33 @@ export async function POST(request: Request) {
         if (!payoutRes.ok) {
           const payoutErr = await payoutRes.json().catch(() => ({ error: 'Unknown' }));
           payoutNote = payoutErr.error || 'Payout deferred';
+          
+          // If payout failed because creator hasn't set up Stripe, email them
+          if (payoutErr.error?.includes('Stripe onboarding') || payoutErr.error?.includes('not completed')) {
+            try {
+              const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
+              if (creatorData.length > 0 && creatorData[0].email) {
+                const name = creatorData[0].display_name || 'Creator';
+                const earnings = (creatorEarnsCents / 100).toFixed(2);
+                // Fire-and-forget: send Stripe setup email via Resend
+                fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/email/send`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    to: creatorData[0].email,
+                    subject: `$${earnings} earned — complete your payout setup`,
+                    html: `
+                      <h2>You earned $${earnings} on Selah.fm!</h2>
+                      <p>Hi ${name},</p>
+                      <p>Your video was approved and you've earned <strong>$${earnings}</strong>. To receive your payout, you need to connect your bank account (takes 2 minutes).</p>
+                      <p><a href="https://selah.fm/earnings" style="display:inline-block;padding:12px 24px;background:#4338CA;color:white;border-radius:8px;text-decoration:none;font-weight:600;">Set up payouts →</a></p>
+                      <p style="color:#888;font-size:13px;">Payouts are processed within 2-3 business days after setup. Works in 40+ countries.</p>
+                    `,
+                  }),
+                }).catch(() => {});
+              }
+            } catch {}
+          }
         } else {
           payoutNote = 'Payout processing';
         }
