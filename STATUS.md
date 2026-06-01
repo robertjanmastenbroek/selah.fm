@@ -9,7 +9,9 @@
 |------|--------|
 | Auth | Supabase Auth (Google OAuth), redirect bug fixed, avatar saved on login |
 | Database | Supabase PostgreSQL (29+ tables, 2,100+ artists) |
-| Outreach | Cron dispatcher → 10 workers, 100 emails/day target, Resend delivery |
+| **Outreach (primary)** | **Instagram DM — content-first loop. See OUTREACH.md for full strategy** |
+| Outreach (secondary) | Blog SEO — 2 posts/day, answer-first format, QAPage schema |
+| Outreach (tertiary) | Email — opt-in only, post-IG engagement. No cold email. |
 | Campaigns | 2,564 campaigns (2,563 unclaimed, 1 claimed) |
 | Engagement | Onboarding flow, welcome/re-engage sequence, action tracker |
 | Fee model | 20% added on artist CPM, creators earn full CPM + Stripe Connect payouts |
@@ -18,8 +20,8 @@
 | Stripe Payouts | Connect Express setup, auto-payout on approval, webhook tracking |
 | Free SEO tools | Playlist Analyzer, CPM Calculator, Creator Earnings, Budget Planner |
 | Submissions | 24 total (2 approved, 22 rejected), URL dedup active |
-| Users | 11 signups, 11 onboarded |
-| Analytics | Admin view shows all submissions, user view shows own |
+| Users | 13 signups, 11 onboarded |
+| Analytics | Page view tracking live (DB-backed), GA4 running, admin dashboard at /admin/analytics |
 
 ---
 
@@ -27,17 +29,18 @@
 
 | Table | Rows | Notes |
 |-------|------|-------|
-| discovered_artists | 2,095 | Multi-channel: Bandcamp + Reddit + YouTube |
-| artist_audits | 3,192 | Email scraping (Bandcamp, Instagram, SoundCloud, Twitter/X, Google) |
+| discovered_artists | 2,157 | Multi-channel: Bandcamp + Reddit + YouTube |
+| artist_audits | 3,569 | Email scraping (Bandcamp, SoundCloud, Twitter/X) |
 | campaigns | 2,564 | Auto-generated, 1 claimed |
-| campaign_claims | 2,561 | UUID claim codes |
-| outreach_log (email) | 333 | Sent via Resend, 0 bounces today |
+| campaign_claims | 2,563 | UUID claim codes |
+| outreach_log (email) | 371 | Sent via Resend, 122 bounced (25%), 0 opened |
 | creator_outreach_log | 13 | Creator emails sent |
 | verified emails | 83 | Bandcamp text (71), SoundCloud (8), Twitter (4) |
+| **Instagram handles** | **1,320** | **1,196 prime DM targets (has IG, campaign, no email)** |
 | discovered_creators | 20 | TikTok scraping + Reddit creator discovery |
 | submissions | 24 | 2 approved ($2.08 total), 22 rejected (duplicates) |
 | blog_posts | 19 | 13 published, 6 scheduled, 2/day generation |
-| users | 11 | 11 onboarded, 1 Stripe account connected |
+| users | 13 | 11 onboarded, 1 Stripe account connected |
 
 **Cron Schedule (dispatcher at 0 * * * *)**
 
@@ -112,6 +115,8 @@
 | `app/api/cron/creator-outreach/route.ts` | Creator email sending (13/run) |
 | `app/api/cron/creator-discovery/route.ts` | TikTok/Reddit creator discovery |
 | `lib/blog-engine.ts` | DeepSeek article generation, founder answers, anti-detection |
+| `OUTREACH.md` | Full outreach strategy — Instagram, blog, email, MoneyPrinterTurbo |
+| `MoneyPrinterTurbo` | AI video generator (15K★) — future creator tool integration |
 | `lib/founder-answers.json` | 50 verified Q&A — source of truth for all AI content |
 | `lib/outreach.ts` | Artist audit + email scraping + AI messages |
 | `lib/discovery.ts` | Multi-channel discovery (Bandcamp API + Reddit + YouTube) |
