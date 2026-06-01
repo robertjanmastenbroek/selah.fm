@@ -56,6 +56,7 @@ export async function GET(request: Request) {
     );
 
     const searchData = await searchRes.json();
+    result.searchRaw = searchData;
     result.search = {
       status: searchRes.status,
       totalResults: searchData.artists?.total || 0,
@@ -76,13 +77,7 @@ export async function GET(request: Request) {
         { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
       );
       const artistData = await artistRes.json();
-      result.artistDetail = {
-        status: artistRes.status,
-        name: artistData.name,
-        followers: artistData.followers?.total,
-        popularity: artistData.popularity,
-        genres: artistData.genres,
-      };
+      result.artistDetailRaw = artistData;
     }
 
     return NextResponse.json(result);
