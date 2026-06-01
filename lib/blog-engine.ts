@@ -75,6 +75,31 @@ export async function generateInterviewQuestions(rawQuestion: string): Promise<s
 
 // ── Article Generation ───────────────────────────────────────────
 
+// ── Load founder's real answers (source of truth) ────────────────
+const FOUNDER_ANSWERS: Record<string, { q: string; a: string }[]> = (() => {
+  try {
+    return require('./founder-answers.json');
+  } catch {
+    return {};
+  }
+})();
+
+// Build a flattened reference of all real founder quotes for injection
+function getRelevantFounderQuotes(topic: string, max: number = 5): string[] {
+  const all = Object.values(FOUNDER_ANSWERS).flat();
+  const topicWords = topic.toLowerCase().split(/\s+/);
+  const scored = all.map(qa => {
+    const text = (qa.q + ' ' + qa.a).toLowerCase();
+    let score = 0;
+    for (const w of topicWords) {
+      if (text.includes(w)) score++;
+      if (qa.q.toLowerCase().includes(w)) score += 2;
+    }
+    return { ...qa, score };
+  }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, max);
+  return scored.map(x => `Q: ${x.q}\nA: ${x.a}`);
+}
+
 const FOUNDER_BACKSTORY = `
 Robert-Jan Mastenbroek is the founder of Selah.fm. His story:
 - Was a professional musician who got a record deal at a young age but walked away after reading the contract — realized major labels take 98% of revenue and artists become "slaves to the system"
@@ -280,12 +305,18 @@ export async function generateArticle(
     ? `\n\nVOICE EXAMPLES (write in this style):\n${voiceExamples.map((ex, i) => `Example ${i + 1}:\n${ex}`).join('\n\n')}`
     : '';
 
+  // Inject the founder's REAL answers as source material — never fabricate
+  const founderQuotes = getRelevantFounderQuotes(interviewTranscript, 8);
+  const founderContext = founderQuotes.length > 0
+    ? `\n\nFOUNDER'S REAL ANSWERS (use these directly — do NOT invent alternative details):\n${founderQuotes.join('\n\n')}`
+    : '';
+
   // Strong keyword injection — ensures the post targets the right query
   const keywordDirective = keyword
     ? `\n\n🔑 PRIMARY KEYWORD (non-negotiable): "${keyword}"\n- The TITLE must include this keyword naturally (or a very close variant)\n- The SLUG must be built from this keyword\n- The keyword MUST appear in the first 100 words of the post\n- One H2 heading must include the keyword or a close variant\n- The meta description must include the keyword\n- At least one bulleted list item should mention the keyword\n- The post should ANSWER the question implied by the keyword\n- Frame the entire post as answering someone who typed "${keyword}" into Google`
     : '';
 
-  const prompt = `${ARTICLE_PROMPT}\n\nFOUNDER: ${founderName}${voiceContext}${keywordDirective}\n\nINTERVIEW TRANSCRIPT:\n${interviewTranscript}`;
+  const prompt = `${ARTICLE_PROMPT}\n\nFOUNDER: ${founderName}${voiceContext}${founderContext}${keywordDirective}\n\nINTERVIEW TRANSCRIPT:\n${interviewTranscript}`;
 
   const response = await chat([
     { role: 'system', content: prompt },
