@@ -126,26 +126,43 @@ export async function storeMetrics(artistId: string, platform: string, metrics: 
 }
 
 export async function updateArtistProfile(artistId: string, spotifyImageUrl?: string) {
+  const [{ count }] = await sql`SELECT COUNT(DISTINCT platform)::int as count FROM artist_metrics WHERE artist_id = ${artistId}`;
+  const latest = await sql`
+    SELECT metric_name, value FROM artist_metrics WHERE artist_id = ${artistId}
+    AND (platform, metric_name, recorded_at) IN (
+      SELECT platform, metric_name, MAX(recorded_at) FROM artist_metrics WHERE artist_id = ${artistId} GROUP BY platform, metric_name
+    )
+  `;
+  let totalFollowers = 0, totalStreams = 0;
+  for (const m of latest) {
+    if (['followers','subscribers','fans'].includes(m.metric_name)) totalFollowers += m.value || 0;
+    if (['total_views','streams','plays'].includes(m.metric_name)) totalStreams += m.value || 0;
+  }
   await sql`
-    UPDATE artist_profiles SET spotify_image_url = COALESCE(${spotifyImageUrl}, spotify_image_url),
-    total_platforms = (SELECT COUNT(DISTINCT platform) FROM artist_metrics WHERE artist_id = ${artistId}),
-    last_refreshed_at = NOW() WHERE artist_id = ${artistId}
+    UPDATE artist_profiles SET
+      spotify_image_url = COALESCE(${spotifyImageUrl}, spotify_image_url),
+      total_followers = ${totalFollowers},
+      total_streams = ${totalStreams},
+      total_platforms = ${count},
+      last_refreshed_at = NOW()
+    WHERE artist_id = ${artistId}
   `;
 }
 
-export async function refreshArtistMetrics(artistId: string, artistName: string): Promise<number> {
+export async function refreshArtistMetrics(artistId: string, artistName: string, trackName?: string): Promise<number> {
   let updated = 0;
 
   const [spotify, deezer, youtube] = await Promise.all([
-    fetchSpotifyMetrics(artistName),
+    fetchSpotifyMetrics(artistName, trackName),
     fetchDeezerMetrics(artistName),
     fetchYouTubeMetrics(artistName),
   ]);
 
-  if (spotify?.metrics) { await storeMetrics(artistId, 'spotify', spotify.metrics); await updateArtistProfile(artistId, spotify.imageUrl); updated++; }
-  if (deezer?.metrics) { await storeMetrics(artistId, 'deezer', deezer.metrics); await updateArtistProfile(artistId); updated++; }
-  if (youtube?.metrics) { await storeMetrics(artistId, 'youtube', youtube.metrics); await updateArtistProfile(artistId); updated++; }
+  if (spotify?.metrics) { await storeMetrics(artistId, 'spotify', spotify.metrics); updated++; }
+  if (deezer?.metrics) { await storeMetrics(artistId, 'deezer', deezer.metrics); updated++; }
+  if (youtube?.metrics) { await storeMetrics(artistId, 'youtube', youtube.metrics); updated++; }
 
+  await updateArtistProfile(artistId, spotify?.imageUrl);
   return updated;
 }
 

@@ -137,6 +137,29 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
               className="w-28 h-28 rounded-full mx-auto object-cover border-2 border-white/10 shadow-xl mb-5" />
           )}
           <h1 className="text-3xl font-bold">{artist.artist_name}</h1>
+
+          {/* Hero numbers — total followers + total streams */}
+          {(profile?.total_followers > 0 || profile?.total_streams > 0) && (
+            <div className="flex items-center justify-center gap-8 mt-4">
+              {profile?.total_followers > 0 && (
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white tabular-nums">
+                    {useCountUp(profile.total_followers, 2000).toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Total Followers</div>
+                </div>
+              )}
+              {profile?.total_streams > 0 && (
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-primary tabular-nums">
+                    {useCountUp(profile.total_streams, 2000).toLocaleString()}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">Total Streams</div>
+                </div>
+              )}
+            </div>
+          )}
+
           <p className="text-sm text-muted-foreground mt-2">
             {cards.length > 0 ? `${cards.length} metrics across ${Object.keys(metrics).length} platforms` :
              refreshing ? 'Fetching live data...' : 'No metrics yet'}
