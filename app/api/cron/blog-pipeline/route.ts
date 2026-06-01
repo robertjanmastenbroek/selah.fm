@@ -83,6 +83,26 @@ export async function GET(request: Request) {
         log.push(`Sourced ${stored} questions from Reddit`);
       }
       
+      // Fill from AI-generated question pool (deepseek-generated from bulk sourcing)
+      const aiRemaining = 10 - results.questions;
+      if (aiRemaining > 0) {
+        const aiQs = await sql`
+          SELECT raw_question, category FROM batch_questions bq
+          WHERE bq.platform = 'deepseek-generated'
+            AND NOT EXISTS (SELECT 1 FROM batch_questions bq2 WHERE bq2.raw_question = bq.raw_question AND bq2.batch_id = ${batchId})
+          ORDER BY random() LIMIT ${aiRemaining}
+        `;
+        if (aiQs.length > 0) {
+          let aiStored = 0;
+          for (const q of aiQs) {
+            await sql`INSERT INTO batch_questions (batch_id, raw_question, source_url, platform, category) VALUES (${batchId}, ${q.raw_question}, '', 'ai-generated', ${q.category})`;
+            aiStored++;
+          }
+          results.questions += aiStored;
+          log.push(`Sourced ${aiStored} questions from AI pool`);
+        }
+      }
+      
       // Fill remaining slots with curated fallback questions
       const remaining = 10 - results.questions;
       if (remaining > 0) {
