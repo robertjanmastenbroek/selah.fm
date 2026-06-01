@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { generateOutreachVideoAsync, pollMptTask, generateOutreachVideo, generateCaption, generateDMTemplate } from '@/lib/video-generator';
+import { generateOutreachVideoAsync, generateCaption, generateDMTemplate } from '@/lib/video-generator';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,8 +32,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ artists });
     }
 
-    // Videos by status
-    const videos = await sql`
+    // Videos by status — 'all' returns everything with stats
+    let videos;
+    if (status === 'all') {
+      videos = await sql`
+        SELECT ip.*, da.artist_name, da.latest_track_name as track_name
+        FROM instagram_posts ip
+        LEFT JOIN discovered_artists da ON da.artist_name = ip.artist_name
+        ORDER BY ip.created_at DESC
+        LIMIT ${limit}
+      `;
+    } else {
+      videos = await sql`
       SELECT ip.*, da.artist_name, da.latest_track_name as track_name
       FROM instagram_posts ip
       LEFT JOIN discovered_artists da ON da.artist_name = ip.artist_name
@@ -41,6 +51,7 @@ export async function GET(request: Request) {
       ORDER BY ip.created_at DESC
       LIMIT ${limit}
     `;
+    }
 
     // Stats
     const [{ pending }, { approved }, { generating }, { posted }] = await Promise.all([
