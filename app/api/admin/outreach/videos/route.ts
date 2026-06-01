@@ -85,6 +85,17 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action } = body;
 
+    if (action === 'store_local') {
+      // Store a locally-generated video (from MPT on user's Mac → Supabase Storage)
+      const [post] = await sql`
+        INSERT INTO instagram_posts (artist_name, track_name, instagram_handle, cover_art_url, video_url, caption, campaign_slug, status)
+        VALUES (${body.artist_name}, ${body.track_name}, ${body.instagram_handle}, ${body.cover_art_url}, ${body.video_url}, ${body.caption}, ${body.campaign_slug}, 'pending_review')
+        RETURNING id
+      `;
+      await sql`INSERT INTO instagram_outreach_log (discovered_artist_id, campaign_id, instagram_handle, message_text, response_type) VALUES (${body.artist_id}, ${body.campaign_id}, ${body.instagram_handle}, ${body.dm_message || ''}, 'pending')`;
+      return NextResponse.json({ post_id: post.id, status: 'pending_review', source: 'local_mpt' });
+    }
+
     if (action === 'generate') {
       const [artist] = await sql`
         SELECT da.id as artist_id, da.artist_name, da.latest_track_name as track_name,
