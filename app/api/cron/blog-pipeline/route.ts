@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { generateInterviewQuestions, generateArticle, generateFounderAnswers, findVoiceExamples, getFallbackQuestions, sourceQuestionsFromReddit } from '@/lib/blog-engine';
-import { fetchBlogImage } from '@/lib/blog-images';
+import { fetchBlogImage, attachImageToPost } from '@/lib/blog-images';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600;
@@ -240,6 +240,9 @@ export async function GET(request: Request) {
           )
           RETURNING id
         `;
+
+        // Link the downloaded image to this post
+        await attachImageToPost(featuredImage, post.id);
 
         // Add schema
         const schema = {

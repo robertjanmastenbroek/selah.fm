@@ -1,89 +1,28 @@
 /**
- * Image sourcing for blog posts — Pexels API → local cache.
- * Downloads images to /public/images/blog/ so they're served from our domain.
- * Includes deduplication and optional Pexels attribution.
- *
+ * Image sourcing for blog posts — Pexels API → DB binary storage.
+ * 
+ * Images are downloaded and stored in the blog_images table as BYTEA.
+ * Served via /api/images/blog/[id] endpoint.
+ * 
+ * Fallback chain: DB binary → Pexels CDN → /images/og-image.jpg
+ * 
  * Requires PEXELS_API_KEY in environment.
- * Get a free key: https://www.pexels.com/api/
  */
 
-import fs from 'fs';
-import path from 'path';
+import sql from '@/lib/db';
 
 const PEXELS_API_KEY = process.env.PEXELS_API_KEY;
 const FALLBACK_IMAGE = '/images/og-image.jpg';
-const CACHE_DIR = path.join(process.cwd(), 'public/images/blog');
 
-// Ensure cache directory exists
-try { fs.mkdirSync(CACHE_DIR, { recursive: true }); } catch {}
-
-// Track used images + their Pexels source URLs for attribution
-const usedImageUrls = new Set<string>();
-const imageAttribution = new Map<string, string>(); // localUrl → pexelsUrl
-
-/** Load previously used image URLs from DB */
-export async function loadUsedImages(sql: any) {
-  try {
-    const rows = await sql`
-      SELECT DISTINCT featured_image, pexels_source_url FROM blog_posts
-      WHERE featured_image IS NOT NULL AND featured_image != ${FALLBACK_IMAGE}
-    `;
-    for (const row of rows) {
-      if (row.featured_image) usedImageUrls.add(row.featured_image);
-    }
-  } catch {}
-}
-
-/** Mark an image URL as used */
-export function markImageUsed(url: string) {
-  if (url && url !== FALLBACK_IMAGE) usedImageUrls.add(url);
-}
-
-/** Get the original Pexels source URL for a cached image */
-export function getAttribution(localUrl: string): string | undefined {
-  return imageAttribution.get(localUrl);
-}
-
-/** Download a Pexels image to our /public/images/blog/ directory */
-async function downloadToCache(pexelsUrl: string, query: string): Promise<string | null> {
-  try {
-    const res = await fetch(pexelsUrl);
-    if (!res.ok) return null;
-
-    const buffer = Buffer.from(await res.arrayBuffer());
-    const ext = pexelsUrl.match(/\.(jpe?g|png|webp)/)?.[1] || 'jpg';
-    const filename = `blog-${query.replace(/[^a-z0-9]+/g, '-').slice(0, 50)}-${Date.now().toString(36)}.${ext}`;
-    const filepath = path.join(CACHE_DIR, filename);
-
-    fs.writeFileSync(filepath, buffer);
-
-    const localUrl = `/images/blog/${filename}`;
-    imageAttribution.set(localUrl, pexelsUrl); // store attribution
-
-    return localUrl;
-  } catch (e) {
-    console.error('Failed to download image:', (e as Error).message);
-    return null;
-  }
-}
-
-/** Pick first unused photo from Pexels results */
-function pickUnusedPhoto(photos: any[]): any {
-  for (const photo of photos) {
-    const url = photo.src?.large2x || photo.src?.large || photo.src?.original;
-    if (url && !usedImageUrls.has(url)) return photo;
-  }
-  return photos[Math.floor(Math.random() * photos.length)];
-}
-
-/** Fetch and cache a single image from Pexels */
-export async function fetchBlogImage(query: string): Promise<string> {
+/** Fetch and store a blog image — downloads from Pexels, stores in DB, returns API URL */
+export async function fetchBlogImage(query: string, blogPostId?: string): Promise<string> {
   if (!PEXELS_API_KEY) return FALLBACK_IMAGE;
 
   try {
+    // 1. Search Pexels
     const res = await fetch(
       `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=10&orientation=landscape&size=large`,
-      { headers: { Authorization: PEXELS_API_KEY } }
+      { headers: { Authorization: PEXELS_API_KEY }, signal: AbortSignal.timeout(10000) }
     );
 
     if (!res.ok) return FALLBACK_IMAGE;
@@ -91,28 +30,58 @@ export async function fetchBlogImage(query: string): Promise<string> {
     const data = await res.json();
     if (!data.photos?.length) return FALLBACK_IMAGE;
 
-    const photo = pickUnusedPhoto(data.photos);
+    // Pick a random photo from top results
+    const photo = data.photos[Math.floor(Math.random() * Math.min(data.photos.length, 5))];
     const pexelsUrl = photo.src?.large2x || photo.src?.large || photo.src?.original;
     if (!pexelsUrl) return FALLBACK_IMAGE;
 
-    // Store Pexels URL directly (avoids Railway ephemeral filesystem)
-    // Download to local is still attempted for self-hosting but doesn't block
-    downloadToCache(pexelsUrl, query).then(localUrl => {
-      if (localUrl) markImageUsed(localUrl);
-    }).catch(() => {});
+    // 2. Download the image bytes
+    const imageRes = await fetch(pexelsUrl, { signal: AbortSignal.timeout(15000) });
+    if (!imageRes.ok) {
+      // Download failed — use Pexels CDN as fallback
+      console.warn(`[blog-images] Download failed for ${query}, using Pexels CDN`);
+      return pexelsUrl;
+    }
 
-    markImageUsed(pexelsUrl);
-    return pexelsUrl;
-  } catch {
+    const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
+    const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+
+    // 3. Store in database
+    const [row] = await sql`
+      INSERT INTO blog_images (blog_post_id, image_data, mime_type, source_url, source_type)
+      VALUES (${blogPostId || null}, ${imageBuffer}, ${contentType}, ${pexelsUrl}, 'pexels')
+      RETURNING id
+    `;
+
+    // Return API URL for serving
+    return `/api/images/blog/${row.id}`;
+  } catch (e) {
+    console.error('[blog-images] Error:', (e as Error).message);
     return FALLBACK_IMAGE;
   }
 }
 
-/** Fetch multiple images */
-export async function fetchBlogImages(queries: string[]): Promise<Map<string, string>> {
+/** Fetch multiple images — returns a map of query → image URL */
+export async function fetchBlogImages(queries: string[], blogPostId?: string): Promise<Map<string, string>> {
   const results = new Map<string, string>();
   for (const query of queries.slice(0, 5)) {
-    results.set(query, await fetchBlogImage(query));
+    results.set(query, await fetchBlogImage(query, blogPostId));
   }
   return results;
+}
+
+/** Update a blog post's featured image after the post is created */
+export async function attachImageToPost(imageUrl: string, blogPostId: string): Promise<void> {
+  // Extract image ID from URL: /api/images/blog/[id]
+  const match = imageUrl.match(/\/api\/images\/blog\/([a-f0-9-]+)/);
+  if (!match) return;
+
+  try {
+    await sql`
+      UPDATE blog_images SET blog_post_id = ${blogPostId}
+      WHERE id = ${match[1]}
+    `;
+  } catch {
+    // Best effort — image is stored, just not linked
+  }
 }

@@ -9,7 +9,7 @@ import {
   getFallbackQuestions,
   sourceQuestionsFromReddit,
 } from '@/lib/blog-engine';
-import { fetchBlogImage, loadUsedImages, markImageUsed, getAttribution } from '@/lib/blog-images';
+import { fetchBlogImage, attachImageToPost } from '@/lib/blog-images';
 
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
@@ -377,7 +377,6 @@ async function autoAnswerAll(batchId: string) {
 }
 
 async function previewPost(interviewId: string) {
-  await loadUsedImages(sql);
   const [interview] = await sql`SELECT * FROM batch_interviews WHERE id = ${interviewId} AND status = 'answered'`;
   if (!interview) return NextResponse.json({ error: 'Interview not found or not answered' }, { status: 404 });
 
@@ -393,18 +392,15 @@ async function previewPost(interviewId: string) {
 
   const imageQuery = article.image_suggestions?.[0]?.description || article.tags?.[0] || 'music promotion';
   const featuredImage = await fetchBlogImage(imageQuery);
-  const pexelsUrl = getAttribution(featuredImage);
 
   const [post] = await sql`
     INSERT INTO blog_posts (
       interview_id, title, slug, content_html, excerpt, featured_image,
-      pexels_source_url,
       meta_title, meta_description, tags, image_suggestions,
       primary_keyword, internal_links, faq_schema, word_count, cta_positions,
       status, author_id
     ) VALUES (
       ${interview.id}, ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
-      ${pexelsUrl || null},
       ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
       ${JSON.stringify(article.image_suggestions || [])},
       ${article.primary_keyword || (article.tags?.[0] || null)},
@@ -422,7 +418,8 @@ async function previewPost(interviewId: string) {
     RETURNING *
   `;
 
-  if (post?.featured_image) markImageUsed(post.featured_image);
+  // Link the image to the post
+  await attachImageToPost(featuredImage, post.id);
 
   // Add JSON-LD
   const schema: any = {
@@ -481,7 +478,6 @@ async function updatePost(postId: string, updates: any) {
   `;
 
   const updatedPost = result[0];
-  if (updatedPost?.featured_image) markImageUsed(updatedPost.featured_image);
 
   return NextResponse.json({ post: updatedPost });
 }
@@ -503,18 +499,15 @@ async function generateFromVoice(topic: string, keyword: string) {
   const slug = baseSlug + '-' + Date.now().toString(36);
   const imageQuery = article.image_suggestions?.[0]?.description || article.tags?.[0] || searchTopic;
   const featuredImage = await fetchBlogImage(imageQuery);
-  const pexelsUrl = getAttribution(featuredImage);
 
   const [post] = await sql`
     INSERT INTO blog_posts (
       title, slug, content_html, excerpt, featured_image,
-      pexels_source_url,
       meta_title, meta_description, tags, image_suggestions,
       primary_keyword, internal_links, faq_schema, word_count, cta_positions,
       status, author_id
     ) VALUES (
       ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
-      ${pexelsUrl || null},
       ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
       ${JSON.stringify(article.image_suggestions || [])},
       ${keyword || article.primary_keyword || (article.tags?.[0] || null)},
@@ -532,7 +525,8 @@ async function generateFromVoice(topic: string, keyword: string) {
     RETURNING *
   `;
 
-  if (post?.featured_image) markImageUsed(post.featured_image);
+  // Link the image to post
+  await attachImageToPost(featuredImage, post.id);
 
   // Mark the question as used so we don't answer it again
   if (keyword) markQuestionUsed(keyword, post.id, 'answered');
@@ -541,7 +535,6 @@ async function generateFromVoice(topic: string, keyword: string) {
 }
 
 async function finalizeBatch(batchId: string) {
-  await loadUsedImages(sql);
   await sql`UPDATE batches SET status = 'generating', updated_at = NOW() WHERE id = ${batchId}`;
 
   const interviews = await sql`SELECT * FROM batch_interviews WHERE batch_id = ${batchId} AND status = 'answered'`;
@@ -590,7 +583,8 @@ async function finalizeBatch(batchId: string) {
         RETURNING *
       `;
 
-      if (post?.featured_image) markImageUsed(post.featured_image);
+      // Link the image to the post
+      await attachImageToPost(featuredImage, post.id);
 
       if (interview.transcript) {
         const chunks = interview.transcript.match(/.{1,500}/g) || [];

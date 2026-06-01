@@ -25,9 +25,18 @@ async function getRelatedPosts(currentSlug: string, tags: string[]) {
   return related;
 }
 
+function absoluteUrl(path: string | null): string | null {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  if (path.startsWith('/')) return `https://selah.fm${path}`;
+  return `https://selah.fm/${path}`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getPost(params.slug);
   if (!post) return { title: 'Post not found — Selah.fm Blog' };
+
+  const ogImage = absoluteUrl(post.featured_image);
 
   return {
     title: post.meta_title || post.title,
@@ -38,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       url: `https://selah.fm/blog/${post.slug}`,
       siteName: 'Selah.fm',
-      images: post.featured_image ? [{ url: post.featured_image, width: 1200, height: 630 }] : [],
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630 }] : [],
       publishedTime: post.published_at,
       authors: ['Robert-Jan Mastenbroek'],
     },
@@ -46,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: 'summary_large_image',
       title: post.meta_title || post.title,
       description: post.meta_description || post.excerpt,
-      images: post.featured_image ? [post.featured_image] : [],
+      images: ogImage ? [ogImage] : [],
     },
     alternates: { canonical: `https://selah.fm/blog/${post.slug}` },
   };
@@ -158,7 +167,7 @@ export default async function BlogPostPage({ params }: Props) {
             <div className="grid gap-4 md:grid-cols-3">
               {relatedPosts.map((rp: any) => (
                 <a key={rp.slug} href={`/blog/${rp.slug}`} className="group block rounded-xl bg-white/[0.02] border border-white/[0.06] overflow-hidden hover:bg-white/[0.04] transition-colors">
-                  {rp.featured_image && <img src={rp.featured_image} alt={rp.title} className="w-full h-32 object-cover" loading="lazy" />}
+                  {rp.featured_image && <img src={rp.featured_image?.startsWith("/") ? "https://selah.fm" + rp.featured_image : rp.featured_image} alt={rp.title} className="w-full h-32 object-cover" loading="lazy" />}
                   <div className="p-4">
                     <h3 className="text-sm font-semibold group-hover:text-primary transition-colors line-clamp-2">{rp.title}</h3>
                     {rp.published_at && <p className="text-[10px] text-muted-foreground mt-1">{new Date(rp.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>}
