@@ -26,11 +26,11 @@ Selah.fm is a two-sided marketplace: **artists** set budgets and **creators** ea
     └───────┬───────┘                     └───────┬───────┘
             │                                     │
             ▼                                     ▼
-    ┌───────────────┐                     ┌───────────────┐
-    │ INSTAGRAM DM   │                     │ INSTAGRAM DM   │
-    │ Content-first  │                     │ Content-first  │
-    │ loop           │                     │ loop           │
-    └───────┬───────┘                     └───────┬───────┘
+    ┌───────────────────┐               ┌───────────────┐
+    │ INSTAGRAM CONTENT  │               │ INSTAGRAM DM   │
+    │ MoneyPrinterTurbo  │               │ Content-first  │
+    │ AI video → @artist │               │ loop           │
+    └─────────┬─────────┘               └───────┬───────┘
             │                                     │
             └──────────────────┬──────────────────┘
                                ▼
@@ -61,8 +61,6 @@ Selah.fm is a two-sided marketplace: **artists** set budgets and **creators** ea
 4. Creator Income — how creators earn from short-form video (high traffic)
 5. Music Promotion — independent artist strategies (core product alignment)
 
-**Creator-facing content:** Every post links to relevant tools (CPM Calculator, Creator Earnings, Playlist Analyzer) and campaign pages. Internal linking brings both artists and creators into the funnel.
-
 ---
 
 ## Channel 2: Instagram DM — Content-First Outreach Loop
@@ -75,31 +73,50 @@ Selah.fm is a two-sided marketplace: **artists** set budgets and **creators** ea
 POST → ENGAGE → DM
 ```
 
-1. **Post:** Selah.fm posts about an artist's track (cover art + caption + @artist tag)
+1. **Post:** Selah.fm posts about an artist's track (AI-generated video + @artist tag)
 2. **Engage:** Artist sees it, likes/comments/views the story — now it's warm
-3. **DM:** "Hey, we posted about your track. Actually, we built a campaign page for it..."
+3. **DM:** "Hey, we featured your track. Actually, we built a campaign page for it..."
 
-**This is not cold outreach.** It's responding to engagement about content featuring their music. Meta explicitly supports this pattern.
+**This is not cold outreach.** Meta explicitly supports business-to-consumer messaging via their API. Content-first makes it compliant.
 
 ### Artist Outreach Loop
 
-**Step 1: Content Creation (automated)**
-- System queues artists from the `instagram_outreach` table
-- Generates Instagram posts: track cover art (from DB) + caption with @artist_handle
-- Human reviews and posts (or schedules)
+**Step 1: Content Creation (MoneyPrinterTurbo-powered)**
 
-**Step 2: Engagement Tracking**
-- Check who engaged with the post
-- Prioritize artists who liked/commented/viewed
+The Instagram content is AI-generated video. MoneyPrinterTurbo produces short vertical videos featuring an artist's track.
 
-**Step 3: DM (manual by Robert-Jan)**
-- Personalized message about their track + campaign page link
+```
+DB queue              MPT API                    Instagram
+────────              ───────                    ─────────
+Artist + track   →   Generate video        →   Post to @selahfm
+Cover art (DB)   →   "Check out [track]    →   Tag @artist
+Campaign URL     →    by [artist]"         →   Artist sees it
+IG handle        →                         →   Engages → DM
+```
+
+**What MPT generates:**
+- Script: "Independent artist [name] just dropped '[track]'. We built a campaign page for it — creators can make TikToks with this song and earn per view. Artist pays only for verified views. Link in bio."
+- Stock footage: Pexels/Pixabay clips matching the music genre
+- Voiceover: AI narration, subtitles auto-generated
+- Background music: **The artist's actual track** (from campaign URL)
+- Output: 9:16 vertical, 15-30 seconds, H.264 MP4
+
+**The flow:**
+1. Cron job picks 3-5 artists from queue (has IG handle, campaign, not yet posted)
+2. MPT API generates video for each
+3. Videos stored in Supabase Storage or DB (`instagram_posts` table)
+4. Human review (Robert-Jan) — watch, approve or regenerate
+5. Post to @selahfm with @artist tag + campaign link in bio
+6. Artist sees their music featured → engages → warm DM conversation
+
+**Step 2: DM (manual by Robert-Jan)**
+- Personalized message: references their track specifically
 - "No pressure, just claim it when ready"
-- Signed as Robert-Jan (founder credibility)
+- Campaign URL with UTM: `?utm_source=instagram&utm_medium=dm`
 
-**Step 4: Conversion Tracking**
-- Track DM sent → campaign visited → campaign claimed → submissions received
-- UTM: `?utm_source=instagram&utm_medium=dm&utm_campaign=artist_outreach`
+**Step 3: Conversion Tracking**
+- Track: DM sent → campaign visited → campaign claimed → submissions
+- UTM params captured by existing page_view analytics
 
 ### Creator Outreach Loop
 
@@ -110,93 +127,76 @@ Same pattern, different targeting:
 - Dance, lip-sync, "songs you need to hear," music reviews
 - Track in `discovered_creators` table with Instagram handle
 
-**Step 2: Content Creation**
-- Post about creator earnings potential on Selah.fm
-- Statistics: "Creators earn ~$1,000/1M views. Artists set CPM. You choose the track."
+**Step 2: DM (manual)**
+- "You make great music content. We have 2,500+ artists paying for verified views. Browse campaigns, pick a track, make a video, earn per view."
 - Link to CPM Calculator + Browse page
 
-**Step 3: DM (manual)**
-- "Hey, you make great music content. We have 2,500+ artists paying for verified views. Browse campaigns, pick a track, make a video, earn per view."
-
-**Step 4: Tool-Based Attraction**
-- Free tools bring creators organically: Playlist Analyzer, CPM Calculator, Creator Earnings
-- Creators searching "How much does TikTok pay per view?" find our blog → discover Selah.fm
+**Step 3: Tool-Based Attraction (organic)**
+- Free SEO tools: Playlist Analyzer, CPM Calculator, Creator Earnings
+- Creators searching "How much does TikTok pay" find blog → discover Selah.fm
 
 ---
 
-## Channel 3: Email (Opt-In, Post-Engagement)
+## Channel 3: Email (Opt-In Only)
 
-**Role:** Email is no longer primary outreach. It's the follow-up channel after Instagram engagement.
+**Role:** Follow-up after Instagram engagement. No cold email.
 
-**When we collect email:**
-- Artist replies to DM → we ask for email for campaign updates
-- Artist claims their page → email collected during signup
-- Creator signs up for payouts → email collected during Stripe onboarding
-
-**What email does now:**
-- Campaign status updates (submissions received, views verified)
-- Payout notifications
-- Re-engagement for dormant artists/creators
-- **No cold outreach.** Email addresses are opt-in only.
+- Artist replies to DM → ask for email for updates
+- Artist claims page → email via signup
+- Creator signs up for payouts → email via Stripe onboarding
+- Campaign status updates, payout notifications, re-engagement
 
 ---
 
-## MoneyPrinterTurbo — AI Video Generation for Creators
+## MoneyPrinterTurbo — AI Video Engine for Instagram Content
 
-**What it is:** MoneyPrinterTurbo (https://github.com/harry0703/MoneyPrinterTurbo) is an open-source Python tool (15K+ GitHub stars) that turns a topic/keyword into a complete short-form video with AI-generated script, stock footage, voiceover, subtitles, and background music.
+**What it is:** Open-source Python tool (15K+ GitHub stars). Turns a topic into a complete short-form video: AI script → stock footage → voiceover → subtitles → background music → final MP4.
 
-**Strategic value for Selah.fm:** The #1 barrier for creators is "I don't know how to make videos" or "It takes too long." MoneyPrinterTurbo removes this barrier. A creator can:
-1. Pick a campaign track
-2. Enter: "Why [track name] is the song of the summer"
-3. Get a complete video with stock footage + artist's song + captions
-4. Post it to TikTok/Reels/Shorts
-5. Earn per verified view
+**How we use it (INTERNAL ONLY — NOT a creator tool):** MPT is our Instagram content factory. It generates the videos we post to @selahfm featuring artists' tracks. This is the fuel that drives the entire outreach loop.
 
 **Integration plan:**
 
-| Phase | What | When |
+| Phase | What | Time |
 |-------|------|------|
-| Phase 1 | Research + prototype: deploy MPT Docker on Railway, test API | Week 1-2 |
-| Phase 2 | Build `/tools/video-generator` page: creator enters topic, gets video | Week 3-4 |
-| Phase 3 | Auto-generate videos for campaigns: "Why [artist]'s [track] deserves more ears" | Month 2 |
-| Phase 4 | Blog-to-video pipeline: auto-generate TikTok versions of blog posts | Month 3 |
+| 1 | Deploy MPT Docker on Railway, expose internal API | Day 1-2 |
+| 2 | Build `/api/cron/generate-outreach-videos` cron route | Day 3-4 |
+| 3 | Build video review dashboard at `/admin/outreach/videos` | Day 5-6 |
+| 4 | Wire into daily ops: generate → review → post → DM | Week 2 |
+| 5 | (Future) Open MPT to creators as a tool | Month 3+ |
 
-**Technical approach:**
-- Deploy MPT as a separate Docker service on Railway
-- Expose via internal Railway network (not public — API only)
-- Next.js calls MPT API: POST `/api/tools/generate-video` with track details
-- MPT returns video URL (stored in Supabase Storage or our DB)
-- Creator downloads and posts
+**Technical architecture:**
 
-**Alternative (lightweight):** If MPT is too heavy for Railway, build a Node.js equivalent using:
-- DeepSeek for script generation (already integrated)
-- Pexels API for stock footage (already integrated)
-- Remotion (https://remotion.dev) for video composition in Node.js
-- Or: use a cloud service (Shotstack, Creatomate) for rendering
+```
+Railway
+├── selah.fm (Next.js)
+│   ├── /api/cron/generate-outreach-videos  ← cron trigger
+│   ├── /api/mpt/generate                   ← calls MPT
+│   └── /admin/outreach/videos              ← review dashboard
+│
+└── mpt-service (Docker)
+    └── MoneyPrinterTurbo Python API (:8080)
+        ├── POST /api/v1/videos  ← { script, bgm_url, genre }
+        └── returns { video_url, duration, thumbnail }
+```
+
+**Why MPT:**
+- Already handles everything: script gen, footage sourcing, voiceover, subtitles, composition
+- Supports DeepSeek (we have API key) + Pexels (we have API key)
+- Docker deploy = one command on Railway
+- 15K stars, MIT license, active maintenance
+
+**Fallback:** If MPT is too heavy for Railway, use Shotstack API for rendering ($19/mo for 30 videos, $0.63/video, no GPU).
 
 ---
 
 ## Daily Operations
 
-### Morning (30 min)
-- Review IG post queue (auto-generated from artist DB)
-- Post 3-5 artist features on @selahfm
-- Check engagement from yesterday's posts
-
-### Midday (20 min)
-- Send DMs to artists who engaged with posts
-- 10-15 personalized messages with campaign links
-- Record in `instagram_outreach_log`
-
-### Afternoon (15 min)
-- Send 5-10 DMs to new creator discoveries
-- Review responses, follow up on conversations
-- Update tracking
-
-### Weekly Review
-- Conversion metrics: posts → DMs → visits → claims
-- Adjust messaging based on response rates
-- Top up discovery queue (new artists, new creators)
+| Time | Action | Duration |
+|------|--------|----------|
+| Morning | Review MPT-generated videos, post 3-5 to @selahfm | 20 min |
+| Midday | Check engagement, send DMs to artists who engaged | 20 min |
+| Afternoon | Send DMs to new creator discoveries, follow up | 15 min |
+| Weekly | Review metrics, adjust templates, top up queue | 30 min |
 
 ---
 
@@ -204,14 +204,13 @@ Same pattern, different targeting:
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| Artists ready for IG outreach | 1,196 | 973 with campaigns, 223 already emailed |
+| Artists ready for IG outreach | 1,196 | 973 with campaigns |
 | Daily IG posts | 3-5 | 0 (starting) |
 | Daily DMs sent | 20-25 | 0 (starting) |
 | DM reply rate | 10-30% | TBD |
 | Campaign claim rate | 5-15% of DMs | TBD |
-| Creators discovered | 50+ new/week | 7 total (to be rebuilt) |
+| Creators discovered | 50+ new/week | 7 total |
 | Blog posts/day | 2 | 2 (automated) |
-| Blog organic traffic | Growing | TBD (page_view tracking live) |
 
 ---
 
@@ -225,7 +224,7 @@ CREATE TABLE instagram_outreach_log (
   campaign_id UUID REFERENCES campaigns(id),
   instagram_handle VARCHAR(100),
   message_text TEXT,
-  post_url VARCHAR(500),        -- URL of the IG post that triggered this DM
+  post_url VARCHAR(500),
   dm_sent_at TIMESTAMPTZ,
   response_type VARCHAR(20),    -- replied, ignored, claimed
   response_at TIMESTAMPTZ,
@@ -242,12 +241,11 @@ CREATE TABLE instagram_posts (
   artist_name VARCHAR(200),
   track_name VARCHAR(200),
   instagram_handle VARCHAR(100),
-  cover_art_url VARCHAR(500),
+  video_url VARCHAR(500),       -- MPT-generated video
   caption TEXT,
   campaign_slug VARCHAR(200),
   posted_at TIMESTAMPTZ,
   post_url VARCHAR(500),
-  engagement_count INTEGER,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
@@ -258,11 +256,12 @@ CREATE TABLE instagram_posts (
 
 | File | Purpose |
 |------|---------|
+| `OUTREACH.md` | This document — full outreach strategy |
+| `STATUS.md` | Project status + reference |
 | `app/api/cron/outreach-pipeline/route.ts` | Artist discovery → audit → campaign (automated) |
-| `app/api/cron/instagram-outreach/route.ts` | IG post queue + DM prep (to be created) |
+| `app/api/cron/generate-outreach-videos/route.ts` | MPT video generation cron (to be created) |
 | `app/admin/outreach/instagram/page.tsx` | DM queue dashboard (to be created) |
-| `lib/outreach.ts` | Artist audit + email scraping + AI message generation |
-| `lib/outreach-instagram.ts` | IG message generation + post caption generation (to be created) |
+| `app/admin/outreach/videos/page.tsx` | Video review dashboard (to be created) |
+| `lib/outreach.ts` | Artist audit + AI message generation |
 | `lib/discovery.ts` | Multi-channel artist/creator discovery |
-| `lib/blog-engine.ts` | DeepSeek article generation, founder answers |
-| `lib/founder-answers.json` | Source of truth for AI-generated content |
+| `lib/blog-engine.ts` | DeepSeek article generation |
