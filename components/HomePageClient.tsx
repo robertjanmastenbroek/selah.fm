@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
 import { Search, Music4, Clapperboard, ArrowRight, X, Check, Star, TrendingUp, Shield, BadgeCheck, Sparkles, MessageCircle, BarChart3, Eye, Upload, DollarSign, Heart, Globe } from 'lucide-react';
 
 function formatCount(n: number): string {
@@ -21,6 +22,25 @@ export default function RootPage() {
   const [stats, setStats] = useState({ artists: 0, creators: 0, activeCampaigns: 0, totalPaidCents: 0, totalViews: 0, donors: 0, totalDonatedCents: 0, totalDepositedCents: 0 });
   const [featuredCampaigns, setFeaturedCampaigns] = useState<any[]>([]);
   const [totalActive, setTotalActive] = useState(0);
+  const [user, setUser] = useState<{ email?: string; avatar?: string; name?: string } | null>(null);
+
+  // Check auth state on mount
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) {
+        const u = data.session.user;
+        setUser({ email: u.email, avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture, name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] });
+      }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      if (s?.user) {
+        const u = s.user;
+        setUser({ email: u.email, avatar: u.user_metadata?.avatar_url || u.user_metadata?.picture, name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0] });
+      } else { setUser(null); }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     // Fetch stats
@@ -58,11 +78,25 @@ export default function RootPage() {
 
       {/* ════════════ HERO ════════════ */}
       <section className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4">
-        {/* Sign in */}
+        {/* Auth: profile icon or sign in */}
         <motion.div className="absolute top-6 right-6 z-20" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          {user ? (
+            <Link href="/dashboard"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] text-[13px] font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-200">
+              {user.avatar ? (
+                <img src={user.avatar} alt="" className="w-6 h-6 rounded-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-[#4338CA]/30 flex items-center justify-center text-white/70 text-[11px] font-bold">
+                  {user.name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+              )}
+              <span className="hidden sm:inline max-w-[120px] truncate">{user.name}</span>
+            </Link>
+          ) : (
           <Link href="/login" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] text-[13px] font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-200">
             Sign in <ArrowRight size={12} />
           </Link>
+          )}
         </motion.div>
 
         <motion.div className="w-full max-w-3xl text-center space-y-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9 }}>
