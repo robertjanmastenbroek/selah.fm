@@ -131,7 +131,7 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
 
   // Check crawl4ai health on mount
   useEffect(() => {
-    fetch('/api/crawl/health').then(r => r.json()).then(d => setCrawlStatus(d.ok ? 'connected' : 'offline')).catch(() => setCrawlStatus('offline'));
+    fetch('/api/crawl').then(r => r.json()).then(d => setCrawlStatus(d.ok ? 'connected' : 'offline')).catch(() => setCrawlStatus('offline'));
   }, []);
 
   // Auto-refresh if no data at all
