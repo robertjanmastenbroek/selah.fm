@@ -24,6 +24,7 @@ function buildQuery(filters: Record<string, any>) {
   if (filters.platform) params.set('platform', filters.platform);
   if (filters.minCpm) params.set('minCpm', String(filters.minCpm));
   if (filters.offset) params.set('offset', String(filters.offset || 0));
+  params.set('sort', filters.sort || 'popular'); // default: popularity-weighted random
   const qs = params.toString();
   return qs ? `?${qs}` : '';
 }

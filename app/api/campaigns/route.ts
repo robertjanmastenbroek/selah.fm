@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const minCpm = searchParams.get('minCpm') || '';
     const offset = parseInt(searchParams.get('offset') || '0');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
-    const sort = searchParams.get('sort') || 'newest';
+    const sort = searchParams.get('sort') || 'popular';
 
     // If user is authenticated, show only their campaigns (dashboard).
     // If not, show all active/draft campaigns (public browse).
@@ -54,16 +54,18 @@ export async function GET(request: Request) {
       `;
       campaigns = await sql.raw(query, [userId, limit]);
     } else {
-      // Public browsing: support 'recent' (newest first) and 'popular' (budget fill first)
+      // Public browsing: popularity-weighted with random jitter (different order each refresh)
+      // Pinned campaigns always first. Popularity = submissions*100 + views/1000 + budget_spent_pct*50 + donations/100
       const orderClause2 = sort === 'recent'
         ? `${pinSort}, c.created_at DESC`
         : `${pinSort},
-          CASE WHEN c.total_budget_cents > 0 
-            THEN (c.total_budget_cents - c.budget_remaining_cents)::float / c.total_budget_cents 
-            ELSE 0 
-          END DESC,
-          c.total_budget_cents DESC,
-          c.created_at DESC`;
+          (COALESCE(v.approved_submissions, '0')::int * 100 +
+           COALESCE(v.total_verified_views, '0')::float / 1000 +
+           CASE WHEN c.total_budget_cents > 0 
+             THEN (c.total_budget_cents - c.budget_remaining_cents)::float / c.total_budget_cents * 50 
+             ELSE 0 END +
+           COALESCE(donations.total_cents, 0)::float / 100
+          ) + RANDOM() * 200 DESC`;
       
       const query = `
         SELECT c.*,
@@ -72,12 +74,18 @@ export async function GET(request: Request) {
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
           COALESCE(u.display_name, da.artist_name) as artist_name,
-          u.profile_image_url as artist_avatar
+          u.profile_image_url as artist_avatar,
+          COALESCE(donations.total_cents, 0) as donation_total_cents,
+          COALESCE(donations.donation_count, 0) as donation_count
         FROM campaigns c
         LEFT JOIN campaign_stats v ON v.id = c.id
         LEFT JOIN users u ON u.id = c.artist_id
         LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
         LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+        LEFT JOIN (
+          SELECT campaign_id, COALESCE(SUM(amount_cents), 0) as total_cents, COUNT(*) as donation_count
+          FROM campaign_donations GROUP BY campaign_id
+        ) donations ON donations.campaign_id = c.id
         WHERE c.status IN ('active', 'draft')
         ORDER BY ${orderClause2}
         LIMIT $1

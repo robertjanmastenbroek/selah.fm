@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
 async function getCampaigns() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
-    const res = await fetch(`${baseUrl}/api/campaigns?limit=100`);
+    const res = await fetch(`${baseUrl}/api/campaigns?limit=100&sort=popular`);
     if (!res.ok) return { campaigns: [], total: 0 };
     return res.json();
   } catch {
