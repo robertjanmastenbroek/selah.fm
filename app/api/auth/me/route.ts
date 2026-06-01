@@ -13,11 +13,19 @@ export async function GET(request: Request) {
     const user = await getUser();
     if (!user) return NextResponse.json({ user: null, isAdmin: false });
 
-    const rows = await sql`
-      SELECT display_name, user_type, is_artist, is_creator, stripe_connect_id, onboarded_at
-      FROM users WHERE id = ${user.id}
+    // Get user profile + social handles + matching artist audit data
+    const [profile] = await sql`
+      SELECT u.display_name, u.user_type, u.is_artist, u.is_creator, u.stripe_connect_id, u.onboarded_at,
+        u.bio, u.genres, u.preferred_cpm_cents,
+        u.tiktok_handle, u.instagram_handle, u.youtube_handle, u.facebook_handle,
+        u.profile_image_url, u.email as user_email,
+        aa.id as audit_id, aa.instagram_handle as audit_ig, aa.tiktok_handle as audit_tt
+      FROM users u
+      LEFT JOIN discovered_artists da ON da.artist_name ILIKE u.display_name OR da.email_address = u.email
+      LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+      WHERE u.id = ${user.id}
+      ORDER BY aa.audited_at DESC LIMIT 1
     `;
-    const profile = rows[0];
 
     return NextResponse.json({
       user: {
@@ -28,6 +36,14 @@ export async function GET(request: Request) {
         is_artist: profile?.is_artist ?? false,
         is_creator: profile?.is_creator ?? true,
         stripe_connect_id: profile?.stripe_connect_id,
+        bio: profile?.bio || null,
+        genres: profile?.genres || null,
+        preferred_cpm_cents: profile?.preferred_cpm_cents || null,
+        tiktok_handle: profile?.tiktok_handle || profile?.audit_tt || null,
+        instagram_handle: profile?.instagram_handle || profile?.audit_ig || null,
+        youtube_handle: profile?.youtube_handle || null,
+        facebook_handle: profile?.facebook_handle || null,
+        profile_image_url: profile?.profile_image_url || null,
       },
       onboarded: !!profile?.onboarded_at,
       isAdmin: ADMIN_EMAILS.includes(user.email || ''),
@@ -70,6 +86,27 @@ export async function PATCH(request: Request) {
       `UPDATE users SET ${updates.join(', ')} WHERE id = $${values.length}`,
       values
     );
+
+    // Sync social handles to artist_audits if a matching discovered artist exists
+    if (instagram_handle !== undefined || tiktok_handle !== undefined || youtube_handle !== undefined) {
+      try {
+        const [artist] = await sql`
+          SELECT da.id FROM discovered_artists da
+          WHERE da.artist_name ILIKE ${user.email} OR da.artist_name ILIKE ${user.email?.split('@')[0]}
+             OR da.email_address = ${user.email} LIMIT 1
+        `;
+        if (artist) {
+          const aUpdates: string[] = []; const aValues: any[] = [];
+          if (instagram_handle !== undefined) { aUpdates.push(`instagram_handle = $${aUpdates.length + 1}`); aValues.push(instagram_handle); }
+          if (tiktok_handle !== undefined) { aUpdates.push(`tiktok_handle = $${aUpdates.length + 1}`); aValues.push(tiktok_handle); }
+          if (youtube_handle !== undefined) { aUpdates.push(`youtube_handle = $${aUpdates.length + 1}`); aValues.push(youtube_handle); }
+          if (aUpdates.length > 0) {
+            aValues.push(artist.id);
+            await sql.raw(`UPDATE artist_audits SET ${aUpdates.join(', ')}, updated_at = NOW() WHERE discovered_artist_id = $${aValues.length}`, aValues);
+          }
+        }
+      } catch { /* non-critical sync */ }
+    }
 
     // Trigger welcome email on first onboarding save
     try {

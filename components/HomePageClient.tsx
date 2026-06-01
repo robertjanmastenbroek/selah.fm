@@ -81,7 +81,7 @@ export default function RootPage() {
         {/* Auth: profile icon or sign in */}
         <motion.div className="absolute top-6 right-6 z-20" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           {user ? (
-            <Link href="/dashboard"
+            <Link href="/settings"
               className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] text-[13px] font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-200">
               {user.avatar ? (
                 <img src={user.avatar} alt="" className="w-6 h-6 rounded-full object-cover" referrerPolicy="no-referrer" />
