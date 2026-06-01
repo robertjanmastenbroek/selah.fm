@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { searchSpotify, searchDeezer, storeMetrics, updateArtistProfile } from '@/lib/artist-metrics';
+import { fetchSpotifyMetrics, fetchDeezerMetrics, storeMetrics, updateArtistProfile } from '@/lib/artist-metrics';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     // Not found in DB — try live search if generate=true
     if (generate) {
       // Search Spotify
-      const spotify = await searchSpotify(q);
+      const spotify = await fetchSpotifyMetrics(q);
       if (spotify) {
         // Artist exists on Spotify — create a card
         const slug = q.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -77,8 +77,8 @@ export async function GET(request: Request) {
       }
       
       // Try Deezer only
-      const deezer = await searchDeezer(q);
-      if (deezer?.metrics) {
+      const deezer = await fetchDeezerMetrics(q);
+      if (deezer) {
         const slug = q.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const artistId = crypto.randomUUID();
         

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import sql from '@/lib/db';
-import { getArtistMetricsTimeline } from '@/lib/artist-metrics';
+import { getArtistCardData } from '@/lib/artist-metrics';
 import ArtistCardClient from './ArtistCardClient';
 
 export const dynamic = 'force-dynamic';
@@ -34,6 +34,6 @@ export default async function ArtistCardPage({ params }: { params: { slug: strin
   `;
   if (!artist) notFound();
 
-  const data = await getArtistMetricsTimeline(artist.id);
+  const data = await getArtistCardData(artist.id);
   return <ArtistCardClient artist={artist} initialData={data || {}} />;
 }

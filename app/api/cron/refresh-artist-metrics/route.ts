@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { searchSpotify, searchDeezer, storeMetrics, updateArtistProfile } from '@/lib/artist-metrics';
+import { refreshArtistMetrics } from '@/lib/artist-metrics';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600;
