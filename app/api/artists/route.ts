@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 
+/**
+ * GET /api/artists
+ * Returns all artists from discovered_artists + registered users.
+ * ?search=name — filter by name
+ * ?offset=0&limit=50 — pagination
+ */
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -8,40 +14,44 @@ export async function GET(request: Request) {
     const offset = parseInt(searchParams.get('offset') || '0');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
 
-    const artists = await sql`
-      SELECT 
-        u.id, u.display_name, u.bio,
-        u.tiktok_handle, u.instagram_handle, u.youtube_handle,
-        (SELECT c2.track_url FROM campaigns c2 WHERE c2.artist_id = u.id AND c2.track_url LIKE '%spotify%' ORDER BY c2.created_at DESC LIMIT 1) as spotify_url,
-        COUNT(c.id) as total_campaigns,
-        COUNT(c.id) FILTER (WHERE c.status = 'active') as active_campaigns,
-        COALESCE(SUM(c.total_budget_cents), 0) as total_budget_cents,
-        COALESCE(SUM(c.total_budget_cents - c.budget_remaining_cents), 0) as total_spent_cents,
-        COALESCE(SUM(CAST(COALESCE(cs.approved_submissions, '0') AS INTEGER)), 0) as total_submissions,
-        COALESCE(SUM(CAST(COALESCE(cs.total_verified_views, '0') AS INTEGER)), 0) as total_views
-      FROM users u
-      LEFT JOIN campaigns c ON c.artist_id = u.id
-      LEFT JOIN campaign_stats cs ON cs.id = c.id
-      WHERE u.is_artist = true
-      GROUP BY u.id, u.display_name, u.bio, u.tiktok_handle, u.instagram_handle, u.youtube_handle
-      HAVING COUNT(c.id) > 0
-      ORDER BY total_spent_cents DESC
-    `;
-
-    let filtered = artists;
+    let query;
     if (search) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter((a: any) =>
-        a.display_name?.toLowerCase().includes(q) ||
-        (a.bio || '').toLowerCase().includes(q)
-      );
+      query = sql`
+        SELECT da.artist_name as display_name, da.latest_track_name, ap.slug, ap.spotify_image_url, ap.total_followers, ap.total_platforms,
+               COALESCE(ap.total_followers, 0) as sort_score
+        FROM artist_profiles ap
+        JOIN discovered_artists da ON da.id = ap.artist_id
+        WHERE da.artist_name ILIKE ${'%' + search + '%'}
+        ORDER BY ap.total_followers DESC NULLS LAST
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else {
+      query = sql`
+        SELECT da.artist_name as display_name, da.latest_track_name, ap.slug, ap.spotify_image_url, ap.total_followers, ap.total_platforms,
+               COALESCE(ap.total_followers, 0) as sort_score
+        FROM artist_profiles ap
+        JOIN discovered_artists da ON da.id = ap.artist_id
+        ORDER BY ap.total_followers DESC NULLS LAST
+        LIMIT ${limit} OFFSET ${offset}
+      `;
     }
 
-    const total = filtered.length;
-    const page = filtered.slice(offset, offset + limit);
+    const artists = await query;
 
-    return NextResponse.json({ artists: page, total, offset, limit });
+    // Count total
+    let totalQuery;
+    if (search) {
+      const [{ count }] = await sql`
+        SELECT COUNT(*)::int FROM artist_profiles ap
+        JOIN discovered_artists da ON da.id = ap.artist_id
+        WHERE da.artist_name ILIKE ${'%' + search + '%'}
+      `;
+      return NextResponse.json({ artists, total: count, offset, limit });
+    } else {
+      const [{ count }] = await sql`SELECT COUNT(*)::int FROM artist_profiles`;
+      return NextResponse.json({ artists, total: count, offset, limit });
+    }
   } catch (e: any) {
-    return NextResponse.json({ artists: [], total: 0 });
+    return NextResponse.json({ artists: [], total: 0, error: e.message });
   }
 }

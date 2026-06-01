@@ -1,18 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import Header from '@/components/TopNav';
-import CreatorAvatar from '@/components/CreatorAvatar';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { TikTok, Instagram, YouTube } from '@/components/SocialIcons';
-import { Megaphone, Eye, FileText, ArrowRight, Users, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
-interface Artist { id: string; display_name: string; bio: string; total_campaigns: number; active_campaigns: number; total_budget_cents: number; total_spent_cents: number; total_submissions: number; total_views: number; tiktok_handle: string; instagram_handle: string; youtube_handle: string; spotify_url: string; monthly_listeners: number | null; }
+interface Artist {
+  display_name: string;
+  latest_track_name: string;
+  slug: string;
+  spotify_image_url: string;
+  total_followers: number;
+  total_platforms: number;
+}
 
 export default function ArtistsClient({ initialArtists }: { initialArtists: Artist[] }) {
   const [artists, setArtists] = useState<Artist[]>(initialArtists);
@@ -20,7 +20,7 @@ export default function ArtistsClient({ initialArtists }: { initialArtists: Arti
   const [searchText, setSearchText] = useState('');
   const router = useRouter();
 
-  const fetchArtists = async (search = '') => {
+  async function fetchArtists(search = '') {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -28,75 +28,68 @@ export default function ArtistsClient({ initialArtists }: { initialArtists: Arti
       const res = await fetch(`/api/artists?${params}`);
       const d = await res.json();
       setArtists(d.artists || []);
-    } catch { /* keep existing data */ }
-    finally { setLoading(false); }
-  };
+    } catch {}
+    setLoading(false);
+  }
 
-  const handleSearch = (e: React.FormEvent) => { e.preventDefault(); fetchArtists(searchText); };
-
-  const bg = 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23';
+  function handleSearch(e: React.FormEvent) { e.preventDefault(); fetchArtists(searchText); }
 
   return (
-    <div className="min-h-screen" style={{background:bg}}>
+    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23' }}>
       <Header />
       <main className="page-container">
-        <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="mb-8">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight mb-1">Artists</h1>
-          <p className="text-muted-foreground text-sm">{artists.length} artists running campaigns</p>
-        </motion.div>
+          <p className="text-muted-foreground text-sm">{artists.length} artists tracked across 27 platforms</p>
+        </div>
 
         <form onSubmit={handleSearch} className="mb-8">
           <div className="relative">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground"/>
-            <input type="text" value={searchText} onChange={e=>setSearchText(e.target.value)}
-              placeholder="Search artists..." className="w-full rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"/>
+            <input
+              type="text" value={searchText} onChange={e => setSearchText(e.target.value)}
+              placeholder="Search artists..." className="w-full rounded-xl bg-white/[0.03] border border-white/[0.06] pl-11 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"
+            />
           </div>
         </form>
 
-        {loading && artists.length === 0 ? (
-          <div className="campaign-grid">{[1,2,3].map(i=><div key={i} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden"><div className="h-24 bg-white/[0.02]"/><div className="p-5 space-y-3"><Skeleton className="h-6 w-1/3"/><Skeleton className="h-4 w-2/3"/><Skeleton className="h-12 w-full"/></div></div>)}</div>
-        ) : artists.length===0?(
-          <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="text-center py-20">
-            <Users size={48} className="mx-auto mb-6 text-muted-foreground/20" strokeWidth={1}/>
-            <h2 className="text-xl font-semibold mb-2">No artists yet</h2>
-            <p className="text-muted-foreground text-sm">Artists appear when they create their first campaign.</p>
-          </motion.div>
-        ):(
-          <div className="campaign-grid">
-            {artists.map((a,i)=>{const spent=(a.total_spent_cents||0)/100;const views=a.total_views||0;return(
-              <motion.div key={a.id} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:i*0.06,duration:0.4}} whileHover={{y:-2}} onClick={() => router.push(`/artists/${a.id}`)} className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex flex-col cursor-pointer">
-                <div className="h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent relative flex items-center justify-center">
-                  <CreatorAvatar name={a.display_name} size="xl"/>
-                  <div className="absolute top-3 right-3"><Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">{a.active_campaigns} active</Badge></div>
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 animate-pulse">
+                <div className="w-16 h-16 rounded-full bg-white/[0.04] mx-auto mb-3" />
+                <div className="h-4 bg-white/[0.04] rounded w-2/3 mx-auto mb-2" />
+                <div className="h-3 bg-white/[0.04] rounded w-1/2 mx-auto" />
+              </div>
+            ))}
+          </div>
+        ) : artists.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-muted-foreground text-sm">No artists found.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {artists.map((a, i) => (
+              <div
+                key={a.slug}
+                onClick={() => router.push(`/artist/${a.slug}`)}
+                className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-center cursor-pointer hover:border-primary/20 transition-all hover:-translate-y-0.5"
+              >
+                {a.spotify_image_url ? (
+                  <img src={a.spotify_image_url} alt="" className="w-16 h-16 rounded-full object-cover mx-auto mb-3 border border-white/[0.06]" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-white/[0.04] mx-auto mb-3 flex items-center justify-center text-2xl">🎵</div>
+                )}
+                <p className="text-sm font-medium truncate">{a.display_name}</p>
+                {a.latest_track_name && (
+                  <p className="text-[10px] text-muted-foreground truncate mt-0.5">"{a.latest_track_name}"</p>
+                )}
+                <div className="flex items-center justify-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                  {a.total_followers > 0 && <span>{a.total_followers.toLocaleString()} followers</span>}
+                  {a.total_platforms > 0 && <span>· {a.total_platforms} platforms</span>}
                 </div>
-                <div className="p-5 flex flex-col flex-1 space-y-4">
-                  <div>
-                    <h3 className="text-lg font-bold">{a.display_name}</h3>
-                    <p className="text-xs text-muted-foreground">{a.total_campaigns} total campaigns</p>
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      {a.tiktok_handle && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#ff0050]/10 text-[#ff0050] flex items-center gap-1"><TikTok size={10}/>{a.tiktok_handle.replace('@','')}</span>}
-                      {a.instagram_handle && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#E1306C]/10 text-[#E1306C] flex items-center gap-1"><Instagram size={10}/>{a.instagram_handle.replace('@','')}</span>}
-                      {a.youtube_handle && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#FF0000]/10 text-[#FF0000] flex items-center gap-1"><YouTube size={10}/>{a.youtube_handle.replace('@','')}</span>}
-                      {a.monthly_listeners && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#1DB954]/10 text-[#1DB954] flex items-center gap-1">{(a.monthly_listeners/1000).toFixed(0)}K monthly</span>}
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 py-3 border-y border-white/[0.06]">
-                    {[
-                      {value:`$${spent.toFixed(0)}`,label:'Spent',icon:Megaphone},
-                      {value:views>=1000?`${(views/1000).toFixed(1)}K`:views,label:'Views',icon:Eye},
-                      {value:a.total_submissions,label:'Submissions',icon:FileText},
-                    ].map(s=>{const I=s.icon;return(
-                      <div key={s.label} className="text-center"><I size={12} className="mx-auto mb-1 text-primary/40"/><div className="text-sm font-bold">{s.value}</div><div className="text-[10px] text-muted-foreground">{s.label}</div></div>
-                    )})}
-                  </div>
-                  <div className="mt-auto" onClick={e => e.stopPropagation()}>
-                    <Link href={`/browse?search=${encodeURIComponent(a.display_name)}`}>
-                      <Button variant="outline" size="sm" className="w-full text-xs group min-h-[44px]">View campaigns <ArrowRight size={12} className="ml-1 transition-transform group-hover:translate-x-0.5"/></Button>
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            )})}
+              </div>
+            ))}
           </div>
         )}
       </main>
