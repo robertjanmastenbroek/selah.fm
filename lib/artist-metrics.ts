@@ -69,13 +69,15 @@ export async function fetchSpotifyMetrics(artistName: string, trackName?: string
 
     if (!bestId) return null;
 
-    // Step 2: Get full artist details (more reliable follower count)
+    // Step 2: Get full artist details via bulk endpoint (more reliable data)
     const artistRes = await fetch(
-      `https://api.spotify.com/v1/artists/${bestId}`,
+      `https://api.spotify.com/v1/artists?ids=${bestId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     if (!artistRes.ok) return null;
-    const artist = await artistRes.json();
+    const bulkData = await artistRes.json();
+    const artist = bulkData.artists?.[0];
+    if (!artist) return null;
 
     console.log('[spotify] Artist endpoint:', artist.name, '| followers:', artist.followers?.total, '| popularity:', artist.popularity);
 
