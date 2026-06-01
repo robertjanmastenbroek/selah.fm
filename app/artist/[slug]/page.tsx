@@ -22,9 +22,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ArtistCardPage({ params }: { params: { slug: string } }) {
   const [artist] = await sql`
     SELECT da.id, da.artist_name, da.latest_track_name, ap.slug, ap.spotify_image_url,
-           ap.last_refreshed_at, ap.total_followers,
+           ap.last_refreshed_at, ap.total_followers, ap.total_streams,
            c.slug as campaign_slug,
-           aa.instagram_handle, aa.tiktok_handle, aa.youtube_video_url as youtube_url
+           aa.instagram_handle, aa.instagram_followers,
+           aa.tiktok_handle, aa.tiktok_followers,
+           aa.youtube_video_url as youtube_url,
+           da.social_links
     FROM artist_profiles ap
     JOIN discovered_artists da ON da.id = ap.artist_id
     LEFT JOIN campaign_claims cc ON cc.discovered_artist_id = da.id

@@ -31,7 +31,10 @@ const platformMeta: Record<string, { label: string; color: string }> = {
   youtube: { label: 'YouTube', color: '#FF0000' },
   instagram: { label: 'Instagram', color: '#E4405F' },
   tiktok: { label: 'TikTok', color: '#00F2EA' },
+  facebook: { label: 'Facebook', color: '#1877F2' },
   soundcloud: { label: 'SoundCloud', color: '#FF5500' },
+  applemusic: { label: 'Apple Music', color: '#FA586A' },
+  amazonmusic: { label: 'Amazon Music', color: '#00A8E1' },
 };
 
 function MetricCard({ platform, label, value, handle, color, delay }: { platform: string; label: string; value: number; handle?: string; color: string; delay: number }) {
@@ -84,36 +87,30 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
     }
   });
 
-  // Social platforms from artist audit data
-  if (artist.instagram_handle) {
-    cards.push({
-      platform: 'Instagram',
-      label: 'Handle',
-      value: 0,
-      handle: '@' + artist.instagram_handle,
-      color: platformMeta.instagram?.color || '#E4405F',
-      delay: 100 + cards.length * 120,
-    });
-  }
-  if (artist.tiktok_handle) {
-    cards.push({
-      platform: 'TikTok',
-      label: 'Handle',
-      value: 0,
-      handle: '@' + artist.tiktok_handle,
-      color: platformMeta.tiktok?.color || '#00F2EA',
-      delay: 100 + cards.length * 120,
-    });
-  }
-  if (artist.youtube_url && !metrics.youtube) {
-    cards.push({
-      platform: 'YouTube',
-      label: 'Handle',
-      value: 0,
-      handle: 'Channel',
-      color: platformMeta.youtube?.color || '#FF0000',
-      delay: 100 + cards.length * 120,
-    });
+  // Parse social_links JSON for additional platform URLs
+  let socialLinks: any = {};
+  try { socialLinks = typeof artist.social_links === 'string' ? JSON.parse(artist.social_links) : (artist.social_links || {}); } catch {}
+
+  // Social platforms from artist audit data — show handles, wire up for future follower scraping
+  const socialCards = [
+    { key: 'instagram', platform: 'Instagram', handle: artist.instagram_handle, prefix: '@', color: platformMeta.instagram?.color },
+    { key: 'tiktok', platform: 'TikTok', handle: artist.tiktok_handle, prefix: '@', color: platformMeta.tiktok?.color },
+    { key: 'facebook', platform: 'Facebook', handle: socialLinks.facebook || null, prefix: '', color: platformMeta.facebook?.color },
+    { key: 'soundcloud', platform: 'SoundCloud', handle: socialLinks.soundcloud || null, prefix: '', color: platformMeta.soundcloud?.color },
+    { key: 'applemusic', platform: 'Apple Music', handle: socialLinks.apple_music || socialLinks.applemusic || null, prefix: '', color: platformMeta.applemusic?.color },
+    { key: 'amazonmusic', platform: 'Amazon Music', handle: socialLinks.amazon_music || socialLinks.amazon || null, prefix: '', color: platformMeta.amazonmusic?.color },
+  ];
+  for (const s of socialCards) {
+    if (s.handle) {
+      cards.push({
+        platform: s.platform,
+        label: 'Handle',
+        value: 0,
+        handle: s.prefix + s.handle,
+        color: s.color || '#6B7280',
+        delay: 100 + cards.length * 120,
+      });
+    }
   }
 
   async function handleRefresh() {
