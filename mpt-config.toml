@@ -1,0 +1,46 @@
+# MoneyPrinterTurbo configuration for Selah.fm
+# DeepSeek API for script generation, Pexels for footage
+
+[app]
+# Project metadata
+project_name = "Selah.fm Outreach"
+project_description = "Instagram Reel generation for artist outreach"
+
+# LLM provider: deepseek (we already use it)
+llm_provider = "deepseek"
+
+[deepseek]
+api_key = "${DEEPSEEK_API_KEY}"
+api_base = "https://api.deepseek.com/v1"
+model = "deepseek-chat"
+
+# Pexels for stock footage (we already use it for blog images)
+[pexels]
+api_keys = ["${PEXELS_API_KEY}"]
+
+# Video settings — 9:16 vertical for Instagram Reels
+[video]
+aspect_ratio = "9:16"
+resolution = "1080x1920"
+background_music = true
+subtitle_enabled = true
+voice = "en-US-EmmaMultilingualNeural"
+
+# Voice settings
+[voice]
+provider = "edge"  # Free TTS via Microsoft Edge
+language = "en-US"
+
+# Subtitle settings
+[subtitle]
+provider = "edge"
+font_size = 48
+font_color = "white"
+stroke_color = "black"
+stroke_width = 2
+position = "bottom"
+
+# Output
+[output]
+format = "mp4"
+quality = "high"
