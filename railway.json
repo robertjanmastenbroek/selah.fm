@@ -15,6 +15,13 @@
     "postgres": {
       "image": "postgres:16",
       "volumes": { "pgdata": "/var/lib/postgresql/data" }
+    },
+    "crawl4ai": {
+      "image": "unclecode/crawl4ai:latest",
+      "port": 8000,
+      "env": {
+        "CRAWL4AI_API_TOKEN": "${{CRAWL4AI_API_TOKEN}}"
+      }
     }
   }
 }
