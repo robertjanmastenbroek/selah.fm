@@ -41,7 +41,7 @@ export interface ArtistMetrics {
 
 export async function fetchSpotifyMetrics(artistName: string, trackName?: string): Promise<ArtistMetrics | null> {
   const token = await getSpotifyToken();
-  if (!token) return null;
+  if (!token) { console.log('[spotify] No token — SPOTIFY_CLIENT_ID/SECRET not set?'); return null; }
   try {
     // Try exact name first, then artist+track
     const queries = trackName ? [artistName, `${artistName} ${trackName}`] : [artistName];
