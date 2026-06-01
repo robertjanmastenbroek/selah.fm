@@ -64,6 +64,12 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_URL: process.env.NEXT_PUBLIC_URL || 'https://selah.fm',
   },
+  async redirects() {
+    return [
+      { source: '/artists', destination: '/artist', permanent: true },
+      { source: '/artists/:path*', destination: '/artist/:path*', permanent: true },
+    ];
+  },
 };
 
 module.exports = nextConfig;
