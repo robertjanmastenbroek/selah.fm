@@ -25,11 +25,6 @@ async function getSpotifyToken(): Promise<string | null> {
     });
     if (res.ok) {
       const data = await res.json();
-      console.log('[spotify] search "' + q + '":', data.artists?.items?.length || 0, 'results');
-      if (data.artists?.items?.[0]) {
-        const a = data.artists.items[0];
-        console.log('[spotify] best match:', a.name, '| followers:', a.followers?.total, '| id:', a.id);
-      }
       spotifyToken = { token: data.access_token, expires: Date.now() + (data.expires_in - 60) * 1000 };
       return spotifyToken.token;
     }
