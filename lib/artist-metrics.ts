@@ -40,46 +40,64 @@ export interface ArtistMetrics {
 }
 
 export async function fetchSpotifyMetrics(artistName: string, trackName?: string): Promise<ArtistMetrics | null> {
+  // First try the API for the Spotify ID + profile image
   const token = await getSpotifyToken();
-  if (!token) return null;
+  let spotifyId: string | undefined;
+  let imageUrl: string | undefined;
 
-  try {
-    // Search for the artist to find their Spotify ID + image (search doesn't return followers)
-    const queries = trackName ? [artistName, `${artistName} ${trackName}`] : [artistName];
-    let bestId: string | undefined;
-    let bestImage: string | undefined;
-
-    for (const q of queries) {
+  if (token) {
+    try {
       const res = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=artist&limit=3`,
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=3`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      if (!res.ok) continue;
-      const data = await res.json();
-      const items = data.artists?.items || [];
-      if (items.length === 0) continue;
+      if (res.ok) {
+        const data = await res.json();
+        const items = data.artists?.items || [];
+        const exact = items.find((a: any) => a.name.toLowerCase() === artistName.toLowerCase());
+        const pick = exact || items[0];
+        if (pick) {
+          spotifyId = pick.id;
+          imageUrl = pick.images?.[0]?.url;
+        }
+      }
+    } catch {}
+  }
 
-      // Pick exact name match first, then first result
-      const exact = items.find((a: any) => a.name.toLowerCase() === artistName.toLowerCase());
-      const pick = exact || items[0];
-      bestId = pick.id;
-      bestImage = pick.images?.[0]?.url || null;
-      break;
+  if (!spotifyId) return null;
+
+  // Scrape the public Spotify page for real listener/stream counts
+  try {
+    const pageRes = await fetch(`https://open.spotify.com/artist/${spotifyId}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
+    });
+    if (!pageRes.ok) return null;
+    const html = await pageRes.text();
+
+    // Monthly listeners: <div data-testid="monthly-listeners-label">683,041 monthly listeners</div>
+    const listenerMatch = html.match(/data-testid="monthly-listeners-label"[^>]*>([\d,]+) monthly listeners/);
+    const monthlyListeners = listenerMatch ? parseInt(listenerMatch[1].replace(/,/g, '')) : 0;
+
+    // Sum track stream counts from the page
+    let totalStreams = 0;
+    const streamMatches = html.matchAll(/<span[^>]*>([\d,]+)<\/span>/g);
+    for (const m of streamMatches) {
+      const n = parseInt(m[1].replace(/,/g, ''));
+      if (n > 1000) totalStreams += n;
     }
 
-    if (!bestId) return null;
-
-    // Return image + ID only. Followers come from crawl4ai scraping.
     return {
       platform: 'spotify',
-      imageUrl: bestImage,
+      imageUrl,
       metrics: [
-        { name: 'followers', value: 0, displayName: 'Followers' },
+        { name: 'monthly_listeners', value: monthlyListeners, displayName: 'Monthly Listeners' },
+        { name: 'total_streams', value: totalStreams, displayName: 'Total Streams' },
       ],
-      spotifyId: bestId,
+      spotifyId,
     };
   } catch { return null; }
 }
+
 
 export async function fetchDeezerMetrics(artistName: string): Promise<ArtistMetrics | null> {
   try {
