@@ -58,7 +58,7 @@ function absoluteUrl(path: string): string {
   const base = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
   if (!path) return `${base}/images/og-image.jpg`;
   if (path.startsWith('data:')) return `${base}/images/og-image.jpg`;
-  if (path.startsWith('/images/campaigns/')) return `${base}${path}`;
+  if (path.startsWith('/api/images/')) return `${base}${path}`;
   if (path.startsWith('/images/')) return `${base}${path}`;
   if (path.startsWith('http')) return path;
   return `${base}${path}`;
@@ -83,29 +83,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonicalSlug = campaign.slug || params.id;
   const canonicalUrl = `https://selah.fm/c/${canonicalSlug}`;
 
-  // Tiered title templates — balanced default
-  const title = `Join this campaign for ${artistName}'s "${trackTitle}" — Selah.fm`;
+  // SEO-optimized title: includes artist, track, platform, and CPM when available
+  const cpmPer1M = cpm ? `$${(parseFloat(cpm) * 1000).toFixed(0)}` : null;
+  const title = cpmPer1M
+    ? `Earn ${cpmPer1M}/1M views promoting "${trackTitle}" by ${artistName} — Selah.fm`
+    : `Promote "${trackTitle}" by ${artistName} and earn per view — Selah.fm`;
 
-  // Meta description — keep under ~200 chars for WhatsApp/Instagram crawlers
-  const desc = cpm
-    ? `Join ${artistName}'s campaign for "${trackTitle}". Submit your video and earn $${(parseFloat(cpm) * 1000).toFixed(0)} per 1M verified views on Selah.fm.`
-    : `Join ${artistName}'s campaign for "${trackTitle}". Submit your video and earn per view on Selah.fm.`;
+  // Meta description — rich, under 160 chars, includes CPM and CTA
+  const desc = cpmPer1M
+    ? `Submit a video for ${artistName}'s "${trackTitle}" and earn ${cpmPer1M} per 1M verified views. Artists can start at $0.10 CPM. Join free on Selah.fm.`
+    : `Submit a video for ${artistName}'s "${trackTitle}" and earn per verified view. Artists set the CPM. Zero upfront cost on Selah.fm.`;
 
   return {
     title,
-    description: desc,
+    description: desc.slice(0, 160),
     alternates: { canonical: canonicalUrl },
     keywords: [
-      `submit video ${trackTitle}`,
-      `earn money ${artistName}`,
-      `music promotion ${trackTitle}`,
       artistName,
       trackTitle,
-      'music video contest',
+      `promote ${trackTitle}`,
+      `earn promoting ${artistName}`,
+      'submit music video',
       'get paid per view',
-      'ugc music',
+      'music promotion marketplace',
+      'UGC music campaign',
+      'creator earnings',
       'selah.fm',
-    ],
+    ].filter(Boolean),
     openGraph: {
       title,
       description: desc,
@@ -209,30 +213,24 @@ export default async function CampaignPage({ params }: Props) {
   const jsonLd = campaign ? {
     '@context': 'https://schema.org',
     '@graph': [
+      // MusicRecording — the track being promoted
+      {
+        '@type': 'MusicRecording',
+        name: trackTitle,
+        byArtist: { '@type': 'MusicGroup', name: artistName },
+        ...(imageUrl ? { image: imageUrl } : {}),
+        url: canonicalUrl,
+      },
       // VideoObject — campaign as a video creation opportunity
       {
         '@type': 'VideoObject',
-        name: `${artistName} - ${trackTitle} Campaign`,
+        name: `Promote "${trackTitle}" by ${artistName}`,
         description: cpmDollars
-          ? `Join this campaign and earn $${cpmDollars} per 1,000 verified views by submitting a video for "${trackTitle}".`
+          ? `Submit a video and earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M verified views promoting "${trackTitle}". Artists set CPM, creators earn per view.`
           : `Join this campaign for "${trackTitle}" and earn per verified view.`,
         thumbnailUrl: imageUrl,
         contentUrl: canonicalUrl,
         uploadDate: createdAt,
-      },
-      // EventSeries — ongoing music promotion event
-      {
-        '@type': 'EventSeries',
-        name: `${trackTitle} Video Contest`,
-        description: cpmDollars
-          ? `Join this campaign and earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M views, or donate to support ${artistName}.`
-          : `Join this campaign and earn, or donate to support ${artistName}.`,
-        url: canonicalUrl,
-        startDate: createdAt,
-        organizer: {
-          '@type': 'MusicGroup',
-          name: artistName,
-        },
       },
       // BreadcrumbList
       {
@@ -246,12 +244,22 @@ export default async function CampaignPage({ params }: Props) {
       // Offer
       ...(cpmDollars ? [{
         '@type': 'Offer',
-        name: `Join campaign — earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M verified views`,
+        name: `Earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M views promoting "${trackTitle}"`,
         price: cpmDollars,
         priceCurrency: 'USD',
-        description: `Creators earn the full $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M views. Artists pay CPM + 20% platform fee.${budget ? ` Total budget: $${budget}.` : ''}`,
+        description: `Creators earn per verified view. Artists pay CPM + 20% platform fee.${budget ? ` Budget: $${budget}.` : ''}`,
         url: canonicalUrl,
       }] : []),
+      // FAQ
+      {
+        '@type': 'FAQPage',
+        mainEntity: [
+          { '@type': 'Question', name: `How do I earn money promoting "${trackTitle}"?`, acceptedAnswer: { '@type': 'Answer', text: `Create a short video featuring "${trackTitle}" on TikTok, Instagram Reels, or YouTube Shorts. Submit your video to this campaign. The artist approves and you earn per verified view.` } },
+          { '@type': 'Question', name: 'How much can I earn per video?', acceptedAnswer: { '@type': 'Answer', text: cpmDollars ? `At this campaign's rate, you earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1 million verified views. A video with 10,000 views earns about $${(parseFloat(cpmDollars) * 10).toFixed(2)}.` : 'Earnings depend on the CPM rate set by the artist and how many views your video gets. More views = more earnings.' } },
+          { '@type': 'Question', name: 'What platforms can I post my video on?', acceptedAnswer: { '@type': 'Answer', text: 'TikTok, Instagram Reels, and YouTube Shorts are all supported. Post wherever your audience is — views count across all platforms.' } },
+          { '@type': 'Question', name: 'How does the artist pay me?', acceptedAnswer: { '@type': 'Answer', text: 'Artists pay through Selah.fm for verified views only. You connect your Stripe account and get paid automatically when your views are verified. No waiting for platform funds.' } },
+        ],
+      },
     ],
   } : null;
 

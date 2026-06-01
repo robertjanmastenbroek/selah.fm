@@ -173,7 +173,7 @@ export async function POST(request: Request) {
     const slugSource = `${artistName}-${trackTitle}`.toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 100);
     const uniqueSlug = slugSource + '-' + crypto.randomUUID().slice(0, 4);
 
-    // Handle cover art: if it's a data URL, store binary in campaign_images
+    // Handle cover art: store binary in campaign_images, serve from API
     let finalCoverArt = coverArtUrl || null;
     let imageBuffer: Buffer | null = null;
     let imageMime = 'image/jpeg';
@@ -183,8 +183,7 @@ export async function POST(request: Request) {
         try {
           imageMime = `image/${match[1] === 'jpeg' ? 'jpeg' : match[1]}`;
           imageBuffer = Buffer.from(match[2], 'base64');
-          const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
-          finalCoverArt = `/images/campaigns/campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+          // Don't set finalCoverArt yet — we'll set it after we have the campaign ID
         } catch {}
       }
     }
@@ -205,9 +204,14 @@ export async function POST(request: Request) {
       RETURNING *
     `;
 
-    // Store image in campaign_images table
+    // Store image in campaign_images and update cover_art_url to API format
     if (imageBuffer) {
       await sql`INSERT INTO campaign_images (campaign_id, data, mime) VALUES (${result[0].id}, ${imageBuffer}, ${imageMime})`;
+      const ext = imageMime.includes('png') ? 'png' : 'jpg';
+      const shortId = result[0].id.replace(/-/g, '').slice(0, 12);
+      const apiUrl = `/api/images/campaign/${shortId}.${ext}`;
+      await sql`UPDATE campaigns SET cover_art_url = ${apiUrl} WHERE id = ${result[0].id}`;
+      result[0].cover_art_url = apiUrl;
     }
 
     // Server-side GA tracking

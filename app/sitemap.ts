@@ -39,17 +39,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  // Campaign pages
+  // Campaign pages — all with images get high priority
   let campaignPages: MetadataRoute.Sitemap = [];
   try {
     const campaigns = await sql`
       SELECT id, slug, updated_at FROM campaigns WHERE status IN ('active', 'draft')
-      ORDER BY updated_at DESC LIMIT 500
+      ORDER BY updated_at DESC
     `;
     campaignPages = campaigns.map((c: any) => ({
       url: `${baseUrl}/c/${c.slug || c.id}`,
       lastModified: new Date(c.updated_at),
-      changeFrequency: 'daily' as const,
+      changeFrequency: 'weekly' as const,
       priority: 0.9,
     }));
   } catch {}

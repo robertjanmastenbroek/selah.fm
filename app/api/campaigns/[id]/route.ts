@@ -166,10 +166,9 @@ export async function PATCH(
       try {
         const matches = coverArtUrl.match(/^data:image\/(\w+);base64,(.+)$/);
         if (matches) {
-          const ext = matches[1] === "jpeg" ? "jpg" : matches[1];
           patchImageMime = `image/${matches[1]}`;
           patchImageBuffer = Buffer.from(matches[2], "base64");
-          finalCoverArt = `/images/campaigns/campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+          // Don't set finalCoverArt yet — will use API URL after storing
         }
       } catch (e: any) { console.error("Failed to decode cover art:", e.message); }
     }
@@ -197,13 +196,18 @@ export async function PATCH(
       RETURNING *
     `;
 
-    // Store/update image in campaign_images table
+    // Store/update image in campaign_images table and set API URL
     if (patchImageBuffer) {
       await sql`
         INSERT INTO campaign_images (campaign_id, data, mime)
         VALUES (${campaignId}::uuid, ${patchImageBuffer}, ${patchImageMime})
         ON CONFLICT (campaign_id) DO UPDATE SET data = EXCLUDED.data, mime = EXCLUDED.mime
       `;
+      const ext = patchImageMime.includes('png') ? 'png' : 'jpg';
+      const shortId = campaignId.replace(/-/g, '').slice(0, 12);
+      const apiUrl = `/api/images/campaign/${shortId}.${ext}`;
+      await sql`UPDATE campaigns SET cover_art_url = ${apiUrl} WHERE id = ${campaignId}`;
+      result[0].cover_art_url = apiUrl;
     }
 
     return NextResponse.json(result[0]);

@@ -39,7 +39,7 @@ export default function CampaignCover({
       <div className={`overflow-hidden relative ${className}`} style={{ background: bg }}>
         <img
           src={src}
-          alt=""
+          alt={title || 'Campaign cover art'}
           className="w-full h-full object-cover"
           loading="lazy"
           onError={(e) => {
