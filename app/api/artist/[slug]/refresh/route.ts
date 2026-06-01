@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { refreshArtistMetrics, getArtistCardData } from '@/lib/artist-metrics';
+import { refreshArtistMetrics, getArtistCardData, storeMetrics, updateArtistProfile } from '@/lib/artist-metrics';
+import { scrapeInstagram, scrapeTikTok } from '@/lib/artist-scraper';
 import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+const CRAWL4AI = process.env.CRAWL4AI_URL || 'http://localhost:8000';
 
 export async function GET(request: Request, { params }: { params: { slug: string } }) {
   try {
@@ -13,9 +17,67 @@ export async function GET(request: Request, { params }: { params: { slug: string
     `;
     if (!artist) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
+    // 1. Refresh API-based metrics (Spotify, Deezer, YouTube)
     await refreshArtistMetrics(artist.id, artist.artist_name, artist.latest_track_name);
-    const data = await getArtistCardData(artist.id);
-    return NextResponse.json({ ...data, cached: false });
+
+    // 2. Spotify fallback: if API returned 0 followers, try scraping via crawl4ai
+    const cardData = await getArtistCardData(artist.id);
+    const spotifyFollowers = cardData?.metrics?.spotify?.find((m: any) => m.metric_name === 'followers')?.value || 0;
+    if (spotifyFollowers === 0) {
+      try {
+        const [da] = await sql`SELECT spotify_id FROM discovered_artists WHERE id = ${artist.id}`;
+        if (da?.spotify_id) {
+          const res = await fetch(`${CRAWL4AI}/crawl`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              urls: [`https://open.spotify.com/artist/${da.spotify_id}`],
+              stealth_mode: true,
+            }),
+            signal: AbortSignal.timeout(15000),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const text = JSON.stringify(data).toLowerCase();
+            const match = text.match(/([\d,.]+)\s*followers/);
+            if (match) {
+              const n = parseInt(match[1].replace(/[,.]/g, ''));
+              if (n > 0) await storeMetrics(artist.id, 'spotify', [{ name: 'followers', value: n, displayName: 'Followers' }]);
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Scrape Instagram/TikTok followers (on-demand, only if never scraped)
+    const [audit] = await sql`
+      SELECT instagram_handle, instagram_followers, tiktok_handle, tiktok_followers
+      FROM artist_audits WHERE discovered_artist_id = ${artist.id} LIMIT 1
+    `;
+    if (audit) {
+      if (audit.instagram_handle && !audit.instagram_followers) {
+        try {
+          const ig = await scrapeInstagram(audit.instagram_handle);
+          if (ig && ig.followers > 0) {
+            await sql`UPDATE artist_audits SET instagram_followers = ${ig.followers} WHERE discovered_artist_id = ${artist.id}`;
+            await storeMetrics(artist.id, 'instagram', [{ name: 'followers', value: ig.followers, displayName: 'Followers' }]);
+          }
+        } catch {}
+      }
+      if (audit.tiktok_handle && !audit.tiktok_followers) {
+        try {
+          const tt = await scrapeTikTok(audit.tiktok_handle);
+          if (tt && tt.followers > 0) {
+            await sql`UPDATE artist_audits SET tiktok_followers = ${tt.followers} WHERE discovered_artist_id = ${artist.id}`;
+            await storeMetrics(artist.id, 'tiktok', [{ name: 'followers', value: tt.followers, displayName: 'Followers' }]);
+          }
+        } catch {}
+      }
+    }
+
+    await updateArtistProfile(artist.id);
+    const result = await getArtistCardData(artist.id);
+    return NextResponse.json({ ...result, cached: false });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
