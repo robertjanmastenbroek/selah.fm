@@ -6,6 +6,17 @@ import { fetchBlogImage } from '@/lib/blog-images';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600;
 
+/** Convert basic markdown to HTML — handles headings, bold, dividers */
+function cleanMarkdown(html: string): string {
+  return html
+    .replace(/<p>\s*<\/p>/g, '')
+    .replace(/<p># (.*?)<\/p>/g, '<h2>$1</h2>')
+    .replace(/<p>## (.*?)<\/p>/g, '<h3>$1</h3>')
+    .replace(/<p>### (.*?)<\/p>/g, '<h4>$1</h4>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/<p>---\s*<\/p>/g, '<hr>');
+}
+
 function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
 }
@@ -132,6 +143,8 @@ export async function GET(request: Request) {
         const imageQuery = article.image_suggestions?.[0]?.description || 'music promotion';
         const featuredImage = await fetchBlogImage(imageQuery);
 
+        const cleanHtml = cleanMarkdown(article.content_html || '');
+
         const [post] = await sql`
           INSERT INTO blog_posts (
             interview_id, title, slug, content_html, excerpt, featured_image,
@@ -139,7 +152,7 @@ export async function GET(request: Request) {
             primary_keyword, internal_links, faq_schema, word_count,
             status, author_id
           ) VALUES (
-            ${iv.id}, ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
+            ${iv.id}, ${article.title}, ${slug}, ${cleanHtml}, ${article.excerpt}, ${featuredImage},
             ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
             ${article.primary_keyword || null},
             ${JSON.stringify(article.internal_links || [])},

@@ -377,11 +377,12 @@ Original JSON: ${JSON.stringify(raw).slice(0, 8000)}`;
     }
     throw new Error('No JSON found in response');
   } catch {
-    // Fallback: extract what we can
+    // Fallback: extract what we can — use a proper title-based slug
+    const fallbackTitle = interviewTranscript.split('\n')[0]?.slice(0, 70) || 'Music Promotion Tips';
     return {
-      title: interviewTranscript.split('\n')[0]?.slice(0, 70) || 'New Blog Post',
+      title: fallbackTitle,
       meta_description: interviewTranscript.slice(0, 160),
-      slug: 'post-' + Date.now(),
+      slug: fallbackTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) + '-' + Date.now().toString(36).slice(0, 6),
       content_html: `<p>${response.replace(/\n/g, '</p><p>')}</p>`,
       excerpt: response.slice(0, 200),
       tags: ['music-promotion', 'content-creation'],
