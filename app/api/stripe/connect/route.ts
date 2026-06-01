@@ -17,10 +17,10 @@ export async function POST(request: Request) {
     const { default: Stripe } = await import('stripe');
     const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' as any });
 
-    // Check if creator already has a Stripe account
+    // Check if creator already has a Stripe account (check both column names)
     const { default: sql } = await import('@/lib/db');
-    const rows = await sql`SELECT stripe_account_id FROM users WHERE id = ${session.id}`;
-    let accountId = rows[0]?.stripe_account_id;
+    const rows = await sql`SELECT stripe_account_id, stripe_connect_id FROM users WHERE id = ${session.id}`;
+    let accountId = rows[0]?.stripe_account_id || rows[0]?.stripe_connect_id;
 
     // Create new Stripe Connect Express account if needed
     if (!accountId) {

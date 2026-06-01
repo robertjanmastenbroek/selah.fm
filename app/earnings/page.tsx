@@ -104,7 +104,7 @@ export default function EarningsPage() {
             </Card>
 
             {/* Stripe Connect prompt — only show if not connected */}
-            {!profile?.stripe_account_id && (
+            {!profile?.stripe_account_id && !profile?.stripe_connect_id && (
             <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
               <CardContent className="p-5 text-center space-y-3">
                 <p className="text-sm font-medium">💳 Receive payouts</p>
