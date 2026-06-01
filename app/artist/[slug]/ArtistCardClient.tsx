@@ -127,6 +127,13 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
     setRefreshing(false);
   }
 
+  const [crawlStatus, setCrawlStatus] = useState<string | null>(null);
+
+  // Check crawl4ai health on mount
+  useEffect(() => {
+    fetch('/api/crawl/health').then(r => r.json()).then(d => setCrawlStatus(d.ok ? 'connected' : 'offline')).catch(() => setCrawlStatus('offline'));
+  }, []);
+
   // Auto-refresh if no data at all
   useEffect(() => {
     if (cards.length === 0 && !refreshing) handleRefresh();
@@ -178,6 +185,9 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
             } disabled:opacity-40`}>
             {refreshing ? '⏳ Fetching...' : refreshed ? '✅ Updated' : '🔄 Refresh'}
           </button>
+          {crawlStatus === 'connected' && (
+            <span className="text-[10px] text-green-500/60 ml-2">🕷️ crawl4ai connected</span>
+          )}
         </div>
       </div>
 
