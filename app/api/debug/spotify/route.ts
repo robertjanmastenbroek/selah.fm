@@ -73,11 +73,11 @@ export async function GET(request: Request) {
     // Step 3: If first result has an ID, get full artist details
     if (searchData.artists?.items?.[0]?.id) {
       const artistRes = await fetch(
-        `https://api.spotify.com/v1/artists/${searchData.artists.items[0].id}`,
+        `https://api.spotify.com/v1/artists?ids=${searchData.artists.items[0].id}`,
         { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
       );
-      const artistData = await artistRes.json();
-      result.artistDetailRaw = artistData;
+      const bulkData = await artistRes.json();
+      result.artistDetailRaw = bulkData;
     }
 
     return NextResponse.json(result);
