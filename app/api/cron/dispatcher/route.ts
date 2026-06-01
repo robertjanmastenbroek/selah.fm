@@ -14,7 +14,7 @@ const WORKERS: Record<number, { path: string; params?: string }[]> = {
   3:  [{ path: '/api/cron/email-outreach' }],
   5:  [{ path: '/api/cron/creator-discovery' }],
   6:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
-  8:  [{ path: '/api/cron/blog-pipeline' }],
+  8:  [{ path: '/api/cron/blog-pipeline' }, { path: '/api/cron/generate-outreach-videos' }, { path: '/api/cron/refresh-artist-metrics' }],
   9:  [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/welcome-sequence' }],
   10: [{ path: '/api/cron/blog-publish' }, { path: '/api/cron/outreach-followup' }],
   11: [{ path: '/api/cron/creator-outreach' }, { path: '/api/cron/reengage' }],
