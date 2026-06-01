@@ -1,19 +1,12 @@
-import ArtistsClient from './ArtistsClient';
+import ArtistsPage from './ArtistsClient';
+
+export const metadata = {
+  title: 'Artists — Cross-Platform Stats | Selah.fm',
+  description: 'Browse 2,038 independent artists tracked across 27 platforms. Spotify listeners, Instagram followers, TikTok followers, and more. Updated daily.',
+};
 
 export const dynamic = 'force-dynamic';
 
-async function getArtists() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
-    const res = await fetch(`${baseUrl}/api/artists`);
-    if (!res.ok) return { artists: [] };
-    return res.json();
-  } catch {
-    return { artists: [] };
-  }
-}
-
-export default async function ArtistsPage() {
-  const data = await getArtists();
-  return <ArtistsClient initialArtists={data.artists || []} />;
+export default function Page() {
+  return <ArtistsPage />;
 }
