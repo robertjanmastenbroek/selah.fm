@@ -109,6 +109,7 @@ export async function POST(request: Request) {
       } catch {}
 
       // Attempt auto-payout via Stripe
+      let payoutNote: string | null = null;
       try {
         const payoutRes = await fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/stripe/payout`, {
           method: 'POST',
@@ -116,16 +117,20 @@ export async function POST(request: Request) {
           body: JSON.stringify({ submissionId }),
         });
         if (!payoutRes.ok) {
-          console.log('Auto-payout deferred — creator may need to set up Stripe Connect');
+          const payoutErr = await payoutRes.json().catch(() => ({ error: 'Unknown' }));
+          payoutNote = payoutErr.error || 'Payout deferred';
+        } else {
+          payoutNote = 'Payout processing';
         }
-      } catch (payoutErr) {
-        console.log('Auto-payout attempt failed (non-critical):', payoutErr);
+      } catch {
+        payoutNote = 'Payout endpoint unreachable';
       }
 
       // Server-side GA tracking
       trackApproveSubmission(session.id).catch(() => {});
 
-      return NextResponse.json(result[0]);
+      const responseData = { ...result[0], payout_note: payoutNote };
+      return NextResponse.json(responseData);
     }
 
     // Rejection
