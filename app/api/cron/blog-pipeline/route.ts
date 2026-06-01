@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { generateInterviewQuestions, generateArticle, generateFounderAnswers, findVoiceExamples, getFallbackQuestions, sourceQuestionsFromReddit } from '@/lib/blog-engine';
+import { generateInterviewQuestions, generateArticle, generateFounderAnswers, generateDirectAnswer, findVoiceExamples, getFallbackQuestions, sourceQuestionsFromReddit } from '@/lib/blog-engine';
 import { fetchBlogImage, attachImageToPost } from '@/lib/blog-images';
 
 export const dynamic = 'force-dynamic';
@@ -199,10 +199,11 @@ export async function GET(request: Request) {
 
     // Step 4: Generate post (inline from admin route)
     const answered = await sql`
-      SELECT id, transcript FROM batch_interviews
-      WHERE batch_id = ${batchId} AND status = 'answered' AND transcript IS NOT NULL
-        AND NOT EXISTS (SELECT 1 FROM blog_posts bp WHERE bp.interview_id = batch_interviews.id)
-      ORDER BY created_at DESC
+      SELECT bi.id, bi.transcript, bq.raw_question FROM batch_interviews bi
+      JOIN batch_questions bq ON bq.id = bi.source_question_id
+      WHERE bi.batch_id = ${batchId} AND bi.status = 'answered' AND bi.transcript IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM blog_posts bp WHERE bp.interview_id = bi.id)
+      ORDER BY bi.created_at DESC
       LIMIT 2
     `;
     for (const iv of answered) {
@@ -220,7 +221,21 @@ export async function GET(request: Request) {
         const imageQuery = article.image_suggestions?.[0]?.description || 'music promotion';
         const featuredImage = await fetchBlogImage(imageQuery);
 
-        const cleanHtml = cleanMarkdown(article.content_html || '');
+        // Generate direct answer block — first thing AI crawlers + readers see
+        let directAnswerHtml = '';
+        let directAnswerText = '';
+        if (iv.raw_question) {
+          try {
+            const da = await generateDirectAnswer(iv.raw_question);
+            if (da) {
+              directAnswerHtml = da.answer_html;
+              directAnswerText = da.answer_text;
+            }
+          } catch { /* non-blocking */ }
+        }
+
+        const fullHtml = directAnswerHtml + (directAnswerHtml ? '<hr>' : '') + (article.content_html || '');
+        const cleanHtml = cleanMarkdown(fullHtml);
 
         const [post] = await sql`
           INSERT INTO blog_posts (
@@ -244,16 +259,34 @@ export async function GET(request: Request) {
         // Link the downloaded image to this post
         await attachImageToPost(featuredImage, post.id);
 
-        // Add schema
+        // Add dual schema: Article + QAPage
         const schema = {
-          '@context': 'https://schema.org', '@type': 'Article',
-          headline: article.title,
-          description: article.meta_description || article.excerpt,
-          image: featuredImage,
-          datePublished: new Date().toISOString(),
-          author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
-          publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
-          mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${slug}` },
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'Article',
+              headline: article.title,
+              description: article.meta_description || article.excerpt,
+              image: featuredImage,
+              datePublished: new Date().toISOString(),
+              author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
+              publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
+              mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${slug}` },
+            },
+            ...(directAnswerText ? [{
+              '@type': 'QAPage',
+              mainEntity: {
+                '@type': 'Question',
+                name: iv.raw_question || article.title,
+                answerCount: 1,
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: directAnswerText,
+                  url: `https://selah.fm/blog/${slug}`,
+                },
+              },
+            }] : []),
+          ],
         };
         await sql`UPDATE blog_posts SET schema_markup = ${JSON.stringify(schema)} WHERE id = ${post.id}`;
 

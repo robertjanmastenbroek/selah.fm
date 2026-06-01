@@ -203,11 +203,9 @@ THE ULTIMATE TEST: After writing, ask yourself: could a human tell this was writ
 
 CONTENT STRUCTURE (follow this exact template):
 
-1. OPENING HOOK (first 3-5 paragraphs):
-   - Start with a bold statement or question. One sentence. Standalone paragraph.
-   - Follow with 2-4 short punchy paragraphs (10-25 words each).
-   - This pattern forces the reader to keep scrolling. Think sales page, not blog.
-   - Primary keyword MUST appear within the first 100 words.
+1. START DIRECTLY (no intro hook — the direct answer blockquote is already at the top of the page):
+   - Begin with your first body section. No throat-clearing, no "Let me tell you a story..."
+   - Primary keyword MUST appear within the first 100 words of your content.
 
 2. TABLE OF CONTENTS (skip for short posts under 800 words):
    <h2>In this article</h2>
@@ -344,6 +342,8 @@ export async function generateArticle(
       try {
         const critiquePrompt = `You are an AI detection expert. Analyze this blog post content for machine-written patterns and rewrite ANY sections that would trigger AI detectors.
 
+IMPORTANT: The first element is a <blockquote class="direct-answer"> — this is the direct answer block. PRESERVE this element and its class. Only rewrite the inner text if it sounds AI-generated. Do NOT remove the blockquote tags or change its position.
+
 AI DETECTION CHECKLIST — rewrite EVERY section that fails these:
 1. Sentence length variation: Are there groups of 3+ sentences of similar length? Rewrite them to vary from 3 words to 30 words.
 2. Predictable transitions: "Furthermore", "Additionally", "Moreover" → replace with "And", "So", "But", "Plus", "What's more", or fragment sentences
@@ -398,16 +398,27 @@ const AUTO_ANSWER_PROMPT = `You are Robert-Jan Mastenbroek, founder of Selah.fm.
 BACKGROUND: Professional musician who walked away from a record deal (labels take 98%), built a €6M crowdfunding platform, lost everything, lived in a campervan busking on Tenerife beaches, found faith, now makes electronic worship music. You believe artists should own their promotion.
 
 ANSWERING STYLE:
-- Short, punchy, honest — 30-150 words per answer. No fluff.
-- Use contractions always: don't, can't, I've, it's, that's
-- Share real specifics from your life when relevant: busking on Tenerife beaches, the record deal at 21, the €6M crowdfunding platform (Dream or Donate), losing everything, living in a campervan, quitting smoking after 15 years, making electronic worship music. ONLY use these known details — never invent conversations, specific amounts on specific days, or messages from fans.
-- Be opinionated — you've seen both sides
-- Mix practical advice with spiritual wisdom naturally
+- Start every answer with the direct, objective answer. No warm-up, no throat-clearing.
+- Short, punchy, honest — 80-180 words per answer. 
+- Use contractions always: don't, can't, I've, it's, that's, won't, isn't, wasn't, we're, I'm, here's
+- Share real specifics: busking on Tenerife beaches, the record deal at 21, the €6M crowdfunding platform (Dream or Donate), losing everything, the campervan, quitting smoking after 15 years, electronic worship music. ONLY these known details — never invent conversations, named people, exact amounts on specific days, or messages from fans.
+- Be opinionated — you've seen both sides. Mix practical advice with spiritual wisdom naturally.
 - Sometimes say "I don't know" or "I'm still figuring this out"
-- Use "gonna", "wanna", "kinda" occasionally
-- NEVER use: furthermore, moreover, crucial, essential, delve into, game-changer
+- Use "gonna", "wanna", "kinda" occasionally (1-2 per answer)
+- End sentences with prepositions sometimes: "the platform I built", "the music I care about"
+- Vary sentence length: mix 4-word punchy ones with 20-word flowing ones
 
-FORMAT: Return a JSON array of objects: [{"question": "Q?", "answer": "Your answer"}]`;
+BANNED WORDS — using any of these fails:
+- Furthermore, Moreover, Consequently, Thus, Hence, Therefore, Additionally
+- In conclusion, To summarize, In summary
+- Crucial, Essential, Vital, Paramount, Imperative
+- Delve into, Dive deep into, Explore the nuances of
+- Game-changer, Revolutionary, Cutting-edge
+- Leverage, Utilize (use "use"), Optimize, Maximize
+- Robust, Seamless, Comprehensive, Holistic
+- Foster, Cultivate, Empower, Enable (use "build", "grow", "help", "let")
+
+FORMAT: Return ONLY a JSON array: [{"question": "Q?", "answer": "Your answer"}]`;
 
 export async function generateFounderAnswers(
   questions: { question: string }[],
@@ -446,7 +457,31 @@ export async function generateFounderAnswers(
   }
 }
 
-// ── Voice Matching ───────────────────────────────────────────────
+/** Generate a single direct answer for the "One Mississippi" block — first thing AI crawlers see */
+export async function generateDirectAnswer(question: string): Promise<{
+  question: string;
+  answer_html: string;
+  answer_text: string;
+} | null> {
+  try {
+    const answers = await generateFounderAnswers(
+      [{ question }],
+      [] // No voice examples needed for direct answers
+    );
+    
+    if (!answers?.[0]?.answer) return null;
+    
+    const answer = answers[0].answer;
+    
+    return {
+      question,
+      answer_html: `<blockquote class="direct-answer"><p><strong>The short answer:</strong> ${answer}</p></blockquote>`,
+      answer_text: answer,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export async function findVoiceExamples(
   newTranscript: string,

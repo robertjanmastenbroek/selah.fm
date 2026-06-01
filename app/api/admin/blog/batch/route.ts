@@ -5,6 +5,7 @@ import {
   generateInterviewQuestions,
   generateArticle,
   generateFounderAnswers,
+  generateDirectAnswer,
   findVoiceExamples,
   getFallbackQuestions,
   sourceQuestionsFromReddit,
@@ -390,6 +391,15 @@ async function previewPost(interviewId: string) {
   const baseSlug = slugify(article.slug || article.title);
   const slug = `${baseSlug}-${Date.now().toString(36)}`;
 
+  // Generate direct answer
+  let directAnswerHtml = '';
+  let directAnswerText = '';
+  const [sourceQ] = await sql`SELECT raw_question FROM batch_questions WHERE id = ${interview.source_question_id}`;
+  if (sourceQ?.raw_question) {
+    try { const da = await generateDirectAnswer(sourceQ.raw_question); if (da) { directAnswerHtml = da.answer_html; directAnswerText = da.answer_text; } } catch {}
+  }
+  const fullHtml = directAnswerHtml + (directAnswerHtml ? '<hr>' : '') + (article.content_html || '');
+
   const imageQuery = article.image_suggestions?.[0]?.description || article.tags?.[0] || 'music promotion';
   const featuredImage = await fetchBlogImage(imageQuery);
 
@@ -400,7 +410,7 @@ async function previewPost(interviewId: string) {
       primary_keyword, internal_links, faq_schema, word_count, cta_positions,
       status, author_id
     ) VALUES (
-      ${interview.id}, ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
+      ${interview.id}, ${article.title}, ${slug}, ${fullHtml}, ${article.excerpt}, ${featuredImage},
       ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
       ${JSON.stringify(article.image_suggestions || [])},
       ${article.primary_keyword || (article.tags?.[0] || null)},
@@ -418,17 +428,26 @@ async function previewPost(interviewId: string) {
     RETURNING *
   `;
 
-  // Link the image to the post
+  // Link the image
   await attachImageToPost(featuredImage, post.id);
 
-  // Add JSON-LD
+  // Dual schema: Article + QAPage
   const schema: any = {
-    '@context': 'https://schema.org', '@type': 'Article',
-    headline: post.title, description: post.meta_description || post.excerpt,
-    image: post.featured_image, datePublished: post.publish_at,
-    author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
-    publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
-    mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${post.slug}` },
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Article',
+        headline: post.title, description: post.meta_description || post.excerpt,
+        image: post.featured_image, datePublished: post.publish_at,
+        author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
+        publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${post.slug}` },
+      },
+      ...(directAnswerText ? [{
+        '@type': 'QAPage',
+        mainEntity: { '@type': 'Question', name: sourceQ?.raw_question || article.title, answerCount: 1, acceptedAnswer: { '@type': 'Answer', text: directAnswerText, url: `https://selah.fm/blog/${post.slug}` } },
+      }] : []),
+    ],
   };
   if (post.faq_schema && Array.isArray(post.faq_schema) && post.faq_schema.length > 0) {
     schema.mainEntity = post.faq_schema.map((faq: any) => ({
@@ -555,6 +574,16 @@ async function finalizeBatch(batchId: string) {
       const article = await generateArticle(interview.transcript || '', voiceExamples);
       const baseSlug = slugify(article.slug || article.title);
       const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
+      // Generate direct answer
+      let directAnswerHtml = '';
+      let directAnswerText = '';
+      const [sourceQ] = await sql`SELECT raw_question FROM batch_questions WHERE id = ${interview.source_question_id}`;
+      if (sourceQ?.raw_question) {
+        try { const da = await generateDirectAnswer(sourceQ.raw_question); if (da) { directAnswerHtml = da.answer_html; directAnswerText = da.answer_text; } } catch {}
+      }
+      const fullHtml = directAnswerHtml + (directAnswerHtml ? '<hr>' : '') + (article.content_html || '');
+
       const imageQuery = article.image_suggestions?.[0]?.description || article.tags?.[0] || 'music promotion';
       const featuredImage = await fetchBlogImage(imageQuery);
 
@@ -565,7 +594,7 @@ async function finalizeBatch(batchId: string) {
           primary_keyword, internal_links, faq_schema, word_count, cta_positions,
           status, publish_at, author_id
         ) VALUES (
-          ${interview.id}, ${article.title}, ${slug}, ${article.content_html}, ${article.excerpt}, ${featuredImage},
+          ${interview.id}, ${article.title}, ${slug}, ${fullHtml}, ${article.excerpt}, ${featuredImage},
           ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
           ${JSON.stringify(article.image_suggestions || [])},
           ${article.primary_keyword || (article.tags?.[0] || null)},
@@ -605,18 +634,24 @@ async function finalizeBatch(batchId: string) {
 
   for (const post of posts) {
     const schema: any = {
-      '@context': 'https://schema.org', '@type': 'Article',
-      headline: post.title, description: post.meta_description || post.excerpt,
-      image: post.featured_image, datePublished: post.publish_at,
-      author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
-      publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
-      mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${post.slug}` },
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Article',
+          headline: post.title, description: post.meta_description || post.excerpt,
+          image: post.featured_image, datePublished: post.publish_at,
+          author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
+          publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
+          mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${post.slug}` },
+        },
+        ...(post.faq_schema && Array.isArray(post.faq_schema) && post.faq_schema.length > 0 ? [{
+          '@type': 'FAQPage',
+          mainEntity: post.faq_schema.map((faq: any) => ({
+            '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+          })),
+        }] : []),
+      ],
     };
-    if (post.faq_schema && Array.isArray(post.faq_schema) && post.faq_schema.length > 0) {
-      schema.mainEntity = post.faq_schema.map((faq: any) => ({
-        '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer },
-      }));
-    }
     await sql`UPDATE blog_posts SET schema_markup = ${JSON.stringify(schema)} WHERE id = ${post.id}`;
   }
 

@@ -148,6 +148,9 @@ export default async function BlogPostPage({ params }: Props) {
           .blog-content img { border-radius: 0.75rem; margin: 2rem 0; max-width: 100%; }
           .blog-content blockquote { border-left: 3px solid rgba(67,56,202,0.4); padding: 0.5rem 0 0.5rem 1.5rem; margin: 1.5rem 0; color: #999; font-style: italic; }
           .blog-content hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 2.5rem 0; }
+          .direct-answer { border-left: 3px solid #22C55E; background: rgba(34,197,94,0.06); padding: 1rem 1.25rem; margin: 0 0 2rem 0; border-radius: 0 0.75rem 0.75rem 0; color: #d0d0d0; font-style: normal; }
+          .direct-answer p { color: #d0d0d0 !important; font-size: 1rem !important; line-height: 1.7 !important; margin: 0 !important; }
+          .direct-answer strong { color: #22C55E; }
         `}} />
 
         <div className="blog-content" dangerouslySetInnerHTML={{ __html: post.content_html }} />
