@@ -557,9 +557,11 @@ export async function sourceQuestionsFromReddit(): Promise<{ question: string; u
       
       for (const post of posts) {
         const title = post.data?.title || '';
-        if (title.endsWith('?') && title.length > 20 && title.length < 200) {
+        const isQuestion = title.endsWith('?') ||
+          /^(how|what|why|where|when|who|can|should|do|does|is|are|has|have|will|would|any|anyone|am i|has anyone)/i.test(title);
+        if (isQuestion && title.length > 20 && title.length < 200) {
           results.push({
-            question: title,
+            question: title.endsWith('?') ? title : title + '?',
             url: `https://reddit.com${post.data.permalink}`,
             category: sub === 'creators' || sub === 'tiktokhelp' ? 'creator_income' : 'music_promotion',
           });
