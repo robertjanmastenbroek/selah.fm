@@ -7,15 +7,14 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const [artist] = await sql`
-    SELECT da.artist_name, ap.spotify_image_url
-    FROM artist_profiles ap
+    SELECT da.artist_name, ap.spotify_image_url FROM artist_profiles ap
     JOIN discovered_artists da ON da.id = ap.artist_id
     WHERE ap.slug = ${params.slug} LIMIT 1
   `;
   if (!artist) return { title: 'Artist not found — Selah.fm' };
   return {
     title: `${artist.artist_name} Stats — Spotify Listeners, Social Followers & Streaming Data | Selah.fm`,
-    description: `See ${artist.artist_name}'s complete music & social stats. Updated daily. Free by Selah.fm.`,
+    description: `See ${artist.artist_name}'s complete music & social stats. Updated on-demand. Free by Selah.fm.`,
     openGraph: {
       title: `${artist.artist_name} — Artist Dashboard | Selah.fm`,
       description: `All ${artist.artist_name}'s stats in one place.`,
@@ -36,6 +35,8 @@ export default async function ArtistCardPage({ params }: { params: { slug: strin
   `;
   if (!artist) notFound();
 
+  // Get cached metrics (fast, from DB)
   const data = await getArtistCardData(artist.id);
-  return <ArtistCardClient artist={artist} profile={data?.profile || {}} metrics={data?.metrics || {}} />;
+
+  return <ArtistCardClient artist={artist} initialData={data || {}} />;
 }
