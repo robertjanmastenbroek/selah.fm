@@ -83,23 +83,28 @@ export async function GET(request: Request) {
         log.push(`Sourced ${stored} questions from Reddit`);
       }
       
-      // Fill from AI-generated question pool (deepseek-generated from bulk sourcing)
+      // Fill from AI-generated question pool — weighted by traffic priority
       const aiRemaining = 10 - results.questions;
       if (aiRemaining > 0) {
-        const aiQs = await sql`
-          SELECT raw_question, category FROM batch_questions bq
-          WHERE bq.platform = 'deepseek-generated'
-            AND NOT EXISTS (SELECT 1 FROM batch_questions bq2 WHERE bq2.raw_question = bq.raw_question AND bq2.batch_id = ${batchId})
-          ORDER BY random() LIMIT ${aiRemaining}
-        `;
-        if (aiQs.length > 0) {
-          let aiStored = 0;
-          for (const q of aiQs) {
+        const priorityOrder = ['creator_income', 'music_promotion', 'platform_strategy', 'creator_marketplace', 'cpm_mechanics', 'ai_music', 'youtube_musicians', 'fan_engagement', 'paid_ads', 'spotify_artists', 'artist_business', 'live_streaming'];
+        let aiStored = 0;
+        
+        for (const cat of priorityOrder) {
+          if (aiStored >= aiRemaining) break;
+          const catQs = await sql`
+            SELECT raw_question, category FROM batch_questions bq
+            WHERE bq.platform = 'deepseek-generated' AND bq.category = ${cat}
+              AND NOT EXISTS (SELECT 1 FROM batch_questions bq2 WHERE bq2.raw_question = bq.raw_question AND bq2.batch_id = ${batchId})
+            ORDER BY random() LIMIT ${aiRemaining - aiStored}
+          `;
+          for (const q of catQs) {
             await sql`INSERT INTO batch_questions (batch_id, raw_question, source_url, platform, category) VALUES (${batchId}, ${q.raw_question}, '', 'ai-generated', ${q.category})`;
             aiStored++;
           }
+        }
+        if (aiStored > 0) {
           results.questions += aiStored;
-          log.push(`Sourced ${aiStored} questions from AI pool`);
+          log.push(`Sourced ${aiStored} questions from AI pool (weighted priority)`);
         }
       }
       

@@ -18,49 +18,91 @@ const pool = new Pool({
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_BASE = 'https://api.deepseek.com/v1';
 
-// ── Content pillars with target keywords ──────────────────────────
+// ── Content pillars with target keywords (weighted by traffic potential) ──
 const PILLARS = [
+  // PRIORITY 1: Creator Income — highest traffic, ChatGPT-friendly, we have unique data
+  {
+    category: 'creator_income',
+    keywords: ['get paid for TikTok views', 'creator CPM rates', 'earn making short videos', 'content creator income', 'monetize short form video', 'how much does TikTok pay'],
+    description: 'How content creators earn money from short-form video. TikTok Creator Fund vs Creativity Program, CPM rates, platform fund comparisons, making a living as a creator without millions of followers.',
+    count: 150,
+  },
+  // PRIORITY 2: Music Promotion — core product, high long-tail volume
   {
     category: 'music_promotion',
     keywords: ['promote music without label', 'independent artist promotion', 'music marketing strategy', 'get music heard', 'promote song on budget'],
     description: 'How independent artists promote music without a record label. Budget-friendly strategies, getting heard from zero, finding your first fans.',
-    count: 120,
+    count: 140,
   },
-  {
-    category: 'creator_income',
-    keywords: ['get paid for TikTok views', 'creator CPM rates', 'earn making short videos', 'content creator income', 'monetize short form video'],
-    description: 'How content creators earn money from short-form video. CPM rates, platform fund comparisons, making a living as a creator.',
-    count: 120,
-  },
+  // PRIORITY 3: Platform Strategy — growing, low competition on specific questions
   {
     category: 'platform_strategy',
-    keywords: ['TikTok vs Reels for music', 'YouTube Shorts monetization', 'best platform for musicians', 'social media algorithm music', 'post timing for views'],
-    description: 'Platform strategy for musicians and creators. TikTok vs Instagram vs YouTube, algorithm tips, cross-platform promotion.',
-    count: 100,
+    keywords: ['TikTok vs Reels for music', 'YouTube Shorts monetization', 'best platform for musicians', 'social media algorithm music', 'why do my TikTok videos stop getting views', 'shadowban music'],
+    description: 'Platform strategy for musicians and creators. TikTok vs Instagram vs YouTube, algorithm behavior, shadowbanning, cross-platform promotion, posting strategies.',
+    count: 110,
   },
-  {
-    category: 'cpm_mechanics',
-    keywords: ['CPM music promotion', 'cost per view marketing', 'pay per view promotion', 'campaign budget CPM', 'ROI music promotion'],
-    description: 'How CPM-based music promotion works. Setting rates, calculating ROI, comparing CPM to traditional advertising.',
-    count: 80,
-  },
+  // PRIORITY 4: Creator Marketplace — direct product alignment, zero competition
   {
     category: 'creator_marketplace',
-    keywords: ['UGC music promotion', 'hire content creators', 'creator marketplace music', 'find TikTok creators music', 'influencer marketing music'],
-    description: 'Creator marketplace model. How artists find and hire creators, UGC vs influencer marketing, campaign management.',
+    keywords: ['UGC music promotion', 'hire content creators', 'creator marketplace music', 'find TikTok creators music', 'cost to hire UGC creator'],
+    description: 'Creator marketplace model. How artists find and hire creators, UGC vs influencer marketing, campaign management, pricing, vetting creators, briefing.',
+    count: 90,
+  },
+  // PRIORITY 5: CPM Mechanics — high commercial intent, calculator tie-in
+  {
+    category: 'cpm_mechanics',
+    keywords: ['CPM music promotion', 'cost per view marketing', 'pay per view promotion', 'campaign budget CPM', 'ROI music promotion', 'how CPM works'],
+    description: 'How CPM-based music promotion works. Setting rates, calculating ROI, comparing CPM to traditional advertising, budgeting strategies.',
     count: 70,
   },
-  {
-    category: 'music_production',
-    keywords: ['produce music at home', 'music production tips', 'recording on budget', 'mix and master DIY', 'home studio setup'],
-    description: 'Music production and creation. Home recording, mixing, mastering, gear recommendations, DAW tips.',
-    count: 60,
-  },
+  // PRIORITY 6: Artist Business — high intent but competitive
   {
     category: 'artist_business',
-    keywords: ['make money as musician', 'music business independent', 'artist revenue streams', 'music royalties explained', 'build music career'],
-    description: 'The business side of being an independent artist. Revenue streams, royalties, publishing, building a sustainable career.',
+    keywords: ['make money as musician', 'music business independent', 'artist revenue streams', 'music royalties explained', 'build music career', 'Spotify royalties'],
+    description: 'The business side of being an independent artist. Revenue streams, royalties, publishing, building a sustainable career, sync licensing.',
+    count: 60,
+  },
+  // NEW: AI Music Tools — exploding search volume in 2025
+  {
+    category: 'ai_music',
+    keywords: ['AI music generator', 'Suno AI music', 'AI music promotion', 'AI tools for musicians', 'Udio AI'],
+    description: 'AI tools for music creation and promotion. Suno, Udio, AI mastering, AI lyric generators, AI video creation for music, ethical concerns.',
+    count: 60,
+  },
+  // NEW: YouTube for Musicians (not just Shorts)
+  {
+    category: 'youtube_musicians',
+    keywords: ['YouTube channel for musicians', 'YouTube music promotion', 'YouTube algorithm music', 'YouTube music video strategy', 'grow YouTube music channel'],
+    description: 'YouTube strategy for musicians. Channel growth, video SEO, YouTube algorithm for music content, monetization beyond Shorts, building a subscriber base.',
     count: 50,
+  },
+  // NEW: Fan Engagement & Community Building
+  {
+    category: 'fan_engagement',
+    keywords: ['build fan community', 'Discord for musicians', 'email list musicians', 'fan engagement strategy', 'convert listeners to fans'],
+    description: 'Fan engagement and community building. Discord servers, email marketing, converting listeners to superfans, community management for musicians.',
+    count: 50,
+  },
+  // NEW: Paid Ads for Music
+  {
+    category: 'paid_ads',
+    keywords: ['Facebook ads musicians', 'TikTok Spark Ads music', 'Meta ads music promotion', 'best ad platform musicians', 'music ad strategy'],
+    description: 'Paid advertising for music promotion. Facebook/Instagram ads, TikTok Spark Ads, YouTube ads, budget optimization, targeting, retargeting.',
+    count: 50,
+  },
+  // NEW: Spotify for Artists
+  {
+    category: 'spotify_artists',
+    keywords: ['Spotify for Artists tips', 'Spotify pitch template', 'Spotify Discovery Mode', 'Spotify playlist pitching', 'Spotify algorithmic playlists'],
+    description: 'Spotify for Artists optimization. Pitching to editorial playlists, Discovery Mode, algorithmic playlists (Release Radar, Discover Weekly), profile optimization.',
+    count: 40,
+  },
+  // NEW: Live Streaming
+  {
+    category: 'live_streaming',
+    keywords: ['Twitch for musicians', 'live stream music', 'TikTok Live music', 'streaming concerts', 'virtual concert setup'],
+    description: 'Live streaming for musicians. Twitch music, TikTok Live, YouTube Live, virtual concerts, gear setup, monetizing live streams.',
+    count: 30,
   },
 ];
 

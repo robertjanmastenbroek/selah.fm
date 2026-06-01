@@ -530,46 +530,15 @@ export function getFallbackQuestions(count: number = 30): string[] {
 }
 
 export async function sourceQuestionsFromReddit(): Promise<{ question: string; url: string; category: string }[]> {
-  // Fetch from Reddit API with rotating sort orders for freshness
-  // Uses multiple subreddits and alternates between hot/new/top to get different questions each run
+  // Use the reliable old.reddit.com RSS-based scraper from web-research module
   try {
-    const subreddits = ['musicmarketing', 'wearethemusicmakers', 'creators', 'tiktokhelp', 'instagrammarketing', 'newtubers'];
-    const sortOrders = ['hot', 'new', 'top'];
-    
-    // Pick a random sort order each time for freshness
-    const sort = sortOrders[Math.floor(Math.random() * sortOrders.length)];
-    const timeFilter = sort === 'top' ? '&t=week' : ''; // For top, get weekly to avoid stale results
-    
-    const results: { question: string; url: string; category: string }[] = [];
-    
-    // Shuffle subreddits and take 3 for variety
-    const shuffled = [...subreddits].sort(() => Math.random() - 0.5);
-    
-    for (const sub of shuffled.slice(0, 3)) {
-      const res = await fetch(
-        `https://www.reddit.com/r/${sub}/${sort}.json?limit=25${timeFilter}`,
-        { headers: { 'User-Agent': 'Selah.fm Blog Bot/1.0' } }
-      );
-      if (!res.ok) continue;
-      
-      const data = await res.json();
-      const posts = data?.data?.children || [];
-      
-      for (const post of posts) {
-        const title = post.data?.title || '';
-        const isQuestion = title.endsWith('?') ||
-          /^(how|what|why|where|when|who|can|should|do|does|is|are|has|have|will|would|any|anyone|am i|has anyone)/i.test(title);
-        if (isQuestion && title.length > 20 && title.length < 200) {
-          results.push({
-            question: title.endsWith('?') ? title : title + '?',
-            url: `https://reddit.com${post.data.permalink}`,
-            category: sub === 'creators' || sub === 'tiktokhelp' ? 'creator_income' : 'music_promotion',
-          });
-        }
-      }
-    }
-    
-    return results;
+    const { sourceRedditQuestions } = await import('@/lib/web-research');
+    const questions = await sourceRedditQuestions();
+    return questions.map(q => ({
+      question: q.question,
+      url: q.url,
+      category: q.category,
+    }));
   } catch {
     return [];
   }
