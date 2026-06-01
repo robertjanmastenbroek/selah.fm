@@ -36,7 +36,7 @@ const platformMeta: Record<string, { label: string; color: string }> = {
 
 function MetricCard({ platform, label, value, handle, color, delay }: { platform: string; label: string; value: number; handle?: string; color: string; delay: number }) {
   const [visible, setVisible] = useState(false);
-  const countUp = useCountUp(value, 1500, visible);
+  const countUp = useCountUp(value, 1500, true);
   useEffect(() => { const t = setTimeout(() => setVisible(true), delay); return () => clearTimeout(t); }, [delay]);
 
   return (
@@ -101,7 +101,7 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
       delay: 100 + cards.length * 120,
     });
   }
-  if (artist.youtube_url) {
+  if (artist.youtube_url && !metrics.youtube) {
     cards.push({
       platform: 'YouTube',
       label: 'Channel',
