@@ -115,6 +115,26 @@ export async function POST(request: Request) {
       console.error('Notification creation failed:', notifErr);
     }
 
+    // Also email the artist
+    try {
+      const [campData] = await sql`
+        SELECT c.track_title, u.email, u.display_name
+        FROM campaigns c LEFT JOIN users u ON u.id = c.artist_id
+        WHERE c.id = ${campaignId}
+      `;
+      if (campData?.email) {
+        fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/email/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: campData.email,
+            subject: `New submission on "${campData.track_title}" — review it now`,
+            html: `<p>Hi ${campData.display_name || 'Artist'},</p><p>Someone submitted a video for <strong>"${campData.track_title}"</strong> on Selah.fm.</p><p><a href="https://selah.fm/review">Review the submission →</a></p><p style="color:#888;font-size:13px;">You only pay for verified views after you approve.</p>`,
+          }),
+        }).catch(() => {});
+      }
+    } catch {}
+
     return NextResponse.json(result[0]);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

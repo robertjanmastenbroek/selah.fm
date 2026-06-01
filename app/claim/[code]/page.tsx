@@ -1,151 +1,94 @@
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import sql from '@/lib/db';
-import ClaimButton from './ClaimButton';
 
 export const dynamic = 'force-dynamic';
 
-interface Props {
-  params: { code: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+interface Props { params: { code: string } }
+
+async function getClaimData(code: string) {
+  const [claim] = await sql`
+    SELECT cc.*, c.title, c.track_title, c.slug, c.cpm_rate_cents, c.cover_art_url,
+           da.artist_name
+    FROM campaign_claims cc
+    JOIN campaigns c ON c.id = cc.campaign_id
+    LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+    WHERE cc.claim_code = ${code}
+  `;
+  if (!claim) return null;
+
+  // Social proof: count submissions and donations
+  const [subs] = await sql`SELECT COUNT(*)::int FROM submissions WHERE campaign_id = ${claim.campaign_id}`;
+  const [dons] = await sql`SELECT COUNT(*)::int, COALESCE(SUM(amount_cents), 0)::int as total FROM campaign_donations WHERE campaign_id = ${claim.campaign_id}`;
+
+  return { ...claim, submissionCount: subs.count, donationCount: dons.count, donationTotal: (dons.total / 100).toFixed(0) };
 }
 
-export const metadata: Metadata = {
-  title: 'Claim Your Campaign — Selah.fm',
-  description: 'Someone created a promotion campaign for your music. Claim it now.',
-};
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const data = await getClaimData(params.code);
+  return {
+    title: data ? `Claim "${data.track_title}" — Selah.fm` : 'Claim Campaign — Selah.fm',
+    robots: { index: false },
+  };
+}
 
 export default async function ClaimPage({ params }: Props) {
-  const code = params.code;
+  const data = await getClaimData(params.code);
+  if (!data) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Campaign not found.</div>;
 
-  let claim: any = null;
-  try {
-    const result = await sql`
-      SELECT cc.*, c.slug, c.title, c.track_title, c.cover_art_url, c.status as campaign_status,
-             c.is_unclaimed, da.artist_name, da.spotify_id, da.latest_track_name,
-             da.followers, da.genres
-      FROM campaign_claims cc
-      JOIN campaigns c ON c.id = cc.campaign_id
-      LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-      WHERE cc.claim_code = ${code}
-    `;
-    claim = result[0] || null;
-  } catch {}
-
-  if (!claim) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.15) 0%, #0F0F23 60%), #0F0F23' }}>
-        <div className="text-center space-y-6 max-w-md px-4">
-          <div className="text-5xl">🔗</div>
-          <h1 className="text-2xl font-bold">Invalid claim link</h1>
-          <p className="text-muted-foreground">
-            This claim code doesn't exist or has already been used.
-          </p>
-          <a href="/" className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold">
-            Go to Selah.fm
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  if (claim.claimed_at) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.15) 0%, #0F0F23 60%), #0F0F23' }}>
-        <div className="text-center space-y-6 max-w-md px-4">
-          <div className="text-5xl">✅</div>
-          <h1 className="text-2xl font-bold">Already claimed</h1>
-          <p className="text-muted-foreground">
-            This campaign has already been claimed by the artist.
-          </p>
-          <a href={`/c/${claim.slug}`} className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold">
-            View campaign
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  const coverArt = claim.cover_art_url?.startsWith('/')
-    ? `https://selah.fm${claim.cover_art_url}`
-    : claim.cover_art_url || 'https://selah.fm/images/og-image.jpg';
+  const cpm = (data.cpm_rate_cents / 100).toFixed(2);
+  const hasActivity = data.submissionCount > 0 || data.donationCount > 0;
 
   return (
-    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.15) 0%, #0F0F23 60%), #0F0F23' }}>
-      <div className="max-w-2xl mx-auto px-4 py-16 md:py-24">
-        
-        {/* Gift unwrapping feel */}
-        <div className="text-center mb-10">
-          <div className="text-5xl mb-4">🎁</div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">
-            A campaign was created for {claim.artist_name || 'you'}
-          </h1>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Someone who loves your music set up a promotion campaign so creators on TikTok and Reels can feature your track.
-          </p>
-        </div>
+    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23' }}>
+      <main className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <h1 className="text-3xl font-bold mb-2">{data.track_title}</h1>
+        <p className="text-muted-foreground mb-8">by {data.artist_name}</p>
 
-        {/* Campaign preview card */}
-        <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden mb-8">
-          <div className="aspect-video bg-white/[0.02] flex items-center justify-center overflow-hidden">
-            <img
-              src={coverArt}
-              alt={claim.title || claim.track_title}
-              className="w-full h-full object-cover"
-            />
+        {/* Social Proof */}
+        {hasActivity && (
+          <div className="inline-flex items-center gap-4 mb-12 px-6 py-3 rounded-2xl bg-[#22C55E]/5 border border-[#22C55E]/10">
+            {data.submissionCount > 0 && <span className="text-sm">{data.submissionCount} {data.submissionCount === 1 ? 'creator has' : 'creators have'} submitted videos</span>}
+            {data.submissionCount > 0 && data.donationCount > 0 && <span className="text-muted-foreground">·</span>}
+            {data.donationCount > 0 && <span className="text-sm">{data.donationCount} {data.donationCount === 1 ? 'person has' : 'people have'} donated ${data.donationTotal}</span>}
           </div>
-          <div className="p-6 space-y-3">
-            <div>
-              <h2 className="text-xl font-bold">{claim.title || `${claim.artist_name} — ${claim.latest_track_name || claim.track_title}`}</h2>
-              {claim.latest_track_name && <p className="text-sm text-muted-foreground mt-1">🎵 {claim.latest_track_name}</p>}
-            </div>
+        )}
 
-            {/* Stats if available */}
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/[0.06]">
-              {claim.followers > 0 && (
-                <div className="text-center p-3 rounded-xl bg-white/[0.02]">
-                  <div className="text-lg font-bold">{claim.followers?.toLocaleString()}</div>
-                  <div className="text-[10px] text-muted-foreground">Spotify followers</div>
-                </div>
-              )}
-              {claim.genres?.length > 0 && (
-                <div className="text-center p-3 rounded-xl bg-white/[0.02]">
-                  <div className="text-lg font-bold">{claim.genres.length}</div>
-                  <div className="text-[10px] text-muted-foreground">Genres</div>
-                </div>
-              )}
+        {/* What this is */}
+        <div className="space-y-6 text-left bg-white/[0.02] border border-white/[0.06] rounded-2xl p-8 mb-8">
+          <h2 className="text-xl font-bold">A page was built for your music</h2>
+          <p className="text-muted-foreground">
+            Someone discovered your track and created this campaign page on Selah.fm. Creators make TikToks and Reels with your song — you only pay for verified views (${cpm} per 1,000 views).
+          </p>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="p-3 rounded-xl bg-white/[0.02]">
+              <div className="text-lg font-bold">${cpm}</div>
+              <div className="text-[10px] text-muted-foreground">per 1K views</div>
+            </div>
+            <div className="p-3 rounded-xl bg-white/[0.02]">
+              <div className="text-lg font-bold">$0</div>
+              <div className="text-[10px] text-muted-foreground">upfront cost</div>
+            </div>
+            <div className="p-3 rounded-xl bg-white/[0.02]">
+              <div className="text-lg font-bold">You</div>
+              <div className="text-[10px] text-muted-foreground">approve & pay</div>
             </div>
           </div>
         </div>
 
-        {/* How it works */}
-        <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 mb-8 space-y-3">
-          <h3 className="font-semibold">How it works</h3>
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>📱 Creators on TikTok, Reels, and Shorts make videos featuring your track</p>
-            <p>✅ You review and approve submissions that match your style</p>
-            <p>💰 You only pay per verified view — no upfront cost</p>
-            <p>👥 Friends and family can chip in to fund the campaign</p>
-          </div>
+        {/* CTAs */}
+        <div className="space-y-3">
+          <a href={`/c/${data.slug}`} className="block w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity">
+            View your campaign page →
+          </a>
+          <a href="/login" className="block w-full py-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm hover:bg-white/[0.08] transition-colors">
+            Create account to claim & manage
+          </a>
         </div>
 
-        {/* Claim button */}
-        <ClaimButton
-          claimCode={code}
-          artistName={claim.artist_name || 'the artist'}
-          campaignSlug={claim.slug}
-        />
-
-        {/* Report link */}
-        <div className="text-center mt-8">
-          <p className="text-xs text-muted-foreground">
-            Not {claim.artist_name || 'the artist'}?{' '}
-            <a href={`mailto:support@selah.fm?subject=Claim%20dispute%20-%20${code}`} className="hover:text-foreground underline">
-              Let us know
-            </a>
-          </p>
-        </div>
-      </div>
+        <p className="text-[10px] text-muted-foreground mt-6">
+          No commitment. The page stays live whether you claim it or not. You only pay when you approve videos.
+        </p>
+      </main>
     </div>
   );
 }

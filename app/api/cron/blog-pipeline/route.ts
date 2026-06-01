@@ -6,15 +6,29 @@ import { fetchBlogImage } from '@/lib/blog-images';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600;
 
-/** Convert basic markdown to HTML — handles headings, bold, dividers */
+/** Convert basic markdown to HTML — handles headings, bold, dividers, lists */
 function cleanMarkdown(html: string): string {
-  return html
+  let cleaned = html
     .replace(/<p>\s*<\/p>/g, '')
     .replace(/<p># (.*?)<\/p>/g, '<h2>$1</h2>')
     .replace(/<p>## (.*?)<\/p>/g, '<h3>$1</h3>')
     .replace(/<p>### (.*?)<\/p>/g, '<h4>$1</h4>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/<p>---\s*<\/p>/g, '<hr>');
+  
+  // Convert markdown list items (- [text](link)) that appear outside <ul> tags
+  // Pattern: "- [text](url)" or "- text" on separate lines within <p> tags
+  cleaned = cleaned.replace(/<p>- \[(.*?)\]\((.*?)\)<\/p>/g, '<li><a href="$2">$1</a></li>');
+  cleaned = cleaned.replace(/<p>- (.*?)<\/p>/g, '<li>$1</li>');
+  
+  // Wrap consecutive <li> tags in <ul>
+  cleaned = cleaned.replace(/((?:<li>.*?<\/li>\s*)+)/g, (match) => {
+    // Don't wrap if already inside ul/ol
+    if (match.includes('<ul>')) return match;
+    return `<ul>${match}</ul>`;
+  });
+  
+  return cleaned;
 }
 
 function slugify(text: string): string {
