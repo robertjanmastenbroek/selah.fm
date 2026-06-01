@@ -7,7 +7,7 @@ function useCountUp(target: number, duration = 1500, startOnMount = true) {
   const rafRef = useRef<number | null>(null);
   useEffect(() => {
     if (!startOnMount) return;
-    let startTime = performance.now();
+    const startTime = performance.now();
     function tick(now: number) {
       const progress = Math.min((now - startTime) / duration, 1);
       setValue(Math.floor((1 - Math.pow(2, -10 * progress)) * target));
@@ -25,30 +25,23 @@ function fmt(n: number): string {
   return n.toLocaleString();
 }
 
-const platformMeta: Record<string, { label: string; color: string; icon: string }> = {
-  spotify: { label: 'Spotify', color: '#1DB954', icon: '🟢' },
-  deezer: { label: 'Deezer', color: '#A238FF', icon: '🟣' },
-  youtube: { label: 'YouTube', color: '#FF0000', icon: '🔴' },
-  soundcloud: { label: 'SoundCloud', color: '#FF5500', icon: '🟠' },
-  instagram: { label: 'Instagram', color: '#E4405F', icon: '📷' },
-  tiktok: { label: 'TikTok', color: '#000', icon: '🎵' },
-  facebook: { label: 'Facebook', color: '#1877F2', icon: '📘' },
-  twitter: { label: 'Twitter/X', color: '#1DA1F2', icon: '🐦' },
+const platformMeta: Record<string, { label: string; color: string }> = {
+  spotify: { label: 'Spotify', color: '#1DB954' },
+  deezer: { label: 'Deezer', color: '#A238FF' },
+  youtube: { label: 'YouTube', color: '#FF0000' },
+  soundcloud: { label: 'SoundCloud', color: '#FF5500' },
+  instagram: { label: 'Instagram', color: '#E4405F' },
+  tiktok: { label: 'TikTok', color: '#00F2EA' },
 };
 
-interface MetricCardProps { platform: string; label: string; value: number; changePct?: number; color: string; icon: string; delay: number; }
-
-function MetricCard({ platform, label, value, changePct, color, icon, delay }: MetricCardProps) {
+interface MetricCardProps { platform: string; label: string; value: number; changePct?: number; color: string; delay: number; }
+function MetricCard({ platform, label, value, changePct, color, delay }: MetricCardProps) {
   const [visible, setVisible] = useState(false);
   const countUp = useCountUp(value, 1500, visible);
   useEffect(() => { const t = setTimeout(() => setVisible(true), delay); return () => clearTimeout(t); }, [delay]);
-
   return (
     <div className={`bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-base">{icon}</span>
-        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{platform}</span>
-      </div>
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{platform}</div>
       <div className="text-2xl font-bold tabular-nums" style={{ color }}>{fmt(visible ? countUp : 0)}</div>
       <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
       {changePct != null && (
@@ -69,93 +62,108 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
   const metrics = data?.metrics || {};
   const cacheMsg = data?.cached ? data.message : null;
 
-  // Build metric cards from data
+  // Build metric cards — only show metrics with actual values > 0
   const cards: any[] = [];
   Object.entries(metrics).forEach(([platform, metricList]: [string, any]) => {
-    const meta = platformMeta[platform] || { label: platform, color: '#6B7280', icon: '📊' };
-    (metricList || []).forEach((m: any, i: number) => {
+    const meta = platformMeta[platform] || { label: platform, color: '#6B7280' };
+    // Pick the best metric per platform (highest value, most meaningful)
+    const best = [...(metricList || [])].sort((a: any, b: any) => (b.value || 0) - (a.value || 0));
+    const top = best[0];
+    if (top && top.value > 0) {
       cards.push({
         platform: meta.label,
-        label: (m.metric_name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-        value: m.value || 0,
-        changePct: m.change_pct,
+        label: (top.metric_name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        value: top.value,
+        changePct: top.change_pct,
         color: meta.color,
-        icon: meta.icon,
-        delay: 100 + (Object.keys(metrics).indexOf(platform) * 150) + (i * 80),
+        delay: 100 + cards.length * 120,
       });
-    });
+    }
   });
 
-  const totalFollowers = cards.reduce((sum, c) => sum + c.value, 0);
+  // Build presence badges from artist data (platforms we know they're on but no metrics yet)
+  const presences: { platform: string; handle: string; url: string }[] = [];
+  if (artist.instagram_handle) presences.push({ platform: 'Instagram', handle: `@${artist.instagram_handle}`, url: `https://instagram.com/${artist.instagram_handle}` });
+  if (artist.tiktok_handle) presences.push({ platform: 'TikTok', handle: `@${artist.tiktok_handle}`, url: `https://tiktok.com/@${artist.tiktok_handle}` });
+  if (artist.youtube_url) presences.push({ platform: 'YouTube', handle: 'Channel', url: artist.youtube_url });
 
   async function handleRefresh() {
     setRefreshing(true);
     try {
       const res = await fetch(`/api/artist/${artist.slug}/refresh`);
       const fresh = await res.json();
-      if (!fresh.error) {
-        setData(fresh);
-        setRefreshed(true);
-        setTimeout(() => setRefreshed(false), 3000);
-      }
+      if (!fresh.error) { setData(fresh); setRefreshed(true); setTimeout(() => setRefreshed(false), 3000); }
     } catch {}
     setRefreshing(false);
   }
 
+  // Auto-refresh if no data
+  useEffect(() => {
+    if (cards.length === 0 && presences.length === 0 && !refreshing) handleRefresh();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0A0A0F]">
-      {/* Hero */}
       <div className="relative border-b border-white/[0.04]">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
-        <div className="max-w-4xl mx-auto px-6 py-12 text-center relative">
+        <div className="max-w-2xl mx-auto px-6 py-14 text-center relative">
           {profile?.spotify_image_url && (
             <img src={profile.spotify_image_url} alt={artist.artist_name}
-              className="w-28 h-28 rounded-full mx-auto object-cover border-2 border-white/10 shadow-xl mb-4" />
+              className="w-28 h-28 rounded-full mx-auto object-cover border-2 border-white/10 shadow-xl mb-5" />
           )}
           <h1 className="text-3xl font-bold">{artist.artist_name}</h1>
           <p className="text-sm text-muted-foreground mt-2">
-            {cards.length > 0
-              ? `${cards.length} metrics across ${Object.keys(metrics).length} platforms`
-              : 'Loading metrics...'}
-            {profile?.last_refreshed_at && ` · Updated ${new Date(profile.last_refreshed_at).toLocaleString()}`}
+            {cards.length > 0 ? `${cards.length} metrics across ${Object.keys(metrics).length} platforms` :
+             refreshing ? 'Fetching live data...' : 'No metrics yet'}
+            {profile?.last_refreshed_at && ` · Updated ${new Date(profile.last_refreshed_at).toLocaleDateString()}`}
           </p>
           {cacheMsg && <p className="text-xs text-amber-400/60 mt-1">{cacheMsg}</p>}
 
-          {totalFollowers > 0 && (
-            <div className="text-5xl font-bold text-primary mt-4">
-              {useCountUp(totalFollowers, 2000).toLocaleString()}
-              <span className="text-base text-muted-foreground ml-2 font-normal">total followers</span>
-            </div>
-          )}
-
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
+          <button onClick={handleRefresh} disabled={refreshing}
             className={`mt-4 px-5 py-2 rounded-xl text-sm font-medium transition-all ${
               refreshed ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
               'bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06]'
-            } disabled:opacity-40`}
-          >
-            {refreshing ? '⏳ Refreshing...' : refreshed ? '✅ Refreshed' : '🔄 Refresh Data'}
+            } disabled:opacity-40`}>
+            {refreshing ? '⏳ Fetching from Spotify & Deezer...' : refreshed ? '✅ Updated' : '🔄 Refresh'}
           </button>
         </div>
       </div>
 
-      {/* Metric cards */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {cards.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {cards.map((card, i) => <MetricCard key={`${card.platform}-${card.label}-${i}`} {...card} />)}
-          </div>
-        ) : (
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+        {/* Streaming metrics */}
+        {cards.length > 0 && (
+          <section>
+            <h2 className="text-xs font-semibold text-muted-foreground/40 uppercase tracking-wider mb-3">Streaming</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {cards.map((card, i) => <MetricCard key={`${card.platform}-${card.label}`} {...card} />)}
+            </div>
+          </section>
+        )}
+
+        {/* Also on */}
+        {presences.length > 0 && (
+          <section>
+            <h2 className="text-xs font-semibold text-muted-foreground/40 uppercase tracking-wider mb-3">Also On</h2>
+            <div className="flex flex-wrap gap-2">
+              {presences.map(p => (
+                <a key={p.platform} href={p.url} target="_blank"
+                  className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.06] rounded-lg text-xs text-muted-foreground hover:border-white/[0.12] transition-colors">
+                  {p.platform}: {p.handle}
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empty state */}
+        {cards.length === 0 && presences.length === 0 && !refreshing && (
           <div className="text-center py-16 text-muted-foreground">
-            <p className="text-lg mb-2">No metrics yet</p>
-            <p className="text-sm">Click &quot;Refresh Data&quot; to fetch live stats from Spotify &amp; Deezer</p>
+            <p className="text-lg mb-2">No data yet</p>
+            <p className="text-sm">Click &quot;Refresh&quot; to fetch live stats</p>
           </div>
         )}
       </div>
 
-      {/* Campaign CTA */}
       {artist.campaign_slug && (
         <div className="text-center pb-12">
           <a href={`/c/${artist.campaign_slug}?utm_source=artist_card`}
@@ -167,7 +175,7 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
 
       <div className="text-center pb-8 border-t border-white/[0.04] pt-6">
         <p className="text-xs text-muted-foreground">
-          Powered by <a href="/" className="text-primary/60 hover:text-primary">Selah.fm</a> · Free artist dashboard · Refresh anytime
+          Powered by <a href="/" className="text-primary/60 hover:text-primary">Selah.fm</a> · Free artist dashboard
         </p>
       </div>
     </div>
