@@ -270,7 +270,7 @@ SEO + GEO (Generative Engine Optimization) REQUIREMENTS:
 FORMAT:
 Return ONLY a JSON object with these fields:
 {
-  "title": "SEO-optimized title under 70 chars with primary keyword",
+  "title": "THE QUESTION BEING ANSWERED — exact or closest variant, under 70 chars. This matches the H1, QAPage schema, and the query someone typed into Google.",
   "meta_description": "Compelling meta description under 160 chars with keyword",
   "slug": "url-friendly-slug-with-keyword",
   "content_html": "<h2>Section Heading</h2><p>Content with <a href='/page'>descriptive anchor</a>...</p><h3>Sub-section</h3><p>...</p><h2>FAQ</h2><h3>Question?</h3><p>Answer...</p>",
