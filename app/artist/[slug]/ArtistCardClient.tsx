@@ -63,17 +63,21 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
   // Build all metric cards — streaming platforms from metrics, social from artist props
   const cards: any[] = [];
 
-  // Streaming platforms from metrics
+  // Streaming platforms from metrics — show ALL metrics per platform
   Object.entries(metrics).forEach(([platform, metricList]: [string, any]) => {
     const meta = platformMeta[platform] || { label: platform, color: '#6B7280' };
     const list = Array.isArray(metricList) ? metricList : [];
-    const best = [...list].sort((a: any, b: any) => (b.value || 0) - (a.value || 0));
-    const top = best[0];
-    if (top) {
+    // Deduplicate by metric_name (take highest value)
+    const seen = new Set<string>();
+    const unique: any[] = [];
+    for (const m of [...list].sort((a: any, b: any) => (b.value || 0) - (a.value || 0))) {
+      if (!seen.has(m.metric_name)) { seen.add(m.metric_name); unique.push(m); }
+    }
+    for (const m of unique) {
       cards.push({
         platform: meta.label,
-        label: (top.metric_name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-        value: top.value || 0,
+        label: (m.metric_name || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        value: m.value || 0,
         color: meta.color,
         delay: 100 + cards.length * 120,
       });
@@ -84,7 +88,7 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
   if (artist.instagram_handle) {
     cards.push({
       platform: 'Instagram',
-      label: '@' + artist.instagram_handle,
+      label: 'Handle',
       value: 0,
       handle: '@' + artist.instagram_handle,
       color: platformMeta.instagram?.color || '#E4405F',
@@ -94,7 +98,7 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
   if (artist.tiktok_handle) {
     cards.push({
       platform: 'TikTok',
-      label: '@' + artist.tiktok_handle,
+      label: 'Handle',
       value: 0,
       handle: '@' + artist.tiktok_handle,
       color: platformMeta.tiktok?.color || '#00F2EA',
@@ -104,7 +108,7 @@ export default function ArtistCardClient({ artist, initialData }: { artist: any;
   if (artist.youtube_url && !metrics.youtube) {
     cards.push({
       platform: 'YouTube',
-      label: 'Channel',
+      label: 'Handle',
       value: 0,
       handle: 'Channel',
       color: platformMeta.youtube?.color || '#FF0000',
