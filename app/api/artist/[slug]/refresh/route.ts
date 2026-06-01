@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { refreshArtistMetrics, getArtistCardData, storeMetrics, updateArtistProfile } from '@/lib/artist-metrics';
-import { scrapeInstagram, scrapeTikTok } from '@/lib/artist-scraper';
+import { fetchInstagramMetrics, fetchTikTokMetrics } from '@/lib/artist-metrics';
 import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -56,19 +56,19 @@ export async function GET(request: Request, { params }: { params: { slug: string
     if (audit) {
       if (audit.instagram_handle && !audit.instagram_followers) {
         try {
-          const ig = await scrapeInstagram(audit.instagram_handle);
-          if (ig && ig.followers > 0) {
-            await sql`UPDATE artist_audits SET instagram_followers = ${ig.followers} WHERE discovered_artist_id = ${artist.id}`;
-            await storeMetrics(artist.id, 'instagram', [{ name: 'followers', value: ig.followers, displayName: 'Followers' }]);
+          const ig = await fetchInstagramMetrics(audit.instagram_handle);
+          if (ig && ig.metrics && ig.metrics[0] && ig.metrics[0].value > 0) {
+            await sql`UPDATE artist_audits SET instagram_followers = ${ig.metrics[0].value} WHERE discovered_artist_id = ${artist.id}`;
+            await storeMetrics(artist.id, 'instagram', ig.metrics);
           }
         } catch {}
       }
       if (audit.tiktok_handle && !audit.tiktok_followers) {
         try {
-          const tt = await scrapeTikTok(audit.tiktok_handle);
-          if (tt && tt.followers > 0) {
-            await sql`UPDATE artist_audits SET tiktok_followers = ${tt.followers} WHERE discovered_artist_id = ${artist.id}`;
-            await storeMetrics(artist.id, 'tiktok', [{ name: 'followers', value: tt.followers, displayName: 'Followers' }]);
+          const tt = await fetchTikTokMetrics(audit.tiktok_handle);
+          if (tt && tt.metrics && tt.metrics[0] && tt.metrics[0].value > 0) {
+            await sql`UPDATE artist_audits SET tiktok_followers = ${tt.metrics[0].value} WHERE discovered_artist_id = ${artist.id}`;
+            await storeMetrics(artist.id, 'tiktok', tt.metrics);
           }
         } catch {}
       }

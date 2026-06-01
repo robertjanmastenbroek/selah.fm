@@ -99,6 +99,68 @@ export async function fetchSpotifyMetrics(artistName: string, trackName?: string
 }
 
 
+
+/**
+ * Scrape Instagram public profile for follower count.
+ * Instagram renders follower count in <meta name="description"> tags server-side.
+ * Example: <meta content="696 Followers, 1,041 Following, 131 Posts" name="description">
+ */
+export async function fetchInstagramMetrics(handle: string): Promise<ArtistMetrics | null> {
+  try {
+    const res = await fetch(`https://www.instagram.com/${handle}/`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // <meta content="696 Followers, 1,041 Following, 131 Posts" name="description">
+    const match = html.match(/<meta[^>]+content="([\d,.KMBkmb]+) Followers[^"]*"[^>]+name="description"/i)
+               || html.match(/<meta[^>]+name="description"[^>]+content="([\d,.KMBkmb]+) Followers[^"]*"/i);
+    if (!match) return null;
+
+    const raw = match[1].replace(/,/g, '');
+    let followers = 0;
+    if (raw.toUpperCase().endsWith('K')) followers = Math.round(parseFloat(raw) * 1000);
+    else if (raw.toUpperCase().endsWith('M')) followers = Math.round(parseFloat(raw) * 1_000_000);
+    else followers = parseInt(raw) || 0;
+
+    return followers > 0 ? {
+      platform: 'instagram',
+      metrics: [{ name: 'followers', value: followers, displayName: 'Followers' }],
+    } : null;
+  } catch { return null; }
+}
+
+// Also add basic TikTok scraper using the page meta
+export async function fetchTikTokMetrics(handle: string): Promise<ArtistMetrics | null> {
+  try {
+    const res = await fetch(`https://www.tiktok.com/@${handle}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // Try meta description: "dannyvera 19 Followers, 229 Following"
+    const match = html.match(/<meta[^>]+name="description"[^>]+content="[^"]*?([\d,.KMBkmb]+) Followers/i);
+    if (!match) return null;
+
+    const raw = match[1].replace(/,/g, '');
+    let followers = 0;
+    if (raw.toUpperCase().endsWith('K')) followers = Math.round(parseFloat(raw) * 1000);
+    else if (raw.toUpperCase().endsWith('M')) followers = Math.round(parseFloat(raw) * 1_000_000);
+    else followers = parseInt(raw) || 0;
+
+    // TikTok logged-out pages show the bot's own follower count (wrong data).
+    // Only return if it looks like a real count (>100 followers)
+    return followers > 100 ? {
+      platform: 'tiktok',
+      metrics: [{ name: 'followers', value: followers, displayName: 'Followers' }],
+    } : null;
+  } catch { return null; }
+}
+
 export async function fetchDeezerMetrics(artistName: string): Promise<ArtistMetrics | null> {
   try {
     const res = await fetch(`https://api.deezer.com/search/artist?q=${encodeURIComponent(artistName)}&limit=1`);
@@ -177,10 +239,12 @@ export async function updateArtistProfile(artistId: string, spotifyImageUrl?: st
 export async function refreshArtistMetrics(artistId: string, artistName: string, trackName?: string): Promise<number> {
   let updated = 0;
 
-  const [spotify, deezer, youtube] = await Promise.all([
+  const [spotify, deezer, youtube, instagram, tiktok] = await Promise.all([
     fetchSpotifyMetrics(artistName, trackName),
     fetchDeezerMetrics(artistName),
     fetchYouTubeMetrics(artistName),
+    Promise.resolve(null), // instagram — called separately with handle
+    Promise.resolve(null), // tiktok — called separately with handle
   ]);
 
   if (spotify?.metrics) { await storeMetrics(artistId, 'spotify', spotify.metrics); updated++; }
