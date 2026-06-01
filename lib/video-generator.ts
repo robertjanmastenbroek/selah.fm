@@ -95,7 +95,7 @@ async function generateScript(input: VideoGenerationInput): Promise<string> {
   return `This is ${input.artistName}. Their track "${input.trackName}" deserves way more ears. We built a campaign page on Selah.fm so creators can make TikToks with this song and earn per view. Zero cost for the artist — you only pay for results. Link in bio.`;
 }
 
-function generateCaption(input: VideoGenerationInput): string {
+export function generateCaption(input: VideoGenerationInput): string {
   const cleanGenre = input.genre.replace(/^(bandcamp\s+|reddit\s+|youtube\s+)/i, '');
   return `🎵 "${input.trackName}" by ${input.artistName}
 
@@ -106,7 +106,7 @@ We discovered this track and built a campaign page. Creators make TikToks & Reel
 #${cleanGenre.replace(/\s+/g, '') || 'independentartist'} #musicpromotion #selahfm @${input.instagramHandle}`;
 }
 
-async function generateDMTemplate(input: VideoGenerationInput): Promise<string> {
+export async function generateDMTemplate(input: VideoGenerationInput): Promise<string> {
   const url = `https://selah.fm/c/${input.campaignSlug}?utm_source=instagram&utm_medium=dm`;
 
   if (!DEEPSEEK_KEY) {
@@ -136,6 +136,79 @@ async function generateDMTemplate(input: VideoGenerationInput): Promise<string> 
   return `Hey ${input.artistName} — we featured "${input.trackName}" on @selahfm.\n\nAlso built a campaign page: creators make TikToks with your song, earn per view, you pay only for verified views.\n\n👉 ${url}\n\nClaim it whenever. No pressure.\n\n— Robert-Jan (founder, Selah.fm)`;
 }
 
+/**
+ * Submit video generation to MPT without waiting for completion.
+ * Returns the MPT task_id for polling. Stores task_id in DB.
+ */
+export async function generateOutreachVideoAsync(input: VideoGenerationInput): Promise<{ mptTaskId: string } | null> {
+  const script = await generateScript(input);
+  
+  try {
+    const res = await fetch(`${MPT_API}/api/v1/videos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        video_subject: `${input.artistName} — "${input.trackName}" | Selah.fm`,
+        video_script: script,
+        video_aspect: 'portrait',
+        voice_name: 'en-US-EmmaMultilingualNeural',
+        bgm_name: 'random',
+        font_name: 'STHeitiMedium 黑体-中',
+        text_color: '#FFFFFF',
+        font_size: 60,
+        stroke_color: '#000000',
+        stroke_width: 1.5,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.data?.task_id) {
+        return { mptTaskId: data.data.task_id };
+      }
+    }
+  } catch (e: any) {
+    console.warn('[video-gen] MPT API submit error:', e.message);
+  }
+  return null;
+}
+
+/**
+ * Poll MPT task status. Returns video URL when complete, null if still running.
+ */
+export async function pollMptTask(taskId: string): Promise<{ status: string; videoUrl?: string; error?: string }> {
+  try {
+    const res = await fetch(`${MPT_API}/api/v1/tasks/${taskId}`, {
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return { status: 'error', error: `HTTP ${res.status}` };
+    
+    const data = await res.json();
+    const task = data.data || data;
+    const state = task.state || task.status;
+
+    if (state === 'completed' || state === 'success') {
+      const videos = task.videos || task.combined_videos || [];
+      if (videos.length > 0) {
+        const url = typeof videos[0] === 'string' ? videos[0] : videos[0].url || videos[0].uri;
+        return { status: 'completed', videoUrl: url };
+      }
+    }
+
+    if (state === 'failed' || state === 'error') {
+      return { status: 'failed', error: task.error || 'MPT render failed' };
+    }
+
+    return { status: state || 'running' };
+  } catch (e: any) {
+    return { status: 'error', error: e.message };
+  }
+}
+
+/**
+ * Synchronous generation — used by cron. Waits for MPT to complete.
+ */
 export async function generateOutreachVideo(input: VideoGenerationInput): Promise<VideoGenerationOutput> {
   console.log(`[video-gen] ${input.artistName} — "${input.trackName}"`);
 
