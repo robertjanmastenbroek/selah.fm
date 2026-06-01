@@ -45,6 +45,7 @@ export async function fetchBlogImage(query: string, blogPostId?: string): Promis
 
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+    const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
 
     // 3. Store in database
     const [row] = await sql`
@@ -53,8 +54,9 @@ export async function fetchBlogImage(query: string, blogPostId?: string): Promis
       RETURNING id
     `;
 
-    // Return API URL for serving
-    return `/api/images/blog/${row.id}`;
+    // Return short, clean URL: /api/images/blog/[short-id].[ext]
+    const shortId = row.id.replace(/-/g, '').slice(0, 12);
+    return `/api/images/blog/${shortId}.${ext}`;
   } catch (e) {
     console.error('[blog-images] Error:', (e as Error).message);
     return FALLBACK_IMAGE;
@@ -72,14 +74,15 @@ export async function fetchBlogImages(queries: string[], blogPostId?: string): P
 
 /** Update a blog post's featured image after the post is created */
 export async function attachImageToPost(imageUrl: string, blogPostId: string): Promise<void> {
-  // Extract image ID from URL: /api/images/blog/[id]
-  const match = imageUrl.match(/\/api\/images\/blog\/([a-f0-9-]+)/);
+  // Extract short ID from URL: /api/images/blog/[shortId].[ext]
+  const match = imageUrl.match(/\/api\/images\/blog\/([a-f0-9]{12})\.\w+/);
   if (!match) return;
 
   try {
+    // Find the blog_images row whose UUID starts with this short ID
     await sql`
       UPDATE blog_images SET blog_post_id = ${blogPostId}
-      WHERE id = ${match[1]}
+      WHERE REPLACE(id::text, '-', '') LIKE ${match[1] + '%'}
     `;
   } catch {
     // Best effort — image is stored, just not linked
