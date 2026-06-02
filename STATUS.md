@@ -1,5 +1,5 @@
 # Selah.fm — Status & Reference
-**Version:** 3.0 · **Live:** https://selah.fm · **Updated:** 2026-06-01
+**Version:** 3.1 · **Live:** https://selah.fm · **Updated:** 2026-06-02
 
 ---
 
@@ -7,8 +7,9 @@
 
 | Area | Status |
 |------|--------|
-| Auth | Supabase Auth (Google OAuth), redirect bug fixed, avatar saved on login |
-| Database | Supabase PostgreSQL (29+ tables, 2,100+ artists) |
+| Auth | Supabase Auth (Google OAuth), cookies() API fix, Secure flag on HTTPS |
+| Database | Supabase PostgreSQL ONLY (Railway PG removed). 36/36 tables RLS enabled |
+| RLS | Auto-enable trigger on new tables, policies on all 36 tables |
 | **Outreach (primary)** | **Instagram DM — content-first loop. See OUTREACH.md for full strategy** |
 | Outreach (secondary) | Blog SEO — 2 posts/day, answer-first format, QAPage schema |
 | Outreach (tertiary) | Email — opt-in only, post-IG engagement. No cold email. |
@@ -16,9 +17,10 @@
 | Engagement | Onboarding flow, welcome/re-engage sequence, action tracker |
 | Fee model | 20% added on artist CPM, creators earn full CPM + Stripe Connect payouts |
 | Email verification | MX record + disposable domain filter + pre-send check |
-| Blog/SEO | 19 posts (13 published, 6 scheduled), 2/day auto-generation |
+| Blog/SEO | 16 published + 1 scheduled, 2/day auto-generation + publish |
 | Stripe Payouts | Connect Express setup, auto-payout on approval, webhook tracking |
 | Free SEO tools | Playlist Analyzer, CPM Calculator, Creator Earnings, Budget Planner |
+| Support | AI chat widget on all pages (DeepSeek), rate-limited + anti-abuse guards |
 | Submissions | 24 total (2 approved, 22 rejected), URL dedup active |
 | Users | 13 signups, 11 onboarded |
 | Analytics | Page view tracking live (DB-backed), GA4 running, admin dashboard at /admin/analytics |
@@ -39,7 +41,7 @@
 | **Instagram handles** | **1,320** | **1,196 prime DM targets (has IG, campaign, no email)** |
 | discovered_creators | 20 | TikTok scraping + Reddit creator discovery |
 | submissions | 24 | 2 approved ($2.08 total), 22 rejected (duplicates) |
-| blog_posts | 19 | 13 published, 6 scheduled, 2/day generation |
+| blog_posts | 17 | 16 published, 1 scheduled, 2/day generation + publish |
 | users | 13 | 11 onboarded, 1 Stripe account connected |
 
 **Cron Schedule (dispatcher at 0 * * * *)**
@@ -131,6 +133,9 @@
 | `app/tools/playlist-analyzer/page.tsx` | Spotify playlist analyzer UI |
 | `app/tools/[slug]/page.tsx` | Free SEO tool pages |
 | `components/ToolCalculators.tsx` | CPM, earnings, and budget calculators |
+| `components/SupportWidget.tsx` | Global AI support chat widget — DeepSeek-powered, bug report, human escalation |
+| `app/api/support/route.ts` | Support chat API — rate-limited, anti-abuse guards, keyword fallback |
+| `supabase/migrations/20260602120000_rls_auto_enable.sql` | RLS auto-enable trigger + missing schema + policy completion |
 | `railway.json` | Single cron entry at `0 * * * *` pointing to dispatcher |
 
 ---
@@ -205,3 +210,46 @@
 
 ### Record Deal Age
 - Corrected from 17 to 21 across all 4 references in codebase
+
+## Changelog (June 2 Session)
+
+### Auth Fix
+- Auth callback switched from manual `pendingCookies` array to Next.js `cookies()` API — fixes session cookie dropping on redirect
+- Added `Secure` flag to session cookies on production (HTTPS) — prevents browser rejection
+- Middleware: added `cookieOptions: { secure }` for token refresh cookies
+- TypeScript: `npx tsc --noEmit` passes clean
+
+### Database Consolidation
+- Removed `DATABASE_URL` fallback from `lib/db.ts` — `SUPABASE_DATABASE_URL` is now the only option
+- Cleaned up `.env.local` and `.env.local.example` — removed legacy Railway PostgreSQL references
+- Railway PostgreSQL service can now be safely deleted
+
+### RLS (Row Level Security)
+- Created auto-enable RLS event trigger — all new tables automatically get RLS
+- Applied RLS to 8 legacy tables that were missing it (`discovered_creators`, `research_data`, `creator_outreach_log`, `page_views`, `instagram_outreach_log`, `artist_metrics`, `instagram_posts`, `artist_profiles`)
+- 36/36 tables now have RLS enabled with appropriate policies
+- Migration file: `supabase/migrations/20260602120000_rls_auto_enable.sql`
+
+### Support Chat Widget
+- Added `SupportWidget` to root layout — appears on ALL pages (logged in + logged out)
+- Removed duplicate widget from FAQ page
+- Anti-abuse guardrails on `/api/support`:
+  - Per-IP rate limit: 5 msgs/min (429 with Retry-After)
+  - Message length cap: 500 chars
+  - Per-IP daily AI cap: 30 DeepSeek calls/day → exceeds switch to keyword fallback
+  - Global daily hard cap: 500 total AI calls/day
+  - `max_tokens` reduced 300→200 for cost savings
+- Client-side: 429 handling, character counter, `maxLength={500}`, rate-limit cooldown
+
+### Campaign Page
+- Consolidated duplicate "More campaigns" sections into single server-rendered section at page bottom
+- Removed text-only version that was rendering above the hero
+- Added cover art images, artist names, and CPM rates to campaign cards
+- Full SEO preservation: still server-rendered HTML with crawlable internal links
+
+### Blog Pipeline Fixes
+- Rate limit window reduced from 23h→20h to prevent pipeline from self-blocking
+- Blog-publish now publishes up to 2 posts per run (was 1)
+- Cleaned up 30 orphaned interviews with no data
+- Force-ran pipeline — 2 new posts generated and 1 published immediately
+- Blog now at 16 published + 1 scheduled
