@@ -612,3 +612,203 @@ Before marking any phase complete:
 - [ ] SEO metadata correct (title, description, schema)
 - [ ] Edge cases documented and handled
 - [ ] Database indexes created for all new queries
+
+---
+
+## ARTIST-FIRST PLATFORM REDESIGN (June 2)
+
+### The Shift
+**Before:** Campaign-centric — each campaign = one track. Donations per-campaign. Browse shows campaigns.  
+**After:** Artist-centric — artist is the primary entity. Track catalog per artist. Donations to the artist. Browse shows artists.
+
+### Data Model
+
+#### New: `artist_tracks` table
+Per-artist catalog of songs (populated from existing campaign data + Spotify API).
+```sql
+CREATE TABLE artist_tracks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  artist_id UUID NOT NULL REFERENCES discovered_artists(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  spotify_url TEXT,
+  spotify_track_id TEXT,
+  cover_art_url TEXT,
+  duration_ms INTEGER,
+  cpm_rate_cents INTEGER DEFAULT 10,
+  enabled BOOLEAN DEFAULT true,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_at_artist ON artist_tracks(artist_id, sort_order, enabled DESC);
+CREATE UNIQUE INDEX idx_at_spotify ON artist_tracks(artist_id, spotify_track_id) WHERE spotify_track_id IS NOT NULL;
+```
+
+#### New: `artist_donations` table
+Artist-level donations (not per-campaign).
+```sql
+CREATE TABLE artist_donations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  artist_id UUID NOT NULL REFERENCES discovered_artists(id) ON DELETE CASCADE,
+  campaign_id UUID REFERENCES campaigns(id) ON DELETE SET NULL,
+  donor_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  donor_name TEXT,
+  donor_email TEXT,
+  amount_cents INTEGER NOT NULL CHECK (amount_cents >= 100),
+  message TEXT CHECK (length(message) <= 500),
+  stripe_payment_intent_id TEXT,
+  status TEXT DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_ad_artist ON artist_donations(artist_id, created_at DESC);
+```
+
+#### Schema change: `submissions.track_id`
+```sql
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS track_id UUID REFERENCES artist_tracks(id) ON DELETE SET NULL;
+```
+
+#### Data Migration
+```sql
+-- For each artist with active campaigns, create artist_tracks entries
+INSERT INTO artist_tracks (artist_id, title, spotify_url, cover_art_url, cpm_rate_cents, sort_order)
+SELECT DISTINCT ON (cc.discovered_artist_id, c.track_title)
+  cc.discovered_artist_id,
+  c.track_title,
+  c.track_url,
+  c.cover_art_url,
+  c.cpm_rate_cents,
+  ROW_NUMBER() OVER (PARTITION BY cc.discovered_artist_id ORDER BY c.created_at DESC)
+FROM campaigns c
+JOIN campaign_claims cc ON cc.campaign_id = c.id
+WHERE c.status = 'active'
+ORDER BY cc.discovered_artist_id, c.track_title;
+```
+
+#### Artist "Funding Pool" Campaign
+Each artist gets 1 primary campaign (rename from "campaign" to "funding pool" in UI).
+
+```sql
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS is_artist_pool BOOLEAN DEFAULT false;
+-- Designate one campaign per artist as the funding pool
+UPDATE campaigns c SET is_artist_pool = true
+FROM campaign_claims cc
+WHERE cc.campaign_id = c.id
+  AND c.id = (
+    SELECT c2.id FROM campaigns c2
+    JOIN campaign_claims cc2 ON cc2.campaign_id = c2.id
+    WHERE cc2.discovered_artist_id = cc.discovered_artist_id AND c2.status = 'active'
+    ORDER BY c2.created_at ASC LIMIT 1
+  );
+```
+
+### User Flows
+
+#### Sign Up → Connect Spotify (Flow 1)
+```
+1. User signs up (Google OAuth)
+2. Dashboard shows: "Connect your Spotify artist profile to get started"
+3. Field: paste Spotify artist URL
+4. One-click: "Fetch my data" button
+5. Spotify API → fetch artist name, followers, genres, top tracks (up to 10) with artwork
+6. Auto-create artist_profiles + artist_tracks + 1 campaign as funding pool
+7. User sees: "Your profile is live at selah.fm/artist/[slug]"
+8. User can set CPM per track, enable/disable, add more tracks
+```
+
+#### Browse Artist-First (Flow 2)
+```
+1. /browse loads artist cards (not campaigns)
+2. Card shows: profile image, name, genre badges, track count, total raised
+3. Filters: genre, search by name, sort
+4. Click artist → /artist/[slug]
+5. Artist profile shows header, track catalog, submissions, activity, comments
+```
+
+#### Donate to Artist (Flow 3)
+```
+1. User clicks "Support" on artist profile
+2. /checkout?artistId=X opens with artist-level donation
+3. Donation recorded in artist_donations table
+4. Activity feed event + notification
+```
+
+#### Create Content for an Artist (Flow 4)
+```
+1. Creator picks a track from artist's catalog
+2. Clicks "Make a Video" → submission form (track pre-selected)
+3. Submission goes to artist's review queue
+4. On approval → creator earns based on that track's CPM rate
+```
+
+### API Changes
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/api/spotify/artist-lookup` | POST | Paste Spotify URL → return artist data + top tracks |
+| `/api/artists/[slug]/tracks` | GET, POST, PATCH | Manage track catalog |
+| `/api/artists/[slug]/fund` | POST | Artist-level donation |
+| `/api/artists/[slug]/claim` | POST | Claim profile after Spotify verification |
+
+### Pages
+
+| # | Page | Action |
+|---|------|--------|
+| 1 | `/dashboard` | REWRITE — Spotify connect + track management hub |
+| 2 | `/dashboard/connect-spotify` | NEW — One-field form: paste URL |
+| 3 | `/dashboard/manage-tracks` | NEW — Track editor (CPM, enable/disable, reorder) |
+| 4 | `/artist/[slug]` | MODIFY — Track catalog + per-track submit |
+| 5 | `/browse` | REWRITE — Artist-first |
+| 6 | `/checkout` | MODIFY — Support `?artistId=X` |
+
+### Edge Cases
+
+| # | Scenario | Handling |
+|---|----------|----------|
+| EC1 | User pastes Spotify TRACK url instead of ARTIST | Auto-resolve: follow artist from track |
+| EC2 | Invalid/broken Spotify URL | "Invalid URL. Should look like: https://open.spotify.com/artist/..." |
+| EC3 | Artist already exists (from discovered_artists) | Match by name, merge tracks, no duplicate |
+| EC4 | 50+ tracks on Spotify | Fetch top 10 initially, "Load more" button |
+| EC5 | Spotify API rate limit | Cache 1 hour, "Try again later" |
+| EC6 | Old /c/[slug] URLs | 301 redirect to /artist/[slug] |
+
+### Execution Phases
+
+```
+Phase A (NOW):  Data model — artist_tracks table + migration + submissions.track_id
+Phase B (NEXT): Spotify connect flow — API endpoint + dashboard page
+Phase C (NEXT): Artist donations — table + API + checkout integration
+Phase D (NEXT): Artist-first browse — rewrite /browse
+Phase E (NEXT): Artist profile — track catalog + per-track submit
+Phase F (LAST): Dashboard management — track editor, CPM, profile settings
+```
+
+### File Change Summary
+
+#### New Files
+```
+scripts/migrations/003_artist_tracks.sql       — artist_tracks + artist_donations + track_id
+scripts/migrations/004_artist_migration.sql    — migrate campaigns to artist_tracks
+app/api/spotify/artist-lookup/route.ts         — Spotify URL → artist data
+app/api/artists/[slug]/tracks/route.ts         — GET/POST tracks
+app/api/artists/[slug]/tracks/[id]/route.ts    — PATCH/DELETE track
+app/api/artists/[slug]/fund/route.ts           — Artist donation
+app/api/artists/[slug]/claim/route.ts          — Claim profile
+app/dashboard/connect-spotify/page.tsx         — Spotify connect page
+app/dashboard/manage-tracks/page.tsx           — Track editor
+lib/spotify-artist.ts                          — Spotify artist fetch
+```
+
+#### Modified Files
+```
+app/dashboard/page.tsx                         — Spotlight CTA to connect
+app/artist/[slug]/page.tsx                     — Tracks from artist_tracks
+app/browse/page.tsx                            — Artist-first
+app/browse/BrowseClient.tsx                    — Artist cards
+app/checkout/page.tsx                          — artistId support
+app/api/artists/[slug]/route.ts                — Return artist_tracks
+app/api/artists/route.ts                       — Query artist_tracks
+app/api/submissions/route.ts                   — Accept track_id
+```
+
+**Total: 10 new files, 8 modified, 2 DB migrations**

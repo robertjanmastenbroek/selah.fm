@@ -21,6 +21,7 @@ import { useToast } from '@/components/Toast';
 import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
 import { Plus, Edit3, ExternalLink, Copy, Check } from 'lucide-react';
 import ArtistDashboardSection from '@/components/ArtistDashboardSection';
+import SpotifyConnectPrompt from '@/components/SpotifyConnectPrompt';
 
 
 interface Campaign {
@@ -408,6 +409,10 @@ function DashboardContent() {
         ) : (
           <>
             {profile && (
+            <>
+            {/* Spotify connect CTA — only if no artist profile found yet */}
+            <SpotifyConnectPrompt displayName={profile?.display_name} />
+
             <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
               <CardContent className="p-4 text-center space-y-2">
                 <p className="text-sm font-medium">🔗 Share Selah.fm, earn 5% bonus</p>
@@ -433,6 +438,7 @@ function DashboardContent() {
                 </div>
               </CardContent>
             </Card>
+            </>
             )}
 
             {campaigns.length > 0 && (
