@@ -11,8 +11,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },
     { url: `${baseUrl}/browse`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.9 },
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
-    { url: `${baseUrl}/artists`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
-    { url: `${baseUrl}/creators`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.8 },
     { url: `${baseUrl}/login`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/faq`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/welcome-artists`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
@@ -24,7 +22,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/report-bug`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.4 },
   ];
 
-  // Blog posts (highest SEO priority)
+  // Data-driven tools
+  const toolPages: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/tools/cpm-calculator`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
+    { url: `${baseUrl}/tools/creator-earnings`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
+    { url: `${baseUrl}/tools/promotion-budget`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    { url: `${baseUrl}/tools/playlist-analyzer`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
+  ];
+
+  // Blog posts
   let blogPages: MetadataRoute.Sitemap = [];
   try {
     const posts = await sql`
@@ -39,12 +45,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  // Campaign pages — all with images get high priority
+  // Campaign pages
   let campaignPages: MetadataRoute.Sitemap = [];
   try {
     const campaigns = await sql`
       SELECT id, slug, updated_at FROM campaigns WHERE status IN ('active', 'draft')
-      ORDER BY updated_at DESC
+      ORDER BY updated_at DESC LIMIT 3000
     `;
     campaignPages = campaigns.map((c: any) => ({
       url: `${baseUrl}/c/${c.slug || c.id}`,
@@ -54,41 +60,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  // Artist pages
+  // Artist profile pages (from discovered_artists — all 2,158 artists)
   let artistPages: MetadataRoute.Sitemap = [];
   try {
     const artists = await sql`
-      SELECT id, updated_at FROM users WHERE is_artist = true ORDER BY created_at DESC LIMIT 200
+      SELECT ap.slug FROM artist_profiles ap
+      JOIN discovered_artists da ON da.id = ap.artist_id
+      ORDER BY da.monthly_listeners DESC NULLS LAST
+      LIMIT 2000
     `;
     artistPages = artists.map((a: any) => ({
-      url: `${baseUrl}/artists/${a.id}`,
-      lastModified: new Date(a.updated_at),
+      url: `${baseUrl}/artist/${a.slug}`,
+      lastModified: new Date(),
       changeFrequency: 'weekly' as const,
-      priority: 0.7,
+      priority: 0.8,
     }));
   } catch {}
 
-  // Creator pages
-  let creatorPages: MetadataRoute.Sitemap = [];
-  try {
-    const creators = await sql`
-      SELECT id, updated_at FROM users WHERE is_creator = true ORDER BY created_at DESC LIMIT 200
-    `;
-    creatorPages = creators.map((c: any) => ({
-      url: `${baseUrl}/creators/${c.id}`,
-      lastModified: new Date(c.updated_at),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }));
-  } catch {}
+  // Genre landing pages
+  const GENRES = ['electronic', 'hip-hop', 'pop', 'rock', 'indie', 'r&b', 'jazz', 'metal',
+                   'folk', 'country', 'ambient', 'punk', 'alternative', 'experimental', 'latin'];
+  const genrePages: MetadataRoute.Sitemap = GENRES.map(g => ({
+    url: `${baseUrl}/browse/genre/${g}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }));
 
-  // Data-driven tools (high-value, unique data, interactive)
-  const toolPages: MetadataRoute.Sitemap = [
-    { url: `${baseUrl}/tools/cpm-calculator`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
-    { url: `${baseUrl}/tools/creator-earnings`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.9 },
-    { url: `${baseUrl}/tools/promotion-budget`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
-    { url: `${baseUrl}/tools/playlist-analyzer`, lastModified: new Date(), changeFrequency: "daily" as const, priority: 0.9 },
+  return [
+    ...staticPages,
+    ...toolPages,
+    ...genrePages,
+    ...blogPages,
+    ...artistPages,
+    ...campaignPages,
   ];
-
-  return [...staticPages, ...toolPages, ...blogPages, ...campaignPages, ...artistPages, ...creatorPages];
 }
