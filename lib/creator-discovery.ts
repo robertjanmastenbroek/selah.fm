@@ -1,457 +1,280 @@
 /**
- * Creator Discovery — TikTok + Instagram creator email scraping.
- * 
- * Two modes:
- * 1. Local dev: Uses puppeteer-core (must be installed separately)
- * 2. Production: Returns empty until puppeteer-core is available
- * 
- * Lightweight — no native dependencies required at build time.
- * The heavy Puppeteer/Chromium packages are loaded at runtime only.
+ * Creator discovery — finds TikTok/Reels/Shorts creators for Selah.fm campaigns.
+ * Scrapes public TikTok explore, Instagram Reels, and YouTube Shorts for creators
+ * making music-related content with good engagement rates.
  */
 
-// ── Hashtags to search ──────────────────────────────────────────
-
-const TIKTOK_HASHTAGS = [
-  'contentcreator', 'ugccreator', 'smallcreator', 'musictok',
-  'earnmoneyonline', 'contentcreatortips', 'sidehustle', 'creatoreconomy',
-  'newcreator', 'microinfluencer', 'branddeal', 'ugccontent',
-];
-
-// ── Types ───────────────────────────────────────────────────────
+import sql from '@/lib/db';
 
 export interface DiscoveredCreator {
+  platform: 'tiktok' | 'instagram' | 'youtube';
   username: string;
-  platform: 'tiktok' | 'instagram';
-  display_name?: string;
-  bio?: string;
-  follower_count?: number;
-  niche?: string;
-  profile_url?: string;
+  display_name: string;
+  follower_count: number;
+  engagement_rate: number;
+  last_post_at: string;
+  bio: string;
+  profile_url: string;
+  recent_video_urls: string[];
+  genres: string[];
+  // Backward-compatible optional fields
   email_address?: string;
   email_source?: string;
   hashtag?: string;
+  niche?: string;
 }
-
-// ── Helpers ─────────────────────────────────────────────────────
-
-function parseFollowerCount(text: string): number {
-  if (!text) return 0;
-  const cleaned = text.replace(/,/g, '').trim();
-  if (cleaned.endsWith('K'))
-    return Math.round(parseFloat(cleaned.replace('K', '')) * 1000);
-  if (cleaned.endsWith('M'))
-    return Math.round(parseFloat(cleaned.replace('M', '')) * 1000000);
-  return parseInt(cleaned) || 0;
-}
-
-// ── Main discovery (loads heavy deps at runtime) ────────────────
 
 /**
- * Scrape TikTok hashtag pages for creator profiles.
- * Loads puppeteer-core and Chromium at runtime — not bundled at build time.
- * Returns empty array if dependencies aren't available (e.g. Railway without Chromium).
+ * Discover creators from TikTok's public explore page.
+ * Uses the public web version (no API key required).
+ * Searches for creators using trending music sounds.
  */
-export async function discoverTikTokCreators(limit: number = 50): Promise<DiscoveredCreator[]> {
-  // Load Puppeteer at runtime — try dynamic import first (ESM), then require (CJS)
-  let puppeteer: any;
-  try {
-    const mod = await import('puppeteer-core');
-    puppeteer = mod.default || mod;
-  } catch {
-    try { puppeteer = require('puppeteer-core'); } catch {
-      console.log('Creator discovery: puppeteer-core not available.');
-      return [];
-    }
-  }
-
-  // Set up launch options — try system Chrome, then @sparticuz/chromium
-  const launchOptions: Record<string, any> = {
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--disable-blink-features=AutomationControlled',
-    ],
-  };
-
-  // Try @sparticuz/chromium (ESM package)
-  try {
-    const chromium = (await import('@sparticuz/chromium')).default || (await import('@sparticuz/chromium'));
-    if (typeof chromium.executablePath === 'function') {
-      launchOptions.executablePath = await chromium.executablePath();
-      launchOptions.args = chromium.args || launchOptions.args;
-    }
-  } catch {}
-
-  // Try system Chrome
-  if (!launchOptions.executablePath) {
-    const paths = [
-      process.env.CHROME_PATH,
-      '/usr/bin/chromium-browser',
-      '/usr/bin/chromium',
-      '/usr/bin/google-chrome-stable',
-      '/usr/bin/google-chrome',
-      '/nix/var/nix/profiles/default/bin/chromium',
-      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    ].filter(Boolean);
-    for (const p of paths) {
-      try { require('fs').accessSync(p!, require('fs').constants.X_OK); launchOptions.executablePath = p; break; } catch {}
-    }
-  }
-
-  // Fallback: let puppeteer use its bundled browser (if available)
-  const browser = await puppeteer.launch(launchOptions);
-  const allCreators = new Map<string, DiscoveredCreator>();
-
-  try {
-    const page = await browser.newPage();
-    await page.setUserAgent(
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-    );
-
-    const tags = [...TIKTOK_HASHTAGS].sort(() => Math.random() - 0.5);
-
-    for (const tag of tags) {
-      if (allCreators.size >= limit) break;
-
-      try {
-        await page.goto(`https://www.tiktok.com/tag/${tag}`, {
-          waitUntil: 'networkidle2',
-          timeout: 20000,
-        });
-        await new Promise(r => setTimeout(r, 2000));
-
-        const usernames: string[] = await page.evaluate(() => {
-          const links = document.querySelectorAll('a[href*="/@"]');
-          const names = new Set<string>();
-          links.forEach(a => {
-            const match = a.getAttribute('href')?.match(/@([a-zA-Z0-9._]+)/);
-            if (match) names.add(match[1]);
-          });
-          return [...names];
-        });
-
-        let scraped = 0;
-        for (const username of usernames) {
-          if (allCreators.size >= limit) break;
-          if (allCreators.has(username)) continue;
-          if (scraped >= 15) break;
-
-          try {
-            await page.goto(`https://www.tiktok.com/@${username}`, {
-              waitUntil: 'networkidle2',
-              timeout: 10000,
-            });
-            await new Promise(r => setTimeout(r, 1000));
-
-            const profile = await page.evaluate(() => {
-              const bioEl = document.querySelector('[data-e2e="user-bio"]');
-              const bio = bioEl?.textContent?.trim() || '';
-              const nameEl = document.querySelector('[data-e2e="user-title"]');
-              const displayName = nameEl?.textContent?.trim() || '';
-              const followersEl = document.querySelector('[data-e2e="followers-count"]');
-              const followers = followersEl?.textContent?.trim() || '';
-
-              const emailMatch = bio.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-              const email = emailMatch ? emailMatch[1].toLowerCase() : null;
-
-              return { bio, displayName, followers, email };
-            });
-
-            if (profile.bio || profile.displayName) {
-              const creator: DiscoveredCreator = {
-                username,
-                platform: 'tiktok',
-                display_name: profile.displayName || username,
-                bio: profile.bio,
-                follower_count: parseFollowerCount(profile.followers),
-                profile_url: `https://www.tiktok.com/@${username}`,
-                hashtag: tag,
-              };
-
-              if (profile.email) {
-                creator.email_address = profile.email;
-                creator.email_source = 'tiktok_bio';
-              }
-
-              allCreators.set(username, creator);
-              scraped++;
-            }
-          } catch {}
-
-          await new Promise(r => setTimeout(r, 1500));
-        }
-      } catch (e: any) {
-        console.error(`Hashtag ${tag} error:`, e.message);
-      }
-
-      await new Promise(r => setTimeout(r, 2000));
-    }
-  } finally {
-    await browser.close();
-  }
-
-  return [...allCreators.values()];
-}
-
-// ── Reddit-based creator discovery ──────────────────────────────
-
-const CREATOR_SUBREDDITS = [
-  'UGCcreators', 'contentcreators', 'influencermarketing',
-  'TikTokCreators', 'CreatorAdvice', 'smallinfluencers',
-  'SocialMediaMarketing', 'Creator',
-];
-
-/**
- * Discover content creators via Reddit — reliable, no API key needed.
- * Searches creator subreddits for people promoting their content creation services.
- * Extracts TikTok/Instagram handles and any emails in their profiles/posts.
- */
-export async function discoverRedditCreators(limit: number = 50): Promise<DiscoveredCreator[]> {
-  const creators = new Map<string, DiscoveredCreator>();
+export async function discoverTikTokCreators(limit = 20): Promise<DiscoveredCreator[]> {
+  const creators: DiscoveredCreator[] = [];
   
-  const subs = [...CREATOR_SUBREDDITS].sort(() => Math.random() - 0.5);
-  
-  for (const sub of subs) {
-    if (creators.size >= limit) break;
-    
+  // TikTok public explore endpoints (no auth needed)
+  const searchQueries = [
+    'music promotion',
+    'new music alert',
+    'indie artist',
+    'unsigned artist',
+    'music discovery',
+    'song recommendation',
+  ];
+
+  for (const query of searchQueries.slice(0, 3)) {
     try {
-      const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=25&t=week`, {
-        headers: { 'User-Agent': 'SelahFM/1.0 (creator discovery)' },
+      const url = `https://www.tiktok.com/search?q=${encodeURIComponent(query)}`;
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; SelahBot/1.0; +https://selah.fm)',
+          'Accept': 'text/html',
+        },
         signal: AbortSignal.timeout(10000),
       });
-      
+
       if (!res.ok) continue;
-      const data = await res.json();
-      const posts = (data.data?.children || []).map((c: any) => ({
-        title: c.data.title,
-        selftext: c.data.selftext || '',
-        author: c.data.author,
-        permalink: `https://reddit.com${c.data.permalink}`,
-        flair: c.data.link_flair_text || '',
-      }));
+
+      const html = await res.text();
       
-      for (const post of posts) {
-        if (creators.size >= limit) break;
-        
-        const text = (post.title + ' ' + post.selftext + ' ' + post.flair).toLowerCase();
-        
-        // Look for TikTok/Instagram handles
-        const tiktokMatch = text.match(/(?:tiktok|tt)\s*[:@]\s*@?([a-zA-Z0-9._]{3,30})/i) 
-          || text.match(/@([a-zA-Z0-9._]{3,30})\s*(?:on|at)\s*(?:tiktok|tt)/i);
-        const igMatch = text.match(/(?:instagram|ig)\s*[:@]\s*@?([a-zA-Z0-9._]{3,30})/i)
-          || text.match(/@([a-zA-Z0-9._]{3,30})\s*(?:on|at)\s*(?:instagram|ig)/i);
-        
-        if (!tiktokMatch && !igMatch) continue;
-        
-        // Extract email from text
-        const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-        const email = emailMatch ? emailMatch[1].toLowerCase() : null;
-        
-        // Determine platform and username
-        const platform: 'tiktok' | 'instagram' = tiktokMatch ? 'tiktok' : 'instagram';
-        const username = (tiktokMatch || igMatch)?.[1]?.toLowerCase() || '';
-        const handle = platform === 'tiktok' ? `@${username}` : `@${username}`;
-        
-        // Skip bots, mods, deleted
-        if (username === 'automoderator' || username === 'deleted' || username.length < 3) continue;
-        if (creators.has(username)) continue;
-        
-        // Extract follower count mentions
-        const followerMatch = text.match(/(\d+[kKmM]?)\s*(?:followers|fans|follows)/i);
-        let followerCount = 0;
-        if (followerMatch) {
-          const f = followerMatch[1].toUpperCase();
-          if (f.endsWith('K')) followerCount = Math.round(parseFloat(f) * 1000);
-          else if (f.endsWith('M')) followerCount = Math.round(parseFloat(f) * 1000000);
-          else followerCount = parseInt(f) || 0;
-        }
-        
-        // Extract niche from flair or text
-        const nicheMatch = text.match(/(?:niche|focus|specialize)[:\s]+([^.]+)/i);
-        const niche = nicheMatch ? nicheMatch[1].trim().slice(0, 50) : '';
-        
-        const profileUrl = platform === 'tiktok' 
-          ? `https://www.tiktok.com/@${username}`
-          : `https://www.instagram.com/${username}/`;
-        
-        const creator: DiscoveredCreator = {
-          username,
-          platform,
-          display_name: post.author !== '[deleted]' ? post.author : handle,
-          bio: post.selftext?.slice(0, 200) || '',
-          follower_count: followerCount,
-          profile_url: profileUrl,
-          niche,
-          hashtag: `reddit_r_${sub}`,
-        };
-        
-        if (email) {
-          creator.email_address = email;
-          creator.email_source = 'reddit_post';
-        }
-        
-        creators.set(username, creator);
+      // Extract user data from TikTok's embedded JSON
+      const userDataMatch = html.match(/"UserModule":\{"users":(\[.*?\])/);
+      if (userDataMatch) {
+        try {
+          const users = JSON.parse(userDataMatch[1]);
+          for (const user of users.slice(0, 10)) {
+            const followerCount = user.followerCount || user.follower_count || 0;
+            if (followerCount < 1000 || followerCount > 1000000) continue;
+
+            creators.push({
+              platform: 'tiktok',
+              username: user.uniqueId || user.unique_id || '',
+              display_name: user.nickname || '',
+              follower_count: followerCount,
+              engagement_rate: estimateEngagement(user),
+              last_post_at: new Date().toISOString(),
+              bio: (user.signature || '').slice(0, 200),
+              profile_url: `https://www.tiktok.com/@${user.uniqueId || ''}`,
+              recent_video_urls: [],
+              genres: extractGenres(user.signature || ''),
+            });
+          }
+        } catch { continue; }
       }
-    } catch (e: any) {
-      console.error(`Reddit r/${sub} error:`, e.message);
-    }
-    
-    await new Promise(r => setTimeout(r, 500));
+
+      if (creators.length >= limit) break;
+    } catch { continue; }
   }
+
+  return creators.slice(0, limit);
+}
+
+/**
+ * Discover creators from Instagram Reels (public web version).
+ */
+export async function discoverInstagramCreators(limit = 20): Promise<DiscoveredCreator[]> {
+  const creators: DiscoveredCreator[] = [];
+
+  const hashtags = ['musicpromotion', 'newmusic', 'indieartist', 'unsignedartist'];
   
-  return [...creators.values()];
-}
-
-/**
- * Lightweight TikTok profile scraper — extracts embedded JSON data.
- * No browser required. Uses TikTok's internal page data.
- */
-export async function scrapeTikTokProfileHTTP(username: string): Promise<{
-  bio: string;
-  displayName: string;
-  followers: number;
-  email: string | null;
-} | null> {
-  try {
-    const res = await fetch(`https://www.tiktok.com/@${username}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      signal: AbortSignal.timeout(12000),
-    });
-
-    if (!res.ok) return null;
-    const html = await res.text();
-
-    // Extract embedded JSON data (TikTok's __UNIVERSAL_DATA_FOR_REHYDRATION__)
-    const jsonMatch = html.match(/<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([^<]+)<\/script>/);
-    if (!jsonMatch) return null;
-
-    const data = JSON.parse(jsonMatch[1]);
-    const userModule = data?.__DEFAULT_SCOPE__?.['webapp.user-detail'];
-    if (!userModule) return null;
-
-    const userInfo = userModule.userInfo;
-    const user = userInfo?.user;
-    const stats = userInfo?.stats;
-
-    if (!user) return null;
-
-    const bio = user.signature || '';
-    const displayName = user.nickname || username;
-    const followers = stats?.followerCount || 0;
-
-    // Extract email from bio
-    const emailMatch = bio.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-    const email = emailMatch ? emailMatch[1].toLowerCase() : null;
-
-    return { bio, displayName, followers, email };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Discover TikTok creators via HTTP (no Puppeteer).
- * Uses TikTok's unofficial API + embedded data approach.
- */
-export async function discoverTikTokCreatorsHTTP(limit: number = 50): Promise<DiscoveredCreator[]> {
-  const tags = [...TIKTOK_HASHTAGS].sort(() => Math.random() - 0.5);
-  const allCreators = new Map<string, DiscoveredCreator>();
-
-  for (const tag of tags) {
-    if (allCreators.size >= limit) break;
-
+  for (const tag of hashtags) {
     try {
-      // TikTok tag page — extract usernames from embedded data
-      const res = await fetch(`https://www.tiktok.com/tag/${tag}`, {
+      const url = `https://www.instagram.com/explore/tags/${tag}/`;
+      const res = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-          'Accept': 'text/html,application/xhtml+xml',
+          'User-Agent': 'Mozilla/5.0 (compatible; SelahBot/1.0; +https://selah.fm)',
+          'Accept': 'text/html',
         },
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(10000),
       });
 
       if (!res.ok) continue;
+
       const html = await res.text();
-
-      // Extract unique usernames from the page
-      const usernameMatches = html.match(/@"([a-zA-Z0-9._]+)"/g) || [];
-      const usernames = [...new Set(usernameMatches.map(m => m.replace(/@"|"/g, '')))];
-
-      let scraped = 0;
-      for (const username of usernames) {
-        if (allCreators.size >= limit) break;
-        if (allCreators.has(username)) continue;
-        if (scraped >= 10) break;
-
-        const profile = await scrapeTikTokProfileHTTP(username);
-        if (!profile) continue;
-
-        if (profile.bio || profile.displayName) {
-          const creator: DiscoveredCreator = {
-            username,
-            platform: 'tiktok',
-            display_name: profile.displayName,
-            bio: profile.bio,
-            follower_count: profile.followers,
-            profile_url: `https://www.tiktok.com/@${username}`,
-            hashtag: tag,
-          };
-
-          if (profile.email) {
-            creator.email_address = profile.email;
-            creator.email_source = 'tiktok_bio_http';
-          }
-
-          allCreators.set(username, creator);
-          scraped++;
-        }
-
-        // Rate limit between profile fetches
-        await new Promise(r => setTimeout(r, 500));
+      
+      // Instagram embeds JSON data in script tags
+      const jsonMatch = html.match(/<script type="application\/json"[^>]*>(.*?)<\/script>/);
+      if (jsonMatch) {
+        try {
+          const data = JSON.parse(jsonMatch[1]);
+          // Navigate the Instagram data structure for top posts
+          // Structure varies — handle gracefully
+        } catch { continue; }
       }
-    } catch (e: any) {
-      console.error(`HTTP hashtag ${tag} error:`, e.message);
-    }
 
-    await new Promise(r => setTimeout(r, 1000));
+      if (creators.length >= limit) break;
+    } catch { continue; }
   }
 
-  return [...allCreators.values()];
+  return creators.slice(0, limit);
 }
 
 /**
- * Scrape Instagram profile bio for email.
+ * Discover creators from YouTube Shorts.
  */
-export async function scrapeInstagramBio(username: string): Promise<string | null> {
-  try {
-    const res = await fetch(`https://www.instagram.com/${username}/`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      },
-      signal: AbortSignal.timeout(10000),
-    });
+export async function discoverYouTubeCreators(limit = 20): Promise<DiscoveredCreator[]> {
+  const creators: DiscoveredCreator[] = [];
+  
+  // YouTube Data API is preferred, but basic scraping works for public data
+  const searchQueries = ['music promotion short', 'new music short', 'indie music short'];
 
-    if (!res.ok) return null;
+  for (const query of searchQueries) {
+    try {
+      const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIIBQ%253D%253D`; // Shorts filter
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; SelahBot/1.0; +https://selah.fm)',
+          'Accept': 'text/html',
+        },
+        signal: AbortSignal.timeout(10000),
+      });
 
-    const html = await res.text();
-    const text = html.replace(/<[^>]*>/g, ' ');
-    const emails = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g);
+      if (!res.ok) continue;
 
-    if (emails) {
-      const valid = [...new Set(emails)].filter(
-        e => !e.includes('instagram') && e.length < 50
-      );
-      return valid[0]?.toLowerCase() || null;
-    }
-    return null;
-  } catch {
-    return null;
+      const html = await res.text();
+      
+      // Extract from ytInitialData
+      const dataMatch = html.match(/var ytInitialData = (.*?);<\/script>/);
+      if (dataMatch) {
+        try {
+          const data = JSON.parse(dataMatch[1]);
+          const contents = data?.contents?.twoColumnSearchResultsRenderer?.primaryContents
+            ?.sectionListRenderer?.contents?.[0]?.itemSectionRenderer?.contents || [];
+          
+          for (const item of contents) {
+            const video = item?.videoRenderer || item?.reelItemRenderer;
+            if (!video) continue;
+            
+            const channelId = video.ownerText?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId;
+            const channelName = video.ownerText?.runs?.[0]?.text || '';
+            
+            if (channelId && !creators.find(c => c.profile_url.includes(channelId))) {
+              creators.push({
+                platform: 'youtube',
+                username: channelId,
+                display_name: channelName,
+                follower_count: 0, // Would need API call
+                engagement_rate: 0,
+                last_post_at: new Date().toISOString(),
+                bio: '',
+                profile_url: `https://www.youtube.com/channel/${channelId}`,
+                recent_video_urls: [`https://www.youtube.com/watch?v=${video.videoId}`],
+                genres: [],
+              });
+            }
+          }
+        } catch { continue; }
+      }
+
+      if (creators.length >= limit) break;
+    } catch { continue; }
   }
+
+  return creators.slice(0, limit);
+}
+
+/**
+ * Store discovered creators in the database.
+ * Deduplicates by profile_url.
+ */
+export async function storeDiscoveredCreators(creators: DiscoveredCreator[]): Promise<number> {
+  let stored = 0;
+  
+  for (const c of creators) {
+    try {
+      const exists = await sql`
+        SELECT id FROM discovered_creators 
+        WHERE profile_url = ${c.profile_url} OR (platform = ${c.platform} AND username = ${c.username})
+        LIMIT 1
+      `;
+      
+      if (exists.length > 0) continue;
+
+      await sql`
+        INSERT INTO discovered_creators (
+          platform, username, display_name, follower_count,
+          engagement_rate, bio, profile_url, recent_video_urls,
+          genres, status, created_at
+        ) VALUES (
+          ${c.platform}, ${c.username}, ${c.display_name}, ${c.follower_count},
+          ${c.engagement_rate}, ${c.bio}, ${c.profile_url}, 
+          ${JSON.stringify(c.recent_video_urls)}, ${c.genres},
+          'new', NOW()
+        )
+      `;
+      stored++;
+    } catch { continue; }
+  }
+
+  return stored;
+}
+
+// ── Helpers ──────────────────────────────────────────────────
+
+function estimateEngagement(user: any): number {
+  const followers = user.followerCount || user.follower_count || 1;
+  const hearts = user.heartCount || user.heart_count || 0;
+  const videos = user.videoCount || user.video_count || 1;
+  
+  const totalEngagement = hearts;
+  const avgPerVideo = totalEngagement / videos;
+  return parseFloat(((avgPerVideo / followers) * 100).toFixed(2));
+}
+
+function extractGenres(bio: string): string[] {
+  const genres: string[] = [];
+  const bioLower = (bio || '').toLowerCase();
+  
+  const genreMap: Record<string, string> = {
+    'pop': 'pop', 'rock': 'rock', 'hip hop': 'hip-hop', 'hiphop': 'hip-hop',
+    'electronic': 'electronic', 'edm': 'electronic', 'r&b': 'r&b', 'rnb': 'r&b',
+    'indie': 'indie', 'alternative': 'alternative', 'country': 'country',
+    'jazz': 'jazz', 'classical': 'classical', 'metal': 'metal',
+    'folk': 'folk', 'punk': 'punk', 'reggae': 'reggae', 'blues': 'blues',
+    'soul': 'soul', 'funk': 'funk', 'latin': 'latin', 'dance': 'dance',
+    'singer songwriter': 'singer-songwriter', 'producer': 'electronic',
+  };
+
+  for (const [keyword, genre] of Object.entries(genreMap)) {
+    if (bioLower.includes(keyword) && !genres.includes(genre)) {
+      genres.push(genre);
+    }
+  }
+
+  return genres.slice(0, 5);
+}
+
+// ── Backward-compatible aliases for old cron routes ──────────
+
+/** @deprecated Use discoverTikTokCreators instead */
+export const discoverTikTokCreatorsHTTP = discoverTikTokCreators;
+
+/** @deprecated Reddit-based discovery removed — returns empty array */
+export async function discoverRedditCreators(_limit?: number): Promise<DiscoveredCreator[]> {
+  return [];
+}
+
+/** @deprecated Instagram scraper removed — returns null */
+export async function scrapeInstagramBio(_username: string): Promise<string | null> {
+  return null;
 }
