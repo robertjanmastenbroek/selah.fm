@@ -3,6 +3,59 @@ import { NextResponse } from 'next/server';
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 const DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions';
 
+// ── Rate limit constants ──────────────────────────────────────
+const RATE_WINDOW_MS = 60_000;        // 1 minute
+const RATE_MAX_REQUESTS = 5;          // 5 messages per minute per IP
+const DAILY_AI_CAP_PER_IP = 30;       // 30 AI replies per day per IP
+const GLOBAL_DAILY_AI_CAP = 500;      // 500 total AI calls per day (all users)
+const MAX_MESSAGE_LENGTH = 500;       // characters per message
+
+// ── In-memory stores (reset on server restart) ────────────────
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const dailyAiStore = new Map<string, number>(); // IP → AI calls today
+let globalAiCallsToday = 0;
+let globalAiDate = new Date().getUTCDate();
+
+function resetDailyIfNeeded() {
+  const today = new Date().getUTCDate();
+  if (today !== globalAiDate) {
+    globalAiCallsToday = 0;
+    globalAiDate = today;
+    dailyAiStore.clear();
+  }
+}
+
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  return forwarded?.split(',')[0]?.trim() || '127.0.0.1';
+}
+
+// ── Rate limit check (per-IP, sliding window) ─────────────────
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now();
+  let entry = rateLimitStore.get(ip);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + RATE_WINDOW_MS };
+    rateLimitStore.set(ip, entry);
+  }
+  entry.count++;
+  const remaining = Math.max(0, RATE_MAX_REQUESTS - entry.count);
+  const resetIn = Math.max(0, entry.resetAt - now);
+
+  // Periodic cleanup (every ~1000 entries)
+  if (rateLimitStore.size > 5000) {
+    for (const [k, v] of rateLimitStore) {
+      if (now > v.resetAt) rateLimitStore.delete(k);
+    }
+  }
+
+  return {
+    allowed: entry.count <= RATE_MAX_REQUESTS,
+    remaining,
+    resetIn,
+  };
+}
+
 const SYSTEM_PROMPT = `You are Selah AI, the support assistant for Selah.fm — an open-source CPM marketplace for music promotion.
 
 Key facts about Selah.fm:
@@ -30,78 +83,148 @@ Rules:
 - Use emojis sparingly — one per message max.
 - Never make up features that don't exist.`;
 
-/**
- * Chat with DeepSeek for support responses.
- * Falls back to keyword matching if API key is not configured.
- */
 export async function POST(request: Request) {
-  try {
-    const { message, history } = await request.json();
+  const ip = getClientIp(request);
+  resetDailyIfNeeded();
 
-    if (!message) {
-      return NextResponse.json({ error: 'Missing message' }, { status: 400 });
-    }
-
-    // ── Try DeepSeek API ──────────────────────────────────────
-    if (DEEPSEEK_API_KEY) {
-      try {
-        const messages = [
-          { role: 'system', content: SYSTEM_PROMPT },
-          ...(Array.isArray(history) ? history.slice(-6).map((h: string) => {
-            const [role, ...rest] = h.split(': ');
-            return {
-              role: role === 'user' ? 'user' : 'assistant',
-              content: rest.join(': '),
-            };
-          }) : []),
-          { role: 'user', content: message },
-        ];
-
-        const res = await fetch(DEEPSEEK_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: 'deepseek-chat',
-            messages,
-            max_tokens: 300,
-            temperature: 0.7,
-          }),
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const reply = data.choices?.[0]?.message?.content;
-          if (reply) {
-            return NextResponse.json({ reply, source: 'ai' });
-          }
-        }
-      } catch (aiErr) {
-        console.error('DeepSeek API error:', aiErr);
+  // ── Guard 1: Rate limit (per-IP, 5 req/min) ──────────────────
+  const rl = checkRateLimit(ip);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { reply: "You're sending messages too quickly. Please wait a moment before sending another.", source: 'rate_limited' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(Math.ceil(rl.resetIn / 1000)),
+          'Retry-After': String(Math.ceil(rl.resetIn / 1000)),
+        },
       }
-    }
-
-    // ── Fallback: keyword matching ────────────────────────────
-    const reply = keywordMatch(message);
-    if (reply) {
-      return NextResponse.json({ reply, source: 'keyword' });
-    }
-
-    // ── Auto-detect potential bugs ─────────────────────────────
-    // Runs in background — doesn't affect user response
-    detectBug(message, history).catch(() => {});
-
-    // ── No response available — suggest email support ──────────
-    return NextResponse.json({
-      reply: "I'm not sure about that — please email support@selah.fm and our team will get back to you, usually within a few hours.",
-      source: 'human',
-    });
-  } catch (e: any) {
-    console.error('Support API error:', e.message);
-    return NextResponse.json({ reply: 'Something went wrong. Please try again or email support@selah.fm.' }, { status: 500 });
+    );
   }
+
+  // ── Guard 2: Parse body, validate message length ─────────────
+  let message: string;
+  let history: any[];
+  try {
+    const body = await request.json();
+    message = (body.message || '').trim();
+    history = Array.isArray(body.history) ? body.history : [];
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  if (!message) {
+    return NextResponse.json({ error: 'Missing message' }, { status: 400 });
+  }
+
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return NextResponse.json({
+      reply: `Your message is too long (${message.length} characters). Please keep it under ${MAX_MESSAGE_LENGTH} characters — try breaking it into shorter messages.`,
+      source: 'validation',
+    });
+  }
+
+  // ── Guard 3: Global daily AI cap ─────────────────────────────
+  const globalCapExceeded = globalAiCallsToday >= GLOBAL_DAILY_AI_CAP;
+
+  // ── Guard 4: Per-IP daily AI cap ─────────────────────────────
+  const ipDailyCount = dailyAiStore.get(ip) || 0;
+  const ipCapExceeded = ipDailyCount >= DAILY_AI_CAP_PER_IP;
+
+  // ── Determine if we should use AI ────────────────────────────
+  const canUseAi = DEEPSEEK_API_KEY && !globalCapExceeded && !ipCapExceeded;
+
+  if (canUseAi) {
+    try {
+      const messages = [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...(history.slice(-6).map((h: string) => {
+          const [role, ...rest] = h.split(': ');
+          return {
+            role: role === 'user' ? 'user' : 'assistant',
+            content: rest.join(': '),
+          };
+        })),
+        { role: 'user', content: message },
+      ];
+
+      const res = await fetch(DEEPSEEK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages,
+          max_tokens: 200,
+          temperature: 0.7,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content;
+        if (reply) {
+          // Track AI usage
+          globalAiCallsToday++;
+          dailyAiStore.set(ip, ipDailyCount + 1);
+
+          return NextResponse.json(
+            { reply, source: 'ai' },
+            {
+              headers: {
+                'X-RateLimit-Remaining': String(rl.remaining),
+                'X-RateLimit-Reset': String(Math.ceil(rl.resetIn / 1000)),
+              },
+            }
+          );
+        }
+      }
+    } catch (aiErr) {
+      console.error('DeepSeek API error:', aiErr);
+    }
+  }
+
+  // ── Fallback: keyword matching (free) ────────────────────────
+  const reply = keywordMatch(message);
+  const source = reply
+    ? 'keyword'
+    : globalCapExceeded
+      ? 'global_cap'
+      : ipCapExceeded
+        ? 'daily_ip_cap'
+        : 'keyword';
+
+  if (reply) {
+    return NextResponse.json(
+      { reply, source },
+      {
+        headers: {
+          'X-RateLimit-Remaining': String(rl.remaining),
+          'X-RateLimit-Reset': String(Math.ceil(rl.resetIn / 1000)),
+        },
+      }
+    );
+  }
+
+  // Auto-detect potential bugs (fire-and-forget)
+  detectBug(message, history).catch(() => {});
+
+  // ── No match — suggest email support ─────────────────────────
+  return NextResponse.json(
+    {
+      reply: "I'm not sure about that — please email support@selah.fm and our team will get back to you, usually within a few hours.",
+      source: 'fallback',
+    },
+    {
+      headers: {
+        'X-RateLimit-Remaining': String(rl.remaining),
+        'X-RateLimit-Reset': String(Math.ceil(rl.resetIn / 1000)),
+      },
+    }
+  );
 }
 
 // ── Keyword fallback ──────────────────────────────────────────
@@ -145,7 +268,6 @@ function keywordMatch(msg: string): string | null {
 async function detectBug(message: string, history: any[]) {
   const msg = message.toLowerCase();
 
-  // Bug-like patterns
   const bugPatterns = [
     /\b(not working|doesn'?t work|isn'?t working|broken|broke)\b/,
     /\b(error|bug|glitch|crash|freeze|stuck|hang)\b/,
@@ -160,14 +282,12 @@ async function detectBug(message: string, history: any[]) {
   const isBugLike = bugPatterns.some(p => p.test(msg));
   if (!isBugLike) return;
 
-  // Don't log if it's a known FAQ
   const knownTopics = /(?:how (?:do|can|to)|what is|where (?:is|can)|when (?:can|will))/i;
   if (knownTopics.test(msg)) return;
 
   try {
     const { default: sql } = await import('@/lib/db');
     const historyText = Array.isArray(history) ? history.join('\n') : '';
-
     await sql`
       INSERT INTO bugs (description, steps_to_reproduce, severity, status)
       VALUES (

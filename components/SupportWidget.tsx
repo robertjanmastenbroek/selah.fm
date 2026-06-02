@@ -21,6 +21,7 @@ export default function SupportWidget() {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [emailForwarded, setEmailForwarded] = useState(false);
+  const [rateLimited, setRateLimited] = useState(false);
   const msgEnd = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -28,10 +29,11 @@ export default function SupportWidget() {
   useEffect(() => { if (open && !minimized) setTimeout(() => inputRef.current?.focus(), 200); }, [open, minimized]);
 
   const sendMessage = async () => {
-    if (!input.trim() || sending) return;
+    if (!input.trim() || sending || rateLimited) return;
     const userMsg = input.trim();
     setInput('');
     setSending(true);
+    setRateLimited(false);
 
     // Add user message
     const userMessage: Message = { id: `u-${Date.now()}`, role: 'user', content: userMsg, timestamp: new Date() };
@@ -46,6 +48,21 @@ export default function SupportWidget() {
           history: messages.slice(-6).map(m => `${m.role}: ${m.content}`),
         }),
       });
+
+      // Handle rate limiting (429)
+      if (res.status === 429) {
+        const retryAfter = parseInt(res.headers.get('Retry-After') || '15', 10);
+        setRateLimited(true);
+        setMessages(prev => [...prev, {
+          id: `b-${Date.now()}`,
+          role: 'bot',
+          content: `⏳ You're sending messages too quickly. Please wait about ${retryAfter} seconds before sending another.`,
+          timestamp: new Date(),
+        }]);
+        setTimeout(() => setRateLimited(false), retryAfter * 1000);
+        setSending(false);
+        return;
+      }
 
       const data = await res.json();
       if (data.reply) {
@@ -188,23 +205,31 @@ export default function SupportWidget() {
             </div>
 
             {/* Input */}
-            <div className="shrink-0 p-3 border-t border-white/[0.06] flex items-center gap-2">
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                placeholder="Ask anything..."
-                disabled={sending}
-                className="flex-1 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors disabled:opacity-50"
-              />
-              <button
-                onClick={sendMessage}
-                disabled={!input.trim() || sending}
-                className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground disabled:opacity-40 transition-opacity hover:opacity-90 active:scale-95"
-              >
-                <Send size={15} />
-              </button>
+            <div className="shrink-0 p-3 border-t border-white/[0.06] space-y-1.5">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                  placeholder="Ask anything..."
+                  disabled={sending || rateLimited}
+                  maxLength={500}
+                  className="flex-1 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors disabled:opacity-50"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!input.trim() || sending || rateLimited}
+                  className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground disabled:opacity-40 transition-opacity hover:opacity-90 active:scale-95"
+                >
+                  <Send size={15} />
+                </button>
+              </div>
+              {input.length > 300 && (
+                <p className={`text-[10px] text-right ${input.length >= 500 ? 'text-destructive' : 'text-muted-foreground/40'}`}>
+                  {input.length}/500
+                </p>
+              )}
             </div>
           </motion.div>
         )}
