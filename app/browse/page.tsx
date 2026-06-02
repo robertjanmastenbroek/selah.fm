@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import BrowseClient from './BrowseClient';
 import type { Metadata } from 'next';
 
@@ -23,18 +24,26 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-async function getCampaigns() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://selah.fm';
-    const res = await fetch(`${baseUrl}/api/campaigns?limit=100&sort=popular`);
-    if (!res.ok) return { campaigns: [], total: 0 };
-    return res.json();
-  } catch {
-    return { campaigns: [], total: 0 };
-  }
-}
-
-export default async function BrowsePage() {
-  const data = await getCampaigns();
-  return <BrowseClient initialCampaigns={data.campaigns || []} initialTotal={data.total || 0} />;
+export default function BrowsePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen" style={{ background: '#0F0F23' }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+          <div className="grid gap-4 sm:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] animate-pulse">
+                <div className="h-40 w-full rounded-t-2xl bg-white/[0.03]" />
+                <div className="p-4 space-y-3">
+                  <div className="h-4 w-2/3 bg-white/[0.03] rounded" />
+                  <div className="h-3 w-1/3 bg-white/[0.03] rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <BrowseClient />
+    </Suspense>
+  );
 }

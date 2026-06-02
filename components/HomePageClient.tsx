@@ -155,12 +155,12 @@ export default function RootPage() {
 
           {/* CTAs */}
           <motion.div className="flex flex-col sm:flex-row items-center justify-center gap-3" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-            <Link href="/welcome-artists" className="w-full sm:w-auto group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl font-semibold text-base text-white transition-all duration-300 active:scale-[0.97] hover:shadow-[0_0_48px_rgba(67,56,202,0.35)] hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, #4338CA 0%, #6366F1 100%)' }}>
+            <Link href="/welcome-artists" onClick={() => { fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'cta_click', path: window.location.pathname, metadata: { cta: 'promote_artist' } }) }).catch(()=>{}); }} className="w-full sm:w-auto group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl font-semibold text-base text-white transition-all duration-300 active:scale-[0.97] hover:shadow-[0_0_48px_rgba(67,56,202,0.35)] hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg, #4338CA 0%, #6366F1 100%)' }}>
               <Music4 size={20} />
               Promote your music
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link href="/welcome-creators" className="w-full sm:w-auto group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl font-semibold text-base transition-all duration-300 active:scale-[0.97] border border-[#22C55E]/25 hover:bg-[#22C55E]/8 hover:border-[#22C55E]/40 hover:-translate-y-0.5" style={{ color: '#22C55E' }}>
+            <Link href="/welcome-creators" onClick={() => { fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'cta_click', path: window.location.pathname, metadata: { cta: 'earn_creator' } }) }).catch(()=>{}); }} className="w-full sm:w-auto group inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl font-semibold text-base transition-all duration-300 active:scale-[0.97] border border-[#22C55E]/25 hover:bg-[#22C55E]/8 hover:border-[#22C55E]/40 hover:-translate-y-0.5" style={{ color: '#22C55E' }}>
               <Clapperboard size={20} />
               Earn as a creator
               <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />

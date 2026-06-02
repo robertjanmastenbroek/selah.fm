@@ -297,7 +297,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
             )}
 
             {/* CTA — single dominant creator action */}
-            <button onClick={() => setJoinOpen(true)}
+            <button onClick={() => { fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'campaign_join_click', path: window.location.pathname, metadata: { campaign_id: id } }) }).catch(()=>{}); setJoinOpen(true); }}
               className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#6366F1] text-white
                 active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)]">
               Join campaign — earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
@@ -501,7 +501,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                   <span className="text-[8px] font-medium text-muted-foreground">Share</span>
                 </button>
               </div>
-              <button onClick={() => setJoinOpen(true)} className="w-full py-3.5 text-sm font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#6366F1] text-white active:scale-[0.97]">
+              <button onClick={() => { fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'campaign_join_click', path: window.location.pathname, metadata: { campaign_id: id } }) }).catch(()=>{}); setJoinOpen(true); }} className="w-full py-3.5 text-sm font-bold rounded-xl bg-gradient-to-r from-[#4338CA] to-[#6366F1] text-white active:scale-[0.97]">
                 Join campaign — earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
               </button>
               {isUnclaimed && claimCode && (

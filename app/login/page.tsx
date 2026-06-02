@@ -40,6 +40,7 @@ function LoginForm() {
         // trackLogin('email');
         setTimeout(() => { window.location.href = redirect || '/browse'; }, 300);
       } else {
+        fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'signup_start', path: window.location.pathname, metadata: { method: 'email' } }) }).catch(()=>{});
         const { error: authError } = await supabase.auth.signUp({
           email,
           password,
@@ -54,6 +55,7 @@ function LoginForm() {
         });
         if (authError) { setError(authError.message); setLoading(false); return; }
         // trackSignUp('email');
+        fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'signup_complete', path: window.location.pathname, metadata: { method: 'email' } }) }).catch(()=>{});
         setSuccess('Account created! Check your email to verify.');
         setLoading(false);
       }

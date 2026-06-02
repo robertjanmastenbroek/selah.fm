@@ -11,9 +11,11 @@ export const maxDuration = 30; // 30 seconds timeout
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search') || '';
+    const search = searchParams.get('search') || searchParams.get('q') || '';
     const platform = searchParams.get('platform') || '';
-    const minCpm = searchParams.get('minCpm') || '';
+    const genre = searchParams.get('genre') || '';
+    const cpmMin = parseInt(searchParams.get('cpm_min') || '0');
+    const cpmMax = parseInt(searchParams.get('cpm_max') || '0');
     const offset = parseInt(searchParams.get('offset') || '0');
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const sort = searchParams.get('sort') || 'popular';
@@ -24,17 +26,71 @@ export async function GET(request: Request) {
     const session = await getSession(request);
     const isOwnerView = !!session;
 
-    let campaigns;
     // ORDER BY must be raw SQL — cannot use sql`` helper (returns object, not string)
     const pinSort = `c.is_pinned DESC NULLS LAST`;
-    
+
+    // Build sort order clause
+    function orderClause(prefix: string = '') {
+      const c = (col: string) => prefix ? `${prefix}.${col}` : `c.${col}`;
+      switch (sort) {
+        case 'newest':
+        case 'recent':
+          return `${pinSort}, ${c('created_at')} DESC`;
+        case 'highest_cpm':
+          return `${pinSort}, ${c('cpm_rate_cents')} DESC NULLS LAST`;
+        case 'most_funded':
+          return `${pinSort}, (${c('total_budget_cents')} - ${c('budget_remaining_cents')}) DESC NULLS LAST`;
+        case 'most_views':
+          return `${pinSort}, COALESCE(v.total_verified_views, '0')::int DESC NULLS LAST, ${c('created_at')} DESC`;
+        default: // popular
+          return `${pinSort},
+            (COALESCE(v.approved_submissions, '0')::int * 100 +
+             COALESCE(v.total_verified_views, '0')::float / 1000 +
+             CASE WHEN ${c('total_budget_cents')} > 0 
+               THEN (${c('total_budget_cents')} - ${c('budget_remaining_cents')})::float / ${c('total_budget_cents')} * 50 
+               ELSE 0 END +
+             COALESCE(donations.total_cents, 0)::float / 100
+            ) + RANDOM() * 200 DESC`;
+      }
+    }
+
+    // Build WHERE conditions and params array
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let p = (v: any) => { params.push(v); return params.length; };
+
     if (isOwnerView) {
-      const userId = session.id;
-      const orderClause = sort === 'popular'
-        ? `${pinSort}, COALESCE(v.total_verified_views, '0')::int DESC, c.created_at DESC`
-        : `${pinSort}, c.created_at DESC`;
-      
-      // Build query as raw SQL (ORDER BY must not be parameterized)
+      conditions.push(`c.artist_id = $${p(session.id)}`);
+    } else {
+      conditions.push(`c.status IN ('active', 'draft')`);
+    }
+
+    if (search) {
+      conditions.push(`(COALESCE(c.title, c.track_title) ILIKE '%' || $${p(search)} || '%' OR COALESCE(u.display_name, da.artist_name) ILIKE '%' || $${p(search)} || '%')`);
+    }
+
+    if (platform) {
+      conditions.push(`$${p(platform)} = ANY(c.platforms)`);
+    }
+
+    if (genre) {
+      conditions.push(`(da.genres ILIKE '%' || $${p(genre)} || '%')`);
+    }
+
+    if (cpmMin > 0) {
+      conditions.push(`c.cpm_rate_cents >= $${p(cpmMin)}`);
+    }
+
+    if (cpmMax > 0) {
+      conditions.push(`c.cpm_rate_cents <= $${p(cpmMax)}`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const limitIdx = p(limit);
+
+    let campaigns;
+
+    if (isOwnerView) {
       const query = `
         SELECT c.*,
           COALESCE(c.title, c.track_title) as title,
@@ -48,25 +104,13 @@ export async function GET(request: Request) {
         LEFT JOIN users u ON u.id = c.artist_id
         LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
         LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-        WHERE c.artist_id = $1
-        ORDER BY ${orderClause}
-        LIMIT $2
+        ${whereClause}
+        ORDER BY ${orderClause()}
+        LIMIT $${limitIdx}
       `;
-      campaigns = await sql.raw(query, [userId, limit]);
+      campaigns = await sql.raw(query, params);
     } else {
-      // Public browsing: popularity-weighted with random jitter (different order each refresh)
-      // Pinned campaigns always first. Popularity = submissions*100 + views/1000 + budget_spent_pct*50 + donations/100
-      const orderClause2 = sort === 'recent'
-        ? `${pinSort}, c.created_at DESC`
-        : `${pinSort},
-          (COALESCE(v.approved_submissions, '0')::int * 100 +
-           COALESCE(v.total_verified_views, '0')::float / 1000 +
-           CASE WHEN c.total_budget_cents > 0 
-             THEN (c.total_budget_cents - c.budget_remaining_cents)::float / c.total_budget_cents * 50 
-             ELSE 0 END +
-           COALESCE(donations.total_cents, 0)::float / 100
-          ) + RANDOM() * 200 DESC`;
-      
+      // Public browsing
       const query = `
         SELECT c.*,
           COALESCE(c.title, c.track_title) as title,
@@ -86,47 +130,26 @@ export async function GET(request: Request) {
           SELECT campaign_id, COALESCE(SUM(amount_cents), 0) as total_cents, COUNT(*) as donation_count
           FROM campaign_donations GROUP BY campaign_id
         ) donations ON donations.campaign_id = c.id
-        WHERE c.status IN ('active', 'draft')
-        ORDER BY ${orderClause2}
-        LIMIT $1
+        ${whereClause}
+        ORDER BY ${orderClause()}
+        LIMIT $${limitIdx}
       `;
-      campaigns = await sql.raw(query, [limit]);
+      campaigns = await sql.raw(query, params);
     }
 
-    let filtered = campaigns;
-    
-    if (search) {
-      const q = search.toLowerCase();
-      filtered = filtered.filter((c: any) => 
-        (c.title || c.track_title)?.toLowerCase().includes(q) ||
-        (c.recommended_hashtags || '').toLowerCase().includes(q) ||
-        (c.artist_name || '').toLowerCase().includes(q)
-      );
-    }
-    
-    if (platform) {
-      filtered = filtered.filter((c: any) => 
-        Array.isArray(c.platforms) && c.platforms.includes(platform)
-      );
-    }
-    
-    if (minCpm) {
-      const min = parseFloat(minCpm) * 100;
-      filtered = filtered.filter((c: any) => c.cpm_rate_cents >= min);
-    }
-
-    // total should be accurate count of ALL matching campaigns
-    let total = filtered.length;
+    // Total count: re-run with just the WHERE (no ORDER BY/LIMIT)
+    let total = campaigns.length;
     try {
+      const countParams = params.slice(0, -1); // remove limit param
+      const countWhere = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
       const countQuery = isOwnerView
-        ? `SELECT COUNT(*)::int FROM campaigns WHERE artist_id = $1`
-        : `SELECT COUNT(*)::int FROM campaigns WHERE status IN ('active', 'draft')`;
-      const countResult = isOwnerView
-        ? await sql.raw(countQuery, [session.id])
-        : await sql.raw(countQuery, []);
+        ? `SELECT COUNT(*)::int FROM campaigns c LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id LEFT JOIN users u ON u.id = c.artist_id ${countWhere}`
+        : `SELECT COUNT(*)::int FROM campaigns c LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id LEFT JOIN users u ON u.id = c.artist_id ${countWhere}`;
+      const countResult = await sql.raw(countQuery, countParams);
       total = countResult[0]?.count || total;
     } catch {}
-    const page = filtered.slice(offset, offset + limit);
+
+    const page = campaigns.slice(offset, offset + limit);
 
     return NextResponse.json({
       campaigns: page,

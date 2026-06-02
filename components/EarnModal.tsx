@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
   const [url, setUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const startTracked = useRef(false);
   const { addToast } = useToast();
   const router = useRouter();
 
@@ -51,7 +52,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
   }, [open]);
 
   useEffect(() => {
-    if (open) { setPlatform('tiktok'); setUrl(''); setSubmitting(false); setSubmitted(false); }
+    if (open) { setPlatform('tiktok'); setUrl(''); setSubmitting(false); setSubmitted(false); startTracked.current = false; }
   }, [open]);
 
   const cpmDollars = cpmCents / 100;
@@ -69,6 +70,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
       });
       const data = await res.json();
       if (res.ok) {
+        fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'video_submit_complete', path: window.location.pathname, metadata: { campaign_id: campaignId, platform } }) }).catch(()=>{});
         trackSubmitContent(platform);
         setSubmitted(true);
         addToast('Submitted! The artist will review your video.', 'success');
@@ -231,7 +233,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     {/* URL input */}
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Paste your video link</label>
-                      <Input value={url} onChange={e => setUrl(e.target.value)}
+                      <Input value={url} onChange={e => { setUrl(e.target.value); if (!startTracked.current && e.target.value.includes('https://')) { startTracked.current = true; fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'video_submit_start', path: window.location.pathname, metadata: { campaign_id: campaignId, platform } }) }).catch(()=>{}); } }}
                         placeholder={`https://www.${platform === 'facebook' ? 'facebook' : platform}.com/...`}
                         className="text-sm py-5 rounded-xl" autoFocus />
                     </div>

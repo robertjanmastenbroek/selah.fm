@@ -1,32 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
-import CampaignSearch from '@/components/CampaignSearch';
 import CampaignCover from '@/components/CampaignCover';
 import OnboardingBanner from '@/components/OnboardingBanner';
-import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/States';
-import { Megaphone, Search } from 'lucide-react';
-import { PlatformBadge } from '@/components/SocialIcons';
+import { Megaphone, Search, X, SlidersHorizontal, Music4, TrendingUp } from 'lucide-react';
+import { PlatformBadge, platformColors } from '@/components/SocialIcons';
 
 interface Campaign { id: string; slug?: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; artist_name?: string; artist_avatar?: string; }
 
-function buildQuery(filters: Record<string, any>) {
-  const params = new URLSearchParams();
-  if (filters.search) params.set('search', filters.search);
-  if (filters.platform) params.set('platform', filters.platform);
-  if (filters.minCpm) params.set('minCpm', String(filters.minCpm));
-  if (filters.offset) params.set('offset', String(filters.offset || 0));
-  params.set('sort', filters.sort || 'popular'); // default: popularity-weighted random
-  const qs = params.toString();
-  return qs ? `?${qs}` : '';
+const GENRES = ['pop', 'rock', 'hip-hop', 'electronic', 'r&b', 'country', 'latin', 'jazz', 'classical', 'indie', 'folk', 'metal', 'punk', 'reggae', 'blues', 'soul', 'funk', 'world', 'alternative', 'dance'];
+
+const PLATFORMS = ['tiktok', 'instagram', 'youtube'];
+
+const SORT_OPTIONS: { value: string; label: string }[] = [
+  { value: 'popular', label: 'Popular' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'highest_cpm', label: 'Highest CPM' },
+  { value: 'most_funded', label: 'Most Funded' },
+  { value: 'most_views', label: 'Most Views' },
+];
+
+function buildQuery(filters: Record<string, string>) {
+  const p = new URLSearchParams();
+  if (filters.q) p.set('q', filters.q);
+  if (filters.genre) p.set('genre', filters.genre);
+  if (filters.platform) p.set('platform', filters.platform);
+  if (filters.cpm_min) p.set('cpm_min', filters.cpm_min);
+  if (filters.cpm_max) p.set('cpm_max', filters.cpm_max);
+  p.set('sort', filters.sort || 'popular');
+  p.set('limit', '100');
+  const qs = p.toString();
+  return qs ? `?${qs}` : '?limit=100&sort=popular';
 }
 
 // ── Circle Progress ──────────────────────────────────────────
@@ -53,12 +65,18 @@ function CircleProgress({ pct, size = 36 }: { pct: number; size?: number }) {
   );
 }
 
-export default function BrowseClient({ initialCampaigns, initialTotal }: { initialCampaigns: Campaign[]; initialTotal: number }) {
+export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }: { initialCampaigns?: Campaign[]; initialTotal?: number }) {
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
   const [total, setTotal] = useState(initialTotal);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<Record<string, any>>({});
-  const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Load on mount if no initial data
+  useEffect(() => {
+    if (initialCampaigns.length === 0) loadCampaigns({});
+    else setLoading(false);
+  }, []);
 
   const loadCampaigns = async (f: Record<string, any> = filters) => {
     setLoading(true);
@@ -96,7 +114,20 @@ export default function BrowseClient({ initialCampaigns, initialTotal }: { initi
               style={{ background: 'linear-gradient(135deg, #4338CA, #4338CA)' }}>
               <Megaphone size={16} /> Create campaign
             </Link>
-            <CampaignSearch onFilter={handleFilter} />
+            <div className="flex items-center gap-2">
+              <input
+                ref={searchInputRef}
+                placeholder="Search campaigns..."
+                className="rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none w-48"
+                onKeyDown={e => { if (e.key === 'Enter') handleFilter({ ...filters, q: (e.target as HTMLInputElement).value }); }}
+              />
+              <button
+                onClick={() => handleFilter({ ...filters, q: searchInputRef.current?.value || '' })}
+                className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.06] text-muted-foreground transition-colors"
+              >
+                <Search size={16} />
+              </button>
+            </div>
           </div>
         </div>
 
