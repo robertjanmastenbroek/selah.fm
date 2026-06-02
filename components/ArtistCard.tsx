@@ -52,11 +52,33 @@ export default function ArtistCard({ artist }: Props) {
             {artist.artist_name}
           </h3>
 
-          {genre && (
-            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
-              {genre}
-            </p>
-          )}
+          {/* Genre tag with dynamic color */}
+          {genre && (() => {
+            const colors: Record<string, string> = {
+              electronic: 'from-blue-500/20 to-cyan-500/10 border-blue-500/20 text-blue-300',
+              'hip-hop': 'from-amber-500/20 to-orange-500/10 border-amber-500/20 text-amber-300',
+              pop: 'from-pink-500/20 to-rose-500/10 border-pink-500/20 text-pink-300',
+              rock: 'from-red-500/20 to-orange-500/10 border-red-500/20 text-red-300',
+              indie: 'from-violet-500/20 to-purple-500/10 border-violet-500/20 text-violet-300',
+              'r&b': 'from-emerald-500/20 to-teal-500/10 border-emerald-500/20 text-emerald-300',
+              jazz: 'from-yellow-500/20 to-amber-500/10 border-yellow-500/20 text-yellow-300',
+              metal: 'from-gray-500/20 to-zinc-500/10 border-gray-500/20 text-gray-300',
+              folk: 'from-stone-500/20 to-amber-500/10 border-stone-500/20 text-stone-300',
+              country: 'from-brown-500/20 to-yellow-500/10 border-amber-500/20 text-amber-300',
+              ambient: 'from-sky-500/20 to-indigo-500/10 border-sky-500/20 text-sky-300',
+              punk: 'from-fuchsia-500/20 to-pink-500/10 border-fuchsia-500/20 text-fuchsia-300',
+              alternative: 'from-teal-500/20 to-cyan-500/10 border-teal-500/20 text-teal-300',
+              experimental: 'from-rose-500/20 to-pink-500/10 border-rose-500/20 text-rose-300',
+              latin: 'from-red-500/20 to-yellow-500/10 border-red-500/20 text-red-300',
+            };
+            const g = genre.toLowerCase();
+            const colorClass = Object.entries(colors).find(([k]) => g.includes(k))?.[1] || 'from-primary/20 to-primary/5 border-primary/20 text-primary';
+            return (
+              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-gradient-to-r ${colorClass} border`}>
+                {genre}
+              </span>
+            );
+          })()}
 
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
