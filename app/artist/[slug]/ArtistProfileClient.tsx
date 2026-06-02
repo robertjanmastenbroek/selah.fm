@@ -39,8 +39,19 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
     return [String(raw)];
   })();
   const listeners = artist.monthly_listeners || 0;
-  const imageUrl = artist.spotify_image_url || '';
+  const rawImage = artist.spotify_image_url || '';
+  const isRealImage = rawImage && (rawImage.includes('scdn.co/image/ab676161') || rawImage.includes('deezer'));
+  const imageUrl = isRealImage ? rawImage : '';
   const bio = artist.bio || '';
+
+  // Unique gradient per artist
+  const nameHash = (() => { let h = 0; const n = name; for (let i = 0; i < n.length; i++) h = n.charCodeAt(i) + ((h << 5) - h); return Math.abs(h); })();
+  const hues = [[250,200],[200,160],[160,120],[50,30],[340,320],[220,180],[30,10]];
+  const [h1, h2] = hues[nameHash % hues.length];
+  const s = 30 + (nameHash % 40);
+  const l = 25 + (nameHash % 20);
+  const gradient = `linear-gradient(135deg, hsl(${h1}, ${s}%, ${l}%), hsl(${h2}, ${s + 20}%, ${l + 10}%))`;
+  const initial = name[0]?.toUpperCase() || '?';
   const totalDonations = stats.total_donations_cents || 0;
   const supporterCount = stats.supporter_count || 0;
   const [showSubmitModal, setShowSubmitModal] = useState(false);
@@ -57,8 +68,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
               {imageUrl ? (
                 <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-emerald-500/5">
-                  <span className="text-5xl font-bold text-white/10">{name[0]?.toUpperCase()}</span>
+                <div className="w-full h-full flex items-center justify-center" style={{ background: gradient }}>
+                  <span className="text-5xl font-bold text-white/20 select-none">{initial}</span>
                 </div>
               )}
             </div>

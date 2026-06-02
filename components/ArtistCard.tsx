@@ -36,10 +36,30 @@ export default function ArtistCard({ artist }: Props) {
     return [String(raw)];
   })();
   const genre = genres[0] || '';
-  const imageUrl = artist.spotify_image_url || '';
+  const rawImage = artist.spotify_image_url || '';
+  // Only use real profile images (Spotify/i.scdn.co) — not track covers
+  const isRealImage = rawImage && (rawImage.includes('scdn.co/image/ab676161') || rawImage.includes('deezer'));
+  const imageUrl = isRealImage ? rawImage : '';
   const slug = artist.slug || '';
   const trackCount = artist.track_count || 0;
   const listeners = artist.monthly_listeners || 0;
+
+  // Generate unique gradient from name
+  const nameHash = (() => {
+    let h = 0;
+    const n = artist.artist_name || '';
+    for (let i = 0; i < n.length; i++) h = n.charCodeAt(i) + ((h << 5) - h);
+    return Math.abs(h);
+  })();
+  const hues = [
+    [250, 200], [200, 160], [160, 120], [50, 30],
+    [340, 320], [220, 180], [30, 10],
+  ];
+  const [h1, h2] = hues[nameHash % hues.length];
+  const s = 30 + (nameHash % 40);
+  const l = 25 + (nameHash % 20);
+  const gradient = `linear-gradient(135deg, hsl(${h1}, ${s}%, ${l}%), hsl(${h2}, ${s + 20}%, ${l + 10}%))`;
+  const initial = (artist.artist_name || '?')[0]?.toUpperCase() || '?';
 
   return (
     <Link href={`/artist/${slug}`}>
@@ -53,9 +73,9 @@ export default function ArtistCard({ artist }: Props) {
             <img src={imageUrl} alt={artist.artist_name} loading="lazy"
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-emerald-500/5">
-              <span className="text-3xl font-bold text-white/10">
-                {artist.artist_name[0]?.toUpperCase()}
+            <div className="w-full h-full flex items-center justify-center" style={{ background: gradient }}>
+              <span className="text-4xl font-bold text-white/20 select-none">
+                {initial}
               </span>
             </div>
           )}
