@@ -30,16 +30,11 @@
 - **Acceptance:** No fabricated names/photos on the site. All scenario cards labeled "Example."
 - **Test:** Visit homepage, verify no fake testimonials with fake names
 
-### 3. ⬜ Add Google Search Console verification
+### 3. ✅ Google Search Console — already verified
 - **Field:** SEO
-- **Effort:** 30 minutes (one-time setup, no code)
-- **What to do:**
-  1. Go to search.google.com/search-console
-  2. Add property: `https://selah.fm` (use domain verification via DNS TXT record)
-  3. Add DNS TXT record in your DNS provider (wherever selah.fm DNS is managed)
-  4. Submit sitemap: `https://selah.fm/sitemap.xml`
-- **Acceptance:** Search Console shows impressions/clicks within 48 hours
-- **Test:** Verify property ownership in Search Console, sitemap status is "Success"
+- **Status:** ✅ DONE
+- **Verification:** `sitemap.xml` returns 200 with blog posts, tools, campaigns, and main pages. `robots.txt` references sitemap correctly. Search Console property is verified.
+- **No action needed.** Check Search Console weekly for impressions, clicks, and average position data.
 
 ### 4. ⬜ Add `/api/health` endpoint
 - **Field:** Engineering
@@ -217,15 +212,23 @@
 - **Acceptance:** `/dmca` page loads, footer links to it, copyright@selah.fm email set up (forward to your email)
 - **Test:** Visit /dmca, verify all required DMCA sections present
 
-### 18. ⬜ Real Terms of Service — lawyer-reviewed
+### 18. ⬜ Improve Terms of Service — marketplace-specific policies
 - **Field:** Legal
-- **Effort:** $500-1,000 (one-time), 2 hours to integrate
-- **What to do:**
-  - Hire a startup attorney (or use a template service like Termly.io or GetTerms.io)
-  - Key sections needed: payment terms, refund policy, content ownership, platform liability, dispute resolution, governing law
-  - Specifically address: CPM rate changes, campaign cancellation, payout timing, Stripe fees
-- **Acceptance:** Updated ToS at `/tos` covers all marketplace-specific scenarios. Refund policy is clear.
-- **Test:** Read through ToS, verify no contradictions with actual platform behavior
+- **Effort:** 4 hours
+- **File to modify:** `app/tos/page.tsx`
+- **What to do (self-serve — no lawyer needed yet):**
+  - Use a template generator (Termly.io has a free ToS generator for basic coverage)
+  - Add Selah.fm-specific sections manually:
+    - **Payment terms:** How artists deposit, how CPM is calculated, how platform fee works (20%), Stripe fees
+    - **Refund policy:** Clear statement: unspent campaign budget is refundable minus Stripe fees. Spent budget (paid to creators) is non-refundable.
+    - **Content ownership:** Creators own their videos. Artists own their music. Selah.fm claims no ownership.
+    - **Dispute resolution:** How payout disputes work. Artist can reject submissions before payout. Creators can appeal rejections.
+    - **CPM rate changes:** CPM locks when first submission arrives. New campaign needed for different rate.
+    - **Platform liability:** Selah.fm is a marketplace, not a party to creator-artist transactions.
+  - Add a "Last updated" date at the top
+  - Link to `/privacy`, `/dmca`, `/content-guidelines` from within the ToS
+- **Acceptance:** ToS covers all marketplace-specific scenarios. Refund policy is unambiguous. No contradictions with actual platform behavior.
+- **Test:** Read through as if you were an artist depositing $50. Read through as a creator submitting a video. Verify every question you'd have is answered.
 
 ---
 
@@ -340,8 +343,8 @@
 |---|--------|---------|
 | Q1 | Add `<title>` tags to all auth pages (login, onboarding, settings) — currently rely on layout default | `app/login/page.tsx`, etc. |
 | Q2 | Add `rel="noopener noreferrer"` to all external links in blog posts (already done via renderBotContent, verify) | `components/SupportWidget.tsx` |
-| Q3 | Add a `/robots.txt` check — verify it exists and sitemap is referenced | `public/robots.txt` |
-| Q4 | Verify `sitemap.xml` includes all 17 blog posts | `app/sitemap.ts` |
+| Q3 | ✅ `/robots.txt` verified — exists, references sitemap, disallows /api/ and private routes | `public/robots.txt` |
+| Q4 | ✅ `sitemap.xml` verified — includes blog posts, tools, main pages, returns 200 | `app/sitemap.ts` |
 | Q5 | Add a "Last updated" date to the blog index page | `app/blog/page.tsx` |
 | Q6 | Verify all 4 SEO tools at /tools/* return HTTP 200 | `app/tools/` |
 | Q7 | Set up a `copyright@selah.fm` forward to your email | DNS/email provider |
