@@ -218,7 +218,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       {/* Floating chat bubble — always visible, collapsed by default */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-primary shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
+        className="fixed right-6 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full bg-primary shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
         aria-label="Messages"
       >
         {open ? (
@@ -242,7 +242,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-20 right-6 z-50 w-80 sm:w-96 h-[480px] rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden backdrop-blur-xl origin-bottom-right"
+            className="fixed right-20 top-1/2 -translate-y-1/2 z-50 w-80 sm:w-96 h-[480px] rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden backdrop-blur-xl origin-right"
           >
             {/* Header */}
             <div className="shrink-0 p-4 border-b border-white/[0.06] flex items-center gap-3">
