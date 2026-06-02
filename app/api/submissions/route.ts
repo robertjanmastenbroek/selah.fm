@@ -10,7 +10,34 @@ export async function POST(request: Request) {
   if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
 
   try {
-    const { campaignId, contentUrl, platform } = await request.json();
+    const body = await request.json();
+    let { campaignId, trackId, contentUrl, platform } = body;
+
+    // If trackId is provided instead of campaignId, resolve to the artist's campaign
+    if (!campaignId && trackId) {
+      const [trackInfo] = await sql`
+        SELECT cc.campaign_id FROM artist_tracks at
+        JOIN campaign_claims cc ON cc.discovered_artist_id = at.artist_id
+        WHERE at.id = ${trackId} AND at.enabled = true
+        ORDER BY cc.created_at ASC LIMIT 1
+      `;
+      if (!trackInfo) {
+        // Fallback: find any campaign for this artist
+        const [fallbackCampaign] = await sql`
+          SELECT c.id FROM artist_tracks at
+          JOIN campaign_claims cc ON cc.discovered_artist_id = at.artist_id
+          JOIN campaigns c ON c.id = cc.campaign_id AND c.status = 'active'
+          WHERE at.id = ${trackId}
+          ORDER BY c.created_at ASC LIMIT 1
+        `;
+        if (!fallbackCampaign) {
+          return NextResponse.json({ error: 'No active campaign found for this track' }, { status: 400 });
+        }
+        campaignId = fallbackCampaign.id;
+      } else {
+        campaignId = trackInfo.campaign_id;
+      }
+    }
     
     const session = await getSession(request);
     if (!session) {

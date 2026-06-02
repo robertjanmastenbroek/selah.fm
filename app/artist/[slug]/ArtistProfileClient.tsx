@@ -187,11 +187,12 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                             {track.total_views > 0 && ` · ${track.total_views >= 1000 ? (track.total_views / 1000).toFixed(1) + 'K' : track.total_views} views`}
                           </p>
                         </div>
-                        {/* Action */}
-                        <Link href={`/c/${track.campaign_slug || track.id}`}
-                          className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all shrink-0">
-                          Submit video
-                        </Link>
+                        {/* Action — submit a video for this track */}
+                        <a href={`/c/${track.campaign_slug || track.track_url ? encodeURIComponent(track.track_url) : '#'}`}
+                          className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all shrink-0 inline-block text-center"
+                          title={track.campaign_slug ? `Submit video for ${track.track_title}` : 'Contact artist to submit'}>
+                          {track.campaign_slug ? 'Submit video' : 'Make content'}
+                        </a>
                       </div>
                     );
                   })}

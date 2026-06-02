@@ -60,12 +60,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch {}
 
-  // Artist profile pages (from discovered_artists — all 2,158 artists)
+  // Artist profile pages (artists with at least one track)
   let artistPages: MetadataRoute.Sitemap = [];
   try {
     const artists = await sql`
       SELECT ap.slug FROM artist_profiles ap
       JOIN discovered_artists da ON da.id = ap.artist_id
+      WHERE EXISTS (SELECT 1 FROM artist_tracks at WHERE at.artist_id = da.id AND at.enabled = true)
       ORDER BY da.monthly_listeners DESC NULLS LAST
       LIMIT 2000
     `;

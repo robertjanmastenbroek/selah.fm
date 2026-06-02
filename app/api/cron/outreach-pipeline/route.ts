@@ -54,13 +54,39 @@ export async function GET(request: Request) {
       if (!a.artist_name || a.artist_name.length < 2) continue;
       if (!a.latest_track_name || a.latest_track_name.length < 2) continue;
 
-      // Use spotify_id if available, otherwise check by artist_name
+      // Check if artist already exists — add track instead of skipping
+      let existingArtist: any = null;
       if (a.spotify_id) {
-        const existing = await sql`SELECT id FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;
-        if (existing.length > 0) continue;
-      } else {
-        const existing = await sql`SELECT id FROM discovered_artists WHERE artist_name = ${a.artist_name}`;
-        if (existing.length > 0) continue;
+        [existingArtist] = await sql`SELECT id, artist_name FROM discovered_artists WHERE spotify_id = ${a.spotify_id}`;
+      }
+      if (!existingArtist) {
+        [existingArtist] = await sql`SELECT id, artist_name FROM discovered_artists WHERE artist_name ILIKE ${a.artist_name} LIMIT 1`;
+      }
+
+      if (existingArtist) {
+        // Artist exists — add this track as a new artist_tracks entry
+        log.push(`  → Adding track "${a.latest_track_name}" to existing artist ${existingArtist.artist_name}`);
+        try {
+          const [existingTrack] = await sql`
+            SELECT id FROM artist_tracks 
+            WHERE artist_id = ${existingArtist.id} AND (title ILIKE ${a.latest_track_name} OR spotify_url = ${a.latest_track_spotify_url || ''})
+            LIMIT 1
+          `;
+          if (!existingTrack) {
+            await sql`
+              INSERT INTO artist_tracks (artist_id, title, spotify_url, cover_art_url, cpm_rate_cents, sort_order)
+              VALUES (${existingArtist.id}, ${a.latest_track_name}, ${a.latest_track_spotify_url || null},
+                      ${a.latest_track_cover_url || null}, 10, 
+                      (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM artist_tracks WHERE artist_id = ${existingArtist.id}))
+            `;
+            log.push(`    ✅ Track added: "${a.latest_track_name}"`);
+          } else {
+            log.push(`    ⏭️ Track already exists: "${a.latest_track_name}"`);
+          }
+        } catch (e: any) {
+          log.push(`    ❌ Failed to add track: ${e.message}`);
+        }
+        continue;
       }
 
       await sql`
@@ -190,11 +216,32 @@ export async function GET(request: Request) {
             return { artist, error: false, skipped: true, msg: 'no email' };
           }
 
-          // Prevent duplicate campaigns
+          // Check if artist already has campaigns — if so, add as new track instead
           const [existingClaim] = await sql`SELECT id FROM campaign_claims WHERE discovered_artist_id = ${artist.id} LIMIT 1`;
           if (existingClaim) {
-            log.push(`  ⚠️  Campaign already exists for ${artist.artist_name} — skipping`);
-            return { artist, error: false, skipped: true, msg: 'duplicate' };
+            // Artist already has a campaign — add this as a new track to their catalog
+            log.push(`  → Adding new track "${artist.latest_track_name}" to existing artist ${artist.artist_name}`);
+            
+            // Check if this track already exists
+            const [existingTrack] = await sql`
+              SELECT id FROM artist_tracks 
+              WHERE artist_id = ${artist.id} AND (title ILIKE ${artist.latest_track_name || ''} OR spotify_url = ${artist.latest_track_spotify_url || ''})
+              LIMIT 1
+            `;
+            
+            if (!existingTrack && artist.latest_track_name) {
+              await sql`
+                INSERT INTO artist_tracks (artist_id, title, spotify_url, cover_art_url, cpm_rate_cents, sort_order)
+                VALUES (${artist.id}, ${artist.latest_track_name}, ${artist.latest_track_spotify_url || null},
+                        ${artist.latest_track_cover_url || null}, ${artist.recommended_cpm_cents || 10},
+                        (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM artist_tracks WHERE artist_id = ${artist.id}))
+              `;
+              log.push(`    ✅ Track added: "${artist.latest_track_name}"`);
+            } else {
+              log.push(`    ⏭️ Track already exists or has no name`);
+            }
+            
+            return { artist, error: false, skipped: true, msg: 'track_added' };
           }
 
           log.push(`Creating campaign: ${artist.artist_name}`);
