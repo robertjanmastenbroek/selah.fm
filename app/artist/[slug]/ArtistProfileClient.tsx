@@ -95,8 +95,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
 
         {/* ── Primary CTAs ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
-          {/* Donate CTA */}
-          <a href={tracks[0] ? `/checkout?type=donation&campaignId=${tracks[0].id}` : '#'}
+          {/* Donate CTA — links to artist-level checkout */}
+          <Link href={`/checkout?type=donation&artistSlug=${slug}`}
             className="group rounded-2xl bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/15 p-6 hover:border-red-500/30 transition-all text-center">
             <Heart size={28} className="mx-auto mb-3 text-red-400" />
             <p className="text-lg font-bold mb-1">Support {name}</p>
@@ -107,15 +107,16 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 ${(totalDonations / 100).toFixed(0)} raised from {supporterCount} supporters
               </p>
             )}
-          </a>
+          </Link>
 
-          {/* Make Video CTA */}
-          <div className="rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/15 p-6 hover:border-emerald-500/30 transition-all text-center">
+          {/* Make Video CTA — links to first track or browse */}
+          <Link href={tracks[0] ? `/c/${tracks[0].campaign_slug || tracks[0].id}` : '/browse'}
+            className="group rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/15 p-6 hover:border-emerald-500/30 transition-all text-center">
             <Video size={28} className="mx-auto mb-3 text-emerald-400" />
             <p className="text-lg font-bold mb-1">Make a Video</p>
             <p className="text-xs text-muted-foreground mb-4">Pick a track, create content, earn per view</p>
             <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">Start Creating →</Button>
-          </div>
+          </Link>
         </div>
 
         {/* ── Two-column layout ── */}

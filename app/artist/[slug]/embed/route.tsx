@@ -13,26 +13,25 @@ export async function GET(
 ) {
   try {
     const [artist] = await sql`
-      SELECT da.artist_name, da.genres, da.monthly_listeners,
+      SELECT da.artist_name, da.genres, da.monthly_listeners, da.latest_track_cover_url,
              ap.slug, ap.spotify_image_url,
-             COUNT(DISTINCT c.id)::int as track_count
+             COUNT(DISTINCT at.id)::int as track_count
       FROM discovered_artists da
       JOIN artist_profiles ap ON ap.artist_id = da.id
-      LEFT JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
-      LEFT JOIN campaigns c ON c.id = cc.campaign_id AND c.status = 'active'
+      LEFT JOIN artist_tracks at ON at.artist_id = da.id AND at.enabled = true
       WHERE ap.slug = ${params.slug}
       GROUP BY da.id, ap.slug, ap.spotify_image_url
       LIMIT 1
     `;
 
     if (!artist) {
-      return new NextResponse('Artist not found', { status: 404 });
+      return new Response('Artist not found', { status: 404 });
     }
 
-    const genres = artist.genres
-      ? (Array.isArray(artist.genres) ? artist.genres.slice(0, 2) : [artist.genres])
-      : [];
-    const imageUrl = artist.spotify_image_url || '';
+    const genres = Array.isArray(artist.genres)
+      ? artist.genres.slice(0, 2)
+      : (typeof artist.genres === 'string' ? [artist.genres] : []);
+    const imageUrl = artist.spotify_image_url || artist.latest_track_cover_url || '';
     const name = artist.artist_name || '';
     const trackLabel = artist.track_count === 1 ? '1 track' : `${artist.track_count} tracks`;
     const listeners = artist.monthly_listeners
@@ -44,7 +43,7 @@ export async function GET(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Support ${name} on Selah.fm</title>
+  <title>Support ${name.replace(/"/g, '&quot;')} on Selah.fm</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -103,12 +102,12 @@ export async function GET(
 <body>
   <div class="card">
     ${imageUrl
-      ? `<img class="image" src="${imageUrl}" alt="${name}" loading="lazy">`
+      ? `<img class="image" src="${imageUrl.replace(/"/g, '&quot;')}" alt="${name.replace(/"/g, '&quot;')}" loading="lazy">`
       : `<div class="image">${name[0]?.toUpperCase() || '?'}</div>`
     }
     <div class="body">
       <div class="name">${name}</div>
-      ${genres.length > 0 ? `<div class="genre">${genres.join(' · ')}</div>` : ''}
+      ${genres.length > 0 ? `<div class="genre">${genres.join(' · ').replace(/"/g, '&quot;')}</div>` : ''}
       <div class="stats">${trackLabel}${listeners ? ' · ' + listeners : ''}</div>
       <a class="cta" href="https://selah.fm/artist/${params.slug}?utm_source=embed&utm_medium=artist_widget" target="_blank" rel="noopener">
         🎬 Make content & earn →
@@ -121,13 +120,16 @@ export async function GET(
 </body>
 </html>`;
 
-    return new NextResponse(html, {
+    return new Response(html, {
+      status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+        'X-Frame-Options': 'ALLOWALL',
+        'Access-Control-Allow-Origin': '*',
       },
     });
   } catch (e: any) {
-    return new NextResponse('Error loading artist', { status: 500 });
+    return new Response('Error loading artist', { status: 500 });
   }
 }
