@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PageTransition from '@/components/PageTransition';
+import SupportWidget from '@/components/SupportWidget';
 import { Poppins, Righteous } from "next/font/google";
 import Analytics from '@/components/Analytics';
 import { cn } from "@/lib/utils";
@@ -91,6 +92,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </footer>
         <Suspense fallback={null}>
           <Analytics />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SupportWidget />
         </Suspense>
       </body>
     </html>
