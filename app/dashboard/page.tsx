@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
 import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
 import { Plus, Edit3, ExternalLink, Copy, Check } from 'lucide-react';
+import ArtistDashboardSection from '@/components/ArtistDashboardSection';
 
 
 interface Campaign {
@@ -244,6 +245,7 @@ function DashboardContent() {
       <Header />
       <main className="page-container">
         <ActionTracker userType={profile?.type} />
+        {step === 'list' && <ArtistDashboardSection />}
         {step === 'wizard' ? (
           <>
             {hireCreatorName && wizardStep === 2 && (
