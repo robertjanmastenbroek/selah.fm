@@ -8,6 +8,7 @@ import ActivityFeed from '@/components/ActivityFeed';
 import PageComments from '@/components/PageComments';
 import ArtistEmbed from '@/components/ArtistEmbed';
 import SubmissionReactions from '@/components/SubmissionReactions';
+import SubmitVideoModal from '@/components/SubmitVideoModal';
 
 interface ArtistProps {
   artist: any;
@@ -26,6 +27,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
   const bio = artist.bio || '';
   const totalDonations = stats.total_donations_cents || 0;
   const supporterCount = stats.supporter_count || 0;
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
@@ -132,14 +134,14 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
             )}
           </Link>
 
-          {/* Make Video CTA — links to first track or browse */}
-          <Link href={tracks[0] ? `/c/${tracks[0].campaign_slug || tracks[0].id}` : '/browse'}
-            className="group rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/15 p-6 hover:border-emerald-500/30 transition-all text-center">
+          {/* Make Video CTA — opens submit modal */}
+          <button onClick={() => setShowSubmitModal(true)}
+            className="group rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/15 p-6 hover:border-emerald-500/30 transition-all text-center w-full">
             <Video size={28} className="mx-auto mb-3 text-emerald-400" />
             <p className="text-lg font-bold mb-1">Make a Video</p>
             <p className="text-xs text-muted-foreground mb-4">Pick a track, create content, earn per view</p>
             <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">Start Creating →</Button>
-          </Link>
+          </button>
         </div>
 
         {/* ── Two-column layout ── */}
@@ -282,6 +284,15 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
         </div>
 
       </main>
+
+      {/* Submit video modal */}
+      <SubmitVideoModal
+        open={showSubmitModal}
+        onClose={() => setShowSubmitModal(false)}
+        tracks={tracks}
+        artistSlug={slug}
+        artistName={name}
+      />
     </div>
   );
 }

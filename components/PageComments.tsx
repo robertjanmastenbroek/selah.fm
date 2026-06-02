@@ -106,6 +106,9 @@ function CommentItem({ comment, depth = 0, pageId }: { comment: Comment; depth?:
   const [replies, setReplies] = useState<Comment[]>([]);
   const [showReplies, setShowReplies] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reported, setReported] = useState(false);
 
   const handleLike = async () => {
     const res = await fetch(`/api/comments/${comment.id}/like`, { method: 'POST' });
@@ -173,6 +176,52 @@ function CommentItem({ comment, depth = 0, pageId }: { comment: Comment; depth?:
               {comment.reply_count} {comment.reply_count === 1 ? 'reply' : 'replies'}
             </button>
           )}
+          {/* Report button */}
+          <div className="relative">
+            <button
+              onClick={() => { setShowReport(!showReport); setReported(false); }}
+              className="flex items-center gap-1 text-xs text-muted-foreground/30 hover:text-amber-400 transition-colors"
+            >
+              ⚑
+            </button>
+            <AnimatePresence>
+              {showReport && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 4 }}
+                  className="absolute bottom-full right-0 mb-2 w-48 rounded-xl bg-[#1C1C3A] border border-white/[0.08] shadow-2xl p-3 z-50"
+                >
+                  {reported ? (
+                    <p className="text-xs text-emerald-400 text-center">Reported. Thanks.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] text-muted-foreground font-medium">Report this comment</p>
+                      {['spam', 'harassment', 'inappropriate', 'other'].map(reason => (
+                        <button key={reason}
+                          onClick={async () => {
+                            setReportReason(reason);
+                            try {
+                              await fetch('/api/comments/report', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ commentId: comment.id, reason }),
+                              });
+                            } catch {}
+                            setReported(true);
+                            setTimeout(() => setShowReport(false), 1000);
+                          }}
+                          className={`w-full text-left px-2 py-1 rounded-lg text-xs hover:bg-white/[0.04] transition-colors ${reportReason === reason ? 'text-amber-400' : 'text-muted-foreground'}`}
+                        >
+                          {reason.charAt(0).toUpperCase() + reason.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         <AnimatePresence>
