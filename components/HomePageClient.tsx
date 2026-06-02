@@ -19,7 +19,7 @@ function formatMoney(cents: number): string {
 
 export default function RootPage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [stats, setStats] = useState({ artists: 0, creators: 0, activeCampaigns: 0, totalPaidCents: 0, totalViews: 0, donors: 0, totalDonatedCents: 0, totalDepositedCents: 0 });
+  const [stats, setStats] = useState({ artists: 0, creators: 0, activeCampaigns: 0, totalPaidCents: 0, totalViews: 0, donors: 0, totalDonatedCents: 0, totalDepositedCents: 0, approvedSubmissions: 0, processingCents: 0 });
   const [featuredCampaigns, setFeaturedCampaigns] = useState<any[]>([]);
   const [totalActive, setTotalActive] = useState(0);
   const [user, setUser] = useState<{ email?: string; avatar?: string; name?: string } | null>(null);
@@ -138,10 +138,16 @@ export default function RootPage() {
                   <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Creators earning</div>
                 </div>
               )}
-              {(stats.totalDonatedCents || 0) + (stats.totalDepositedCents || 0) > 0 && (
+              {stats.totalDepositedCents > 0 && (
                 <div className="text-center">
-                  <div className="text-[32px] md:text-[40px] font-bold text-[#22C55E] tracking-tight">{formatMoney((stats.totalDonatedCents || 0) + (stats.totalDepositedCents || 0))}</div>
+                  <div className="text-[32px] md:text-[40px] font-bold text-[#22C55E] tracking-tight">{formatMoney(stats.totalDepositedCents)}</div>
                   <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Funded by artists</div>
+                </div>
+              )}
+              {stats.totalPaidCents > 0 && (
+                <div className="text-center">
+                  <div className="text-[32px] md:text-[40px] font-bold text-[#4338CA] tracking-tight">{formatMoney(stats.totalPaidCents)}</div>
+                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Paid to creators</div>
                 </div>
               )}
             </motion.div>
