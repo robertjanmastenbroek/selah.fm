@@ -78,87 +78,52 @@ export async function POST(request: Request) {
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const days = parseInt(searchParams.get('days') || '7');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  // Sanitize via parseInt — safe for direct interpolation into INTERVAL and LIMIT
+  const days = parseInt(searchParams.get('days') || '7') || 7;
+  const limit = parseInt(searchParams.get('limit') || '20') || 20;
+  const daysStr = String(Math.max(1, Math.min(365, days)));    // clamp 1-365
+  const limitStr = String(Math.max(1, Math.min(100, limit)));    // clamp 1-100
 
   try {
     // Top pages (last N days)
-    const topPages = await sql`
-      SELECT path, COUNT(*)::int as views 
-      FROM page_views 
-      WHERE created_at > NOW() - make_interval(days => ${days})
-      GROUP BY path 
-      ORDER BY views DESC 
-      LIMIT ${limit}
-    `;
+    const topPages = await sql.raw(
+      `SELECT path, COUNT(*)::int as views FROM page_views WHERE created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY path ORDER BY views DESC LIMIT ${limitStr}`
+    );
 
     // Blog posts only (top N)
-    const topBlogs = await sql`
-      SELECT path, COUNT(*)::int as views 
-      FROM page_views 
-      WHERE path LIKE '/blog/%' AND created_at > NOW() - make_interval(days => ${days})
-      GROUP BY path 
-      ORDER BY views DESC 
-      LIMIT ${limit}
-    `;
+    const topBlogs = await sql.raw(
+      `SELECT path, COUNT(*)::int as views FROM page_views WHERE path LIKE '/blog/%' AND created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY path ORDER BY views DESC LIMIT ${limitStr}`
+    );
 
     // Traffic by UTM source
-    const utmSources = await sql`
-      SELECT 
-        COALESCE(utm_source, '(direct/none)') as source,
-        COUNT(*)::int as views
-      FROM page_views 
-      WHERE created_at > NOW() - make_interval(days => ${days})
-      GROUP BY COALESCE(utm_source, '(direct/none)')
-      ORDER BY views DESC 
-      LIMIT 10
-    `;
+    const utmSources = await sql.raw(
+      `SELECT COALESCE(utm_source, '(direct/none)') as source, COUNT(*)::int as views FROM page_views WHERE created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY COALESCE(utm_source, '(direct/none)') ORDER BY views DESC LIMIT 10`
+    );
 
     // Traffic by UTM medium
-    const utmMediums = await sql`
-      SELECT 
-        COALESCE(utm_medium, '(direct/none)') as medium,
-        COUNT(*)::int as views
-      FROM page_views 
-      WHERE created_at > NOW() - make_interval(days => ${days})
-      GROUP BY COALESCE(utm_medium, '(direct/none)')
-      ORDER BY views DESC 
-      LIMIT 10
-    `;
+    const utmMediums = await sql.raw(
+      `SELECT COALESCE(utm_medium, '(direct/none)') as medium, COUNT(*)::int as views FROM page_views WHERE created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY COALESCE(utm_medium, '(direct/none)') ORDER BY views DESC LIMIT 10`
+    );
 
     // Traffic by UTM campaign
-    const utmCampaigns = await sql`
-      SELECT 
-        utm_campaign,
-        COUNT(*)::int as views
-      FROM page_views 
-      WHERE utm_campaign IS NOT NULL 
-        AND created_at > NOW() - make_interval(days => ${days})
-      GROUP BY utm_campaign
-      ORDER BY views DESC 
-      LIMIT 10
-    `;
+    const utmCampaigns = await sql.raw(
+      `SELECT utm_campaign, COUNT(*)::int as views FROM page_views WHERE utm_campaign IS NOT NULL AND created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY utm_campaign ORDER BY views DESC LIMIT 10`
+    );
 
     // Hourly breakdown (last 48 hours)
-    const hourlyRaw = await sql`
-      SELECT 
-        DATE_TRUNC('hour', created_at) as hour,
-        COUNT(*)::int as views
-      FROM page_views 
-      WHERE created_at > NOW() - make_interval(hours => 48)
-      GROUP BY hour
-      ORDER BY hour DESC
-    `;
+    const hourlyRaw = await sql.raw(
+      `SELECT DATE_TRUNC('hour', created_at) as hour, COUNT(*)::int as views FROM page_views WHERE created_at > NOW() - INTERVAL '48 hours' GROUP BY hour ORDER BY hour DESC LIMIT 48`
+    );
     const hourly = hourlyRaw.map((r: any) => ({
       ...r,
       hour: r.hour instanceof Date ? r.hour.toISOString() : r.hour,
     }));
 
     // Total views in period
-    const [{ total }] = await sql`
-      SELECT COUNT(*)::int as total FROM page_views 
-      WHERE created_at > NOW() - make_interval(days => ${days})
-    `;
+    const totalRows = await sql.raw(
+      `SELECT COUNT(*)::int as total FROM page_views WHERE created_at > NOW() - INTERVAL '${daysStr} days'`
+    );
+    const total = totalRows[0]?.total || 0;
 
     return NextResponse.json({
       total,
