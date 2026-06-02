@@ -4,34 +4,42 @@ import sql from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 /**
- * GET /api/artists/[id]/activity?limit=20&before=CURSOR
+ * GET /api/artists/[slug]/activity?limit=20&before=CURSOR
  * Returns activity events for an artist (paginated, cursor-based).
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { slug: string } }
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
-    const before = searchParams.get('before'); // cursor: ISO timestamp
+    const before = searchParams.get('before');
 
-    const { id: artistId } = params;
+    const slug = params.slug;
+
+    // Look up artist by slug
+    const [artist] = await sql`
+      SELECT da.id FROM discovered_artists da
+      JOIN artist_profiles ap ON ap.artist_id = da.id
+      WHERE ap.slug = ${slug} LIMIT 1
+    `;
+    if (!artist) {
+      return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
+    }
 
     let events;
     if (before) {
       events = await sql`
         SELECT * FROM activity_events
-        WHERE artist_id = ${artistId} AND created_at < ${before}::timestamptz
-        ORDER BY created_at DESC
-        LIMIT ${limit}
+        WHERE artist_id = ${artist.id} AND created_at < ${before}::timestamptz
+        ORDER BY created_at DESC LIMIT ${limit}
       `;
     } else {
       events = await sql`
         SELECT * FROM activity_events
-        WHERE artist_id = ${artistId}
-        ORDER BY created_at DESC
-        LIMIT ${limit}
+        WHERE artist_id = ${artist.id}
+        ORDER BY created_at DESC LIMIT ${limit}
       `;
     }
 

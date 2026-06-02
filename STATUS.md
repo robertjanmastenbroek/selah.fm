@@ -112,4 +112,11 @@
 |-------|-----|--------|
 | Owner dashboard `GET /api/campaigns` crashed with Postgres `missing FROM-clause entry for "donations"` | `orderClause()` now accepts `isOwner` flag; owner view uses `created_at DESC` default (no donations subquery in FROM) | ✅ Committed |
 
-**Next:** What do you want to build next?
+### What's next?
+- **BLUEPRINT.md written** — Full pre-execution audit, 38 files, 9 phases, every edge case mapped
+- **VISION.md** — Platform vision with social layer
+- **GROWTH_AUDIT.md** — 10 prioritized acquisition channels
+
+See `BLUEPRINT.md` (execution plan), `VISION.md` (architecture), `GROWTH_AUDIT.md` (acquisition).
+
+**Next:** Ready to start building Phase 0 (database migrations) whenever you are.

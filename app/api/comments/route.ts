@@ -12,6 +12,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const pageType = searchParams.get('pageType') || '';
     const pageId = searchParams.get('pageId') || '';
+    const parentId = searchParams.get('parentId') || ''; // for loading replies
     const sort = searchParams.get('sort') || 'newest';
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
     const offset = parseInt(searchParams.get('offset') || '0');
@@ -24,22 +25,33 @@ export async function GET(request: Request) {
       ? 'ORDER BY pc.likes_count DESC, pc.created_at DESC'
       : 'ORDER BY pc.created_at DESC';
 
-    // Fetch top-level comments (parent_id IS NULL) with reply counts
+    const parentCondition = parentId
+      ? `AND pc.parent_id = $3::uuid`
+      : 'AND pc.parent_id IS NULL';
+
+    const parentParams = parentId
+      ? [pageType, pageId, parentId, limit, offset]
+      : [pageType, pageId, limit, offset];
+
+    // Fetch comments (top-level or replies)
     const comments = await sql.raw(`
       SELECT pc.id, pc.page_type, pc.page_id, pc.parent_id, pc.user_id, pc.author_name,
              pc.content, pc.likes_count, pc.is_hidden, pc.created_at,
              (SELECT COUNT(*) FROM page_comments replies WHERE replies.parent_id = pc.id) as reply_count
       FROM page_comments pc
-      WHERE pc.page_type = $1 AND pc.page_id = $2::uuid AND pc.parent_id IS NULL AND pc.is_hidden = false
+      WHERE pc.page_type = $1 AND pc.page_id = $2::uuid AND pc.is_hidden = false ${parentCondition}
       ${orderClause}
-      LIMIT $3 OFFSET $4
-    `, [pageType, pageId, limit, offset]);
+      LIMIT $${parentParams.length - 1} OFFSET $${parentParams.length}
+    `, parentParams);
 
     // Fetch total count
+    const countCondition = parentId
+      ? `AND parent_id = $3::uuid`
+      : 'AND parent_id IS NULL';
     const [{ count: total }] = await sql.raw(`
       SELECT COUNT(*)::int FROM page_comments
-      WHERE page_type = $1 AND page_id = $2::uuid AND parent_id IS NULL AND is_hidden = false
-    `, [pageType, pageId]);
+      WHERE page_type = $1 AND page_id = $2::uuid AND is_hidden = false ${countCondition}
+    `, parentId ? [pageType, pageId, parentId] : [pageType, pageId]);
 
     return NextResponse.json({ comments, total, offset, limit });
   } catch (e: any) {
