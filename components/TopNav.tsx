@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
-import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug, Search, Menu, Bell, MessageCircle, Clapperboard, HelpCircle, Sparkles } from 'lucide-react';
+import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug, Search, Menu, Bell, MessageCircle, Clapperboard, HelpCircle, Sparkles, Mail } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 
 export default function Header() {
@@ -59,8 +59,18 @@ export default function Header() {
           <img src="/images/selah-nav-logo.png" alt="Selah.fm" className="h-7 w-auto" fetchPriority="high" width="200" height="40" />
         </Link>
 
-        {/* Right: notification bell + hamburger menu */}
+        {/* Right: messages icon + notification bell + hamburger menu */}
         <div className="flex items-center" ref={dropdownRef}>
+          {profile && (
+            <Link href="/messages" className="p-2 text-muted-foreground hover:text-primary transition-colors relative" aria-label="Messages">
+              <Mail size={20} strokeWidth={1.5} />
+              {unreadMessages > 0 && (
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1" style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)' }}>
+                  {unreadMessages > 9 ? '9+' : unreadMessages}
+                </span>
+              )}
+            </Link>
+          )}
           {profile && <NotificationBell />}
           <button
             onClick={() => setOpen(!open)}
@@ -122,7 +132,7 @@ export default function Header() {
                   {/* Navigation links */}
                   <div className="py-1">
                     <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={() => setOpen(false)} />
-                    <NavItem href="/dashboard" icon={MessageCircle} label="Messages" onClick={() => setOpen(false)} />
+                    <NavItem href="/messages" icon={MessageCircle} label="Messages" onClick={() => setOpen(false)} />
                     <NavItem href="/review" icon={ClipboardCheck} label="Review" onClick={() => setOpen(false)} />
                     <NavItem href="/earnings" icon={Banknote} label="Earnings" onClick={() => setOpen(false)} />
                     <NavItem href="/analytics" icon={LayoutDashboard} label="Analytics" onClick={() => setOpen(false)} />

@@ -75,4 +75,24 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// ── Sentry (conditional — only activates when SENTRY_AUTH_TOKEN is set) ──
+let config = nextConfig;
+
+if (process.env.SENTRY_AUTH_TOKEN) {
+  try {
+    const { withSentryConfig } = require('@sentry/nextjs');
+    config = withSentryConfig(nextConfig, {
+      silent: true,
+      org: process.env.SENTRY_ORG || '',
+      project: process.env.SENTRY_PROJECT || 'selahfm',
+      widenClientFileUpload: true,
+      hideSourceMaps: true,
+      disableLogger: true,
+    });
+    console.log('[Sentry] Source map upload enabled');
+  } catch (e) {
+    console.warn('[Sentry] @sentry/nextjs not found — skipping source map upload');
+  }
+}
+
+module.exports = config;

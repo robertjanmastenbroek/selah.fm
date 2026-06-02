@@ -48,8 +48,10 @@ export default function ReviewPage() {
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [exitingIds, setExitingIds] = useState<Set<string>>(new Set());
+  const [modalState, setModalState] = useState<{ submission: Submission; action: 'approved' | 'rejected' } | null>(null);
+  const [modalFeedback, setModalFeedback] = useState('');
 
-  const handleAction = async (id: string, status: string) => {
+  const handleAction = async (id: string, status: string, feedback?: string) => {
     setActionLoading(id);
     
     // Start exit animation — shrink + slide out
@@ -72,7 +74,7 @@ export default function ReviewPage() {
     }, 400);
 
     try {
-      const res = await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status }) });
+      const res = await fetch('/api/review', { method: 'POST', credentials: 'include', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ submissionId: id, status, feedback }) });
       const data = await res.json();
       if (!res.ok) {
         addToast(data.error || 'Failed to update', 'error');
@@ -287,7 +289,7 @@ export default function ReviewPage() {
                             <>
                               <Button
                                 variant="outline"
-                                onClick={() => handleAction(s.id, 'rejected')}
+                                onClick={() => { setModalState({ submission: s, action: 'rejected' }); setModalFeedback(''); }}
                                 disabled={actionLoading === s.id}
                                 className="flex-1 flex items-center gap-1.5 h-10 text-xs font-medium transition-all duration-200 hover:border-red-500/30 hover:text-red-400"
                               >
@@ -298,7 +300,7 @@ export default function ReviewPage() {
                                 )}
                               </Button>
                               <Button
-                                onClick={() => handleAction(s.id, 'approved')}
+                                onClick={() => { setModalState({ submission: s, action: 'approved' }); setModalFeedback(''); }}
                                 disabled={actionLoading === s.id}
                                 className="flex-1 flex items-center gap-1.5 h-10 text-xs font-medium bg-[#22C55E] hover:bg-[#16A34A] text-white disabled:opacity-50 transition-all duration-200 hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]"
                               >
@@ -337,6 +339,131 @@ export default function ReviewPage() {
           </div>
         )}
       </main>
+
+      {/* ── Review Feedback Modal ── */}
+      <AnimatePresence>
+        {modalState && (() => {
+          const s = modalState.submission;
+          const isReject = modalState.action === 'rejected';
+          const cpm = s.cpm_rate_cents / 100;
+          const views = s.views_verified || 0;
+          let gross = (views / 1000) * cpm;
+          const maxPayout = (s.max_payout_per_submission_cents || 0) / 100;
+          if (maxPayout > 0 && gross > maxPayout) gross = maxPayout;
+          const charCount = modalFeedback.length;
+          const charColor = charCount >= 280 ? 'text-red-400' : charCount >= 250 ? 'text-amber-400' : 'text-muted-foreground/60';
+          const quickReasons = ['Audio quality issues', "Doesn't fit campaign brief", 'Low production value', 'Inappropriate content'];
+
+          return (
+            <motion.div
+              key="review-modal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+              onClick={() => setModalState(null)}
+            >
+              {/* Backdrop */}
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+              {/* Modal Panel */}
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 300, mass: 0.9 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full sm:max-w-lg bg-[#1A1A2E] border border-white/[0.08] rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
+              >
+                {/* Title */}
+                <h2 className="text-xl font-bold tracking-tight mb-2" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
+                  {isReject ? 'Reject this submission?' : 'Approve & pay this submission?'}
+                </h2>
+
+                {/* Subtitle / Payout breakdown */}
+                {isReject ? (
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {s.creator_name || 'Creator'} — ${gross.toFixed(2)} payout
+                  </p>
+                ) : (
+                  <div className="mb-6 p-4 rounded-2xl bg-[#22C55E]/[0.04] border border-[#22C55E]/[0.08]">
+                    <p className="text-sm text-muted-foreground">
+                      <span className="text-white/80 font-medium">{(views).toLocaleString()} views</span>
+                      <span className="mx-1.5">×</span>
+                      <span className="text-white/80 font-medium">${(cpm * 1000).toFixed(0)}/1M</span>
+                      <span className="mx-1.5">=</span>
+                      <span className="text-[#22C55E] font-bold">${gross.toFixed(2)}</span>
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/50 mt-1">Creator earns full amount — no platform fee deducted</p>
+                  </div>
+                )}
+
+                {/* Textarea */}
+                <div className="relative">
+                  <textarea
+                    value={modalFeedback}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v.length <= 280) setModalFeedback(v);
+                    }}
+                    placeholder={isReject ? "Let the creator know why (optional)" : "Add a note to the creator (optional)"}
+                    rows={4}
+                    className="w-full resize-none rounded-xl bg-white/[0.03] border border-white/[0.08] px-4 py-3 text-sm text-white/80 placeholder:text-muted-foreground/40 focus:outline-none focus:border-white/[0.15] focus:bg-white/[0.04] transition-colors"
+                  />
+                </div>
+
+                {/* Character counter */}
+                <div className="flex justify-end mt-1.5 mb-4">
+                  <span className={`text-[10px] font-medium ${charColor}`}>
+                    {charCount}/280
+                  </span>
+                </div>
+
+                {/* Quick-reason chips (reject only) */}
+                {isReject && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {quickReasons.map((reason) => (
+                      <button
+                        key={reason}
+                        type="button"
+                        onClick={() => setModalFeedback(reason)}
+                        className="px-3 py-1.5 rounded-full text-[11px] font-medium bg-white/[0.03] border border-white/[0.06] text-muted-foreground hover:bg-white/[0.06] hover:text-white/70 hover:border-white/[0.10] transition-all"
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setModalState(null)}
+                    className="flex-1 h-11 rounded-xl text-sm font-medium bg-white/[0.03] border border-white/[0.06] text-muted-foreground hover:bg-white/[0.06] hover:text-foreground transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleAction(s.id, modalState.action, modalFeedback || undefined);
+                      setModalState(null);
+                      setModalFeedback('');
+                    }}
+                    className={`flex-1 h-11 rounded-xl text-sm font-semibold transition-all ${
+                      isReject
+                        ? 'bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300'
+                        : 'bg-[#22C55E] hover:bg-[#16A34A] text-white shadow-[0_0_20px_rgba(34,197,94,0.15)] hover:shadow-[0_0_28px_rgba(34,197,94,0.25)]'
+                    }`}
+                  >
+                    {isReject ? 'Reject submission' : `Approve & pay $${gross.toFixed(2)}`}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
     </div>
   );
 }
