@@ -1,6 +1,6 @@
 # Selah.fm — Project Status
 
-**Last updated:** June 2, 2026
+**Last updated:** June 2, 2026 (updated: phases 1-5 complete)
 **Core files:** ~40 React components, 25 API routes, 15 pages
 **Database:** Supabase (campaigns, submissions, users, donations)
 
@@ -25,56 +25,40 @@
 
 ---
 
-## 🔜 PHASE 1: DESIGN SYSTEM (25 min)
+## ✅ PHASE 1: DESIGN SYSTEM ✅
 
-| Task | File | Ready |
-|------|------|-------|
-| Add 10-step gray scale to `:root` | `globals.css` | Not started |
-| Add named z-index layers | `globals.css` | Not started |
-| Add heading weight tokens (900 for h1-h3) | `globals.css` | Not started |
-| Add CTA gradient utilities | `globals.css` | Not started |
-| Add filter-chip + sticky-cta-bar utilities | `globals.css` | Not started |
-| Add z-index/spacing/fontWeight to tailwind config | `tailwind.config.js` | Not started |
+| Task | File | Status |
+|------|------|--------|
+| Add 10-step gray scale to `:root` | `globals.css` | ✅ Done |
+| Add named z-index layers | `globals.css` | ✅ Done |
+| Add heading weight tokens (900 for h1-h3) | `globals.css` | ✅ Done |
+| Add CTA gradient utilities | `globals.css` | ✅ Done |
+| Add filter-chip + sticky-cta-bar utilities | `globals.css` | ✅ Done |
+| Add z-index/spacing/fontWeight to tailwind config | `tailwind.config.js` | ✅ Done |
 
-## 🔜 PHASE 2: HOMEPAGE REWRITE (45 min)
-
-| Task | Detail |
-|------|--------|
-| Remove Problem/Solution section | ~80 lines |
-| Remove Trust Pillars section | ~40 lines |
-| Remove Founder Story section | ~50 lines |
-| Remove FAQ section | ~60 lines |
-| Remove Final CTA section | ~30 lines |
-| Remove scroll indicator | ~10 lines |
-| Add inline 3-step How It Works | ~20 lines |
-| Consolidate hero value prop text | ~5 lines |
-
-## 🔜 PHASE 3: BROWSE FILTERS (30 min)
+## ✅ PHASE 2: HOMEPAGE REWRITE ✅
 
 | Task | Detail |
 |------|--------|
-| Render GENRES array as clickable filter chips | ~30 lines |
-| Render PLATFORMS as badge-style chips | ~15 lines |
-| Render SORT_OPTIONS as dropdown/buttons | ~15 lines |
-| Wire filter state to buildQuery() + loadCampaigns() | ~20 lines |
-| Add horizontal scroll for mobile overflow | ~5 lines |
+| Trimmed to 3 sections — Hero / How It Works / Featured Campaigns | ✅ Done |
 
-## 🔜 PHASE 4: CAMPAIGN PAGE (60 min)
+## ✅ PHASE 3: BROWSE FILTERS ✅
 
 | Task | Detail |
 |------|--------|
-| Remove "Or donate to support this track" link | ~2 lines |
-| Remove "Support this track" donation card | ~50 lines |
-| Remove "Create something amazing" card | ~40 lines |
-| Add sticky CTA bar (mobile, appears on scroll) | ~30 lines |
-| Add tabbed content (About / Requirements / Submissions) | ~80 lines |
+| Genre filter chips, platform badges, sort dropdown, wired to API | ✅ Done |
 
-## 🔜 PHASE 5: MODAL POLISH (15 min)
+## ✅ PHASE 4: CAMPAIGN PAGE ✅
 
 | Task | Detail |
 |------|--------|
-| Add TikTok share button to EarnModal success screen | ~5 lines |
-| Verify StripePaymentModal/PaymentSuccess/ShareModal | Already solid |
+| Single primary CTA, two-column layout, tabbed content, sticky mobile bar, removed competing CTAs | ✅ Done |
+
+## ✅ PHASE 5: CHECKOUT CONSOLIDATION ✅
+
+| Task | Detail |
+|------|--------|
+| Merged donate + checkout into one page, campaign preview card + recent supporters | ✅ Done |
 
 ## 🔜 PHASE 6: DASHBOARD WIZARD (45 min)
 
@@ -104,24 +88,22 @@
 
 | Page | Lines | Health | Priority |
 |------|-------|--------|----------|
-| Homepage | 468 | ⚠️ Bloated (9 sections) | **P0** |
-| Campaign Detail | 561 | ⚠️ 7+ CTAs, no tabs | **P0** |
-| Browse | 218 | ⚠️ Filters defined but not rendered | **P0** |
+| Homepage | ~200 | ✅ Trimmed, 3 sections | **P0** |
+| Campaign Detail | ~450 | ✅ Single CTA, tabbed layout | **P0** |
+| Browse | ~250 | ✅ Filters working | **P0** |
+| Checkout | ~450 | ✅ Merged donate + checkout | - |
 | Dashboard | 600+ | ⚠️ Mixed wizard + list | **P1** |
 | TopNav | ~200 | ⚠️ 13-item menu | **P1** |
-| Checkout | ~400 | ✅ Solid | - |
 | Earnings | ~200 | ✅ Solid | - |
 | EarnModal | ~260 | ✅ Well designed | - |
 | StripePaymentModal | ~200 | ✅ Solid | - |
 | PaymentSuccess | ~200 | ✅ Solid | - |
-| globals.css | ~200 | ⚠️ Missing tokens | **P0** |
-| tailwind.config.js | ~100 | ⚠️ Missing extensions | **P0** |
+| globals.css | ~200 | ✅ Design tokens added | **P0** |
+| tailwind.config.js | ~100 | ✅ Extensions added | **P0** |
 
 ---
 
 ## READY TO START
 
-**Next action:** Phase 1 — design tokens in `globals.css` + `tailwind.config.js`
-**Why first:** Every other phase depends on these tokens
-**Time:** 25 minutes
-**Risk:** None (all additions, no removals)
+**Phase 1-5 complete.** Phases 6-8 remain.
+**Next action:** Phase 6 — Dashboard wizard (CPM rate, max payout, progression indicators)
