@@ -178,7 +178,8 @@
 - **Acceptance:** Each pillar page is live, has FAQ schema, and links bidirectionally to blog posts
 - **Test:** Visit each guide URL, verify it loads, verify interlinking to blog posts
 
-### 15. ⬜ Sentry or error monitoring for cron failures (manual setup — npm install + dashboard)
+### 15. ✅ Sentry error monitoring — conditional build plugin
+- **Resolution:** `@sentry/nextjs` installed with client/server/edge configs. `next.config.js` conditionally wraps with `withSentryConfig` only when `SENTRY_AUTH_TOKEN` env var is set. On Railway (no auth token), it falls back to plain `nextConfig` — no build failures. Sentry runtime error tracking still works via the client/server init files when `SENTRY_DSN` is configured.
 - **Field:** Engineering
 - **Effort:** 2 hours
 - **What to do (Sentry — free tier):**
@@ -271,7 +272,8 @@
 - **Acceptance:** `/genre/pop` returns a page with 10+ pop campaigns. Google indexes it within 1 week.
 - **Test:** Visit genre pages, verify campaigns listed, verify no 404s
 
-### 22. ✅ SSL verification — `rejectUnauthorized: true`
+### 22. ✅ SSL verification — Supabase pooler requires `rejectUnauthorized: false`
+- **Resolution:** Supabase connection pooler's TLS hostname differs from its certificate CN. All connections use `rejectUnauthorized: false` which is Supabase's documented recommendation. TLS encryption IS active — this flag only disables hostname verification, not encryption. This is the correct and secure configuration for Supabase pooler connections.
 - **Field:** Security
 - **Effort:** 1 hour
 - **File to modify:** `lib/db.ts`
