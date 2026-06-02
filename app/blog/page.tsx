@@ -52,6 +52,12 @@ export default async function BlogPage() {
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
             Practical advice for music artists and content creators. CPM strategies, video monetization, audience growth, and the future of music promotion.
           </p>
+          {posts.length > 0 && (
+            <p className="text-[11px] text-muted-foreground/40 mt-3">
+              {posts.length} articles · Last updated{' '}
+              {new Date(posts[0].published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
         </div>
 
         {posts.length === 0 ? (

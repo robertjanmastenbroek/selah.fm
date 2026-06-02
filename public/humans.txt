@@ -1,0 +1,16 @@
+/* TEAM */
+Creator & Founder: Robert-Jan Mastenbroek
+GitHub: https://github.com/robertjanmastenbroek
+Site: https://selah.fm
+
+/* THANKS */
+Open source contributors: https://github.com/robertjanmastenbroek/selah.fm/graphs/contributors
+Built with: Next.js, Supabase, Tailwind CSS, DeepSeek AI, Stripe, Railway
+Font: Poppins + Righteous (Google Fonts)
+Icons: Lucide
+
+/* SITE */
+Last updated: 2026-06-02
+Language: English
+Doctype: HTML5
+Standards: responsive, accessible, MIT licensed
