@@ -4,11 +4,123 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
-import { ArrowLeft, Send, MessageCircle, User } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Send, MessageCircle, User, X } from 'lucide-react';
 
 interface UserInfo { id: string; display_name: string; profile_image_url?: string; }
 interface Conversation { other_user: UserInfo; last_message: { content: string; created_at: string }; unread_count: number; }
 interface Message { id: string; sender_id: string; receiver_id: string; content: string; created_at: string; read: boolean; }
+
+// ── New Message Button ──
+function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: string; onConversationStart: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [userId, setUserId] = useState('');
+  const [searchDone, setSearchDone] = useState(false);
+  const [foundUser, setFoundUser] = useState<any>(null);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
+
+  const handleSearch = async () => {
+    if (!userId.trim()) return;
+    setSearching(true);
+    setError('');
+    setSearchDone(false);
+    setFoundUser(null);
+    try {
+      const res = await fetch(`/api/users/search?q=${encodeURIComponent(userId.trim())}`, { credentials: 'include' });
+      const data = await res.json();
+      if (data.user) {
+        setFoundUser(data.user);
+        setSearchDone(true);
+      } else if (data.users && data.users.length > 0) {
+        setFoundUser(data.users[0]);
+        setSearchDone(true);
+      } else {
+        setError('No user found with that name or email');
+        setSearchDone(true);
+      }
+    } catch {
+      setError('Search failed');
+      setSearchDone(true);
+    }
+    setSearching(false);
+  };
+
+  const startConversation = () => {
+    if (!foundUser) return;
+    router.push(`/messages?user=${foundUser.id}`);
+    setOpen(false);
+    setUserId('');
+    setFoundUser(null);
+    setSearchDone(false);
+  };
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)}
+        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#4338CA] text-white hover:bg-[#4338CA]/90 transition-all active:scale-[0.97] flex items-center gap-1.5">
+        <MessageCircle size={13} /> New
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => { setOpen(false); setUserId(''); setFoundUser(null); setSearchDone(false); setError(''); }}>
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              onClick={e => e.stopPropagation()}
+              className="relative z-10 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">New message</h3>
+                <button onClick={() => { setOpen(false); setUserId(''); setFoundUser(null); setSearchDone(false); setError(''); }}
+                  className="p-1 rounded-lg hover:bg-white/[0.06] transition-colors"><X size={18} className="text-muted-foreground" /></button>
+              </div>
+              <p className="text-xs text-muted-foreground">Search for a user by name or email to start a conversation.</p>
+              <div className="flex gap-2">
+                <Input value={userId} onChange={e => { setUserId(e.target.value); setSearchDone(false); setFoundUser(null); setError(''); }}
+                  placeholder="Name or email..."
+                  className="flex-1 text-sm rounded-xl h-11 bg-white/[0.04] border-white/[0.06]"
+                  onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }} />
+                <button onClick={handleSearch} disabled={!userId.trim() || searching}
+                  className="px-4 rounded-xl bg-[#4338CA] text-white text-sm font-semibold disabled:opacity-30 hover:opacity-90 transition-opacity">
+                  {searching ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Search'}
+                </button>
+              </div>
+
+              {error && <p className="text-xs text-red-400">{error}</p>}
+
+              {foundUser && (
+                <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0">
+                    {foundUser.profile_image_url ? (
+                      <img src={foundUser.profile_image_url} alt="" className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <User size={18} className="text-muted-foreground/40" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{foundUser.display_name || 'User'}</p>
+                    <p className="text-[10px] text-muted-foreground/50 truncate">{foundUser.email || ''}</p>
+                  </div>
+                  <button onClick={startConversation}
+                    className="px-4 py-2 rounded-xl bg-[#4338CA] text-white text-xs font-semibold hover:bg-[#4338CA]/90 transition-all">
+                    Message
+                  </button>
+                </div>
+              )}
+
+              {searchDone && !foundUser && !error && (
+                <p className="text-xs text-muted-foreground/60 text-center py-4">No user found. Try a different search.</p>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
 
 export default function MessagesPage() {
   const searchParams = useSearchParams();
@@ -155,8 +267,13 @@ export default function MessagesPage() {
               className={`${selectedUser && isMobile ? 'hidden' : 'flex'} flex-col border-r border-white/[0.06] bg-white/[0.01] ${isMobile ? 'w-full' : 'w-80 shrink-0'}`}
             >
               <div className="p-5 border-b border-white/[0.06]">
-                <h1 className="text-xl font-bold" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>Messages</h1>
-                {unreadTotal > 0 && <p className="text-xs text-muted-foreground mt-1">{unreadTotal} unread</p>}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-xl font-bold" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>Messages</h1>
+                    {unreadTotal > 0 && <p className="text-xs text-muted-foreground mt-1">{unreadTotal} unread</p>}
+                  </div>
+                  <NewMessageButton onConversationStart={loadConversations} />
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto">
                 {loading ? (

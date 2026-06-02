@@ -348,7 +348,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               </div>
             </div>
 
-            {/* ONE PRIMARY CTA */}
+            {/* ── Primary: Join campaign (creator CTA) ── */}
             <button onClick={() => {
               fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'campaign_join_click', path: window.location.pathname, metadata: { campaign_id: id } }) }).catch(()=>{});
               setJoinOpen(true);
@@ -357,6 +357,15 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)] shadow-lg shadow-indigo-500/20">
               Join campaign — earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
             </button>
+
+            {/* ── Secondary: Support this campaign (fan CTA) ── */}
+            <Link href={`/checkout?type=donation&campaignId=${id}`}
+              className="mt-3 w-full py-3.5 text-sm font-semibold rounded-xl border border-white/[0.12] bg-white/[0.02] text-muted-foreground
+                hover:text-white hover:bg-white/[0.05] hover:border-[#4338CA]/30 active:scale-[0.98] transition-all
+                flex items-center justify-center gap-2">
+              <Heart size={16} className="text-[#4338CA]/60" />
+              Support this campaign
+            </Link>
 
             {/* Secondary: Share (icon only, not competing) */}
             <div className="flex items-center justify-between mt-4">
@@ -405,11 +414,20 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 <p className="text-xs font-semibold truncate font-display">{displayTitle}</p>
                 <p className="text-[10px] text-muted-foreground">${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views · {artistName}</p>
               </div>
-              <button onClick={() => setJoinOpen(true)}
-                className="shrink-0 px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                  active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20">
-                Join campaign
-              </button>
+              <div className="flex gap-2">
+                <Link href={`/checkout?type=donation&campaignId=${id}`}
+                  className="shrink-0 px-4 py-2.5 text-xs font-semibold rounded-xl border border-white/[0.12] bg-white/[0.02] text-muted-foreground
+                    hover:text-white hover:bg-white/[0.05] hover:border-[#4338CA]/30 active:scale-[0.98] transition-all
+                    flex items-center gap-1.5">
+                  <Heart size={13} className="text-[#4338CA]/60" />
+                  Support
+                </Link>
+                <button onClick={() => setJoinOpen(true)}
+                  className="shrink-0 px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
+                    active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20">
+                  Join
+                </button>
+              </div>
             </div>
           </motion.div>
         )}
