@@ -295,29 +295,42 @@ export default function RootPage() {
         </div>
       </section>
 
-      {/* ════════════ SOCIAL PROOF ════════════ */}
+      {/* ════════════ WHAT'S POSSIBLE ════════════ */}
       <section className="relative z-10 px-4 py-32" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(67,56,202,0.06) 0%, transparent 70%)' }}>
         <div className="max-w-5xl mx-auto">
           <motion.div className="text-center mb-14" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-            <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-5">What artists say</p>
-            <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">Promotion that actually works.</h2>
-            <p className="text-white/35 max-w-md mx-auto text-sm">Artists and creators who stopped wasting money and started seeing real results.</p>
+            <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-5">What's possible</p>
+            <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">Real math. Real results.</h2>
+            <p className="text-white/35 max-w-md mx-auto text-sm">No hype. Just what you can actually earn when you promote music with real creators on Selah.fm.</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             {[
-              { name: 'Marcus J.', role: 'Electronic producer', quote: 'I spent thousands on playlists with empty streams. On Selah, $200 got me 15 videos with real, engaged listeners. I can actually see who made what and how it performed.', stars: 5 },
-              { name: 'Sarah K.', role: 'Christian EDM artist', quote: 'Wasted $1,500 on playlist pitching. On Selah, $200 got me 6 great videos from real creators. Three went semi-viral — I could never get that with ads.', stars: 5 },
-              { name: 'Mia J.', role: 'Lifestyle creator · 28K', quote: 'I love browsing tracks that fit my style. Made $340 last month from 3 videos. Way better than chasing brand deals and sponsorships.', stars: 5 },
-              { name: 'Chloe B.', role: 'TikTok creator', quote: 'Found a track I loved, posted a 30-second Reel, and got paid $85 three days later. No negotiating, no waiting — just create and earn. It&apos;s that simple.', stars: 5 },
+              { label: 'Example', scenario: 'Artist campaign', budget: '$100', cpm: '$5,000/1M', math: '= 20,000 verified views', desc: 'Deposit $100, set a $5,000/1M CPM rate. Creators submit videos. You approve the best ones. Your track gets 20,000 real views from real people — not bots.', icon: Music4, color: '#4338CA' },
+              { label: 'Example', scenario: 'Creator earnings', budget: '3 videos', cpm: '$10,000/1M CPM', math: '= up to $300', desc: 'Make 3 TikToks or Reels for a campaign. At a $10,000/1M CPM rate, every 10,000 views earns you $100. Post your best content and earn per view.', icon: Clapperboard, color: '#22C55E' },
+              { label: 'Example', scenario: 'Fan support', budget: '$250 donated', cpm: 'crowdfunded', math: '= 50,000 views', desc: 'Fans chip in to fund your promotion budget. Share your campaign link. Every dollar donated goes directly to creator payouts — 0% platform cut on donations.', icon: Heart, color: '#EF4444' },
             ].map((t, i) => (
               <motion.div key={i} className="rounded-2xl border border-white/[0.04] p-6 backdrop-blur-sm" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.015) 0%, transparent 100%)' }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5 }}>
-                <div className="flex gap-0.5 mb-5 text-[#22C55E]/50">{[...Array(t.stars)].map((_, j) => <Star key={j} size={13} fill="currentColor" />)}</div>
-                <p className="text-[14px] leading-relaxed mb-6 text-white/45 italic">&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-[11px] font-semibold text-white/40">{t.name[0]}</div>
-                  <div><div className="text-[12px] font-medium text-white/60">{t.name}</div><div className="text-[10px] text-white/25">{t.role}</div></div>
+                <div className="flex items-center gap-2 mb-4">
+                  <t.icon size={14} style={{ color: t.color, opacity: 0.6 }} />
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-white/20">{t.label}</span>
                 </div>
+                <p className="text-[13px] font-semibold text-white/70 mb-3">{t.scenario}</p>
+                <div className="space-y-1.5 mb-4">
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-white/25">Budget</span>
+                    <span className="font-semibold text-white/60">{t.budget}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-white/25">Rate</span>
+                    <span className="font-semibold text-white/60">{t.cpm}</span>
+                  </div>
+                  <div className="flex justify-between text-[11px]">
+                    <span className="text-white/25">Result</span>
+                    <span className="font-semibold" style={{ color: t.color }}>{t.math}</span>
+                  </div>
+                </div>
+                <p className="text-[11px] leading-relaxed text-white/30">{t.desc}</p>
               </motion.div>
             ))}
           </div>
