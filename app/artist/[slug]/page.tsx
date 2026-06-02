@@ -28,19 +28,14 @@ async function getArtistData(slug: string) {
 
   const artistId = artist.id;
 
-  // Fetch tracks
+  // Fetch tracks from artist_tracks catalog
   const tracks = await sql`
-    SELECT c.id, c.track_title, c.track_url, c.cover_art_url, c.cpm_rate_cents,
-           c.total_budget_cents, c.budget_remaining_cents, c.slug as campaign_slug,
-           c.status, c.platforms, c.created_at,
-           COALESCE(v.approved_submissions, '0')::int as submissions_count,
-           COALESCE(v.total_verified_views, '0')::int as total_views,
-           COALESCE(v.pending_submissions, '0')::int as pending_submissions
-    FROM campaigns c
-    JOIN campaign_claims cc ON cc.campaign_id = c.id
-    LEFT JOIN campaign_stats v ON v.id = c.id
-    WHERE cc.discovered_artist_id = ${artistId} AND c.status IN ('active', 'draft')
-    ORDER BY c.created_at DESC
+    SELECT at.id, at.title as track_title, at.spotify_url as track_url,
+           at.cover_art_url, at.cpm_rate_cents, at.enabled, at.sort_order,
+           at.created_at
+    FROM artist_tracks at
+    WHERE at.artist_id = ${artistId} AND at.enabled = true
+    ORDER BY at.sort_order ASC, at.created_at DESC
   `;
 
   // Fetch donation totals

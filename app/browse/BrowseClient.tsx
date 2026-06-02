@@ -112,7 +112,7 @@ function CampaignGrid({ campaigns, loading }: { campaigns: Campaign[]; loading: 
 }
 
 export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }: { initialCampaigns?: Campaign[]; initialTotal?: number }) {
-  const [tab, setTab] = useState<'campaigns' | 'artists'>('campaigns');
+  const [tab, setTab] = useState<'campaigns' | 'artists'>('artists');
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
   const [artists, setArtists] = useState<any[]>([]);
   const [total, setTotal] = useState(initialTotal);
