@@ -1,19 +1,10 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import type { CookieOptionWithName } from '@/lib/supabase/types';
 import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
-
-function parseCookies(header: string) {
-  return header
-    .split(';')
-    .filter(Boolean)
-    .map(c => {
-      const idx = c.indexOf('=');
-      if (idx === -1) return { name: c.trim(), value: '' };
-      return { name: c.substring(0, idx).trim(), value: c.substring(idx + 1).trim() };
-    });
-}
 
 /**
  * Get the real origin, accounting for Railway's reverse proxy.
@@ -36,11 +27,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Determine final redirect URL after auth exchange + new-user check
     let finalUrl = new URL(next, origin);
 
-    // Collect auth cookies into array since we don't have response object yet
-    const pendingCookies: { name: string; value: string; options: Record<string, any> }[] = [];
+    // Use the Next.js cookies() API — this is the official Supabase SSR pattern.
+    // cookies().set() automatically includes Set-Cookie headers on every response,
+    // so we don't need to manually attach them to the redirect.
+    const cookieStore = cookies();
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,13 +40,17 @@ export async function GET(request: Request) {
       {
         cookies: {
           getAll() {
-            return parseCookies(request.headers.get('cookie') || '');
+            return cookieStore.getAll();
           },
-          setAll(cookiesToSet: { name: string; value: string; options: Record<string, any> }[]) {
+          setAll(cookiesToSet: CookieOptionWithName[]) {
             cookiesToSet.forEach(({ name, value, options }) => {
-              pendingCookies.push({ name, value, options });
+              cookieStore.set(name, value, options);
             });
           },
+        },
+        // Ensure session cookies have the secure flag on HTTPS (Railway)
+        cookieOptions: {
+          secure: process.env.NODE_ENV === 'production',
         },
       }
     );
@@ -94,13 +90,8 @@ export async function GET(request: Request) {
       }
     }
 
-    // Create a SINGLE redirect response with both cookies and correct URL
-    const response = NextResponse.redirect(finalUrl, 302);
-    for (const c of pendingCookies) {
-      response.cookies.set(c.name, c.value, c.options);
-    }
-
-    return response;
+    // Redirect — cookies are auto-included by Next.js because we used cookies().set()
+    return NextResponse.redirect(finalUrl, 302);
   } catch (err: any) {
     console.error('Auth callback exception:', err.message);
     return NextResponse.redirect(new URL('/login?error=auth_error', origin));
