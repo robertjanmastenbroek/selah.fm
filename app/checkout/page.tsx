@@ -5,32 +5,56 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import LiveTicker from '@/components/LiveTicker';
-import { Heart, ArrowLeft, Shield, Lock, AlertCircle, Check, Zap, Wallet, Share2 } from 'lucide-react';
+import {
+  Heart, ArrowLeft, Shield, Lock, AlertCircle, Check, Zap, Wallet,
+  DollarSign, Sparkles, Users,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import LiveTicker from '@/components/LiveTicker';
+import PaymentSuccess from '@/components/PaymentSuccess';
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
 const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
 
 const PRESETS = [
-  { amount: 50 }, { amount: 100 }, { amount: 200, recommended: true }, { amount: 300 }, { amount: 500 }, { amount: 1000 },
+  { amount: 50 }, { amount: 100 }, { amount: 200, recommended: true },
+  { amount: 300 }, { amount: 500 }, { amount: 1000 },
 ];
 
-// Payment method order: Apple Pay first, Google Pay second, card last
-const payOptions = { 
-  layout: { type: 'tabs' as const, defaultCollapsed: false },
-  fields: { billingDetails: 'auto' as const },
-  wallets: { applePay: 'auto' as const, googlePay: 'auto' as const },
-};
+// ── Recent Supporters ──────────────────────────────────────────
+function RecentSupporters({ donations }: { donations: any[] }) {
+  if (!donations || donations.length === 0) return null;
+  return (
+    <div className="space-y-2">
+      <p className="text-[10px] font-semibold text-white/30 uppercase tracking-wider flex items-center gap-1.5">
+        <Users size={11} /> Recent supporters
+      </p>
+      <div className="space-y-1">
+        {donations.slice(0, 5).map((d: any, i: number) => (
+          <div key={i} className="flex items-center gap-2 py-1.5">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#4338CA]/20 to-[#4338CA]/5 flex items-center justify-center text-[10px] font-bold text-[#4338CA] shrink-0">
+              {(d.donor_name || 'A')[0].toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0 flex items-center justify-between">
+              <span className="text-xs truncate text-white/40">{d.donor_name || 'Anonymous'}</span>
+              <span className="text-xs font-semibold text-[#4338CA] shrink-0 ml-2">${(d.amount_cents / 100).toFixed(0)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Circle Progress ─────────────────────────────────────────
 function lerpColor(a: number, b: number, t: number) { return Math.round(a + (b - a) * t); }
 function pctColor(pct: number) {
   const t = Math.min(pct, 100) / 100;
-  return `rgb(${lerpColor(0x5B, 0x1E, t)},${lerpColor(0x7F, 0x3A, t)},${lerpColor(0xFF, 0x8A, t)})`;
+  return `rgb(${lerpColor(0x5B, 0x1F, t)},${lerpColor(0x7F, 0x3A, t)},${lerpColor(0xFF, 0x8A, t)})`;
 }
 
-function CircleProgress({ pct, size = 80 }: { pct: number; size?: number }) {
+function CircleProgress({ pct, size = 72 }: { pct: number; size?: number }) {
   const stroke = 5, radius = (size - stroke) / 2, circumference = radius * 2 * Math.PI;
   const offset = circumference - (Math.min(pct, 100) / 100) * circumference;
   const color = pctColor(pct);
@@ -38,14 +62,18 @@ function CircleProgress({ pct, size = 80 }: { pct: number; size?: number }) {
     <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
         <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
-        <motion.circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: offset }} transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }} />
+        <motion.circle cx={size/2} cy={size/2} r={radius} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }} />
       </svg>
       <span className="absolute text-sm font-bold">{Math.round(pct)}%</span>
     </div>
   );
 }
 
-// ── Checkout Form (embedded Stripe Elements) ────────────────
+// ── Payment Form (Stripe Elements) ──────────────────────────
 function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
   clientSecret: string; amount: number; type: 'donation' | 'deposit';
   onSuccess: () => void; onError: (msg: string) => void;
@@ -67,30 +95,39 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
   };
 
   return (
-    <form onSubmit={handlePay} className="space-y-5">
-      {/* Card input — clearly delineated with premium styling */}
-      <div className="rounded-2xl bg-gradient-to-b from-white/[0.06] to-white/[0.02] border-2 border-primary/20 p-1">
-        <div className="rounded-xl bg-[#0F0F23] p-4">
-          <PaymentElement />
+    <form onSubmit={handlePay} className="space-y-4">
+      <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 min-h-[60px]">
+        {!stripe ? (
+          <div className="flex items-center justify-center gap-2 text-sm text-white/50 py-2">
+            <div className="w-4 h-4 border-2 border-[#4338CA]/30 border-t-[#4338CA] rounded-full animate-spin" />
+            Loading secure payment...
+          </div>
+        ) : (
+          <PaymentElement options={{
+            layout: { type: 'tabs', defaultCollapsed: false },
+            wallets: { applePay: 'auto', googlePay: 'auto' },
+            fields: { billingDetails: 'auto' },
+          }} />
+        )}
+      </div>
+
+      <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-xs">
+        <div className="flex justify-between font-semibold">
+          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> 100% to campaign</span>
+          <span className="text-emerald-400">${amount.toFixed(2)}</span>
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground font-medium">Total</span>
-          <span className="text-2xl font-bold">${amount.toFixed(2)}</span>
-        </div>
-        <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-white/[0.05]">
-          <Check size={12} className="text-emerald-400" />
-          <span className="text-[11px] text-emerald-400 font-medium">100% added to campaign</span>
-        </div>
-      </div>
-
-      <Button type="submit" disabled={processing}
-        className="w-full py-6 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary hover:shadow-[0_0_40px_rgba(67,56,202,0.3)] disabled:opacity-50 transition-all active:scale-[0.98]">
+      <Button type="submit" disabled={!stripe || processing}
+        className="w-full py-6 text-base font-bold rounded-2xl
+                   bg-gradient-to-r from-[#4338CA] to-[#3730A3]
+                   hover:shadow-[0_0_40px_rgba(67,56,202,0.3)]
+                   disabled:opacity-50 transition-all active:scale-[0.98]">
         {processing ? (
-          <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Processing...</span>
+          <span className="flex items-center justify-center gap-2">
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Processing...
+          </span>
         ) : type === 'donation' ? (
           <span className="flex items-center justify-center gap-2"><Heart size={18} /> Donate ${amount}</span>
         ) : (
@@ -101,7 +138,7 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
   );
 }
 
-// ── Main Checkout Page ──────────────────────────────────────
+// ── Main Consolidated Checkout Page ─────────────────────────
 export default function CheckoutPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -118,7 +155,6 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState('');
   const [donorMessage, setDonorMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
-  const [shareCopied, setShareCopied] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
   const [paymentError, setPaymentError] = useState('');
   const [gettingSecret, setGettingSecret] = useState(false);
@@ -126,6 +162,7 @@ export default function CheckoutPage() {
 
   const effectiveAmount = parseInt(customValue) || 0;
 
+  // Fetch campaign
   useEffect(() => {
     if (!campaignId) { setLoading(false); return; }
     fetch(`/api/campaigns/${campaignId}`)
@@ -133,6 +170,7 @@ export default function CheckoutPage() {
       .catch(() => {}).finally(() => setLoading(false));
   }, [campaignId]);
 
+  // Get clientSecret (debounced)
   useEffect(() => {
     if (effectiveAmount < 1 || !campaignId || loading) return;
     setClientSecret('');
@@ -143,9 +181,16 @@ export default function CheckoutPage() {
         ? `/api/campaigns/${campaignId}/support`
         : '/api/stripe';
       const body: any = type === 'donation'
-        ? { amount: effectiveAmount, donorName: `${firstName} ${lastName}`.trim() || undefined, message: donorMessage || undefined }
+        ? {
+            amount: effectiveAmount,
+            donorName: `${firstName} ${lastName}`.trim() || undefined,
+            message: donorMessage || undefined,
+          }
         : { amount: effectiveAmount, campaignId };
-      fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      fetch(endpoint, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
         .then(r => r.json())
         .then(d => {
           if (d.clientSecret) setClientSecret(d.clientSecret);
@@ -167,12 +212,12 @@ export default function CheckoutPage() {
     setActivePreset(null);
   };
 
-  const bg = '#0F0F23';
+  const bg = '#080817';
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: bg }}>
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#4338CA]/30 border-t-[#4338CA] rounded-full animate-spin" />
       </div>
     );
   }
@@ -180,77 +225,116 @@ export default function CheckoutPage() {
   if (!campaignId || !campaign) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: bg }}>
-        <p className="text-muted-foreground">Campaign not found</p>
+        <p className="text-white/50">Campaign not found</p>
         <Button variant="outline" onClick={() => router.push('/browse')}>Browse campaigns</Button>
       </div>
     );
   }
 
-  const displayTitle = campaign.title || campaign.track_title;
-  const donations = campaign.donations || { totalCents: 0, count: 0 };
+  const donations = campaign.donations || { totalCents: 0, count: 0, supporters: [] };
   const totalRaised = donations.totalCents / 100;
   const budget = campaign.total_budget_cents / 100;
-  const spent = budget - (campaign.budget_remaining_cents / 100);
+  const spent = budget - ((campaign.budget_remaining_cents || 0) / 100);
   const progress = budget > 0 ? (spent / budget) * 100 : 0;
-  const artistName = campaign.artist_name || '';
+  const cpm = campaign.cpm_rate_cents / 100;
+  const coverArt = campaign.cover_art_url || campaign.cover_url;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: bg }}>
       {/* Top nav */}
-      <div className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0F0F23]/95 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
-        <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <div className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#080817]/95 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
+        <button onClick={() => router.back()}
+          className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors">
           <ArrowLeft size={18} /> Back
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {type === 'donation' ? (
-            <span className="text-xs text-muted-foreground flex items-center gap-1"><Heart size={12} className="text-primary/60" /> Donation</span>
+            <span className="text-xs text-white/40 flex items-center gap-1">
+              <Heart size={12} className="text-[#4338CA]/60" /> Donation
+            </span>
           ) : (
-            <span className="text-xs text-muted-foreground flex items-center gap-1"><Wallet size={12} className="text-primary/60" /> Deposit</span>
+            <span className="text-xs text-white/40 flex items-center gap-1">
+              <Wallet size={12} className="text-[#4338CA]/60" /> Deposit
+            </span>
           )}
-          <span className="text-[10px] text-muted-foreground/40 flex items-center gap-1"><Lock size={10} /> Secure</span>
+          <span className="text-[10px] text-white/30 flex items-center gap-1">
+            <Lock size={10} /> Secure
+          </span>
         </div>
       </div>
 
       <div className="flex-1 w-full max-w-lg mx-auto px-4 py-8">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
 
-          {/* ── Campaign header with progress ── */}
-          <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 flex items-center gap-5">
-            <CircleProgress pct={progress} size={72} />
-            <div className="flex-1 min-w-0 space-y-2">
-              <h1 className="text-base font-bold truncate">{displayTitle}</h1>
-              <p className="text-xs text-muted-foreground truncate">{artistName}</p>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span><strong className="text-foreground">${totalRaised.toFixed(0)}</strong> raised</span>
-                <span className="text-white/[0.15]">·</span>
-                <span><strong className="text-foreground">{donations.count}</strong> supporters</span>
-                <span className="text-white/[0.15]">·</span>
-                <span>of <strong className="text-foreground">${budget.toFixed(0)}</strong></span>
+          {/* ── Campaign Preview Card ── */}
+          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden">
+            {coverArt && (
+              <div className="aspect-[2/1] bg-white/[0.02] overflow-hidden">
+                <img src={coverArt} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="p-5">
+              {!coverArt && (
+                <div className="flex items-center gap-4 mb-4">
+                  <CircleProgress pct={progress} size={56} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider mb-0.5">
+                      {type === 'donation' ? "You're supporting" : 'Your campaign'}
+                    </p>
+                    <h1 className="text-lg font-bold truncate">{campaign.title || campaign.track_title}</h1>
+                  </div>
+                </div>
+              )}
+              <div className="space-y-4">
+                <div>
+                  {coverArt && (
+                    <>
+                      <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">
+                        {type === 'donation' ? "You're supporting" : 'Your campaign'}
+                      </p>
+                      <h1 className="text-xl font-bold">{campaign.title || campaign.track_title}</h1>
+                    </>
+                  )}
+                  <p className="text-xs text-white/40 mt-1">${cpm.toFixed(2)} per 1,000 verified views</p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 py-3 border-y border-white/[0.06]">
+                  <div>
+                    <div className="text-lg font-bold">{totalRaised > 0 ? `$${totalRaised.toFixed(0)}` : '$0'}</div>
+                    <div className="text-[10px] text-white/30 uppercase">Raised</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold">${budget.toFixed(0)}</div>
+                    <div className="text-[10px] text-white/30 uppercase">Budget</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold">{donations.count}</div>
+                    <div className="text-[10px] text-white/30 uppercase">Supporters</div>
+                  </div>
+                </div>
+                <RecentSupporters donations={donations.supporters} />
               </div>
             </div>
           </div>
 
-          {/* ── Preset buttons ── */}
+          {/* ── Amount Selection ── */}
           <div>
-            <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-white/40 mb-3 uppercase tracking-wider">
               {type === 'donation' ? 'Donation amount' : 'Deposit amount'}
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 mb-3">
               {PRESETS.map(opt => {
                 const active = activePreset === opt.amount;
                 return (
-                  <button
-                    key={opt.amount}
-                    onClick={() => handlePreset(opt.amount)}
-                    className={`relative rounded-xl py-3 text-center font-semibold text-sm transition-all border ${
+                  <button key={opt.amount} onClick={() => handlePreset(opt.amount)}
+                    className={`relative rounded-xl py-4 text-center font-semibold text-sm transition-all border ${
                       active
-                        ? 'border-primary bg-primary/[0.08] text-primary'
-                        : 'border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:border-white/[0.15] hover:text-foreground'
-                    }`}
-                  >
+                        ? 'border-[#4338CA] bg-[#4338CA]/[0.08] text-[#4338CA]'
+                        : 'border-white/[0.06] bg-white/[0.02] text-white/50 hover:border-white/[0.15] hover:text-white'
+                    }`}>
                     {opt.recommended && (
-                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                        <Heart size={8} fill="currentColor" /> Recommended
+                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full
+                                      bg-[#22C55E]/20 border border-[#22C55E]/30 text-[10px] font-bold text-[#22C55E] flex items-center gap-1">
+                        <Sparkles size={9} /> Best
                       </span>
                     )}
                     ${opt.amount}
@@ -258,96 +342,92 @@ export default function CheckoutPage() {
                 );
               })}
             </div>
-          </div>
-
-          {/* ── Big custom input (below presets) ── */}
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Or enter a custom amount</p>
             <div className="relative">
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-3xl font-light text-muted-foreground">$</span>
-              <input
-                type="number"
-                value={customValue === '0' ? '' : customValue}
+              <DollarSign size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+              <input type="number" value={customValue === '0' ? '' : customValue}
                 onChange={e => handleCustom(e.target.value)}
-                className="w-full bg-white/[0.04] border-2 border-white/[0.08] focus:border-primary/40 rounded-2xl pl-12 pr-5 py-6 text-4xl font-bold text-foreground placeholder:text-muted-foreground/30 focus:outline-none transition-colors"
-                min={0}
-                step="0.01"
-                placeholder="0.00"
-              />
+                placeholder="Custom amount"
+                className="w-full bg-white/[0.04] border border-white/[0.08] focus:border-[#4338CA]/40 rounded-xl pl-10 pr-4 py-4
+                           text-lg font-bold text-white placeholder:text-white/20 focus:outline-none transition-colors"
+                min={0} step="0.01" />
             </div>
           </div>
 
-          {/* ── Live ticker ── */}
+          {/* ── Donor Details ── */}
+          {type === 'donation' && (
+            <div className="space-y-3">
+              <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">Your details</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Input value={firstName} onChange={e => setFirstName(e.target.value)}
+                  placeholder="First name" className="rounded-xl h-11 bg-white/[0.04] border-white/[0.06] text-white" />
+                <Input value={lastName} onChange={e => setLastName(e.target.value)}
+                  placeholder="Last name" className="rounded-xl h-11 bg-white/[0.04] border-white/[0.06] text-white" />
+              </div>
+              <Input value={email} onChange={e => setEmail(e.target.value)} type="email"
+                placeholder="Email address" className="rounded-xl h-11 bg-white/[0.04] border-white/[0.06] text-white" />
+              {!showMessage ? (
+                <button onClick={() => setShowMessage(true)}
+                  className="text-xs text-[#818CF8] hover:underline font-medium">
+                  + Add a message of support
+                </button>
+              ) : (
+                <textarea value={donorMessage} onChange={e => setDonorMessage(e.target.value)}
+                  placeholder="Write a message of encouragement..." rows={3}
+                  className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3
+                             text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[#4338CA]/30 resize-none" />
+              )}
+            </div>
+          )}
+
+          {/* ── Live Ticker ── */}
           {campaignId && <LiveTicker campaignId={campaignId} />}
 
-          {/* ── Your details ── */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your details</p>
-            <div className="grid grid-cols-2 gap-2">
-              <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name"
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" />
-              <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name"
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" />
-            </div>
-            <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Email address"
-              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30" />
-            {type === 'donation' && (
-              <>
-                {!showMessage ? (
-                  <button onClick={() => setShowMessage(true)} className="text-xs text-primary hover:underline font-medium">+ Add a message of support</button>
-                ) : (
-                  <textarea value={donorMessage} onChange={e => setDonorMessage(e.target.value)} placeholder="Write a message..." rows={3}
-                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 resize-none" />
-                )}
-              </>
-            )}
+          {/* ── Payment Section ── */}
+          <div>
+            {!PUBLISHABLE_KEY ? (
+              <div className="rounded-2xl bg-yellow-500/5 border border-yellow-500/10 p-6 text-center space-y-3">
+                <AlertCircle size={32} className="mx-auto text-yellow-400/60" />
+                <h3 className="font-semibold text-white/80">Payment not configured</h3>
+                <p className="text-xs text-white/40">Stripe keys need to be set for payments to work.</p>
+              </div>
+            ) : effectiveAmount < 1 ? (
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center">
+                <p className="text-sm text-white/40">Enter an amount above to continue</p>
+              </div>
+            ) : gettingSecret ? (
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-8 flex items-center justify-center">
+                <div className="flex items-center gap-3 text-sm text-white/50">
+                  <div className="w-5 h-5 border-2 border-[#4338CA]/30 border-t-[#4338CA] rounded-full animate-spin" />
+                  Preparing secure payment...
+                </div>
+              </div>
+            ) : paymentError ? (
+              <div className="rounded-2xl bg-red-500/5 border border-red-500/10 p-4 text-xs text-red-400 flex items-start gap-2">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />{paymentError}
+              </div>
+            ) : clientSecret ? (
+              <Elements stripe={stripePromise} options={{
+                clientSecret,
+                appearance: {
+                  theme: 'night',
+                  variables: {
+                    colorPrimary: '#4338CA',
+                    colorBackground: '#080817',
+                    colorText: '#F0F0F0',
+                    colorTextSecondary: '#8C8C8C',
+                    borderRadius: '12px',
+                    spacingUnit: '4px',
+                  },
+                },
+              } as any}>
+                <CheckoutForm clientSecret={clientSecret} amount={effectiveAmount} type={type}
+                  onSuccess={() => setSuccessOpen(true)} onError={setPaymentError} />
+              </Elements>
+            ) : null}
           </div>
 
-          {/* ── Payment section (appears after amount selected) ── */}
-          <AnimatePresence>
-            {effectiveAmount > 0 && PUBLISHABLE_KEY && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} transition={{ duration: 0.3, ease: 'easeOut' }}>
-                <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Payment</p>
-                {gettingSecret ? (
-                  <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-8 flex items-center justify-center">
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                      Preparing secure payment...
-                    </div>
-                  </div>
-                ) : paymentError ? (
-                  <div className="rounded-2xl bg-red-500/5 border border-red-500/10 p-4 text-xs text-red-400 flex items-start gap-2">
-                    <AlertCircle size={14} className="shrink-0 mt-0.5" />{paymentError}
-                  </div>
-                ) : clientSecret ? (
-                  <Elements stripe={stripePromise} options={{
-                    clientSecret,
-                    paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
-                    appearance: { theme: 'night', variables: { colorPrimary: '#4338CA', colorBackground: '#0F0F23', colorText: '#F0F0F0', colorTextSecondary: '#8C8C8C', borderRadius: '12px', spacingUnit: '4px' } },
-                  } as any}>
-                    <CheckoutForm clientSecret={clientSecret} amount={effectiveAmount} type={type}
-                      onSuccess={() => setSuccessOpen(true)} onError={setPaymentError} />
-                  </Elements>
-                ) : null}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {effectiveAmount < 1 && PUBLISHABLE_KEY && (
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center">
-              <p className="text-sm text-muted-foreground">Enter an amount above to continue</p>
-            </div>
-          )}
-
-          {!PUBLISHABLE_KEY && (
-            <div className="rounded-2xl bg-yellow-500/5 border border-yellow-500/10 p-6 text-center space-y-3">
-              <AlertCircle size={32} className="mx-auto text-yellow-400/60" />
-              <h3 className="font-semibold">Payment not configured</h3>
-              <p className="text-xs text-muted-foreground">Stripe is not connected yet.</p>
-            </div>
-          )}
-
-          <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground/40 pb-8">
+          {/* ── Trust Signals ── */}
+          <div className="flex items-center justify-center gap-4 text-[10px] text-white/30 pb-8">
             <span className="flex items-center gap-1"><Lock size={10} /> SSL encrypted</span>
             <span className="flex items-center gap-1"><Shield size={10} /> Secure</span>
             <span>Powered by Stripe</span>
@@ -355,50 +435,17 @@ export default function CheckoutPage() {
         </motion.div>
       </div>
 
-      {/* Success overlay */}
-      <AnimatePresence>
-        {successOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
-            onClick={() => router.push(`/c/${campaignId}`)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              className="bg-[#0F0F23] border border-white/[0.08] rounded-3xl p-8 text-center max-w-sm w-full space-y-5" onClick={e => e.stopPropagation()}>
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.15, type: 'spring', stiffness: 400 }}>
-                <div className="w-16 h-16 rounded-full bg-emerald-500/10 mx-auto flex items-center justify-center">
-                  <Check size={32} className="text-emerald-400" />
-                </div>
-              </motion.div>
-              <div>
-                <h2 className="text-xl font-bold">{type === 'donation' ? 'Thank you!' : 'Funded!'}</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {type === 'donation'
-                    ? `Your $${effectiveAmount} donation supports this campaign.`
-                    : `$${effectiveAmount} added to your campaign budget.`}
-                </p>
-              </div>
-              {type === 'donation' && (
-                <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground">Share this campaign — every share brings more support</p>
-                  <div className="flex gap-2">
-                    <code className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-[10px] text-muted-foreground truncate select-all font-mono">
-                      selah.fm/c/{campaignId}
-                    </code>
-                    <button
-                      onClick={() => { navigator.clipboard.writeText(`https://selah.fm/c/${campaignId}`); setShareCopied(true); setTimeout(() => setShareCopied(false), 2000); }}
-                      className="shrink-0 px-4 py-2 rounded-lg bg-white/[0.06] border border-white/[0.08] text-xs font-semibold hover:bg-white/[0.1] transition-colors flex items-center gap-1.5"
-                    >
-                      {shareCopied ? <><Check size={12} className="text-emerald-400" /> Copied</> : <><Share2 size={12} /> Copy link</>}
-                    </button>
-                  </div>
-                </div>
-              )}
-              <Button onClick={() => router.push(`/c/${campaignId}`)} className="w-full rounded-xl">
-                {type === 'donation' ? 'Back to campaign' : 'View campaign'}
-              </Button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── Success Overlay ── */}
+      <PaymentSuccess
+        open={successOpen}
+        mode={type}
+        amount={effectiveAmount}
+        campaignTitle={campaign.title || campaign.track_title}
+        campaignId={campaignId}
+        donorName={`${firstName} ${lastName}`.trim()}
+        donorMessage={donorMessage}
+        onClose={() => router.push(`/c/${campaignId}`)}
+      />
     </div>
   );
 }
