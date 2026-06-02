@@ -156,9 +156,9 @@ export default function AdminEmailsPage() {
                             className="overflow-hidden"
                           >
                             <div className="px-5 pb-4 space-y-2 border-t border-white/[0.03] pt-3 mx-5">
-                              <div className="text-[10px] text-muted-foreground">
-                                <span>To: {e.to_email}</span>
-                              </div>
+                              {e.from_name && <div className="text-[10px] text-muted-foreground">
+                                <span>Name: {e.from_name}</span>
+                              </div>}
                               <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                                 {e.body_text || e.body_html?.replace(/<[^>]*>/g, '') || '(no content)'}
                               </div>

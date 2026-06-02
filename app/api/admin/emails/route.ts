@@ -9,9 +9,11 @@ export async function GET(request: Request) {
   if (type === 'inbound') {
     try {
       const emails = await sql`
-        SELECT id, from_email, to_email, subject, body_text, body_html, read, received_at
+        SELECT id, from_email, from_name, subject, body_text, body_html,
+               CASE WHEN status = 'unread' THEN false ELSE true END as read,
+               created_at as received_at
         FROM inbound_emails
-        ORDER BY received_at DESC
+        ORDER BY created_at DESC
         LIMIT 100
       `;
       return NextResponse.json(emails);

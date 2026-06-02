@@ -59,24 +59,24 @@ export async function POST(request: Request) {
     const text = email.text || '';
     const html = email.html || '';
 
-    // Ensure table exists
+    // Ensure table exists (matches actual production schema)
     await sql`
       CREATE TABLE IF NOT EXISTS inbound_emails (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        mailbox TEXT,
         from_email TEXT NOT NULL,
-        to_email TEXT,
+        from_name TEXT,
         subject TEXT NOT NULL,
         body_text TEXT,
         body_html TEXT,
-        headers JSONB DEFAULT '{}',
-        read BOOLEAN NOT NULL DEFAULT false,
-        received_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        status TEXT NOT NULL DEFAULT 'unread',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
     `.catch(() => {});
 
     await sql`
-      INSERT INTO inbound_emails (from_email, to_email, subject, body_text, body_html, received_at)
-      VALUES (${from}, ${to}, ${subject}, ${text}, ${html}, NOW())
+      INSERT INTO inbound_emails (from_email, from_name, subject, body_text, body_html, created_at)
+      VALUES (${from}, ${email.from_name || ''}, ${subject}, ${text}, ${html}, NOW())
     `;
 
     console.log(`Inbound email stored: ${subject} from ${from}`);

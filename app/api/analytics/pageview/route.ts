@@ -86,7 +86,7 @@ export async function GET(request: Request) {
     const topPages = await sql`
       SELECT path, COUNT(*)::int as views 
       FROM page_views 
-      WHERE created_at > NOW() - INTERVAL '${days} days'
+      WHERE created_at > NOW() - make_interval(days => ${days})
       GROUP BY path 
       ORDER BY views DESC 
       LIMIT ${limit}
@@ -96,7 +96,7 @@ export async function GET(request: Request) {
     const topBlogs = await sql`
       SELECT path, COUNT(*)::int as views 
       FROM page_views 
-      WHERE path LIKE '/blog/%' AND created_at > NOW() - INTERVAL '${days} days'
+      WHERE path LIKE '/blog/%' AND created_at > NOW() - make_interval(days => ${days})
       GROUP BY path 
       ORDER BY views DESC 
       LIMIT ${limit}
@@ -108,7 +108,7 @@ export async function GET(request: Request) {
         COALESCE(utm_source, '(direct/none)') as source,
         COUNT(*)::int as views
       FROM page_views 
-      WHERE created_at > NOW() - INTERVAL '${days} days'
+      WHERE created_at > NOW() - make_interval(days => ${days})
       GROUP BY COALESCE(utm_source, '(direct/none)')
       ORDER BY views DESC 
       LIMIT 10
@@ -120,7 +120,7 @@ export async function GET(request: Request) {
         COALESCE(utm_medium, '(direct/none)') as medium,
         COUNT(*)::int as views
       FROM page_views 
-      WHERE created_at > NOW() - INTERVAL '${days} days'
+      WHERE created_at > NOW() - make_interval(days => ${days})
       GROUP BY COALESCE(utm_medium, '(direct/none)')
       ORDER BY views DESC 
       LIMIT 10
@@ -133,7 +133,7 @@ export async function GET(request: Request) {
         COUNT(*)::int as views
       FROM page_views 
       WHERE utm_campaign IS NOT NULL 
-        AND created_at > NOW() - INTERVAL '${days} days'
+        AND created_at > NOW() - make_interval(days => ${days})
       GROUP BY utm_campaign
       ORDER BY views DESC 
       LIMIT 10
@@ -145,7 +145,7 @@ export async function GET(request: Request) {
         DATE_TRUNC('hour', created_at) as hour,
         COUNT(*)::int as views
       FROM page_views 
-      WHERE created_at > NOW() - INTERVAL '48 hours'
+      WHERE created_at > NOW() - make_interval(hours => 48)
       GROUP BY hour
       ORDER BY hour DESC
     `;
@@ -157,7 +157,7 @@ export async function GET(request: Request) {
     // Total views in period
     const [{ total }] = await sql`
       SELECT COUNT(*)::int as total FROM page_views 
-      WHERE created_at > NOW() - INTERVAL '${days} days'
+      WHERE created_at > NOW() - make_interval(days => ${days})
     `;
 
     return NextResponse.json({
