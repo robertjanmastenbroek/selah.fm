@@ -80,6 +80,12 @@ export async function POST(
           INSERT INTO activity_events (artist_id, event_type, actor_type, actor_name, message, metadata)
           VALUES (${camp.discovered_artist_id}, 'reaction_batch', 'system', '', ${totalCount + ' people loved this video'}, ${JSON.stringify({ submission_id: submissionId, reaction_count: totalCount })})
         `.catch(() => {});
+        // Notify the submission creator
+        sql`
+          INSERT INTO notifications (user_id, type, message, link)
+          SELECT s.creator_id, 'reaction', ${'Your video got ' + totalCount + ' ❤️ reactions!'}, '/dashboard'
+          FROM submissions s WHERE s.id = ${submissionId} AND s.creator_id IS NOT NULL
+        `.catch(() => {});
       }
     }
 
