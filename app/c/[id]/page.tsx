@@ -16,12 +16,14 @@ async function getCampaign(id: string) {
             COALESCE(u.display_name, da.artist_name) as artist_name,
             da.social_links, da.artist_name as da_artist_name,
             aa.youtube_video_url as audit_youtube_url,
-            aa.spotify_embed_url
+            aa.spotify_embed_url,
+            ap.slug as artist_slug
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
           LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+          LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
           WHERE c.id = ${id}::uuid
           ORDER BY aa.audited_at DESC LIMIT 1
         `
@@ -30,12 +32,14 @@ async function getCampaign(id: string) {
             COALESCE(u.display_name, da.artist_name) as artist_name,
             da.social_links, da.artist_name as da_artist_name,
             aa.youtube_video_url as audit_youtube_url,
-            aa.spotify_embed_url
+            aa.spotify_embed_url,
+            ap.slug as artist_slug
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
           LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+          LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
           WHERE c.slug = ${id}
           ORDER BY aa.audited_at DESC LIMIT 1
         `;
@@ -213,7 +217,17 @@ export default async function CampaignPage({ params }: Props) {
         </ol>
       </nav>
 
-      <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} />
+      {/* Artist profile link */}
+      {campaign?.artist_slug && (
+        <div className="max-w-7xl mx-auto px-4 pt-2 pb-0">
+          <a href={`/artist/${campaign.artist_slug}`}
+            className="inline-flex items-center gap-1.5 text-[11px] text-primary/60 hover:text-primary transition-colors">
+            View {artistName}'s full catalog →
+          </a>
+        </div>
+      )}
+
+      <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} artistSlug={campaign?.artist_slug || null} />
 
       {/* Server-rendered related campaigns — crawlable by Google, visible to users */}
       {relatedCampaigns.length > 0 && (

@@ -207,7 +207,7 @@ function CampaignSkeleton() {
 // ════════════════════════════════════════════════════════════════
 interface ListenLink { platform: string; url: string; icon: string; }
 
-export default function CampaignDetailClient({ id, initialCampaign, listenLinks = [] }: { id: string; initialCampaign: any; listenLinks?: ListenLink[] }) {
+export default function CampaignDetailClient({ id, initialCampaign, listenLinks = [], artistSlug = null }: { id: string; initialCampaign: any; listenLinks?: ListenLink[]; artistSlug?: string | null }) {
   const [campaign, setCampaign] = useState<any>(initialCampaign);
   const [loading, setLoading] = useState(!initialCampaign);
   const { addToast } = useToast();

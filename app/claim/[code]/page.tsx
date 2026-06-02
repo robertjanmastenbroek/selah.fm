@@ -8,10 +8,12 @@ interface Props { params: { code: string } }
 async function getClaimData(code: string) {
   const [claim] = await sql`
     SELECT cc.*, c.title, c.track_title, c.slug, c.cpm_rate_cents, c.cover_art_url,
-           da.artist_name
+           da.artist_name, da.id as da_id,
+           ap.slug as artist_slug
     FROM campaign_claims cc
     JOIN campaigns c ON c.id = cc.campaign_id
     LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+    LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
     WHERE cc.claim_code = ${code}
   `;
   if (!claim) return null;
@@ -75,15 +77,50 @@ export default async function ClaimPage({ params }: Props) {
           </div>
         </div>
 
+        {/* Artist profile link */}
+        {data.artist_slug && (
+          <div className="mb-6">
+            <a href={`/artist/${data.artist_slug}`}
+              className="inline-flex items-center gap-2 text-sm text-primary/80 hover:text-primary transition-colors">
+              View your full artist profile →
+            </a>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Your artist page is already live with all your tracks. Claim it to manage CPM rates, approve videos, and withdraw donations.
+            </p>
+          </div>
+        )}
+
         {/* CTAs */}
         <div className="space-y-3">
-          <a href={`/c/${data.slug}`} className="block w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity">
-            View your campaign page →
+          <a href={`/artist/${data.artist_slug}`} className="block w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity">
+            View your artist profile →
           </a>
-          <a href="/login" className="block w-full py-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm hover:bg-white/[0.08] transition-colors">
+          <a href={`/c/${data.slug}`} className="block w-full py-4 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm hover:bg-white/[0.08] transition-colors">
+            View this campaign page
+          </a>
+          <a href="/login" className="block w-full py-4 rounded-xl bg-white/[0.06] border border-white/[0.06] text-sm hover:bg-white/[0.08] transition-colors">
             Create account to claim & manage
           </a>
         </div>
+
+        {/* Embed widget */}
+        {data.artist_slug && (
+          <div className="mt-8 rounded-2xl bg-white/[0.02] border border-white/[0.06] p-6 text-left">
+            <h3 className="text-sm font-semibold mb-2">📎 Embed on your site</h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              Add this widget to your website or Linktree so fans can find and support you on Selah.fm.
+            </p>
+            <pre className="text-[10px] font-mono bg-black/30 rounded-xl p-4 overflow-x-auto text-muted-foreground/80 leading-relaxed select-all">
+{`<iframe 
+  src="https://selah.fm/artist/${data.artist_slug}/embed" 
+  width="300" 
+  height="400" 
+  style="border:none;border-radius:12px;max-width:100%"
+  title="Support ${data.artist_name} on Selah.fm">
+</iframe>`}
+            </pre>
+          </div>
+        )}
 
         <p className="text-[10px] text-muted-foreground mt-6">
           No commitment. The page stays live whether you claim it or not. You only pay when you approve videos.
