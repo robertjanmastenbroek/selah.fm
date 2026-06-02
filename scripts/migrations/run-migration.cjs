@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const pool = new Pool({
-  connectionString: 'postgresql://postgres.jxniwtzbkthrgmyrslno:GmLduWFnIPkgs4pt@aws-1-us-west-2.pooler.supabase.com:5432/postgres',
+  connectionString: process.env.SUPABASE_DATABASE_URL,
   ssl: { rejectUnauthorized: false },
 });
 
