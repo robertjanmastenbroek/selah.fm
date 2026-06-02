@@ -160,7 +160,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ receiverId: activeConv.other_id, content }),
+        body: JSON.stringify({ receiver_id: activeConv.other_id, content }),
       });
 
       if (!res.ok) {
@@ -200,7 +200,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       fetch('/api/messages', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markReadFrom: conv.other_id }),
+        body: JSON.stringify({ sender_id: conv.other_id }),
       })
         .then(() => fetchConversations()) // Refresh after marking read
         .catch(() => {});
@@ -214,29 +214,35 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
   const unreadTotal = conversations.reduce((s, c) => s + c.unread, 0);
 
   return (
-    <div className="relative">
-      {/* Chat bell */}
+    <>
+      {/* Floating chat bubble — always visible, collapsed by default */}
       <button
         onClick={() => setOpen(!open)}
-        className="relative p-2 rounded-lg hover:bg-white/[0.04] transition-colors"
+        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-primary shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
         aria-label="Messages"
       >
-        <MessageCircle size={18} strokeWidth={1.5} />
-        {unreadTotal > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] bg-primary rounded-full flex items-center justify-center text-[10px] font-bold text-primary-foreground px-1">
-            {unreadTotal > 9 ? '9+' : unreadTotal}
-          </span>
+        {open ? (
+          <X size={20} className="text-primary-foreground" />
+        ) : (
+          <>
+            <MessageCircle size={22} className="text-primary-foreground" strokeWidth={1.5} />
+            {unreadTotal > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1 shadow-sm">
+                {unreadTotal > 9 ? '9+' : unreadTotal}
+              </span>
+            )}
+          </>
         )}
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            exit={{ opacity: 0, y: 12, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute right-0 top-11 z-50 w-80 sm:w-96 h-[480px] rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden backdrop-blur-xl"
+            className="fixed bottom-20 right-6 z-50 w-80 sm:w-96 h-[480px] rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden backdrop-blur-xl origin-bottom-right"
           >
             {/* Header */}
             <div className="shrink-0 p-4 border-b border-white/[0.06] flex items-center gap-3">
@@ -374,7 +380,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }
 

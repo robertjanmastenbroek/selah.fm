@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
     // If a specific conversation user ID is requested, return messages for that conversation
-    const conversationUserId = searchParams.get('userId');
+    const conversationUserId = searchParams.get('userId') || searchParams.get('with');
     if (conversationUserId) {
       const messages = await sql`
         SELECT m.id, m.content, m.created_at, m.read, m.sender_id, m.receiver_id, m.campaign_id
