@@ -38,15 +38,18 @@ async function getArtistData(slug: string) {
     ORDER BY at.sort_order ASC, at.created_at DESC
   `;
 
-  // Fetch donation totals
+  // Fetch donation totals (campaign + artist-level)
   const [donationStats] = await sql`
-    SELECT COALESCE(SUM(cd.amount_cents), 0)::int as total_cents,
-           COUNT(DISTINCT cd.id)::int as donation_count,
-           COUNT(DISTINCT cd.donor_id)::int as supporter_count
-    FROM campaigns c
-    JOIN campaign_claims cc ON cc.campaign_id = c.id
+    SELECT
+      (COALESCE(SUM(cd.amount_cents), 0) + COALESCE(SUM(ad2.amount_cents), 0))::int as total_cents,
+      (COUNT(DISTINCT cd.id) + COUNT(DISTINCT ad2.id))::int as donation_count,
+      COUNT(DISTINCT COALESCE(cd.donor_id, ad2.donor_id))::int as supporter_count
+    FROM discovered_artists da
+    LEFT JOIN campaigns c ON c.id IN (SELECT cc2.campaign_id FROM campaign_claims cc2 WHERE cc2.discovered_artist_id = da.id)
+    LEFT JOIN campaign_claims cc ON cc.discovered_artist_id = da.id AND cc.campaign_id = c.id
     LEFT JOIN campaign_donations cd ON cd.campaign_id = c.id
-    WHERE cc.discovered_artist_id = ${artistId}
+    LEFT JOIN artist_donations ad2 ON ad2.artist_id = da.id AND ad2.status = 'completed'
+    WHERE da.id = ${artistId}
   `;
 
   // Fetch recent approved submissions

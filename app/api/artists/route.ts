@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/artists?genre=electronic&sort=popular&page=1&limit=20&search=name
- * Returns paginated artist list with track counts for browsing.
+ * Returns paginated artist list with track counts from artist_tracks.
  */
 export async function GET(request: Request) {
   try {
@@ -17,26 +17,28 @@ export async function GET(request: Request) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
     const offset = (page - 1) * limit;
 
-    const conditions: string[] = ['c.status IN ($1)'];
-    const params: any[] = [['active', 'draft']];
-    let p = (v: any) => { params.push(v); return params.length; };
+    const conditions: string[] = [];
+    const params: any[] = [];
+    let p = (v: any, idx?: number) => { 
+      if (idx !== undefined) { params[idx] = v; return idx + 1; }
+      params.push(v); return params.length; 
+    };
 
-    // We need artists that have at least one active campaign
-    // Filter by genre on discovered_artists
+    // Artists with at least one enabled track
+    conditions.push('EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)');
+
     if (genre) {
       conditions.push(`da.genres::text ILIKE $${p('%' + genre + '%')}`);
     }
 
-    // Search by artist name
     if (search) {
       conditions.push(`da.artist_name ILIKE $${p('%' + search + '%')}`);
     }
 
-    // Sort order
     let orderBy: string;
     switch (sort) {
       case 'newest':
-        orderBy = 'MAX(c.created_at) DESC NULLS LAST';
+        orderBy = 'MAX(at.created_at) DESC NULLS LAST';
         break;
       case 'name':
         orderBy = 'da.artist_name ASC';
@@ -44,26 +46,22 @@ export async function GET(request: Request) {
       case 'listeners':
         orderBy = 'COALESCE(da.monthly_listeners, 0) DESC NULLS LAST';
         break;
-      default: // popular
-        orderBy = 'COUNT(DISTINCT c.id) DESC, COALESCE(da.monthly_listeners, 0) DESC NULLS LAST';
+      default:
+        orderBy = 'COUNT(at.id) DESC, COALESCE(da.monthly_listeners, 0) DESC NULLS LAST';
     }
 
-    const whereClause = conditions.join(' AND ');
+    const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
     const limitIdx = p(limit);
     const offsetIdx = p(offset);
 
     const query = `
       SELECT da.id, da.artist_name, da.genres, da.monthly_listeners,
              ap.slug, ap.spotify_image_url, ap.total_followers,
-             COUNT(DISTINCT c.id)::int as track_count,
-             COALESCE(SUM(v.total_verified_views::int), 0)::int as total_views,
-             COALESCE(SUM(v.approved_submissions::int), 0)::int as total_submissions
+             COUNT(at.id)::int as track_count
       FROM discovered_artists da
       LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
-      JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
-      JOIN campaigns c ON c.id = cc.campaign_id
-      LEFT JOIN campaign_stats v ON v.id = c.id
-      WHERE ${whereClause}
+      LEFT JOIN artist_tracks at ON at.artist_id = da.id AND at.enabled = true
+      ${whereClause}
       GROUP BY da.id, ap.slug, ap.spotify_image_url, ap.total_followers
       ORDER BY ${orderBy}
       LIMIT $${limitIdx} OFFSET $${offsetIdx}
@@ -72,20 +70,18 @@ export async function GET(request: Request) {
     const artists = await sql.raw(query, params);
 
     // Total count
-    const [totalRow] = await sql.raw(`
-      SELECT COUNT(DISTINCT da.id)::int as total FROM discovered_artists da
-      JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
-      JOIN campaigns c ON c.id = cc.campaign_id
-      WHERE ${genre ? `da.genres::text ILIKE $2 AND ` : ''}c.status IN ($1)
-    `, genre ? [['active', 'draft'], `%${genre}%`] : [['active', 'draft']]);
-    const total = totalRow?.total || 0;
+    const countParams: any[] = [];
+    const countConditions: string[] = ['EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)'];
+    if (genre) { countConditions.push(`da.genres::text ILIKE $$1`); countParams.push(`%${genre}%`); }
+    if (search) { countConditions.push(`da.artist_name ILIKE $${countParams.length + 1}`); countParams.push(`%${search}%`); }
+    const countWhere = countConditions.join(' AND ');
 
-    return NextResponse.json({
-      artists,
-      total,
-      page,
-      limit,
-    });
+    const [{ total }] = await sql.raw(`
+      SELECT COUNT(*)::int as total FROM discovered_artists da
+      ${countWhere ? 'WHERE ' + countWhere : ''}
+    `, countParams.length > 0 ? countParams : []);
+
+    return NextResponse.json({ artists, total: total || 0, page, limit });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
