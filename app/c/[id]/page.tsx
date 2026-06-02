@@ -153,12 +153,13 @@ export default async function CampaignPage({ params }: Props) {
   try {
     relatedCampaigns = await sql`
       SELECT c.slug, COALESCE(c.title, c.track_title) as title, c.track_title,
-        COALESCE(u.display_name, da.artist_name) as artist_name
+        COALESCE(u.display_name, da.artist_name) as artist_name,
+        c.cover_art_url, c.cpm_rate_cents
       FROM campaigns c
       LEFT JOIN users u ON u.id = c.artist_id
       LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
       LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-      WHERE c.status IN ('active', 'draft') AND c.slug != ${canonicalSlug}
+      WHERE c.status IN ('active', 'draft') AND c.slug IS NOT NULL AND c.slug != ${canonicalSlug}
       ORDER BY c.created_at DESC LIMIT 6
     `;
   } catch {}
@@ -212,23 +213,39 @@ export default async function CampaignPage({ params }: Props) {
         </ol>
       </nav>
 
-      {/* Server-rendered related campaigns — crawlable internal links */}
+      <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} />
+
+      {/* Server-rendered related campaigns — crawlable by Google, visible to users */}
       {relatedCampaigns.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 pb-8" aria-labelledby="related-heading">
-          <h2 id="related-heading" className="text-xs font-semibold text-muted-foreground/20 uppercase tracking-wider mb-3">More campaigns</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <section className="max-w-7xl mx-auto px-4 pb-16" aria-labelledby="more-heading">
+          <h2 id="more-heading" className="font-bold text-base mb-5" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
+            More campaigns
+          </h2>
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {relatedCampaigns.map((rc: any) => (
               <a key={rc.slug} href={`/c/${rc.slug}`}
-                className="block rounded-lg bg-white/[0.01] border border-white/[0.03] p-2 hover:border-white/[0.08] transition-colors">
-                <p className="text-[10px] font-medium truncate">{rc.title || rc.track_title}</p>
-                <p className="text-[9px] text-muted-foreground/30 truncate">{rc.artist_name || 'Artist'}</p>
+                className="group rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-[#4338CA]/20 hover:bg-white/[0.05] transition-all">
+                <div className="aspect-square bg-white/[0.02] relative overflow-hidden">
+                  {rc.cover_art_url ? (
+                    <img src={rc.cover_art_url} alt="" loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#4338CA]/10 to-[#22C55E]/5">
+                      <span className="text-[10px] font-bold text-white/10">{(rc.title || rc.track_title || '?')[0]?.toUpperCase()}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="p-2.5">
+                  <p className="text-[11px] font-semibold truncate leading-tight">{rc.title || rc.track_title}</p>
+                  <p className="text-[10px] text-muted-foreground/50 truncate mt-0.5">
+                    {rc.artist_name || 'Artist'}
+                    {rc.cpm_rate_cents ? ` · $${((rc.cpm_rate_cents / 100) * 1000).toFixed(0)}/1M` : ''}
+                  </p>
+                </div>
               </a>
             ))}
           </div>
         </section>
       )}
-
-      <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} />
     </>
   );
 }

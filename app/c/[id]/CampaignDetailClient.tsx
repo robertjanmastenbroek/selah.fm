@@ -480,11 +480,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
             </div>
           )}
 
-          {/* ── More campaigns ── */}
-          <section>
-            <h3 className="font-bold text-sm mb-4" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>More campaigns</h3>
-            <MoreCampaigns currentId={id} />
-          </section>
+
         </div>
       </main>
 
@@ -563,56 +559,3 @@ function RequirementsBlock({ requirements }: { requirements: string }) {
   );
 }
 
-// ── More campaigns (simplified grid) ──────────────────────────────
-function MoreCampaigns({ currentId }: { currentId: string }) {
-  const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    fetch('/api/campaigns?limit=50', { credentials: 'omit' })
-      .then(r => r.json())
-      .then(data => {
-        const all = (data.campaigns || [])
-          .filter((c: any) => c.slug !== currentId && c.id !== currentId)
-          .slice(0, 15);
-        setCampaigns(all);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [currentId]);
-
-  if (loading) return (
-    <div className="grid grid-cols-3 gap-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden">
-          <div className="aspect-square bg-white/[0.02] animate-pulse" />
-          <div className="p-3 space-y-1.5"><div className="h-3 bg-white/[0.04] rounded w-3/4 animate-pulse" /><div className="h-2 bg-white/[0.02] rounded w-1/2 animate-pulse" /></div>
-        </div>
-      ))}
-    </div>
-  );
-
-  if (campaigns.length === 0) return null;
-
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      {campaigns.map((c: any) => (
-        <button key={c.id} onClick={() => router.push(`/c/${c.slug || c.id}`)}
-          className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-[#4338CA]/15 transition-all text-left">
-          <div className="aspect-square bg-white/[0.02]">
-            {c.cover_art_url ? (
-              <img src={c.cover_art_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center"><Music2 size={20} className="text-white/5" /></div>
-            )}
-          </div>
-          <div className="p-3">
-            <p className="text-xs font-semibold truncate">{c.title || c.track_title}</p>
-            <p className="text-[10px] text-muted-foreground truncate">{c.artist_name || 'Artist'}</p>
-          </div>
-        </button>
-      ))}
-    </div>
-  );
-}
