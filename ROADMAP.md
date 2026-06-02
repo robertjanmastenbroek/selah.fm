@@ -17,7 +17,7 @@
 - **Test:** `curl https://selah.fm/api/stats` returns accurate `totalDepositedCents` and `totalPaidCents`
 - **Status:** ✅ DONE
 
-### 2. ⬜ Replace fabricated testimonials with "What you could earn" scenarios
+### 2. ✅ Replace fabricated testimonials with "What you could earn" scenarios
 - **Field:** Legal & Community
 - **Effort:** 30 minutes
 - **Risk:** FTC false advertising violation. Real-sounding fake testimonials are illegal.
@@ -36,7 +36,7 @@
 - **Verification:** `sitemap.xml` returns 200 with blog posts, tools, campaigns, and main pages. `robots.txt` references sitemap correctly. Search Console property is verified.
 - **No action needed.** Check Search Console weekly for impressions, clicks, and average position data.
 
-### 4. ⬜ Add `/api/health` endpoint
+### 4. ✅ Add `/api/health` endpoint
 - **Field:** Engineering
 - **Effort:** 30 minutes
 - **File to create:** `app/api/health/route.ts`
@@ -48,7 +48,7 @@
 
 ## 🔥 Phase 1: Foundation (next 2 weeks)
 
-### 5. ⬜ Browse page — add filters, sorting, search
+### 5. ✅ Browse page — add filters, sorting, search
 - **Field:** Product & UX
 - **Effort:** 4-6 hours
 - **Files:** `app/browse/page.tsx`, `components/BrowseClient.tsx`, `app/api/campaigns/route.ts`
@@ -60,7 +60,7 @@
 - **Acceptance:** User can filter 2,564 campaigns down to 5 matching their criteria. URL updates with filter state. Back button works.
 - **Test:** Apply genre filter, verify results change. Copy URL, open in new tab, verify same filters applied. Sort by highest CPM, verify ordering.
 
-### 6. ⬜ Event tracking — CTA clicks, signup funnel, campaign joins
+### 6. ✅ Event tracking — CTA clicks, signup funnel, campaign joins
 - **Field:** Analytics
 - **Effort:** 3 hours
 - **File to create:** `app/api/analytics/event/route.ts`
@@ -77,7 +77,7 @@
 - **Acceptance:** Events table has rows within 10 minutes of deploy. Can query: "How many people clicked Promote vs Earn this week?"
 - **Test:** Click "Promote your music" on homepage, verify event appears in DB
 
-### 7. ⬜ Browse before signup — allow video link pasting without login
+### 7. ✅ Browse before signup — allow video link pasting without login
 - **Field:** CRO
 - **Effort:** 3 hours
 - **Files:** `components/EarnModal.tsx`
@@ -88,7 +88,7 @@
 - **Acceptance:** User can browse campaigns, open EarnModal, paste a video link, see a preview — all before signing in. Sign-in gate only appears when they click "Submit."
 - **Test:** Open campaign page in incognito, click "Join campaign," verify form is usable without auth. Click submit without signing in, verify sign-in prompt appears.
 
-### 8. ⬜ Pause auto-campaign generation (outreach pipeline)
+### 8. ✅ Pause auto-campaign generation (outreach pipeline)
 - **Field:** Growth
 - **Effort:** 5 minutes
 - **File to modify:** `app/api/cron/dispatcher/route.ts`
@@ -97,7 +97,7 @@
 - **Acceptance:** No new campaigns created for 24 hours. Blog pipeline still runs. Email outreach still runs.
 - **Test:** Wait one cron cycle, query `SELECT COUNT(*) FROM campaigns WHERE created_at > NOW() - INTERVAL '2 hours'` — should return 0.
 
-### 9. ⬜ Cookie consent banner + age gate on signup
+### 9. ✅ Cookie consent banner + age gate on signup
 - **Field:** Legal
 - **Effort:** 2 hours
 - **Files:** `app/layout.tsx` (add banner component), `app/login/page.tsx` (add age check)
