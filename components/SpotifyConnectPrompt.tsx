@@ -38,10 +38,10 @@ export default function SpotifyConnectPrompt({ displayName }: Props) {
           {/* Content */}
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-semibold group-hover:text-primary transition-colors">
-              Connect your artist profile
+              Claim your artist profile
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Link your Spotify artist page — we'll automatically fetch your tracks, artwork, and stats.
+              Search for your artist name and claim your profile to set track CPM rates and track donations.
             </p>
           </div>
 
