@@ -1,7 +1,7 @@
 # Selah.fm — Project Status
 
-**Last updated:** June 2, 2026
-**Core files:** ~40 React components, 25 API routes, 15 pages
+**Last updated:** June 2, 2026 (EOD)
+**Core files:** ~55 React components, 35 API routes, 20+ pages
 **Database:** Supabase (campaigns, submissions, users, donations)
 
 ---
@@ -120,3 +120,75 @@
 See `BLUEPRINT.md` (execution plan), `VISION.md` (architecture), `GROWTH_AUDIT.md` (acquisition).
 
 **Next:** Ready to start building Phase 0 (database migrations) whenever you are.
+
+---
+
+## ✅ SESSION: June 2, 2026 — Artist-Centric Social Layer (16 commits)
+
+### Phase 0: Database Migrations
+| Table | Purpose | Status |
+|-------|---------|--------|
+| `page_comments` | Threaded comments on artist/campaign pages (parent_id FK for replies, denormalized likes_count) | ✅ Live |
+| `comment_likes` | Who liked which comment (unique constraint on comment_id + user_id) | ✅ Live |
+| `submission_reactions` | Fan ❤️ reactions on creator videos (heart, fire, clap, star) | ✅ Live |
+| `activity_events` | Aggregated hype feed per artist (donation, submission, comment, reaction_batch, rating) | ✅ Live |
+| Artist profile backfill | 119 missing profiles created — now 2,158 total, zero slug collisions | ✅ Live |
+
+### Phase 1: API Routes (10 new)
+| Route | Methods | Purpose |
+|-------|---------|--------|
+| `/api/comments` | GET, POST | List/create comments with threading, pagination, sorting |
+| `/api/comments/[id]` | DELETE | Delete own comment (or admin) |
+| `/api/comments/[id]/like` | POST | Toggle like on comment |
+| `/api/submissions/[id]/react` | POST | Toggle ❤️ reaction on video |
+| `/api/submissions/[id]/reactions` | GET | Get reaction counts |
+| `/api/artists/[slug]/activity` | GET | Cursor-paginated activity feed |
+| `/api/artists/[slug]` | GET, PATCH | Full artist profile + update (claimed only) |
+| `/api/artists` | GET | Paginated list with genre/search/sort |
+
+### Phase 2: UI Components (6 new)
+| Component | Purpose |
+|-----------|--------|
+| `PageComments.tsx` | Threaded comment section with replies, likes, sort (newest/most liked) |
+| `SubmissionReactions.tsx` | ❤️🔥👏 reaction buttons with optimistic UI + bounce animation |
+| `ActivityFeed.tsx` | Live activity stream per artist event type icons |
+| `ArtistCard.tsx` | Reusable card for artist grid |
+| `ArtistEmbed.tsx` | Copy-paste iframe code generator |
+| `ArtistDashboardSection.tsx` | Artist stats + track list + embed in dashboard |
+
+### Phase 3: Pages (8 modified/rewritten)
+| Page | Change |
+|------|--------|
+| `/artist/[slug]` | Full social profile hub (JSON-LD, activity, comments, tracks, embed) |
+| `/artist/[slug]/embed` | Server-rendered iframe (1h cache, 10KB) |
+| `/browse` | Campaigns/Artists tab toggle |
+| `/browse/genre/[genre]` | 15 genre SEO landing pages |
+| `/c/[id]` | "View artist catalog" link, fixed doubled title |
+| `/claim/[code]` | Artist profile link + embed snippet |
+| `/dashboard` | ArtistDashboardSection + track management |
+| `/review` | Artist-grouped submission filter |
+| `/sitemap.ts` | 2K+ artist pages + 15 genre pages + tools |
+
+### Bugs Fixed (8)
+| Bug | Fix |
+|-----|-----|
+| Dashboard 500: missing FROM-clause "donations" | `orderClause(isOwner)` — owner view uses created_at DESC |
+| ChatWidget send silently fails | `receiverId` → `receiver_id` (wrong param name) |
+| ChatWidget mark-read fails | `markReadFrom` → `sender_id` |
+| Messages page `?with=X` param ignored | API now accepts both `userId` and `with` |
+| Messages search didn't find video creators | Added UNION on submissions table |
+| Emails exposed in search results | Masked to `f***@domain.com` |
+| Support chat overlapping sticky footers | Moved to `bottom-6` |
+| Hardcoded DB password in migration script | Switched to `SUPABASE_DATABASE_URL` env var |
+
+### Remaining Known Issues
+| Issue | Status |
+|-------|--------|
+| Multi-track pipeline — outreach skips artists it knows, never adds second track | Not yet fixed |
+| Checkout — no `?artistId=X` support for direct artist donations | Not yet built |
+| LLMO content generation per artist | Not yet built |
+| Internal linking engine (artist→campaign→blog cross-linking) | Not yet built |
+| Comment moderation (report + admin panel) | Not yet built |
+
+**Total: 16 commits from `b2ea8cd` → `b423aac`**
+**16 files created, 12 modified, 4 DB tables, 2 DB migrations**
