@@ -69,12 +69,15 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
   const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, any>>({ genre: '', platform: '', sort: 'popular' });
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState('');
+  const [selectedSort, setSelectedSort] = useState('popular');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load on mount if no initial data
   useEffect(() => {
-    if (initialCampaigns.length === 0) loadCampaigns({});
+    if (initialCampaigns.length === 0) loadCampaigns({ sort: 'popular' });
     else setLoading(false);
   }, []);
 
@@ -91,6 +94,13 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
   };
 
   const handleFilter = (f: any) => { setFilters(f); loadCampaigns(f); };
+
+  const handleSearch = (q: string) => {
+    const newFilters = { ...filters, q, genre: selectedGenre, platform: selectedPlatform, sort: selectedSort };
+    if (!q) delete newFilters.q;
+    setFilters(newFilters);
+    loadCampaigns(newFilters);
+  };
 
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
@@ -119,10 +129,10 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
                 ref={searchInputRef}
                 placeholder="Search campaigns..."
                 className="rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none w-48"
-                onKeyDown={e => { if (e.key === 'Enter') handleFilter({ ...filters, q: (e.target as HTMLInputElement).value }); }}
+                onKeyDown={e => { if (e.key === 'Enter') handleSearch((e.target as HTMLInputElement).value); }}
               />
               <button
-                onClick={() => handleFilter({ ...filters, q: searchInputRef.current?.value || '' })}
+                onClick={() => handleSearch(searchInputRef.current?.value || '')}
                 className="p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.06] text-muted-foreground transition-colors"
               >
                 <Search size={16} />
@@ -131,7 +141,65 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
           </div>
         </div>
 
-        {/* ── Campaign grid ── */}
+        {/* ── Filter chips ── */}
+        <div className="mb-6 space-y-3">
+          {/* Genre chips */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => { setSelectedGenre(''); handleFilter({ ...filters, genre: '', platform: selectedPlatform, sort: selectedSort }); }}
+              className={`filter-chip ${selectedGenre === '' ? 'filter-chip-active' : ''}`}
+            >
+              All genres
+            </button>
+            {GENRES.map(genre => (
+              <button
+                key={genre}
+                onClick={() => { setSelectedGenre(genre); handleFilter({ ...filters, genre, platform: selectedPlatform, sort: selectedSort }); }}
+                className={`filter-chip ${selectedGenre === genre ? 'filter-chip-active' : ''}`}
+              >
+                {genre.charAt(0).toUpperCase() + genre.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Platform badges + sort */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Platform:</span>
+              <button
+                onClick={() => { setSelectedPlatform(''); handleFilter({ ...filters, genre: selectedGenre, platform: '', sort: selectedSort }); }}
+                className={`filter-chip text-[10px] ${selectedPlatform === '' ? 'filter-chip-active' : ''}`}
+              >
+                All
+              </button>
+              {PLATFORMS.map(p => (
+                <button
+                  key={p}
+                  onClick={() => { setSelectedPlatform(p); handleFilter({ ...filters, genre: selectedGenre, platform: p, sort: selectedSort }); }}
+                  className={`filter-chip text-[10px] ${selectedPlatform === p ? 'filter-chip-active' : ''}`}
+                >
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Sort:</span>
+              <select
+                value={selectedSort}
+                onChange={e => { setSelectedSort(e.target.value); handleFilter({ ...filters, genre: selectedGenre, platform: selectedPlatform, sort: e.target.value }); }}
+                className="rounded-xl bg-white/[0.04] border border-white/[0.06] px-3 py-1.5 text-xs text-foreground focus:border-primary/30 focus:outline-none appearance-none cursor-pointer"
+              >
+                {SORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value} className="bg-[#1C1C3A]">{opt.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+                {/* ── Campaign grid ── */}
         {loading && campaigns.length === 0 ? (
           <div className="grid gap-4 sm:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
             {[1, 2, 3].map(i => (
@@ -145,10 +213,10 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
             ))}
           </div>
         ) : campaigns.length === 0 ? (
-          Object.keys(filters).length > 0 ? (
+          (selectedGenre || selectedPlatform || filters.q) ? (
             <EmptyState icon={<span className="text-4xl">🔍</span>} title="No matching campaigns"
               description="Try adjusting your filters or search terms."
-              action={{ label: 'Clear filters', onClick: () => { setFilters({}); loadCampaigns({}); } }} />
+              action={{ label: 'Clear filters', onClick: () => { setSelectedGenre(''); setSelectedPlatform(''); setSelectedSort('popular'); setFilters({}); loadCampaigns({}); } }} />
           ) : (
             <EmptyState icon={<span className="text-4xl">🎵</span>} title="No campaigns yet"
               description="Be the first to create one — and share it with your fans."
