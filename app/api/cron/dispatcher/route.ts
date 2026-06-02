@@ -10,18 +10,19 @@ export const maxDuration = 600;
  */
 
 const WORKERS: Record<number, { path: string; params?: string }[]> = {
-  0:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }, { path: '/api/cron/creator-outreach' }],
+  // Outreach pipeline paused — 2,563 unclaimed campaigns with zero activity (ROADMAP #8)
+  // 0:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }, { path: '/api/cron/creator-outreach' }],
   3:  [{ path: '/api/cron/email-outreach' }],
   5:  [{ path: '/api/cron/creator-discovery' }],
-  6:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
+  // 6:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
   8:  [{ path: '/api/cron/blog-pipeline' }, { path: '/api/cron/generate-outreach-videos' }, { path: '/api/cron/refresh-artist-metrics' }],
   9:  [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/welcome-sequence' }],
   10: [{ path: '/api/cron/blog-publish' }, { path: '/api/cron/outreach-followup' }],
   11: [{ path: '/api/cron/creator-outreach' }, { path: '/api/cron/reengage' }],
-  12: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
+  // 12: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
   15: [{ path: '/api/cron/email-outreach' }],
   17: [{ path: '/api/cron/creator-discovery' }],
-  18: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
+  // 18: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
   21: [{ path: '/api/cron/email-outreach' }],
   22: [{ path: '/api/admin/outreach', params: 'action=reaudit_emails&limit=100' }],
   23: [{ path: '/api/cron/creator-outreach' }],
