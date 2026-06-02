@@ -1,6 +1,6 @@
 # Selah.fm — Project Status
 
-**Last updated:** June 2, 2026 (all 8 phases complete)
+**Last updated:** June 2, 2026
 **Core files:** ~40 React components, 25 API routes, 15 pages
 **Database:** Supabase (campaigns, submissions, users, donations)
 
@@ -106,6 +106,10 @@
 
 ## READY TO START
 
-**All 8 phases complete.** 🎉
+## 🔧 June 2 Fix — Dashboard SQL Error
+
+| Issue | Fix | Status |
+|-------|-----|--------|
+| Owner dashboard `GET /api/campaigns` crashed with Postgres `missing FROM-clause entry for "donations"` | `orderClause()` now accepts `isOwner` flag; owner view uses `created_at DESC` default (no donations subquery in FROM) | ✅ Committed |
 
 **Next:** What do you want to build next?

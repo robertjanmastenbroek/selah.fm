@@ -30,8 +30,28 @@ export async function GET(request: Request) {
     const pinSort = `c.is_pinned DESC NULLS LAST`;
 
     // Build sort order clause
-    function orderClause(prefix: string = '') {
-      const c = (col: string) => prefix ? `${prefix}.${col}` : `c.${col}`;
+    // isOwnerView flag: when true, skip donations subquery references (dashboard view
+    // doesn't include the donations LEFT JOIN) and default to newest-first ordering.
+    function orderClause(isOwner: boolean = false) {
+      const c = (col: string) => `c.${col}`;
+      // Owner dashboard: newest first by default; donations not available in FROM
+      if (isOwner) {
+        switch (sort) {
+          case 'popular':
+          case 'newest':
+          case 'recent':
+            return `${pinSort}, ${c('created_at')} DESC`;
+          case 'highest_cpm':
+            return `${pinSort}, ${c('cpm_rate_cents')} DESC NULLS LAST`;
+          case 'most_funded':
+            return `${pinSort}, (${c('total_budget_cents')} - ${c('budget_remaining_cents')}) DESC NULLS LAST`;
+          case 'most_views':
+            return `${pinSort}, COALESCE(v.total_verified_views, '0')::int DESC NULLS LAST, ${c('created_at')} DESC`;
+          default:
+            return `${pinSort}, ${c('created_at')} DESC`;
+        }
+      }
+      // Public browse: full popularity sort with donations
       switch (sort) {
         case 'newest':
         case 'recent':
@@ -105,7 +125,7 @@ export async function GET(request: Request) {
         LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
         LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
         ${whereClause}
-        ORDER BY ${orderClause()}
+        ORDER BY ${orderClause(isOwnerView)}
         LIMIT $${limitIdx}
       `;
       campaigns = await sql.raw(query, params);
@@ -133,7 +153,7 @@ export async function GET(request: Request) {
           FROM campaign_donations GROUP BY campaign_id
         ) donations ON donations.campaign_id = c.id
         ${whereClause}
-        ORDER BY ${orderClause()}
+        ORDER BY ${orderClause(isOwnerView)}
         LIMIT $${limitIdx}
       `;
       campaigns = await sql.raw(query, params);
