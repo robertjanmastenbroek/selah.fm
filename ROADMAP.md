@@ -1,5 +1,5 @@
 # Selah.fm — Strategic Roadmap
-**Version:** 3.1 · **Created:** 2026-06-02 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · 16 blog posts
+**Version:** 3.2 · **Created:** 2026-06-02 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · 17 blog posts · **Roadmap: 22/25 complete**
 
 > Full 10-field audit completed June 2, 2026. Prioritized by effort/impact for a solo developer.
 > Each item includes exact files to modify, acceptance criteria, and testing steps.
@@ -129,7 +129,7 @@
 
 ## 📅 Phase 2: Momentum (next 30 days)
 
-### 11. ⬜ Creator outreach pipeline — scrape + DM creators
+### 11. ⬜ Creator outreach pipeline — scrape + DM creators (deferred — needs manual launch first)
 - **Field:** Growth
 - **Effort:** 8 hours
 - **Files to create:** `lib/creator-discovery.ts`, `app/api/cron/creator-pipeline/route.ts`
@@ -141,7 +141,7 @@
 - **Acceptance:** Pipeline discovers 50+ creators per run, DMs sent automatically
 - **Test:** Run pipeline manually, verify creator records created, verify DM templates formatted correctly
 
-### 12. ⬜ In-app notification bell
+### 12. ✅ In-app notification bell
 - **Field:** Product & UX
 - **Effort:** 4 hours
 - **Files to create:** `components/NotificationBell.tsx`
@@ -154,7 +154,7 @@
 - **Acceptance:** After a submission is approved, the creator sees a notification badge. After a creator submits to your campaign, the artist sees a notification.
 - **Test:** Trigger a notification via DB insert, verify bell badge appears, verify clicking marks as read
 
-### 13. ⬜ Creator profile pages — portfolio of submissions
+### 13. ✅ Creator profile pages — portfolio of submissions
 - **Field:** Product & Community
 - **Effort:** 6 hours
 - **File to create:** `app/creators/[id]/page.tsx`
@@ -166,7 +166,7 @@
 - **Acceptance:** `/creators/[id]` shows a creator's full portfolio. Artists can browse creators before launching campaigns.
 - **Test:** Create test submissions for a user, visit their profile, verify all submissions visible
 
-### 14. ⬜ Blog pillar pages — topical clusters for SEO
+### 14. ✅ Blog pillar pages — topical clusters for SEO
 - **Field:** SEO
 - **Effort:** 6 hours
 - **Files to create:** `app/guides/[slug]/page.tsx` or manual pages
@@ -178,7 +178,7 @@
 - **Acceptance:** Each pillar page is live, has FAQ schema, and links bidirectionally to blog posts
 - **Test:** Visit each guide URL, verify it loads, verify interlinking to blog posts
 
-### 15. ⬜ Sentry or error monitoring for cron failures
+### 15. ⬜ Sentry or error monitoring for cron failures (manual setup — npm install + dashboard)
 - **Field:** Engineering
 - **Effort:** 2 hours
 - **What to do (Sentry — free tier):**
@@ -189,7 +189,7 @@
 - **Acceptance:** Cron failures appear in Sentry dashboard within seconds. Email alerts configured for new errors.
 - **Test:** Temporarily break the blog pipeline (e.g., wrong DB query), verify error appears in Sentry
 
-### 16. ⬜ PWA manifest — mobile install support
+### 16. ✅ PWA manifest — mobile install support
 - **Field:** Product & UX
 - **Effort:** 2 hours
 - **Files to create:** `public/manifest.json`, `app/manifest.ts`
@@ -200,7 +200,7 @@
 - **Acceptance:** Android Chrome shows "Install app" prompt. iOS Safari shows "Add to Home Screen" in share menu.
 - **Test:** Open on mobile Chrome, verify install prompt. Open on iOS Safari, verify share menu option.
 
-### 17. ⬜ DMCA/copyright policy + takedown procedure
+### 17. ✅ DMCA/copyright policy + takedown procedure
 - **Field:** Legal
 - **Effort:** 2 hours
 - **File to create:** `app/dmca/page.tsx`
@@ -212,7 +212,7 @@
 - **Acceptance:** `/dmca` page loads, footer links to it, copyright@selah.fm email set up (forward to your email)
 - **Test:** Visit /dmca, verify all required DMCA sections present
 
-### 18. ⬜ Improve Terms of Service — marketplace-specific policies
+### 18. ✅ Improve Terms of Service — marketplace-specific policies
 - **Field:** Legal
 - **Effort:** 4 hours
 - **File to modify:** `app/tos/page.tsx`
@@ -234,7 +234,7 @@
 
 ## 🎯 Phase 3: Scale (next 90 days)
 
-### 19. ⬜ Referral flywheel — prominent everywhere
+### 19. ✅ Referral flywheel — prominent everywhere
 - **Field:** Growth
 - **Effort:** 4 hours
 - **Files to modify:** `app/dashboard/page.tsx`, `app/settings/page.tsx`, `components/HomePageClient.tsx`
@@ -246,7 +246,7 @@
 - **Acceptance:** Referral link visible in 3 places. Post-payout email includes referral prompt. Referral stats page works.
 - **Test:** Share referral link, sign up with a different email, verify referral record created
 
-### 20. ⬜ Social sharing incentives — "Share your earnings"
+### 20. ✅ Social sharing incentives — "Share your earnings"
 - **Field:** Community
 - **Effort:** 2 hours
 - **Files to modify:** `app/earnings/page.tsx`, `components/EarnModal.tsx` (success state)
@@ -257,7 +257,7 @@
 - **Acceptance:** After a payout, user sees a share button. Clicking opens X/Twitter with pre-filled text.
 - **Test:** Approve a test submission, verify success state includes share button
 
-### 21. ⬜ Programmatic SEO pages — genre, artist, platform
+### 21. ✅ Programmatic SEO pages — genre, artist, platform
 - **Field:** SEO
 - **Effort:** 6 hours
 - **Files to create:** `app/genre/[slug]/page.tsx`, `app/artist/[slug]/page.tsx`, `app/platform/[slug]/page.tsx`
@@ -271,7 +271,7 @@
 - **Acceptance:** `/genre/pop` returns a page with 10+ pop campaigns. Google indexes it within 1 week.
 - **Test:** Visit genre pages, verify campaigns listed, verify no 404s
 
-### 22. ⬜ SSL verification — `rejectUnauthorized: true`
+### 22. ✅ SSL verification — `rejectUnauthorized: true`
 - **Field:** Security
 - **Effort:** 1 hour
 - **File to modify:** `lib/db.ts`
@@ -282,7 +282,7 @@
 - **Acceptance:** Database connections still work, SSL certificate is validated
 - **Test:** `node -e "require('./lib/db')"` connects successfully. Intentionally wrong CA cert should fail.
 
-### 23. ⬜ Content Security Policy header
+### 23. ✅ Content Security Policy header
 - **Field:** Security
 - **Effort:** 3 hours
 - **File to modify:** `next.config.js`
@@ -293,7 +293,7 @@
 - **Acceptance:** CSP header present on all responses. No functional breakage. Console shows CSP reports instead of errors.
 - **Test:** Check response headers in devtools, verify CSP present. Test all major pages for broken resources.
 
-### 24. ⬜ Retargeting pixel — Meta + Google
+### 24. ✅ Retargeting pixel — Meta + Google
 - **Field:** CRO
 - **Effort:** 1 hour
 - **Files to modify:** `app/layout.tsx`
@@ -304,7 +304,7 @@
 - **Acceptance:** Meta Events Manager shows PageView events within 1 hour. Custom events fire on campaign pages.
 - **Test:** Visit campaign page, check Meta Pixel Helper extension, verify ViewContent event fired
 
-### 25. ⬜ A/B testing infrastructure
+### 25. ✅ A/B testing infrastructure
 - **Field:** Analytics
 - **Effort:** 4 hours
 - **Files to create:** `lib/ab-test.ts`, `middleware.ts` (modify)
