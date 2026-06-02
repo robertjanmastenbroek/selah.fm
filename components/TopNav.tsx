@@ -5,6 +5,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import { LayoutDashboard, ClipboardCheck, Banknote, Settings, LogOut, Music, Bug, Search, Menu, Bell, MessageCircle, Clapperboard, HelpCircle, Sparkles } from 'lucide-react';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function Header() {
   const { data } = useSWR('/api/auth/me', fetcher, swrConfig);
@@ -12,23 +13,15 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Notifications
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadNotifs, setUnreadNotifs] = useState(0);
   // Messages
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   const initials = profile?.name?.[0]?.toUpperCase() || '?';
   const profileImage = profile?.profile_image_url || null;
 
-  // Fetch notifications + messages
+  // Fetch messages
   useEffect(() => {
     if (!profile) return;
-    fetch('/api/notifications', { credentials: 'include' })
-      .then(r => r.json())
-      .then(d => {
-        if (d.notifications) { setNotifications(d.notifications.slice(0, 5)); setUnreadNotifs(d.unread || 0); }
-      }).catch(() => {});
     fetch('/api/messages', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
@@ -36,12 +29,7 @@ export default function Header() {
       }).catch(() => {});
   }, [profile]);
 
-  const totalUnread = unreadNotifs + unreadMessages;
-
-  const markNotifsRead = async () => {
-    await fetch('/api/notifications', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
-    setUnreadNotifs(0);
-  };
+  const totalUnread = unreadMessages;
 
   const handleLogout = async () => {
     setOpen(false);
@@ -71,8 +59,9 @@ export default function Header() {
           <img src="/images/selah-nav-logo.png" alt="Selah.fm" className="h-7 w-auto" fetchPriority="high" width="200" height="40" />
         </Link>
 
-        {/* Right: hamburger menu with badge */}
+        {/* Right: notification bell + hamburger menu */}
         <div className="flex items-center" ref={dropdownRef}>
+          {profile && <NotificationBell />}
           <button
             onClick={() => setOpen(!open)}
             className="p-2 -mr-2 text-muted-foreground hover:text-primary transition-colors relative"
@@ -105,39 +94,6 @@ export default function Header() {
                       </Link>
                     </div>
                   </div>
-
-                  {/* Notifications preview */}
-                  {unreadNotifs > 0 && (
-                    <div className="border-b border-white/[0.04]">
-                      <div className="flex items-center justify-between px-4 py-2.5">
-                        <span className="text-xs font-semibold flex items-center gap-1.5">
-                          <Bell size={12} className="text-primary" />
-                          Notifications
-                          <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full" style={{ background: 'linear-gradient(135deg, #4338CA, #5B7FFF)' }}>{unreadNotifs}</span>
-                        </span>
-                        <button onClick={markNotifsRead} className="text-[10px] text-primary hover:underline font-medium">Clear</button>
-                      </div>
-                      <div className="max-h-32 overflow-y-auto">
-                        {notifications.filter((n: any) => !n.read).slice(0, 3).map((n: any) => (
-                          <Link key={n.id} href={n.link || '#'} onClick={() => setOpen(false)}
-                            className="block px-4 py-2.5 hover:bg-white/[0.03] transition-colors">
-                            <p className="text-[11px] leading-relaxed line-clamp-2">{n.message}</p>
-                            <p className="text-[9px] text-muted-foreground mt-0.5">
-                              {(() => {
-                                const d = new Date(n.created_at);
-                                const m = Math.floor((Date.now() - d.getTime()) / 60000);
-                                if (m < 1) return 'just now';
-                                if (m < 60) return `${m}m ago`;
-                                const h = Math.floor(m / 60);
-                                if (h < 24) return `${h}h ago`;
-                                return d.toLocaleDateString();
-                              })()}
-                            </p>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Messages preview */}
                   {unreadMessages > 0 && (

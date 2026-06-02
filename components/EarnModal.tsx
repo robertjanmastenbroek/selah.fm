@@ -151,10 +151,27 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                       <div key={i} className="flex gap-2.5 text-[11px]"><span className="shrink-0">{s.emoji}</span><span className="text-muted-foreground leading-relaxed">{s.text}</span></div>
                     ))}
                   </div>
+                  <button
+                    onClick={() => {
+                      const text = `Just submitted a video for "${trackTitle}" on @selahfm! Creators earn the full CPM — no deductions. 🎵💰\n\nselah.fm/browse`;
+                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border border-[#1DA1F2]/20 text-[#1DA1F2] text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> Share your earnings
+                  </button>
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={onClose} className="flex-1 text-xs">Close</Button>
                     <Button onClick={() => { setSubmitted(false); setUrl(''); }} className="flex-1 text-xs">Submit another</Button>
                   </div>
+                  {session?.id && (
+                    <a
+                      href={`/creators/${session.id}`}
+                      className="block text-center text-[11px] text-primary/70 hover:text-primary transition-colors mt-2"
+                    >
+                      View your creator profile →
+                    </a>
+                  )}
                 </motion.div>
               ) : (
                 <>

@@ -1,0 +1,24 @@
+{
+  "name": "Selah.fm — Music Promotion Marketplace",
+  "short_name": "Selah.fm",
+  "description": "Open-source CPM marketplace for music promotion. Artists set budgets, creators earn per view.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F0F23",
+  "theme_color": "#0F0F23",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/images/selah-nav-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/selah-nav-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["music", "entertainment", "social"],
+  "lang": "en"
+}

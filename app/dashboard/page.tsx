@@ -19,7 +19,7 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/components/Toast';
 import { trackCreateCampaign, trackFundCampaign } from '@/lib/analytics';
-import { Plus, Edit3, ExternalLink } from 'lucide-react';
+import { Plus, Edit3, ExternalLink, Copy, Check } from 'lucide-react';
 
 
 interface Campaign {
@@ -55,6 +55,7 @@ function DashboardContent() {
   const [step, setStep] = useState<'list' | 'wizard'>(hireCreatorId ? 'wizard' : 'list');
   const [wizardStep, setWizardStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [refCopied, setRefCopied] = useState(false);
   const { addToast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
@@ -404,17 +405,33 @@ function DashboardContent() {
           </>
         ) : (
           <>
+            {profile && (
             <Card className="mb-6 border-accent/20 bg-accent/[0.03] animate-fade-in">
               <CardContent className="p-4 text-center space-y-2">
-                <p className="text-sm font-medium">🔗 Invite artists & earn 5%</p>
+                <p className="text-sm font-medium">🔗 Share Selah.fm, earn 5% bonus</p>
                 <p className="text-xs text-muted-foreground">
                   When a referred artist makes their first deposit, you both get 5% of it credited to your campaigns.
                 </p>
                 <div className="flex items-center gap-2 justify-center">
-                  <code className="text-xs bg-muted px-3 py-1.5 rounded-lg font-mono">https://selah.fm/login?ref={profile?.email || 'you@email.com'}</code>
+                  <code className="text-xs bg-muted px-3 py-1.5 rounded-lg font-mono max-w-[240px] truncate">selah.fm/login?ref={profile?.email || 'you@email.com'}</code>
+                  <button
+                    onClick={() => {
+                      const link = `https://selah.fm/login?ref=${encodeURIComponent(profile?.email || '')}`;
+                      navigator.clipboard.writeText(link).then(() => {
+                        setRefCopied(true);
+                        addToast('Referral link copied!', 'success');
+                        setTimeout(() => setRefCopied(false), 2000);
+                      }).catch(() => addToast('Failed to copy', 'error'));
+                    }}
+                    className="shrink-0 px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors flex items-center gap-1"
+                  >
+                    {refCopied ? <Check size={12} /> : <Copy size={12} />}
+                    {refCopied ? 'Copied' : 'Copy'}
+                  </button>
                 </div>
               </CardContent>
             </Card>
+            )}
 
             {campaigns.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">

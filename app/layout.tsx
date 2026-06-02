@@ -50,6 +50,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://api.stripe.com" />
         <link rel="dns-prefetch" href="https://js.stripe.com" />
         <link rel="preload" as="image" href="/images/selah-nav-logo.png" fetchPriority="high" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0F0F23" />
       </head>
       <body className="min-h-screen bg-background overflow-x-hidden">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium focus:outline-none">
@@ -82,6 +84,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/privacy" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">Privacy</a>
             <span className="text-muted-foreground/15 select-none">·</span>
             <a href="/tos" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">Terms</a>
+            <span className="text-muted-foreground/15 select-none">·</span>
+            <a href="/dmca" className="text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">DMCA</a>
             <span className="text-muted-foreground/15 select-none">·</span>
             <a href="https://github.com/robertjanmastenbroek/selah.fm" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/40 hover:text-muted-foreground transition-colors">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="opacity-50">

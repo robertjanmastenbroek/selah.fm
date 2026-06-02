@@ -118,6 +118,8 @@ export async function GET(request: Request) {
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
           COALESCE(u.display_name, da.artist_name) as artist_name,
+          c.artist_id,
+          u.is_creator as artist_is_creator,
           u.profile_image_url as artist_avatar,
           COALESCE(donations.total_cents, 0) as donation_total_cents,
           COALESCE(donations.donation_count, 0) as donation_count

@@ -12,7 +12,7 @@ import { useToast } from '@/components/Toast';
 import CreatorAvatar from '@/components/CreatorAvatar';
 import ImageUpload from '@/components/ImageUpload';
 import { TikTok, Instagram, YouTube, Spotify } from '@/components/SocialIcons';
-import { User, Music4, DollarSign, Save, LogOut, Check, ArrowRight, Camera } from 'lucide-react';
+import { User, Music4, DollarSign, Save, LogOut, Check, ArrowRight, Camera, Copy, Share2, Gift } from 'lucide-react';
 
 export default function SettingsPage() {
   const { data: profileData, isLoading: profileLoading } = useSWR('/api/auth/me', fetcher, swrConfig);
@@ -29,6 +29,10 @@ export default function SettingsPage() {
   const [isArtistAlso, setIsArtistAlso] = useState(true);
   const [isCreatorAlso, setIsCreatorAlso] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [referralTotal, setReferralTotal] = useState(0);
+  const [referralCompleted, setReferralCompleted] = useState(0);
+  const [referralLoading, setReferralLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -46,6 +50,27 @@ export default function SettingsPage() {
     setProfileImage(profile.profile_image_url || '');
     setIsArtistAlso(profile.is_artist ?? (profile.type === 'artist'));
     setIsCreatorAlso(profile.is_creator ?? (profile.type === 'creator'));
+
+    // Fetch referral stats
+    setReferralLoading(true);
+    (async () => {
+      try {
+        const { createClient } = await import('@/lib/supabase/client');
+        const supabase = createClient();
+        const { count: total } = await supabase
+          .from('referrals')
+          .select('*', { count: 'exact', head: true })
+          .eq('referrer_id', profile.id);
+        const { count: completed } = await supabase
+          .from('referrals')
+          .select('*', { count: 'exact', head: true })
+          .eq('referrer_id', profile.id)
+          .eq('status', 'completed');
+        setReferralTotal(total || 0);
+        setReferralCompleted(completed || 0);
+      } catch { /* RLS may block; ignore */ }
+      setReferralLoading(false);
+    })();
   }, [profile]);
 
   const save = async () => {
@@ -203,6 +228,53 @@ export default function SettingsPage() {
                     <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isCreatorAlso ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
                   </div>
                 </label>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ── Referrals ──────────────────────────────────────── */}
+          <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.24,duration:0.4}}>
+            <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden">
+              <div className="p-6 pb-0">
+                <div className="flex items-center gap-2 mb-1"><Gift size={16} strokeWidth={1.5} className="text-accent/60"/><h2 className="font-semibold text-sm">Referrals</h2></div>
+                <p className="text-xs text-muted-foreground mb-5">Share Selah.fm and earn. You both get 5% bonus on the referred user&apos;s first deposit.</p>
+              </div>
+              <div className="p-6 pt-0 space-y-4">
+                {/* Referral link */}
+                <div>
+                  <label className="text-[11px] text-muted-foreground mb-1.5 block">Your referral link</label>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-xs bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2.5 font-mono text-foreground/80 truncate">
+                      selah.fm/login?ref={profile?.email || 'you@email.com'}
+                    </code>
+                    <button
+                      onClick={() => {
+                        const link = `https://selah.fm/login?ref=${encodeURIComponent(profile?.email || '')}`;
+                        navigator.clipboard.writeText(link).then(() => {
+                          setCopied(true);
+                          addToast('Referral link copied!', 'success');
+                          setTimeout(() => setCopied(false), 2000);
+                        }).catch(() => addToast('Failed to copy', 'error'));
+                      }}
+                      className="shrink-0 px-3 py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors flex items-center gap-1.5"
+                    >
+                      {copied ? <Check size={14} /> : <Copy size={14} />}
+                      {copied ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center">
+                    <p className="text-lg font-bold">{referralLoading ? '...' : referralTotal}</p>
+                    <p className="text-[10px] text-muted-foreground">Clicked your link</p>
+                  </div>
+                  <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-center">
+                    <p className="text-lg font-bold text-emerald-400">{referralLoading ? '...' : referralCompleted}</p>
+                    <p className="text-[10px] text-muted-foreground">Signed up &amp; deposited</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground text-center">You both get 5% bonus on the referred user&apos;s first deposit.</p>
               </div>
             </div>
           </motion.div>

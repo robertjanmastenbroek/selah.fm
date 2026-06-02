@@ -1,165 +1,199 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { Bell, CheckCircle, XCircle, Banknote, Info, Send, DollarSign, Sparkles } from 'lucide-react';
 
-interface Notification {
-  id: string;
-  type: 'submission' | 'approval' | 'rejection' | 'earning' | 'payout' | 'system';
-  message: string;
-  read: boolean;
-  link: string;
-  created_at: string;
+const typeIcons: Record<string, React.ElementType> = {
+  submission: Send,
+  approval: CheckCircle,
+  rejection: XCircle,
+  earning: Banknote,
+  payout: DollarSign,
+  system: Info,
+};
+
+function timeAgo(dateStr: string): string {
+  const d = new Date(dateStr);
+  const m = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return d.toLocaleDateString();
 }
 
 export default function NotificationBell() {
-  const [open, setOpen] = useState(false);
-  const [notifs, setNotifs] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const ref = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
-      const res = await fetch('/api/notifications');
-      const data = await res.json();
-      if (data.notifications) {
-        setNotifs(data.notifications);
-        setUnreadCount(data.unreadCount || 0);
+      const r = await fetch('/api/notifications', { credentials: 'include' });
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.notifications) {
+        setNotifications(d.notifications);
+        setUnreadCount(d.unreadCount ?? d.unread ?? 0);
       }
     } catch {
-      // Silent fail — notifications are non-critical
-    } finally {
-      setLoading(false);
+      // silently fail — user may not be authenticated
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (!open) return; // Only poll when dropdown is open
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [open]);
+    intervalRef.current = setInterval(fetchNotifications, 60_000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [fetchNotifications]);
 
+  // Close on outside click
   useEffect(() => {
     if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as HTMLElement)) {
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as HTMLElement)) {
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
-  const markRead = async (id: string) => {
-    try {
-      await fetch('/api/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      });
-    } catch {}
-    setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const markAsRead = useCallback(async (id: string) => {
+    // Optimistic update
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
-    setOpen(false);
-  };
 
-  const markAllRead = async () => {
-    try {
-      await fetch('/api/notifications', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markAllRead: true }),
-      });
-    } catch {}
-    setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+  }, []);
+
+  const markAllRead = useCallback(async () => {
+    // Optimistic update
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
-  };
 
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
-  };
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ markAllRead: true }),
+    });
+  }, []);
 
-  const linkForNotification = (n: Notification): string => {
-    if (n.link) return n.link;
-    switch (n.type) {
-      case 'submission': return '/review';
-      case 'approval':
-      case 'rejection':
-      case 'earning':
-      case 'payout': return '/earnings';
-      default: return '/';
+  const handleNotificationClick = useCallback(async (n: any) => {
+    setOpen(false);
+    if (!n.read) {
+      await markAsRead(n.id);
     }
-  };
+    if (n.link) {
+      window.location.href = n.link;
+    }
+  }, [markAsRead]);
+
+  const recent = notifications.slice(0, 10);
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
-        onClick={() => { setOpen(!open); if (!open) fetchNotifications(); }}
-        className="relative p-2 rounded-lg hover:bg-muted transition-colors"
+        onClick={() => setOpen(!open)}
+        className="p-2 text-muted-foreground hover:text-primary transition-colors relative"
         aria-label="Notifications"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
+        <Bell size={20} strokeWidth={1.5} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white px-1">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1 bg-red-500">
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-12 w-80 bg-popover border rounded-xl shadow-xl z-50 overflow-hidden animate-slide-up">
-          <div className="px-4 py-3 border-b flex items-center justify-between">
-            <span className="font-medium text-sm">Notifications</span>
-            <div className="flex items-center gap-2">
+        <div
+          className="absolute right-0 top-11 z-50 w-80 rounded-2xl shadow-2xl animate-slide-up overflow-hidden"
+          style={{
+            background: '#11112A',
+            border: '1px solid rgba(49,46,129,0.4)',
+          }}
+        >
+          {/* Header */}
+          <div
+            className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08]"
+            style={{
+              background: 'linear-gradient(135deg, rgba(67,56,202,0.1) 0%, transparent 100%)',
+            }}
+          >
+            <span className="text-sm font-semibold flex items-center gap-2">
+              <Bell size={14} className="text-primary" />
+              Notifications
               {unreadCount > 0 && (
-                <button
-                  onClick={markAllRead}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Mark all read
-                </button>
+                <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full bg-red-500">
+                  {unreadCount}
+                </span>
               )}
-            </div>
+            </span>
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllRead}
+                className="text-[11px] text-primary hover:underline font-medium"
+              >
+                Mark all read
+              </button>
+            )}
           </div>
+
+          {/* List */}
           <div className="max-h-80 overflow-y-auto">
-            {loading ? (
-              <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                Loading...
-              </div>
-            ) : notifs.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-                <img src="/images/empty-notifications.png" alt="No notifications" className="mx-auto mb-3 w-20 h-20 object-contain opacity-60" loading="lazy" />
-                No notifications yet
+            {recent.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <Sparkles size={24} className="mx-auto mb-2 text-muted-foreground/30" />
+                <p className="text-xs text-muted-foreground">No notifications yet</p>
               </div>
             ) : (
-              notifs.map(n => (
-                <Link
-                  key={n.id}
-                  href={linkForNotification(n)}
-                  onClick={() => markRead(n.id)}
-                  className={`block px-4 py-3 border-b last:border-0 hover:bg-muted/50 transition-colors ${
-                    !n.read ? 'bg-muted/30' : ''
-                  }`}
-                >
-                  <p className="text-sm leading-relaxed">{n.message}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{timeAgo(n.created_at)}</p>
-                </Link>
-              ))
+              recent.map((n) => {
+                const TypeIcon = typeIcons[n.type] || Info;
+                const isUnread = !n.read;
+                return (
+                  <button
+                    key={n.id}
+                    onClick={() => handleNotificationClick(n)}
+                    className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors border-b border-white/[0.02] ${
+                      isUnread ? 'bg-indigo-500/[0.04]' : ''
+                    }`}
+                  >
+                    <span
+                      className={`mt-0.5 shrink-0 ${
+                        isUnread ? 'text-primary' : 'text-muted-foreground'
+                      }`}
+                    >
+                      <TypeIcon size={15} strokeWidth={1.5} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-[12px] leading-relaxed line-clamp-2 ${
+                          isUnread
+                            ? 'text-foreground font-medium'
+                            : 'text-muted-foreground'
+                        }`}
+                      >
+                        {n.message}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {timeAgo(n.created_at)}
+                      </p>
+                    </div>
+                    {isUnread && (
+                      <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                    )}
+                  </button>
+                );
+              })
             )}
           </div>
         </div>

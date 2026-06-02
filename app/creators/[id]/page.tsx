@@ -1,148 +1,391 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import useSWR from 'swr';
-import { fetcher, swrConfig } from '@/lib/swr-config';
-import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import sql from '@/lib/db';
+import CreatorAvatar from '@/components/CreatorAvatar';
 import Header from '@/components/TopNav';
 import BottomNav from '@/components/BottomNav';
-import CreatorAvatar from '@/components/CreatorAvatar';
-import CreatorSubmissions from '@/components/CreatorSubmissions';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { TikTok, Instagram, YouTube } from '@/components/SocialIcons';
-import { DollarSign, Eye, CheckCircle, Music4, ArrowLeft } from 'lucide-react';
-import { MessageButton } from '@/components/MessageButton';
+import { TikTok, Instagram, YouTube, Facebook } from '@/components/SocialIcons';
+import { DollarSign, FileText, CheckCircle, Music4, ExternalLink, Camera } from 'lucide-react';
 
-interface Creator {
-  id: string; display_name: string; bio: string; genres: string;
-  preferred_cpm_cents: number; tiktok_handle: string; instagram_handle: string;
-  youtube_handle: string; profile_image_url: string;
-  acceptance_rate: number; total_earned_cents: number;
-  total_verified_views: number; total_submissions: number;
+export const dynamic = 'force-dynamic';
+
+interface Props {
+  params: { id: string };
 }
 
-function HireButton({ creatorId, creatorName, cpm }: { creatorId: string; creatorName: string; cpm: number }) {
-  const [profile, setProfileState] = useState<any>(null);
-  const router = useRouter();
-  const { data: swrProfile } = useSWR('/api/auth/me', fetcher, swrConfig);
-  useEffect(() => { if (swrProfile?.user) setProfileState(swrProfile.user); }, [swrProfile]);
+// ── Data fetching ──────────────────────────────────────────────────────────
 
-  if (!profile) return (
-    <div className="text-center space-y-3"><h3 className="font-semibold">Want this creator to promote your music?</h3><p className="text-sm text-muted-foreground">Sign in as an artist to hire them for your campaign.</p><Button className="w-full" onClick={() => router.push(`/login?redirect=/creators/${creatorId}`)}>Sign in to hire</Button></div>
-  );
-  if (profile.type === 'creator') return (
-    <div className="text-center space-y-3"><h3 className="font-semibold">👋 Hey creator!</h3><p className="text-sm text-muted-foreground">Hire is for artists. Want to browse campaigns instead?</p><Button variant="secondary" className="w-full" onClick={() => router.push('/browse')}>Browse campaigns</Button></div>
-  );
-  return (
-    <div className="text-center space-y-3">
-      <h3 className="font-semibold">Want this creator to promote your music?</h3>
-      <p className="text-sm text-muted-foreground">Hire them at their CPM rate or create a custom campaign.</p>
-      <Button className="w-full" onClick={() => router.push(`/dashboard?hire=${creatorId}&cpm=${cpm}&name=${encodeURIComponent(creatorName)}`)}>
-        Hire @{creatorName} — ${(cpm/100).toFixed(2)} CPM
-      </Button>
-    </div>
-  );
+async function getCreator(id: string) {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  if (!isUuid) return null;
+
+  const rows = await sql`
+    SELECT id, display_name, bio, genres, preferred_cpm_cents,
+           tiktok_handle, instagram_handle, youtube_handle, facebook_handle,
+           profile_image_url, is_creator
+    FROM users
+    WHERE id = ${id}::uuid AND is_creator = true
+  `;
+  return rows[0] || null;
 }
 
-export default function CreatorProfilePage() {
-  const { id } = useParams<{ id: string }>();
-  const [creator, setCreator] = useState<Creator | null>(null);
-  const [loading, setLoading] = useState(true);
+async function getSubmissions(creatorId: string) {
+  const rows = await sql`
+    SELECT s.id, s.campaign_id, s.content_url, s.platform,
+           s.review_status, s.views_verified, s.payout_amount_cents,
+           s.payout_status, s.submitted_at,
+           c.track_title, c.cover_art_url
+    FROM submissions s
+    JOIN campaigns c ON c.id = s.campaign_id
+    WHERE s.creator_id = ${creatorId}::uuid
+    ORDER BY s.submitted_at DESC
+  `;
+  return rows;
+}
 
-  useEffect(() => {
-    fetch(`/api/creators/${id}`).then(r=>r.json()).then(d=>{if(d.error){setCreator(null)}else{setCreator(d)};setLoading(false);}).catch(()=>setLoading(false));
-  }, [id]);
+// ── SEO Metadata ───────────────────────────────────────────────────────────
 
-  if (loading) return (<div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23'}}><Header /><main className="page-container max-w-2xl"><Skeleton className="h-48 w-full rounded-2xl mb-4"/><Skeleton className="h-8 w-1/3 mb-2"/><Skeleton className="h-4 w-2/3"/></main><BottomNav/></div>);
-  if (!creator) return (<div className="min-h-screen" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23'}}><Header /><main className="page-container max-w-2xl text-center py-20"><h2 className="text-xl font-bold mb-2">Creator not found</h2></main><BottomNav/></div>);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const creator = await getCreator(params.id);
+  if (!creator) {
+    return {
+      title: 'Creator not found — Selah.fm',
+      robots: { index: false, follow: true },
+    };
+  }
 
-  const earned = (creator.total_earned_cents||0)/100;
-  const views = creator.total_verified_views||0;
-  const acceptance = Math.round((creator.acceptance_rate||0)*100);
+  const displayName = creator.display_name || 'Creator';
+  const title = `${displayName} — Creator on Selah.fm`;
+  const desc = creator.bio
+    ? `${displayName} is a content creator on Selah.fm. ${creator.bio.slice(0, 120)}`
+    : `${displayName} is a content creator on Selah.fm. See their portfolio, earnings, and social handles.`;
+
+  return {
+    title,
+    description: desc.slice(0, 160),
+    robots: { index: true, follow: true },
+    openGraph: {
+      title,
+      description: desc.slice(0, 160),
+      type: 'profile',
+      images: creator.profile_image_url ? [{ url: creator.profile_image_url }] : [],
+      siteName: 'Selah.fm',
+    },
+    twitter: {
+      card: 'summary',
+      title,
+      description: desc.slice(0, 160),
+    },
+  };
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+function formatViews(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return String(n);
+}
+
+function platformUrl(platform: string, handle: string): string {
+  const clean = handle.replace(/^@/, '');
+  switch (platform) {
+    case 'tiktok': return `https://tiktok.com/@${clean}`;
+    case 'instagram': return `https://instagram.com/${clean}`;
+    case 'youtube': return `https://youtube.com/@${clean}`;
+    case 'facebook': return `https://facebook.com/${clean}`;
+    default: return '#';
+  }
+}
+
+function statusBadge(status: string) {
+  switch (status) {
+    case 'approved':
+      return <Badge className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">Approved</Badge>;
+    case 'rejected':
+      return <Badge className="text-[10px] bg-red-500/10 text-red-400 border-red-500/20">Rejected</Badge>;
+    case 'pending':
+    default:
+      return <Badge className="text-[10px] bg-amber-500/10 text-amber-400 border-amber-500/20">Pending</Badge>;
+  }
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────
+
+export default async function CreatorProfilePage({ params }: Props) {
+  const creator = await getCreator(params.id);
+  if (!creator) notFound();
+
+  const submissions = await getSubmissions(creator.id);
+
+  // Compute stats
+  const totalSubmissions = submissions.length;
+  const approvedCount = submissions.filter((s: any) => s.review_status === 'approved').length;
+  const totalEarningsCents = submissions
+    .filter((s: any) => s.payout_status === 'paid' || s.payout_status === 'processing')
+    .reduce((sum: number, s: any) => sum + (s.payout_amount_cents || 0), 0);
+  const totalEarnings = totalEarningsCents / 100;
+
+  const bg = 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23';
+
+  // Platform handles to display
+  const handles: { platform: string; handle: string; icon: React.ReactNode; color: string }[] = [];
+  if (creator.tiktok_handle) handles.push({ platform: 'tiktok', handle: creator.tiktok_handle, icon: <TikTok size={16} />, color: '#ff0050' });
+  if (creator.instagram_handle) handles.push({ platform: 'instagram', handle: creator.instagram_handle, icon: <Instagram size={16} />, color: '#E1306C' });
+  if (creator.youtube_handle) handles.push({ platform: 'youtube', handle: creator.youtube_handle, icon: <YouTube size={16} />, color: '#FF0000' });
+  if (creator.facebook_handle) handles.push({ platform: 'facebook', handle: creator.facebook_handle, icon: <Facebook size={16} />, color: '#1877F2' });
 
   return (
-    <div className="min-h-screen pb-20" style={{background:'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23'}}>
+    <div className="min-h-screen pb-20" style={{ background: bg }}>
       <Header />
+
       <main className="page-container max-w-2xl">
-        {/* Profile header */}
-        <motion.div className="mb-8" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
+        {/* ── Profile header ── */}
+        <div className="mb-8">
           <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden">
-            <div className="h-32 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent"/>
-            <div className="p-6 -mt-12 relative">
-              <CreatorAvatar src={creator.profile_image_url} name={creator.display_name||'Creator'} size="xl"/>
-              <div className="mt-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-2xl font-bold">{creator.display_name}</h1>
-                  <span className="flex items-center gap-1">
-                    {creator.tiktok_handle && <span className="text-[#ff0050]/70"><TikTok size={14}/></span>}
-                    {creator.instagram_handle && <span className="text-[#E1306C]/70"><Instagram size={14}/></span>}
-                    {creator.youtube_handle && <span className="text-[#FF0000]/70"><YouTube size={14}/></span>}
-                  </span>
+            {/* Banner gradient */}
+            <div className="h-32 bg-gradient-to-r from-primary/25 via-primary/8 to-transparent" />
+
+            <div className="p-6 -mt-14 relative">
+              {/* Avatar */}
+              <div className="mb-4">
+                <CreatorAvatar
+                  src={creator.profile_image_url}
+                  name={creator.display_name || 'Creator'}
+                  size="xl"
+                />
+              </div>
+
+              {/* Name + handles */}
+              <div className="flex items-center gap-3 flex-wrap mb-3">
+                <h1
+                  className="text-2xl font-bold tracking-tight"
+                  style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}
+                >
+                  {creator.display_name || 'Creator'}
+                </h1>
+                <div className="flex items-center gap-1.5">
+                  {handles.map((h) => (
+                    <a
+                      key={h.platform}
+                      href={platformUrl(h.platform, h.handle)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
+                      style={{ backgroundColor: `${h.color}15`, color: h.color }}
+                      title={`${h.platform}: ${h.handle}`}
+                    >
+                      {h.icon}
+                    </a>
+                  ))}
                 </div>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {creator.tiktok_handle && <Badge variant="outline" className="text-[10px]">{creator.tiktok_handle.startsWith('@')?creator.tiktok_handle:'@'+creator.tiktok_handle}</Badge>}
-                  {creator.instagram_handle && <Badge variant="outline" className="text-[10px]">{creator.instagram_handle.startsWith('@')?creator.instagram_handle:'@'+creator.instagram_handle}</Badge>}
-                  {creator.youtube_handle && <Badge variant="outline" className="text-[10px]">{creator.youtube_handle.startsWith('@')?creator.youtube_handle:'@'+creator.youtube_handle}</Badge>}
+              </div>
+
+              {/* Handle badges */}
+              {handles.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {handles.map((h) => (
+                    <a
+                      key={h.platform}
+                      href={platformUrl(h.platform, h.handle)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] border transition-colors hover:opacity-80"
+                      style={{ borderColor: `${h.color}30`, color: h.color, backgroundColor: `${h.color}08` }}
+                    >
+                      {h.icon}
+                      <span>{h.handle.startsWith('@') ? h.handle : `@${h.handle}`}</span>
+                      <ExternalLink size={10} />
+                    </a>
+                  ))}
                 </div>
+              )}
+
+              {/* Bio */}
+              {creator.bio && (
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {creator.bio}
+                </p>
+              )}
+
+              {/* Genres */}
+              {creator.genres && (
+                <div className="flex gap-1 flex-wrap mt-3">
+                  {creator.genres.split(',').map((g: string) => (
+                    <Badge key={g.trim()} variant="secondary" className="text-[10px]">
+                      {g.trim()}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Stats cards ── */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          {[
+            {
+              icon: <DollarSign size={18} strokeWidth={1.5} />,
+              value: `$${totalEarnings.toFixed(0)}`,
+              label: 'Total earned',
+            },
+            {
+              icon: <FileText size={18} strokeWidth={1.5} />,
+              value: String(totalSubmissions),
+              label: 'Submissions',
+            },
+            {
+              icon: <CheckCircle size={18} strokeWidth={1.5} />,
+              value: String(approvedCount),
+              label: 'Approved',
+            },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-4 text-center"
+            >
+              <div className="mx-auto mb-2 text-primary/50">{stat.icon}</div>
+              <div
+                className="text-xl font-bold text-primary"
+                style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}
+              >
+                {stat.value}
+              </div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── CPM card ── */}
+        {creator.preferred_cpm_cents ? (
+          <div className="mb-8">
+            <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold mb-1">CPM Rate</h3>
+                <div className="text-[10px] text-muted-foreground">Earn per 1M verified views</div>
+              </div>
+              <div
+                className="text-2xl font-bold text-[#22C55E]"
+                style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}
+              >
+                ${((creator.preferred_cpm_cents / 100) * 1000).toFixed(0)}
               </div>
             </div>
           </div>
-        </motion.div>
+        ) : null}
 
-        {/* Stats */}
-        <motion.div className="grid grid-cols-3 gap-3 mb-8" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.1,duration:0.4}}>
-          {[{value:`$${earned.toFixed(0)}`,label:'Earned',icon:DollarSign},{value:views>=1000?`${(views/1000).toFixed(1)}K`:views,label:'Views',icon:Eye},{value:`${acceptance}%`,label:'Accepted',icon:CheckCircle}].map((s,i)=>{const I=s.icon;return(
-            <div key={i} className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-4 text-center">
-              <I size={18} className="mx-auto mb-2 text-primary/60" strokeWidth={1.5}/>
-              <div className="text-xl font-bold text-primary">{s.value}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">{s.label}</div>
+        {/* ── Submissions grid ── */}
+        <div className="mb-8">
+          <h2
+            className="text-lg font-bold mb-4"
+            style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}
+          >
+            Portfolio
+          </h2>
+
+          {submissions.length === 0 ? (
+            <div className="rounded-2xl bg-white/[0.02] border border-white/[0.05] p-10 text-center">
+              <Camera size={40} strokeWidth={1} className="mx-auto mb-4 text-muted-foreground/20" />
+              <h3 className="font-semibold mb-1">No submissions yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                This creator hasn&apos;t submitted any videos yet.
+              </p>
+              <Link href="/browse">
+                <Button size="sm" variant="outline" className="text-xs rounded-xl">
+                  Browse campaigns
+                </Button>
+              </Link>
             </div>
-          )})}
-        </motion.div>
+          ) : (
+            <div className="grid gap-3">
+              {submissions.map((sub: any) => {
+                const amount = (sub.payout_amount_cents || 0) / 100;
+                const views = sub.views_verified || 0;
 
-        {/* Bio */}
-        {creator.bio && (
-          <motion.div className="mb-8" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.15}}>
-            <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6">
-              <h3 className="font-semibold mb-3 flex items-center gap-2"><Music4 size={16} strokeWidth={1.5} className="text-primary/60"/>About</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{creator.bio}</p>
+                return (
+                  <div
+                    key={sub.id}
+                    className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden flex items-stretch"
+                  >
+                    {/* Cover art thumbnail */}
+                    <div className="w-20 h-20 shrink-0 bg-white/[0.03] flex items-center justify-center overflow-hidden">
+                      {sub.cover_art_url ? (
+                        <img
+                          src={sub.cover_art_url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <Music4 size={20} className="text-white/10" />
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0 p-3 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Link
+                            href={`/c/${sub.campaign_id}`}
+                            className="text-sm font-semibold truncate hover:text-primary transition-colors"
+                          >
+                            {sub.track_title || 'Untitled'}
+                          </Link>
+                          {statusBadge(sub.review_status)}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <span className="capitalize">{sub.platform}</span>
+                          <span>·</span>
+                          <span>{formatViews(views)} views</span>
+                          {amount > 0 && (
+                            <>
+                              <span>·</span>
+                              <span className="text-[#22C55E] font-semibold">
+                                ${amount.toFixed(2)} earned
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Link to campaign */}
+                    <Link
+                      href={`/c/${sub.campaign_id}`}
+                      className="shrink-0 w-12 flex items-center justify-center text-muted-foreground/30 hover:text-primary transition-colors"
+                    >
+                      <ExternalLink size={16} />
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
-          </motion.div>
-        )}
+          )}
+        </div>
 
-        {/* Genres & CPM */}
-        <motion.div className="grid grid-cols-2 gap-4 mb-8" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.2}}>
-          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
-            <h3 className="text-sm font-semibold mb-3">Genres</h3>
-            <div className="flex gap-1 flex-wrap">{(creator.genres||'').split(',').slice(0,4).map(g=><Badge key={g} variant="secondary" className="text-[10px]">{g.trim()}</Badge>)}</div>
+        {/* ── Browse CTA ── */}
+        <div className="mb-6">
+          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-primary/10 p-6 text-center space-y-3">
+            <Music4 size={28} strokeWidth={1} className="mx-auto text-primary/40" />
+            <div>
+              <h3 className="font-semibold">Want creators like this for your music?</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Create a campaign and hire creators to promote your tracks.
+              </p>
+            </div>
+            <Link href="/dashboard">
+              <Button size="sm" className="text-xs rounded-xl">
+                Start a campaign
+              </Button>
+            </Link>
           </div>
-          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
-            <h3 className="text-sm font-semibold mb-3">CPM Rate</h3>
-            <div className="text-2xl font-bold text-primary">${((creator.preferred_cpm_cents/100) * 1000).toFixed(0)}</div>
-            <div className="text-[10px] text-muted-foreground mt-1">per 1M views</div>
-          </div>
-        </motion.div>
-
-        {/* Submissions */}
-        <motion.div className="mb-8" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.25}}>
-          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6">
-            <h3 className="font-semibold mb-4">Recent submissions</h3>
-            <CreatorSubmissions creatorId={id as string}/>
-          </div>
-        </motion.div>
-
-        {/* Hire CTA */}
-        <motion.div className="mb-6" initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.3}}>
-          <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-primary/10 p-6 space-y-3">
-            <HireButton creatorId={creator.id} creatorName={creator.display_name} cpm={creator.preferred_cpm_cents}/>
-            <div className="text-center"><MessageButton userId={creator.id} name={creator.display_name} className="justify-center" /></div>
-          </div>
-        </motion.div>
+        </div>
       </main>
+
       <BottomNav />
     </div>
   );

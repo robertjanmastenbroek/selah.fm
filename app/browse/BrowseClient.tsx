@@ -14,7 +14,7 @@ import { EmptyState } from '@/components/States';
 import { Megaphone, Search, X, SlidersHorizontal, Music4, TrendingUp } from 'lucide-react';
 import { PlatformBadge, platformColors } from '@/components/SocialIcons';
 
-interface Campaign { id: string; slug?: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; artist_name?: string; artist_avatar?: string; }
+interface Campaign { id: string; slug?: string; track_title: string; cover_art_url: string; cpm_rate_cents: number; total_budget_cents: number; budget_remaining_cents: number; platforms: string[]; artist_name?: string; artist_id?: string; artist_is_creator?: boolean; artist_avatar?: string; }
 
 const GENRES = ['pop', 'rock', 'hip-hop', 'electronic', 'r&b', 'country', 'latin', 'jazz', 'classical', 'indie', 'folk', 'metal', 'punk', 'reggae', 'blues', 'soul', 'funk', 'world', 'alternative', 'dance'];
 
@@ -178,9 +178,13 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
                     <div className="flex-1 flex flex-col justify-between p-4">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          {c.artist_name && (
+                          {c.artist_name && (c.artist_is_creator && c.artist_id ? (
+                            <Link href={`/creators/${c.artist_id}`} className="text-[11px] text-muted-foreground hover:text-primary transition-colors line-clamp-1 mb-0.5 block">
+                              {c.artist_name}
+                            </Link>
+                          ) : (
                             <p className="text-[11px] text-muted-foreground line-clamp-1 mb-0.5">{c.artist_name}</p>
-                          )}
+                          ))}
                           {/* Reserve space for 2 lines so all cards have the same title height */}
                           <h3 className="text-sm leading-snug line-clamp-2 font-semibold min-h-[2.5rem]"
                             style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
