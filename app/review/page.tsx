@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/States';
 import VideoEmbed from '@/components/VideoEmbed';
 import RatingPrompt from '@/components/RatingPrompt';
-import { Play, ExternalLink, DollarSign, Eye, Check, X, RefreshCw } from 'lucide-react';
+import { Play, ExternalLink, DollarSign, Eye, Check, X, RefreshCw, Music } from 'lucide-react';
 
 interface Submission {
   id: string; creator_name: string; track_title: string; platform: string;
@@ -34,13 +34,41 @@ function platformColor(platform: string) {
 export default function ReviewPage() {
   const [selectedCampaign, setSelectedCampaign] = useState('all');
   const [statusFilter, setStatusFilter] = useState('pending');
+  const [artistId, setArtistId] = useState<string | null>(null);
+  const [profileName, setProfileName] = useState('');
   const { addToast } = useToast();
 
   const { data: campaignsData } = useSWR('/api/campaigns', fetcher, swrConfig);
   const campaigns = (campaignsData?.campaigns || []).map((c: any) => ({ id: c.id, track_title: c.track_title }));
 
-  const campaignId = selectedCampaign === 'all' ? 'all' : selectedCampaign;
-  const { data: submissions, error, isLoading, mutate } = useSWR(`/api/submissions?campaignId=${campaignId}&status=${statusFilter}`, fetcher, swrConfig);
+  // Look up artist profile for the current user
+  const { data: profileData } = useSWR('/api/auth/me', fetcher, swrConfig);
+  useEffect(() => {
+    if (!profileData?.user?.display_name) return;
+    const name = profileData.user.display_name;
+    setProfileName(name);
+    // Look up artist by name to get their UUID
+    fetch(`/api/artist/search?q=${encodeURIComponent(name)}&generate=false`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.artists?.length > 0) {
+          // Fetch full artist profile to get the UUID
+          fetch(`/api/artists/${d.artists[0].slug}`)
+            .then(r => r.json())
+            .then(ad => {
+              if (ad.artist?.id) setArtistId(ad.artist.id);
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, [profileData?.user?.display_name]);
+
+  // Build the API URL: artistId takes priority over campaignId
+  const apiUrl = selectedCampaign === '__artist__' && artistId
+    ? `/api/submissions?artistId=${artistId}&status=${statusFilter}`
+    : `/api/submissions?campaignId=${selectedCampaign === 'all' ? 'all' : selectedCampaign}&status=${statusFilter}`;
+  const { data: submissions, error, isLoading, mutate } = useSWR(apiUrl, fetcher, swrConfig);
 
   const subs: Submission[] = submissions ? (Array.isArray(submissions) ? submissions : []) : [];
 
@@ -171,6 +199,7 @@ export default function ReviewPage() {
               className="border rounded-md px-3 py-2 text-sm bg-background"
             >
               <option value="all">All campaigns</option>
+              {artistId && <option value="__artist__">🎵 {profileName || 'My artist profile'}</option>}
               {campaigns.map((c: { id: string; track_title: string }) => (
                 <option key={c.id} value={c.id}>{c.track_title}</option>
               ))}

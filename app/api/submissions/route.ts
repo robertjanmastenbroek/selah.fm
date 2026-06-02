@@ -145,9 +145,26 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const campaignId = searchParams.get('campaignId');
-    const statusFilter = searchParams.get('status'); // 'pending', 'approved', 'rejected'
+    const artistId = searchParams.get('artistId');
+    const statusFilter = searchParams.get('status');
     let submissions;
-    if (campaignId && campaignId !== 'all') {
+
+    // If artistId is provided, get submissions for all of that artist's campaigns
+    if (artistId) {
+      const statusCondition = statusFilter ? `AND s.review_status = $2` : '';
+      const query = `
+        SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
+          u.display_name as creator_name
+        FROM submissions s
+        JOIN campaigns c ON c.id = s.campaign_id
+        JOIN campaign_claims cc ON cc.campaign_id = c.id
+        LEFT JOIN users u ON u.id = s.creator_id
+        WHERE cc.discovered_artist_id = $1 ${statusCondition}
+        ORDER BY s.submitted_at DESC
+      `;
+      const params = statusFilter ? [artistId, statusFilter] : [artistId];
+      submissions = await sql.raw(query, params);
+    } else if (campaignId && campaignId !== 'all') {
       if (statusFilter) {
         submissions = await sql`
           SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
