@@ -97,7 +97,7 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
 
   const handleSearch = (q: string) => {
     const newFilters = { ...filters, q, genre: selectedGenre, platform: selectedPlatform, sort: selectedSort };
-    if (!q) delete newFilters.q;
+    if (!q) { const { q: _, ...rest } = newFilters; setFilters(rest); loadCampaigns(rest); return; }
     setFilters(newFilters);
     loadCampaigns(newFilters);
   };
