@@ -21,7 +21,23 @@ interface ArtistProps {
 
 export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug }: ArtistProps) {
   const name = artist.artist_name || 'Unknown Artist';
-  const genres = artist.genres || [];
+  const genres = (() => {
+    const raw = artist.genres;
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [raw];
+      } catch {
+        if (raw.startsWith('{') && raw.endsWith('}')) {
+          return raw.slice(1, -1).split(',').map((g: string) => g.trim()).filter(Boolean);
+        }
+        return [raw];
+      }
+    }
+    return [String(raw)];
+  })();
   const listeners = artist.monthly_listeners || 0;
   const imageUrl = artist.spotify_image_url || '';
   const bio = artist.bio || '';

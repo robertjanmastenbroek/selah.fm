@@ -17,9 +17,24 @@ interface Props {
 }
 
 export default function ArtistCard({ artist }: Props) {
-  const genres = artist.genres
-    ? (Array.isArray(artist.genres) ? artist.genres : [artist.genres])
-    : [];
+  const genres = (() => {
+    const raw = artist.genres;
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [raw];
+      } catch {
+        // PostgreSQL array format: {punk,rock} or just plain text
+        if (raw.startsWith('{') && raw.endsWith('}')) {
+          return raw.slice(1, -1).split(',').map((g: string) => g.trim()).filter(Boolean);
+        }
+        return [raw];
+      }
+    }
+    return [String(raw)];
+  })();
   const genre = genres[0] || '';
   const imageUrl = artist.spotify_image_url || '';
   const slug = artist.slug || '';
