@@ -24,8 +24,9 @@ export async function GET(request: Request) {
       params.push(v); return params.length; 
     };
 
-    // Artists with at least one enabled track
+    // Artists with at least one enabled track AND a real profile image
     conditions.push('EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)');
+    conditions.push(`(ap.spotify_image_url LIKE '%scdn.co/image/ab676161%' OR ap.spotify_image_url LIKE '%deezer%')`);
 
     if (genre) {
       conditions.push(`da.genres::text ILIKE $${p('%' + genre + '%')}`);
@@ -71,7 +72,10 @@ export async function GET(request: Request) {
 
     // Total count
     const countParams: any[] = [];
-    const countConditions: string[] = ['EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)'];
+    const countConditions: string[] = [
+      'EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)',
+      '(ap.spotify_image_url LIKE \'%scdn.co/image/ab676161%\' OR ap.spotify_image_url LIKE \'%deezer%\')'
+    ];
     if (genre) { countConditions.push(`da.genres::text ILIKE $$1`); countParams.push(`%${genre}%`); }
     if (search) { countConditions.push(`da.artist_name ILIKE $${countParams.length + 1}`); countParams.push(`%${search}%`); }
     const countWhere = countConditions.join(' AND ');
