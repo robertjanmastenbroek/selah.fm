@@ -226,9 +226,18 @@ export default function MessagesPage() {
       });
       const data = await res.json();
       if (data.message) {
-        setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: data.message.id } : m));
+        setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: data.message.id, created_at: data.message.created_at } : m));
+      } else if (data.error) {
+        // Remove optimistic message on error
+        setMessages(prev => prev.filter(m => m.id !== tempId));
+        setInput(content); // Restore input text
+        console.error('Failed to send message:', data.error);
       }
-    } catch {}
+    } catch {
+      // Network error — remove optimistic message
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setInput(content);
+    }
     setSending(false);
     inputRef.current?.focus();
   };
