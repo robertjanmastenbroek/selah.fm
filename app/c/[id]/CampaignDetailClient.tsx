@@ -315,10 +315,10 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               {/* Title overlay */}
               <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white drop-shadow-lg font-display">
-                  {displayTitle}
+                  {trackTitle || displayTitle}
                 </h1>
-                {trackTitle && trackTitle !== displayTitle && (
-                  <p className="text-sm text-white/70 mt-1">{trackTitle}</p>
+                {displayTitle !== trackTitle && trackTitle && (
+                  <p className="text-sm text-white/50 mt-1 max-w-md">{displayTitle}</p>
                 )}
               </div>
             </div>
@@ -445,7 +445,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
           open={joinOpen}
           campaignId={id}
           onClose={() => setJoinOpen(false)}
-          trackTitle={displayTitle}
+          trackTitle={trackTitle}
           cpmCents={campaign.cpm_rate_cents || 0}
         />
     </div>
