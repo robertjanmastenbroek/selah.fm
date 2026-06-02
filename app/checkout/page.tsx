@@ -145,8 +145,11 @@ export default function CheckoutPage() {
 
   const type = (searchParams.get('type') || 'donation') as 'donation' | 'deposit';
   const campaignId = searchParams.get('campaignId') || '';
+  const artistId = searchParams.get('artistId') || '';
+  const artistSlug = searchParams.get('artistSlug') || '';
 
   const [campaign, setCampaign] = useState<any>(null);
+  const [artistCheckout, setArtistCheckout] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [customValue, setCustomValue] = useState('0');
   const [activePreset, setActivePreset] = useState<number | null>(null);
@@ -162,31 +165,57 @@ export default function CheckoutPage() {
 
   const effectiveAmount = parseInt(customValue) || 0;
 
-  // Fetch campaign
+  // Fetch campaign or artist data
   useEffect(() => {
-    if (!campaignId) { setLoading(false); return; }
-    fetch(`/api/campaigns/${campaignId}`)
-      .then(r => r.json()).then(d => { if (!d.error) setCampaign(d); })
-      .catch(() => {}).finally(() => setLoading(false));
-  }, [campaignId]);
+    if (artistSlug) {
+      fetch(`/api/artists?search=${encodeURIComponent(artistSlug)}&limit=1&sort=name`)
+        .then(r => r.json()).then(d => {
+          if (d.artists?.length > 0) {
+            fetch(`/api/artists/${d.artists[0].slug}`)
+              .then(r => r.json()).then(ad => {
+                if (ad.artist) setArtistCheckout(ad);
+              }).catch(() => {}).finally(() => setLoading(false));
+          } else setLoading(false);
+        }).catch(() => setLoading(false));
+    } else if (campaignId) {
+      fetch(`/api/campaigns/${campaignId}`)
+        .then(r => r.json()).then(d => { if (!d.error) setCampaign(d); })
+        .catch(() => {}).finally(() => setLoading(false));
+    } else setLoading(false);
+  }, [campaignId, artistSlug]);
 
   // Get clientSecret (debounced)
   useEffect(() => {
-    if (effectiveAmount < 1 || !campaignId || loading) return;
+    if (effectiveAmount < 1 || loading) return;
+    const isArtistMode = !!artistSlug;
+    if (!isArtistMode && !campaignId) return;
     setClientSecret('');
     setPaymentError('');
     setGettingSecret(true);
     const timer = setTimeout(() => {
-      const endpoint = type === 'donation'
-        ? `/api/campaigns/${campaignId}/support`
-        : '/api/stripe';
-      const body: any = type === 'donation'
-        ? {
-            amount: effectiveAmount,
-            donorName: `${firstName} ${lastName}`.trim() || undefined,
-            message: donorMessage || undefined,
-          }
-        : { amount: effectiveAmount, campaignId };
+      let endpoint: string;
+      let body: any;
+
+      if (isArtistMode) {
+        endpoint = `/api/artists/${artistSlug}/fund`;
+        body = {
+          amount: effectiveAmount,
+          donorName: `${firstName} ${lastName}`.trim() || undefined,
+          donorEmail: email || undefined,
+          message: donorMessage || undefined,
+        };
+      } else if (type === 'donation') {
+        endpoint = `/api/campaigns/${campaignId}/support`;
+        body = {
+          amount: effectiveAmount,
+          donorName: `${firstName} ${lastName}`.trim() || undefined,
+          message: donorMessage || undefined,
+        };
+      } else {
+        endpoint = '/api/stripe';
+        body = { amount: effectiveAmount, campaignId };
+      }
+
       fetch(endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -200,7 +229,7 @@ export default function CheckoutPage() {
         .finally(() => setGettingSecret(false));
     }, 500);
     return () => clearTimeout(timer);
-  }, [effectiveAmount, campaignId, loading]);
+  }, [effectiveAmount, campaignId, artistSlug, type, loading, firstName, lastName, email, donorMessage]);
 
   const handlePreset = (val: number) => {
     setCustomValue(String(val));
@@ -222,22 +251,31 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!campaignId || !campaign) {
+  const isArtistMode = !!artistSlug;
+  const entity = isArtistMode ? artistCheckout : campaign;
+
+  if (!entity && !loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4" style={{ background: bg }}>
-        <p className="text-white/50">Campaign not found</p>
-        <Button variant="outline" onClick={() => router.push('/browse')}>Browse campaigns</Button>
+        <p className="text-white/50">{isArtistMode ? 'Artist not found' : 'Campaign not found'}</p>
+        <Button variant="outline" onClick={() => router.push(isArtistMode ? '/browse' : '/browse')}>Browse</Button>
       </div>
     );
   }
 
-  const donations = campaign.donations || { totalCents: 0, count: 0, supporters: [] };
-  const totalRaised = donations.totalCents / 100;
-  const budget = campaign.total_budget_cents / 100;
-  const spent = budget - ((campaign.budget_remaining_cents || 0) / 100);
-  const progress = budget > 0 ? (spent / budget) * 100 : 0;
-  const cpm = campaign.cpm_rate_cents / 100;
-  const coverArt = campaign.cover_art_url || campaign.cover_url;
+  // Derive display data based on mode
+  const artist = isArtistMode ? entity?.artist : null;
+  const artistStats = isArtistMode ? entity?.stats : null;
+  const donations = campaign?.donations || { totalCents: 0, count: 0, supporters: [] };
+  const totalRaised = isArtistMode
+    ? ((artistStats?.total_donations_cents || 0) / 100)
+    : (donations.totalCents / 100);
+  const budget = isArtistMode ? 0 : (campaign?.total_budget_cents / 100 || 0);
+  const spent = isArtistMode ? 0 : (budget - ((campaign?.budget_remaining_cents || 0) / 100));
+  const progress = isArtistMode ? 0 : (budget > 0 ? (spent / budget) * 100 : 0);
+  const displayTitle = isArtistMode ? artist?.artist_name : (campaign?.title || campaign?.track_title);
+  const coverArt = isArtistMode ? artist?.spotify_image_url : (campaign?.cover_art_url || campaign?.cover_url);
+  const supporterCount = isArtistMode ? (artistStats?.donation_count || 0) : (donations.count || 0);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: bg }}>
@@ -292,10 +330,10 @@ export default function CheckoutPage() {
                       <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">
                         {type === 'donation' ? "You're supporting" : 'Your campaign'}
                       </p>
-                      <h1 className="text-xl font-bold">{campaign.title || campaign.track_title}</h1>
+                      <h1 className="text-xl font-bold">{displayTitle}</h1>
                     </>
                   )}
-                  <p className="text-xs text-white/40 mt-1">${cpm.toFixed(2)} per 1,000 verified views</p>
+                  {!isArtistMode && <p className="text-xs text-white/40 mt-1">${((campaign?.cpm_rate_cents || 0) / 100).toFixed(2)} per 1,000 verified views</p>}
                 </div>
                 <div className="grid grid-cols-3 gap-3 py-3 border-y border-white/[0.06]">
                   <div>
@@ -307,7 +345,7 @@ export default function CheckoutPage() {
                     <div className="text-[10px] text-white/30 uppercase">Budget</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold">{donations.count}</div>
+                    <div className="text-lg font-bold">{supporterCount}</div>
                     <div className="text-[10px] text-white/30 uppercase">Supporters</div>
                   </div>
                 </div>
@@ -440,11 +478,11 @@ export default function CheckoutPage() {
         open={successOpen}
         mode={type}
         amount={effectiveAmount}
-        campaignTitle={campaign.title || campaign.track_title}
+        campaignTitle={displayTitle || ''}
         campaignId={campaignId}
         donorName={`${firstName} ${lastName}`.trim()}
         donorMessage={donorMessage}
-        onClose={() => router.push(`/c/${campaignId}`)}
+        onClose={() => router.push(isArtistMode ? `/artist/${artistSlug}` : `/c/${campaignId}`)}
       />
     </div>
   );
