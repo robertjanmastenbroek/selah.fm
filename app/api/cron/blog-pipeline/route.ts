@@ -35,6 +35,39 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80);
 }
 
+/** Normalize question text for deduplication — lowercase, strip punctuation, collapse whitespace */
+function normalizeQuestion(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+/** Check if a question has been used before (cross-batch dedup) */
+async function isQuestionUsed(text: string): Promise<boolean> {
+  const normalized = normalizeQuestion(text);
+  const exists = await sql`SELECT id FROM used_questions WHERE normalized_text = ${normalized} LIMIT 1`;
+  return exists.length > 0;
+}
+
+/** Mark a question as used after generating a post */
+async function markQuestionUsed(text: string, blogPostId: string) {
+  const normalized = normalizeQuestion(text);
+  await sql`
+    INSERT INTO used_questions (question_text, normalized_text, status, blog_post_id)
+    VALUES (${text.slice(0, 500)}, ${normalized}, 'used', ${blogPostId})
+    ON CONFLICT (normalized_text) DO NOTHING
+  `;
+}
+
+/** Enforce question-title format for QAPage schema compatibility */
+function enforceQuestionTitle(title: string, sourceQuestion: string): string {
+  if (!title || !sourceQuestion) return title || sourceQuestion;
+  // If title already looks like a question, keep it
+  if (title.trim().endsWith('?') || /^(what|how|why|when|where|who|can|do|does|is|are|should|will|did)\b/i.test(title.trim())) {
+    return title;
+  }
+  // Use the source question as the title — it was a real question from the pool
+  return sourceQuestion;
+}
+
 /**
  * Blog pipeline cron — fully automated: source → interview → answer → post → schedule.
  * Uses the same proven logic as the admin batch route.
@@ -114,6 +147,8 @@ export async function GET(request: Request) {
             ORDER BY random() LIMIT ${aiRemaining - aiStored}
           `;
           for (const q of catQs) {
+            // Skip questions already answered in previous batches (cross-batch dedup)
+            if (await isQuestionUsed(q.raw_question)) continue;
             await sql`INSERT INTO batch_questions (batch_id, raw_question, source_url, platform, category) VALUES (${batchId}, ${q.raw_question}, '', 'ai-generated', ${q.category})`;
             aiStored++;
           }
@@ -220,7 +255,9 @@ export async function GET(request: Request) {
         );
 
         const article = await generateArticle(iv.transcript, voiceExamples);
-        const slug = slugify(article.slug || article.title) + '-' + Date.now().toString(36);
+        // Enforce question-title format for QAPage schema + SEO featured snippets
+        const title = enforceQuestionTitle(article.title, iv.raw_question);
+        const slug = slugify(title) + '-' + Date.now().toString(36);
         const imageQuery = article.image_suggestions?.[0]?.description || 'music promotion';
         const featuredImage = await fetchBlogImage(imageQuery);
 
@@ -247,8 +284,8 @@ export async function GET(request: Request) {
             primary_keyword, internal_links, faq_schema, word_count,
             status, author_id
           ) VALUES (
-            ${iv.id}, ${article.title}, ${slug}, ${cleanHtml}, ${article.excerpt}, ${featuredImage},
-            ${article.title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
+            ${iv.id}, ${title}, ${slug}, ${cleanHtml}, ${article.excerpt}, ${featuredImage},
+            ${title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
             ${article.primary_keyword || null},
             ${JSON.stringify(article.internal_links || [])},
             ${JSON.stringify(article.faq_schema || null)},
@@ -292,6 +329,11 @@ export async function GET(request: Request) {
           ],
         };
         await sql`UPDATE blog_posts SET schema_markup = ${JSON.stringify(schema)} WHERE id = ${post.id}`;
+
+        // Track question as used (cross-batch dedup)
+        if (iv.raw_question) {
+          await markQuestionUsed(iv.raw_question, post.id);
+        }
 
         // Add to voice library
         const chunks = iv.transcript.match(/.{1,500}/g) || [];

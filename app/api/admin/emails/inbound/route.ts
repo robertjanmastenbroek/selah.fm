@@ -11,6 +11,13 @@ import sql from '@/lib/db';
  */
 
 export async function POST(request: Request) {
+  // Validate webhook secret
+  const secret = request.headers.get('svix-id') || request.headers.get('x-webhook-secret') || '';
+  const expected = process.env.RESEND_INBOUND_WEBHOOK_SECRET || process.env.RESEND_WEBHOOK_SECRET || '';
+  if (expected && secret !== expected) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const payload = await request.json();
 
