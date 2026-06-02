@@ -4,12 +4,8 @@ let _pool: Pool | null = null;
 
 function getPool(): Pool {
   if (!_pool) {
-    // Supabase provides a PostgreSQL connection string.
-    // Use the session pooler (port 6543) for serverless-friendly connections,
-    // or the direct connection (port 5432) for persistent servers.
-    // Prefer SUPABASE_DATABASE_URL if set, fall back to DATABASE_URL for backward compat.
-    const dbUrl = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL || '';
-    if (!dbUrl) throw new Error('SUPABASE_DATABASE_URL or DATABASE_URL not set');
+    const dbUrl = process.env.SUPABASE_DATABASE_URL;
+    if (!dbUrl) throw new Error('SUPABASE_DATABASE_URL is required');
 
     _pool = new Pool({
       connectionString: dbUrl,
@@ -20,7 +16,7 @@ function getPool(): Pool {
   return _pool;
 }
 
-// Tagged template interface — same API as before
+// Tagged template interface
 export default function sql(strings: TemplateStringsArray, ...values: any[]) {
   const text = strings.reduce((acc, str, i) => acc + str + (i < values.length ? `$${i + 1}` : ''), '');
   const params = values;
@@ -40,7 +36,7 @@ export default function sql(strings: TemplateStringsArray, ...values: any[]) {
   } as any;
 }
 
-/** Raw query with explicit parameters (ORDER BY safe — no parameterization of column names) */
+/** Raw query with explicit parameters */
 sql.raw = async function(query: string, params: any[] = []): Promise<QueryResultRow[]> {
   const pool = getPool();
   const result = await pool.query(query, params);
