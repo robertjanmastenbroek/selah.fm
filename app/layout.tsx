@@ -5,6 +5,7 @@ import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PageTransition from '@/components/PageTransition';
 import SupportWidget from '@/components/SupportWidget';
+import CookieBanner from '@/components/CookieBanner';
 import { Poppins, Righteous } from "next/font/google";
 import Analytics from '@/components/Analytics';
 import { cn } from "@/lib/utils";
@@ -95,6 +96,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         <Suspense fallback={null}>
           <SupportWidget />
+        </Suspense>
+        <Suspense fallback={null}>
+          <CookieBanner />
         </Suspense>
       </body>
     </html>

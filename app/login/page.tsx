@@ -24,6 +24,7 @@ function LoginForm() {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
+  const [ageConsent, setAgeConsent] = useState(false);
 
   const supabase = createClient();
 
@@ -130,7 +131,17 @@ function LoginForm() {
               {mode === 'signup' && <Input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Display name" />}
               <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
               <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
-              <Button type="submit" disabled={loading} className="w-full">{loading ? '...' : mode === 'login' ? 'Log in' : 'Create account'}</Button>
+              {mode === 'signup' && (
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" checked={ageConsent} onChange={e => setAgeConsent(e.target.checked)} className="mt-0.5 shrink-0 rounded border-white/20" />
+                  <span className="text-[11px] text-muted-foreground leading-relaxed">
+                    I am 13 years of age or older. By creating an account, I agree to the{' '}
+                    <a href="/tos" className="text-primary hover:underline" target="_blank">Terms of Service</a> and{' '}
+                    <a href="/privacy" className="text-primary hover:underline" target="_blank">Privacy Policy</a>.
+                  </span>
+                </label>
+              )}
+              <Button type="submit" disabled={loading || (mode === 'signup' && !ageConsent)} className="w-full">{loading ? '...' : mode === 'login' ? 'Log in' : 'Create account'}</Button>
             </form>
             {mode === 'login' && (
               <button onClick={() => { setForgotMode(true); setForgotEmail(email); }} className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors">
