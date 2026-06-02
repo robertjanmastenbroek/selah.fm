@@ -1,37 +1,54 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 /**
- * Health check endpoint for Railway + uptime monitoring.
- * GET /api/health
- * 
- * Returns:
- * - 200: { status: "ok", db: "connected", uptime: "..." }
- * - 503: { status: "error", db: "disconnected" }
- * 
- * Monitor this endpoint with uptimerobot.com, betterstack.com, or similar.
+ * Health check endpoint — used by Railway and monitoring tools.
+ * Returns database connectivity, last cron activity, and platform stats.
  */
 export async function GET() {
-  const start = Date.now();
-  
-  try {
-    // Check DB connectivity
-    const dbResult = await sql`SELECT 1 as ok`;
-    const dbLatency = Date.now() - start;
+  const health: Record<string, any> = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+  };
 
-    return NextResponse.json({
-      status: 'ok',
-      db: 'connected',
-      db_latency_ms: dbLatency,
-      version: '1.0.0',
-      timestamp: new Date().toISOString(),
-    }, { status: 200 });
-  } catch (e: any) {
-    return NextResponse.json({
-      status: 'error',
-      db: 'disconnected',
-      error: process.env.NODE_ENV === 'production' ? 'Database unavailable' : e.message,
-      timestamp: new Date().toISOString(),
-    }, { status: 503 });
+  // Database connectivity
+  try {
+    const [dbCheck] = await sql`SELECT 1 as ok`;
+    health.db = dbCheck?.ok === 1 ? 'connected' : 'error';
+  } catch {
+    health.db = 'disconnected';
+    health.status = 'degraded';
   }
+
+  // Last cron activity (most recent blog post or campaign)
+  try {
+    const [lastBlog] = await sql`SELECT created_at FROM blog_posts ORDER BY created_at DESC LIMIT 1`;
+    const [lastCampaign] = await sql`SELECT created_at FROM campaigns ORDER BY created_at DESC LIMIT 1`;
+    const [lastSubmission] = await sql`SELECT created_at FROM submissions ORDER BY created_at DESC LIMIT 1`;
+
+    health.lastActivity = {
+      blogPost: lastBlog?.created_at?.toISOString?.() || null,
+      campaign: lastCampaign?.created_at?.toISOString?.() || null,
+      submission: lastSubmission?.created_at?.toISOString?.() || null,
+    };
+  } catch {
+    health.lastActivity = { error: 'unavailable' };
+  }
+
+  // Quick stats
+  try {
+    const [users] = await sql`SELECT count(*)::int as c FROM users`;
+    const [submissions] = await sql`SELECT count(*)::int as c FROM submissions`;
+    health.stats = {
+      users: users?.c || 0,
+      submissions: submissions?.c || 0,
+    };
+  } catch {
+    // non-critical
+  }
+
+  const statusCode = health.status === 'degraded' ? 503 : 200;
+  return NextResponse.json(health, { status: statusCode });
 }
