@@ -247,6 +247,17 @@
 - Added cover art images, artist names, and CPM rates to campaign cards
 - Full SEO preservation: still server-rendered HTML with crawlable internal links
 
+### Analytics & Admin
+- Analytics endpoint fixed: `INTERVAL` type inference error resolved by switching to `sql.raw()` with sanitized integer inputs
+- Confirmed working: 566 page views in last 7 days across /login, /browse, /, campaign pages
+- Inbound email webhook: DB column mismatch fixed (`received_at`→`created_at`, `read`→`status`), awaiting Resend paid plan (July 1) for subdomain setup
+- Resend webhook: secret validation added to inbound route for security
+
+### Inbound Email (Deferred to July 1)
+- Backend code is ready and tested (DB column mismatch resolved)
+- Needs Resend paid plan ($20/mo) for inbound subdomain (e.g., mail.selah.fm)
+- Setup steps noted: Resend → Domains → add subdomain → Webhooks → secret → Railway env
+
 ### Blog Pipeline Fixes
 - Rate limit window reduced from 23h→20h to prevent pipeline from self-blocking
 - Blog-publish now publishes up to 2 posts per run (was 1)
