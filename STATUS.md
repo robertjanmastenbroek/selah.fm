@@ -1,6 +1,6 @@
 # Selah.fm — Project Status
 
-**Last updated:** June 2, 2026 (updated: phases 1-5 complete)
+**Last updated:** June 2, 2026 (all 8 phases complete)
 **Core files:** ~40 React components, 25 API routes, 15 pages
 **Database:** Supabase (campaigns, submissions, users, donations)
 
@@ -60,27 +60,28 @@
 |------|--------|
 | Merged donate + checkout into one page, campaign preview card + recent supporters | ✅ Done |
 
-## 🔜 PHASE 6: DASHBOARD WIZARD (45 min)
+## ✅ PHASE 6: DASHBOARD WIZARD ✅
 
 | Task | Detail |
 |------|--------|
-| Add CPM rate + max payout to wizard Step 2 | ~10 lines |
-| Polish step progression indicators | ~5 lines |
-| Keep inline editing for existing campaigns | Already works |
+| CPM rate ($/1M views) in wizard Step 2 | ✅ Already built |
+| Max payout per submission field | ✅ Already built |
+| Step progression indicators (1-2-3) | ✅ Already built |
+| Inline editing for existing campaigns | ✅ Already works |
 
-## 🔜 PHASE 7: TOPNAV (20 min)
-
-| Task | Detail |
-|------|--------|
-| Change logo link from /browse to / | ~1 line |
-| Remove 6 menu items from drawer | ~10 lines |
-| Search icon → /browse with focus | ~2 lines |
-
-## 🔜 PHASE 8: FOOTER (5 min)
+## ✅ PHASE 7: TOPNAV ✅
 
 | Task | Detail |
 |------|--------|
-| Minor polish (remove redundant dots) | ~5 lines |
+| Logo link changed from /browse to / | ✅ Done |
+| Removed 6 drawer items (Review, Analytics, Artists, Creators, FAQ, Report a bug) | ✅ Done |
+| Search icon → /browse?focus=search | ✅ Done |
+
+## ✅ PHASE 8: FOOTER ✅
+
+| Task | Detail |
+|------|--------|
+| No Footer component exists in project — nothing to polish | ✅ N/A |
 
 ---
 
@@ -92,8 +93,8 @@
 | Campaign Detail | ~450 | ✅ Single CTA, tabbed layout | **P0** |
 | Browse | ~250 | ✅ Filters working | **P0** |
 | Checkout | ~450 | ✅ Merged donate + checkout | - |
-| Dashboard | 600+ | ⚠️ Mixed wizard + list | **P1** |
-| TopNav | ~200 | ⚠️ 13-item menu | **P1** |
+| Dashboard | 600+ | ✅ CPM, max payout, step indicators | ✅ Complete |
+| TopNav | ~170 | ✅ Logo → /, drawer trimmed to 7 items | ✅ Complete |
 | Earnings | ~200 | ✅ Solid | - |
 | EarnModal | ~260 | ✅ Well designed | - |
 | StripePaymentModal | ~200 | ✅ Solid | - |
@@ -105,5 +106,6 @@
 
 ## READY TO START
 
-**Phase 1-5 complete.** Phases 6-8 remain.
-**Next action:** Phase 6 — Dashboard wizard (CPM rate, max payout, progression indicators)
+**All 8 phases complete.** 🎉
+
+**Next:** What do you want to build next?
