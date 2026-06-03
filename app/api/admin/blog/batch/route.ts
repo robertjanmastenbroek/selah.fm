@@ -220,7 +220,8 @@ async function fetchRealQuestions() {
     try {
       usedRows = await sql`SELECT normalized_text FROM used_questions WHERE status IN ('answered', 'skipped')`;
     } catch {} // Non-critical query — empty set on failure
-    const usedSet = new Set((Array.isArray(usedRows) ? usedRows : usedRows?.rows || []).map((r: any) => r.normalized_text));
+    const rows = Array.isArray(usedRows) ? usedRows : (usedRows as any)?.rows || [];
+    const usedSet = new Set(rows.map((r: any) => r.normalized_text));
 
     const fallbackQs: { question: string; url: string; platform: string; category: string }[] = getFallbackQuestions(30)
       .map(q => ({ question: q, url: '', platform: 'curated', category: 'general' }))
