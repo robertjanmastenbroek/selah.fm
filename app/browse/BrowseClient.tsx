@@ -154,10 +154,12 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
       setCampaigns(data.campaigns || []); setTotal(data.total || 0);
     } catch {} finally { setLoading(false); }
   };
-  const loadArtists = async () => {
+  const loadArtists = async (searchQuery?: string) => {
     setLoading(true);
     try {
-      const p = new URLSearchParams(); if (selectedGenre) p.set('genre', selectedGenre); if (filters.q) p.set('search', filters.q);
+      const p = new URLSearchParams(); if (selectedGenre) p.set('genre', selectedGenre);
+      const q = searchQuery ?? filters.q;
+      if (q) p.set('search', q);
       p.set('sort', selectedSort); p.set('limit', '50');
       const res = await fetch(`/api/artists?${p.toString()}`, { credentials: 'omit' });
       if (res.ok) { const d = await res.json(); setArtists(d.artists || []); setArtistTotal(d.total || 0); }
@@ -166,8 +168,9 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
   const refresh = () => { if (tab === 'campaigns') loadCampaigns(); else loadArtists(); };
   const handleSearch = (q: string) => {
     const nf = { ...filters, q, genre: selectedGenre, platform: selectedPlatform, sort: selectedSort };
-    if (!q) { const { q: _, ...rest } = nf; setFilters(rest); setTimeout(refresh, 0); return; }
-    setFilters(nf); setTimeout(refresh, 0);
+    if (!q) { const { q: _, ...rest } = nf; setFilters(rest); loadArtists(''); return; }
+    setFilters(nf);
+    loadArtists(q);
   };
   const switchTab = (t: typeof tab) => { setTab(t); setLoading(true); setTimeout(() => { if (t === 'campaigns') loadCampaigns(); else loadArtists(); }, 0); };
 
@@ -233,10 +236,10 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
 
         <div className="mb-6 space-y-3">
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => { setSelectedGenre(''); setTimeout(refresh, 0); }}
+            <button onClick={() => { setSelectedGenre(''); loadArtists(''); }}
               className={`filter-chip ${selectedGenre === '' ? 'filter-chip-active' : ''}`}>All genres</button>
             {GENRES.map(g => (
-              <button key={g} onClick={() => { setSelectedGenre(g); setTimeout(refresh, 0); }}
+              <button key={g} onClick={() => { setSelectedGenre(g); setTimeout(() => loadArtists(filters.q), 0); }}
                 className={`filter-chip ${selectedGenre === g ? 'filter-chip-active' : ''}`}>{g.charAt(0).toUpperCase() + g.slice(1)}</button>
             ))}
           </div>
