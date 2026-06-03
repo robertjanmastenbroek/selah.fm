@@ -17,6 +17,7 @@ export default function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [days, setDays] = useState(7);
   const [loading, setLoading] = useState(true);
+  const [userFlows, setUserFlows] = useState<any[]>([]);
 
   useEffect(() => {
     setLoading(true);
@@ -25,6 +26,10 @@ export default function AnalyticsDashboard() {
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
+    fetch("/api/admin/user-flows?limit=10")
+      .then(r => r.json())
+      .then(d => setUserFlows(d.sessions || []))
+      .catch(() => {});
   }, [days]);
 
   if (loading) return <div className="p-8 text-muted-foreground">Loading analytics...</div>;
@@ -181,6 +186,90 @@ export default function AnalyticsDashboard() {
           <span>48h ago</span>
           <span>Now</span>
         </div>
+      </section>
+
+      {/* ════════════════════════════════════════ */}
+      {/* USER FLOWS — Session tracking           */}
+      {/* ════════════════════════════════════════ */}
+      <section className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold">User Flows (Recent Sessions)</h2>
+          <button
+            onClick={() => {
+              fetch("/api/admin/user-flows?limit=10")
+                .then(r => r.json())
+                .then(d => setUserFlows(d.sessions || []))
+                .catch(() => {});
+            }}
+            className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
+
+        {userFlows.length === 0 ? (
+          <p className="text-xs text-muted-foreground/60 text-center py-8">
+            No session data yet. Sessions appear after visitors browse multiple pages.
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {userFlows.map((session: any) => (
+              <div key={session.session_id} className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4 space-y-3">
+                {/* Session header */}
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                  <span className="font-mono">{session.session_id.slice(0, 12)}...</span>
+                  <span>{new Date(session.session_start).toLocaleString()}</span>
+                </div>
+
+                {/* Referrer / UTM */}
+                <div className="flex flex-wrap gap-2 text-[10px]">
+                  {session.referrer && (
+                    <span className="px-2 py-0.5 rounded-full bg-white/[0.04] text-muted-foreground/70">
+                      From: {new URL(session.referrer).hostname || session.referrer}
+                    </span>
+                  )}
+                  {session.utm_source && (
+                    <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300">
+                      UTM: {session.utm_source}
+                    </span>
+                  )}
+                  {session.signed_up > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300">
+                      🎉 Signed up!
+                    </span>
+                  )}
+                  {session.joined_campaign > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300">
+                      Joined campaign
+                    </span>
+                  )}
+                </div>
+
+                {/* Event timeline */}
+                <div className="space-y-1">
+                  {(session.timeline || []).map((event: any, i: number) => (
+                    <div key={i} className="flex items-center gap-2 text-[10px]">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/10 shrink-0" />
+                      <span className="text-muted-foreground/50 w-12 shrink-0 tabular-nums">
+                        {new Date(event.created_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span className={`font-medium ${
+                        event.event === "page_view" ? "text-muted-foreground" :
+                        event.event === "signup_complete" ? "text-emerald-400" :
+                        event.event === "campaign_join_click" ? "text-indigo-400" :
+                        event.event === "cta_click" ? "text-amber-400" : "text-muted-foreground"
+                      }`}>
+                        {event.event.replace(/_/g, " ")}
+                      </span>
+                      <span className="text-muted-foreground/40 truncate max-w-[200px]">{event.path}</span>
+                      {event.metadata?.cta && <span className="text-muted-foreground/30">({event.metadata.cta})</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
