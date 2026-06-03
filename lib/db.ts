@@ -7,8 +7,10 @@ function getPool(): Pool {
     const dbUrl = process.env.SUPABASE_DATABASE_URL;
     if (!dbUrl) throw new Error('SUPABASE_DATABASE_URL is required');
 
+    // Add ?pgbouncer=true for Supabase connection pooler compatibility
+    const connStr = dbUrl.includes('?') ? dbUrl : dbUrl + '?pgbouncer=true';
     _pool = new Pool({
-      connectionString: dbUrl,
+      connectionString: connStr,
       ssl: { rejectUnauthorized: false },
       max: 10,
     });

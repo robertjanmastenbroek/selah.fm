@@ -19,7 +19,7 @@ export async function POST(
     }
 
     const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
-    const rl = rateLimit(getRateLimitKey(request), { maxRequests: 30, windowMs: 60_000 });
+    const rl = await rateLimit(getRateLimitKey(request), { maxRequests: 30, windowMs: 60_000 });
     if (!rl.allowed) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }

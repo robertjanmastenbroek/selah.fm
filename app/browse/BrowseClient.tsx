@@ -230,8 +230,17 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
               ))}
             </div>
           ) : artists.length === 0 ? (
+            <>
             <EmptyState icon={<span className="text-4xl">🎵</span>} title="No artists found"
               description={selectedGenre || filters.q ? 'Try adjusting your filters.' : 'Artists are added daily.'} />
+            {/* Auto-switch to campaigns tab with message */}
+            <div className="mt-4 text-center">
+              <button onClick={() => switchTab('campaigns')}
+                className="text-xs text-primary hover:underline font-medium">
+                → Browse campaigns instead
+              </button>
+            </div>
+            </>
           ) : (
             <div className="grid gap-4 sm:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
               {artists.map((a: any) => (<ArtistCard key={a.id} artist={a} />))}

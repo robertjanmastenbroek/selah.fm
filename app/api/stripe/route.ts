@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
-  const rl = rateLimit(getRateLimitKey(request), { maxRequests: 10, windowMs: 60_000 });
+  const rl = await rateLimit(getRateLimitKey(request), { maxRequests: 10, windowMs: 60_000 });
   if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
 
   try {

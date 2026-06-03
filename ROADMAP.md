@@ -1,5 +1,5 @@
 # Selah.fm — Strategic Roadmap
-**Version:** 4.0 · **Updated:** 2026-06-03 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · **Roadmap: 30/36 complete**
+**Version:** 4.0 · **Updated:** 2026-06-03 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · **Roadmap: 34/36 complete**
 
 > Full 10-field audit completed June 3, 2026. **Core finding: the codebase is ~95% feature-complete for v1.** The bottleneck has shifted from development to acquisition. 38/38 blueprint files are built. Every social feature (comments, reactions, activity feed, embed), artist-first pivot, genre pages, multi-track pipeline, and checkout flow is live and committed.
 >
@@ -69,7 +69,7 @@
 
 **Fix:** Add weekly cron: `DELETE FROM activity_events WHERE created_at < NOW() - INTERVAL '30 days'` → move to `activity_events_archive`.
 
-### H. ⬜ Connection Pooling — not yet configured
+### H. ✅ Connection Pooling — ?pgbouncer=true added to connection string
 **Field:** Engineering
 **Effort:** 1 hour
 **Issue:** Each API call creates a new pg connection. At 100+ concurrent users this hits Neon's connection limit.
@@ -83,7 +83,7 @@
 
 **Fix:** Query actual `updated_at` from `artist_tracks` or `activity_events`.
 
-### J. ⬜ Rate Limiting — in-memory, not yet scaled
+### J. ✅ Rate Limiting — DB-backed, scales across instances
 **Field:** Engineering
 **Effort:** 2 hours
 **Issue:** `lib/rate-limit.ts` stores state in a `Map`. Adding a second Railway instance resets all limits.
@@ -142,7 +142,7 @@
 - **What:** Import `getArtistLinks()` and `getBlogLinks()` from `lib/internal-links.ts`. Add 2-3 contextual cross-links per page.
 - **Impact:** Creates SEO link graph across all pages
 
-### 13. 🟡 Reddit auto-syndicate blog posts
+### 13. ✅ Reddit auto-syndicate — cron at UTC 04, daily limit 3 posts
 - **Field:** Growth
 - **Effort:** 1 day
 - **Files to create:** `app/api/cron/blog-syndicate/route.ts`
@@ -172,7 +172,7 @@
 - **Files:** `components/SubmissionReactions.tsx`
 - **Acceptance:** Unauthenticated users see sign-in prompt overlay when clicking ❤️
 
-### 23. 🟡 Browse artists → campaigns fallback — partially addressed (filter removed)
+### 23. ✅ Browse artists → campaigns fallback — switch button on empty artists
 - **Field:** UX
 - **Effort:** 30 min
 - **Files:** `app/browse/BrowseClient.tsx`

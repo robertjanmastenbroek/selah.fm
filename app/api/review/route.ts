@@ -6,7 +6,7 @@ import { ADMIN_EMAILS } from '@/lib/constants';
 
 export async function POST(request: Request) {
   const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
-  const rl = rateLimit(getRateLimitKey(request), { maxRequests: 30, windowMs: 60_000 });
+  const rl = await rateLimit(getRateLimitKey(request), { maxRequests: 30, windowMs: 60_000 });
   if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
 
   const session = await getSession(request);

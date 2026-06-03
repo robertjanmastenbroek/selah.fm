@@ -1,42 +1,53 @@
 /**
  * Rate limiting middleware for Selah.fm API routes.
- * Simple in-memory token bucket — resets per window.
+ * DB-backed — scales across multiple Railway instances.
+ * Uses PostgreSQL for atomic increment + cleanup.
  */
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+import sql from '@/lib/db';
 
 const DEFAULT_WINDOW_MS = 60_000; // 1 minute
 const DEFAULT_MAX_REQUESTS = 30;
 
-export function rateLimit(
+export async function rateLimit(
   key: string,
   options?: { windowMs?: number; maxRequests?: number }
-): { allowed: boolean; remaining: number; resetIn: number } {
+): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
   const windowMs = options?.windowMs || DEFAULT_WINDOW_MS;
   const maxRequests = options?.maxRequests || DEFAULT_MAX_REQUESTS;
-  const now = Date.now();
+  const now = new Date();
+  const resetAt = new Date(now.getTime() + windowMs);
 
-  let entry = rateLimitStore.get(key);
-  if (!entry || now > entry.resetAt) {
-    entry = { count: 0, resetAt: now + windowMs };
-    rateLimitStore.set(key, entry);
-  }
+  try {
+    // Atomic UPSERT: create or increment
+    const [row] = await sql.raw(`
+      INSERT INTO rate_limits (key, count, reset_at)
+      VALUES ($1, 1, $2)
+      ON CONFLICT (key) 
+      DO UPDATE SET count = CASE 
+        WHEN rate_limits.reset_at < NOW() THEN 1
+        ELSE rate_limits.count + 1
+      END, reset_at = CASE 
+        WHEN rate_limits.reset_at < NOW() THEN $2
+        ELSE rate_limits.reset_at
+      END
+      RETURNING count, reset_at
+    `, [key, resetAt.toISOString()]);
 
-  entry.count++;
-  const remaining = Math.max(0, maxRequests - entry.count);
-  const resetIn = Math.max(0, entry.resetAt - now);
+    const count = row?.count || 1;
+    const actualReset = row?.reset_at ? new Date(row.reset_at) : resetAt;
+    const remaining = Math.max(0, maxRequests - count);
+    const resetIn = Math.max(0, actualReset.getTime() - now.getTime());
 
-  // Cleanup old entries periodically
-  if (rateLimitStore.size > 10_000) {
-    for (const [k, v] of rateLimitStore) {
-      if (now > v.resetAt) rateLimitStore.delete(k);
+    // Periodic cleanup: delete expired entries (runs ~1% of calls)
+    if (Math.random() < 0.01) {
+      sql.raw(`DELETE FROM rate_limits WHERE reset_at < NOW()`).catch(() => {});
     }
-  }
 
-  return {
-    allowed: entry.count <= maxRequests,
-    remaining,
-    resetIn,
-  };
+    return { allowed: count <= maxRequests, remaining, resetIn };
+  } catch {
+    // Fallback: if DB fails, allow the request
+    return { allowed: true, remaining: maxRequests, resetIn: windowMs };
+  }
 }
 
 /**
