@@ -45,9 +45,21 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
 
   // ── Fetch conversations list ──────────────────────────────────
   const fetchConversations = useCallback(() => {
-    fetch('/api/messages')
+    fetch('/api/messages', { credentials: 'include' })
       .then(r => r.json())
-      .then(d => { if (Array.isArray(d)) setConversations(d); })
+      .then(d => {
+        const raw = d.conversations || d;
+        if (Array.isArray(raw)) {
+          setConversations(raw.map((c: any) => ({
+            other_id: c.other_user?.id || '',
+            other_name: c.other_user?.display_name || 'User',
+            other_avatar: c.other_user?.profile_image_url || '',
+            content: c.last_message?.content || '',
+            created_at: c.last_message?.created_at || '',
+            unread: c.unread_count || 0,
+          })));
+        }
+      })
       .catch(() => {});
   }, []);
 

@@ -75,7 +75,7 @@ export async function GET(request: Request) {
       campaign_id: r.campaign_id,
     }));
 
-    return NextResponse.json(conversations);
+    return NextResponse.json({ conversations });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

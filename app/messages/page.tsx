@@ -11,49 +11,57 @@ interface UserInfo { id: string; display_name: string; profile_image_url?: strin
 interface Conversation { other_user: UserInfo; last_message: { content: string; created_at: string }; unread_count: number; }
 interface Message { id: string; sender_id: string; receiver_id: string; content: string; created_at: string; read: boolean; }
 
-// ── New Message Button ──
+// ── New Message Button (with live autocomplete) ──
 function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: string; onConversationStart: () => void }) {
   const [open, setOpen] = useState(false);
-  const [userId, setUserId] = useState('');
-  const [searchDone, setSearchDone] = useState(false);
-  const [foundUser, setFoundUser] = useState<any>(null);
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
-  const [error, setError] = useState('');
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
+  const searchTimer = useRef<NodeJS.Timeout>();
 
-  const handleSearch = async () => {
-    if (!userId.trim()) return;
-    setSearching(true);
-    setError('');
-    setSearchDone(false);
-    setFoundUser(null);
-    try {
-      const res = await fetch(`/api/users/search?q=${encodeURIComponent(userId.trim())}`, { credentials: 'include' });
-      const data = await res.json();
-      if (data.user) {
-        setFoundUser(data.user);
-        setSearchDone(true);
-      } else if (data.users && data.users.length > 0) {
-        setFoundUser(data.users[0]);
-        setSearchDone(true);
-      } else {
-        setError('No user found with that name or email');
-        setSearchDone(true);
-      }
-    } catch {
-      setError('Search failed');
-      setSearchDone(true);
+  // Debounced live search
+  useEffect(() => {
+    if (!query.trim() || query.length < 1 || selectedUser) {
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
     }
-    setSearching(false);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query.trim())}`, { credentials: 'include' });
+        const data = await res.json();
+        setSuggestions(data.users || []);
+        setShowDropdown(true);
+      } catch { setSuggestions([]); }
+      setSearching(false);
+    }, 200);
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
+  }, [query, selectedUser]);
+
+  const selectUser = (user: any) => {
+    setSelectedUser(user);
+    setQuery(user.display_name);
+    setShowDropdown(false);
+    setSuggestions([]);
   };
 
   const startConversation = () => {
-    if (!foundUser) return;
-    router.push(`/messages?user=${foundUser.id}`);
+    if (!selectedUser) return;
+    // Artists (marked with 🎵) link to their artist page instead of messaging
+    if (selectedUser._type === 'artist') {
+      router.push(`/artist/${selectedUser._slug || selectedUser.id}`);
+    } else {
+      router.push(`/messages?user=${selectedUser.id}`);
+    }
     setOpen(false);
-    setUserId('');
-    setFoundUser(null);
-    setSearchDone(false);
+    setQuery('');
+    setSelectedUser(null);
+    setSuggestions([]);
   };
 
   return (
@@ -66,7 +74,7 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => { setOpen(false); setUserId(''); setFoundUser(null); setSearchDone(false); setError(''); }}>
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => { setOpen(false); setQuery(''); setSelectedUser(null); setSuggestions([]); setShowDropdown(false); }}>
             <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
             <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 400, damping: 35 }}
@@ -74,45 +82,86 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
               className="relative z-10 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">New message</h3>
-                <button onClick={() => { setOpen(false); setUserId(''); setFoundUser(null); setSearchDone(false); setError(''); }}
+                <button onClick={() => { setOpen(false); setQuery(''); setSelectedUser(null); setSuggestions([]); setShowDropdown(false); }}
                   className="p-1 rounded-lg hover:bg-white/[0.06] transition-colors"><X size={18} className="text-muted-foreground" /></button>
               </div>
-              <p className="text-xs text-muted-foreground">Search for a user by name or email to start a conversation.</p>
-              <div className="flex gap-2">
-                <Input value={userId} onChange={e => { setUserId(e.target.value); setSearchDone(false); setFoundUser(null); setError(''); }}
-                  placeholder="Name or email..."
-                  className="flex-1 text-sm rounded-xl h-11 bg-white/[0.04] border-white/[0.06]"
-                  onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }} />
-                <button onClick={handleSearch} disabled={!userId.trim() || searching}
-                  className="px-4 rounded-xl bg-[#4338CA] text-white text-sm font-semibold disabled:opacity-30 hover:opacity-90 transition-opacity">
-                  {searching ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Search'}
-                </button>
+              <p className="text-xs text-muted-foreground">Search users, artists, or creators to start a conversation.</p>
+              
+              {/* Live search input with autocomplete */}
+              <div className="relative">
+                <div className="flex gap-2">
+                  <Input value={query}
+                    onChange={e => { setQuery(e.target.value); setSelectedUser(null); setShowDropdown(false); }}
+                    placeholder="Start typing a name..."
+                    className="flex-1 text-sm rounded-xl h-11 bg-white/[0.04] border-white/[0.06]"
+                    autoFocus
+                  />
+                  {searching && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="w-5 h-5 border-2 border-[#4338CA]/30 border-t-[#4338CA] rounded-full animate-spin" /></div>}
+                </div>
+
+                {/* Autocomplete dropdown */}
+                <AnimatePresence>
+                  {showDropdown && suggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      className="absolute z-20 mt-1 w-full rounded-xl bg-[#1C1C3A] border border-white/[0.08] shadow-xl overflow-hidden max-h-64 overflow-y-auto"
+                    >
+                      {suggestions.map((s: any) => (
+                        <button
+                          key={s.id + (s._type || 'user')}
+                          onClick={() => selectUser(s)}
+                          className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-white/[0.04] transition-colors border-b border-white/[0.03] last:border-0 ${
+                            selectedUser?.id === s.id ? 'bg-white/[0.04]' : ''
+                          }`}
+                        >
+                          <div className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden">
+                            {s.profile_image_url ? (
+                              <img src={s.profile_image_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <User size={16} className="text-muted-foreground/40" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{s.display_name || 'User'}</p>
+                            {s.email && <p className="text-[10px] text-muted-foreground/50 truncate">{s.email}</p>}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground/40 shrink-0">
+                            {s._type === 'artist' ? 'Artist' : 'User'}
+                          </span>
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              {error && <p className="text-xs text-red-400">{error}</p>}
-
-              {foundUser && (
+              {/* Selected user preview */}
+              {selectedUser && (
                 <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0">
-                    {foundUser.profile_image_url ? (
-                      <img src={foundUser.profile_image_url} alt="" className="w-full h-full object-cover rounded-full" />
+                  <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden">
+                    {selectedUser.profile_image_url ? (
+                      <img src={selectedUser.profile_image_url} alt="" className="w-full h-full object-cover rounded-full" />
                     ) : (
                       <User size={18} className="text-muted-foreground/40" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{foundUser.display_name || 'User'}</p>
-                    <p className="text-[10px] text-muted-foreground/50 truncate">{foundUser.email || ''}</p>
+                    <p className="text-sm font-semibold truncate">{selectedUser.display_name || 'User'}</p>
+                    {selectedUser.email && <p className="text-[10px] text-muted-foreground/50 truncate">{selectedUser.email}</p>}
+                    {selectedUser._type === 'artist' && <p className="text-[10px] text-amber-400/60">Artist profile — view their page</p>}
                   </div>
                   <button onClick={startConversation}
                     className="px-4 py-2 rounded-xl bg-[#4338CA] text-white text-xs font-semibold hover:bg-[#4338CA]/90 transition-all">
-                    Message
+                    {selectedUser._type === 'artist' ? 'View' : 'Message'}
                   </button>
                 </div>
               )}
 
-              {searchDone && !foundUser && !error && (
-                <p className="text-xs text-muted-foreground/60 text-center py-4">No user found. Try a different search.</p>
+              {/* Empty state */}
+              {query.length > 0 && !searching && suggestions.length === 0 && !selectedUser && (
+                <p className="text-xs text-muted-foreground/60 text-center py-4">No results. Try a different name or search for an artist.</p>
               )}
             </motion.div>
           </motion.div>
@@ -151,15 +200,14 @@ export default function MessagesPage() {
     try {
       const res = await fetch('/api/messages', { credentials: 'include' });
       const data = await res.json();
-      if (data.conversations) {
-        setConversations(data.conversations);
-        setUnreadTotal(data.unreadTotal || data.conversations.reduce((s: number, c: Conversation) => s + c.unread_count, 0));
-        
-        // Pre-select user from URL param
-        if (preselectedUser && data.conversations.length > 0) {
-          const match = data.conversations.find((c: Conversation) => c.other_user.id === preselectedUser);
-          if (match) selectConversation(match.other_user);
-        }
+      const convs = data.conversations || [];
+      setConversations(convs);
+      setUnreadTotal(convs.reduce((s: number, c: Conversation) => s + c.unread_count, 0));
+      
+      // Pre-select user from URL param
+      if (preselectedUser && convs.length > 0) {
+        const match = convs.find((c: Conversation) => c.other_user.id === preselectedUser);
+        if (match) selectConversation(match.other_user);
       }
     } catch {} finally { setLoading(false); }
   }, [preselectedUser]);
