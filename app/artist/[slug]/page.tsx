@@ -64,6 +64,20 @@ async function getArtistData(slug: string) {
     ORDER BY s.created_at DESC LIMIT 6
   `;
 
+
+  // Fetch related artists (same genre, different artist)
+  const relatedArtists = await sql`
+    SELECT da.id, da.artist_name, da.genres, da.monthly_listeners,
+           ap.slug, ap.spotify_image_url
+    FROM discovered_artists da
+    JOIN artist_profiles ap ON ap.artist_id = da.id
+    WHERE da.id != ${artistId}
+      AND da.genres::text ILIKE ${"%" + (Array.isArray(artist.genres) ? artist.genres[0] || "" : "") + "%"}
+      AND EXISTS (SELECT 1 FROM artist_tracks at WHERE at.artist_id = da.id AND at.enabled = true)
+    ORDER BY da.monthly_listeners DESC NULLS LAST
+    LIMIT 4
+  `;
+
   return {
     artist: {
       ...artist,
@@ -84,6 +98,7 @@ async function getArtistData(slug: string) {
       total_submissions: tracks.reduce((s: number, t: any) => s + (t.submissions_count || 0), 0),
     },
     recent_submissions: recentSubmissions,
+    related_artists: relatedArtists,
   };
 }
 
@@ -123,7 +138,7 @@ export default async function ArtistPage({ params }: Props) {
   const data = await getArtistData(params.slug);
   if (!data) notFound();
 
-  const { artist, tracks, stats, recent_submissions } = data;
+  const { artist, tracks, stats, recent_submissions, related_artists } = data;
 
   // Build JSON-LD
   const schema: Record<string, any> = {
@@ -209,6 +224,7 @@ export default async function ArtistPage({ params }: Props) {
         tracks={tracks}
         stats={stats}
         recentSubmissions={recent_submissions}
+        relatedArtists={related_artists || []}
         socialButtons={socialButtons}
         slug={params.slug}
       />
