@@ -63,16 +63,10 @@ export async function POST(request: Request) {
       ON CONFLICT (artist_id) DO UPDATE SET slug = ${slug}, updated_at = NOW()
     `;
 
-    // Link user to artist via campaign_claims
-    const [existingClaim] = await sql`
-      SELECT id FROM campaign_claims WHERE claimed_by = ${user.id} AND discovered_artist_id = ${artistId} LIMIT 1
+    // Link user to artist via claimed_by_user_id on artist_profiles
+    await sql`
+      UPDATE artist_profiles SET claimed_by_user_id = ${user.id} WHERE artist_id = ${artistId}
     `;
-    if (!existingClaim) {
-      await sql`
-        INSERT INTO campaign_claims (discovered_artist_id, claimed_by, claimed_at)
-        VALUES (${artistId}, ${user.id}, NOW())
-      `;
-    }
 
     return NextResponse.json({
       ok: true,

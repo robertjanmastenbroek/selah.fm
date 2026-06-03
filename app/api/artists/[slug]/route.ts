@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { getUser } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -118,24 +119,21 @@ export async function GET(
 }
 
 /**
- * PATCH /api/artists/[slug] — Update artist profile (claimed artists only)
+ * PATCH /api/artists/[slug] — Update artist profile (claimed/linked artists only)
  */
 export async function PATCH(
   request: Request,
   { params }: { params: { slug: string } }
 ) {
-  try {
-    const { getSession } = await import('@/lib/auth');
-    const session = await getSession(request);
-    if (!session) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
+  try {
     const { slug } = params;
 
     // Find the artist
     const [artistRow] = await sql`
-      SELECT da.id FROM discovered_artists da
+      SELECT da.id, da.artist_name FROM discovered_artists da
       JOIN artist_profiles ap ON ap.artist_id = da.id
       WHERE ap.slug = ${slug} LIMIT 1
     `;
@@ -144,56 +142,43 @@ export async function PATCH(
     }
 
     // Verify the user has claimed this artist
-    const [claim] = await sql`
-      SELECT cc.id FROM campaign_claims cc
-      JOIN campaigns c ON c.id = cc.campaign_id
-      WHERE cc.discovered_artist_id = ${artistRow.id} AND c.artist_id = ${session.id}
-      LIMIT 1
+    const [profile] = await sql`
+      SELECT ap.claimed_by_user_id FROM artist_profiles ap
+      WHERE ap.artist_id = ${artistRow.id} LIMIT 1
     `;
-    if (!claim) {
-      // Also check if user's display name matches artist name
-      const [profile] = await sql`
-        SELECT display_name FROM users WHERE id = ${session.id}
-      `;
-      const userName = profile?.display_name || '';
-      const [match] = await sql`
-        SELECT id FROM discovered_artists WHERE id = ${artistRow.id} AND artist_name ILIKE ${userName}
-        LIMIT 1
-      `;
-      if (!match) {
-        return NextResponse.json({ error: 'You have not claimed this artist profile' }, { status: 403 });
-      }
+    const isOwner = profile?.claimed_by_user_id === user.id;
+    if (!isOwner) {
+      return NextResponse.json({ error: 'You have not claimed this artist profile' }, { status: 403 });
     }
 
     const body = await request.json();
-    const updates: string[] = [];
-    const values: any[] = [];
 
-    // Update artist_profiles fields
-    if (body.bio !== undefined) {
-      // Store bio in artist_audits
-      updates.push(`bio = $${updates.length + 1}`);
-      values.push(body.bio);
-    }
-
-    if (updates.length > 0) {
-      values.push(artistRow.id);
-      await sql.raw(
-        `UPDATE artist_audits SET ${updates.join(', ')} WHERE discovered_artist_id = $${values.length}`,
-        values
-      );
-    }
-
-    // Update per-track CPM rates
-    if (body.tracks && Array.isArray(body.tracks)) {
-      for (const track of body.tracks) {
-        if (track.id && track.cpm_rate_cents !== undefined) {
-          await sql`
-            UPDATE campaigns SET cpm_rate_cents = ${track.cpm_rate_cents}
-            WHERE id = ${track.id} AND artist_id = ${session.id}
-          `;
-        }
+    // Update bio in artist_audits
+    if (body.bio !== undefined && body.bio !== null) {
+      const [existingAudit] = await sql`
+        SELECT id FROM artist_audits WHERE discovered_artist_id = ${artistRow.id} LIMIT 1
+      `;
+      if (existingAudit) {
+        await sql`UPDATE artist_audits SET bio = ${body.bio}, audited_at = NOW() WHERE id = ${existingAudit.id}`;
+      } else {
+        await sql`INSERT INTO artist_audits (discovered_artist_id, bio, audited_at) VALUES (${artistRow.id}, ${body.bio}, NOW())`;
       }
+    }
+
+    // Update social handles in discovered_artists
+    if (body.instagram_handle !== undefined) {
+      await sql`UPDATE discovered_artists SET instagram_handle = ${body.instagram_handle} WHERE id = ${artistRow.id}`;
+    }
+    if (body.tiktok_handle !== undefined) {
+      await sql`UPDATE discovered_artists SET tiktok_handle = ${body.tiktok_handle} WHERE id = ${artistRow.id}`;
+    }
+
+    // Update artist_profiles
+    if (body.spotify_image_url !== undefined) {
+      await sql`UPDATE artist_profiles SET spotify_image_url = ${body.spotify_image_url} WHERE artist_id = ${artistRow.id}`;
+    }
+    if (body.genres !== undefined) {
+      await sql`UPDATE discovered_artists SET genres = ${body.genres} WHERE id = ${artistRow.id}`;
     }
 
     return NextResponse.json({ updated: true });
