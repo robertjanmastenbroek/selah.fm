@@ -21,15 +21,21 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Search our DB
-    const existing = await sql`
+    // Search our DB — LEFT JOIN so artists without profiles still appear
+    const existingRaw = await sql`
       SELECT da.artist_name, ap.slug, ap.spotify_image_url, ap.total_followers, ap.total_platforms
-      FROM artist_profiles ap
-      JOIN discovered_artists da ON da.id = ap.artist_id
+      FROM discovered_artists da
+      LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
       WHERE da.artist_name ILIKE ${'%' + q + '%'}
       ORDER BY ap.total_followers DESC NULLS LAST
       LIMIT 10
     `;
+
+    // Ensure every result has a slug (fallback to name-based slug)
+    const existing = existingRaw.map((r: any) => ({
+      ...r,
+      slug: r.slug || r.artist_name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || null,
+    }));
 
     if (existing.length > 0) {
       return NextResponse.json({ artists: existing, source: 'database' });
