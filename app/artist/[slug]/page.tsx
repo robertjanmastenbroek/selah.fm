@@ -68,7 +68,7 @@ async function getArtistData(slug: string) {
   // Also includes lifetime deposits from wallet (not just individual donation records)
   const [donationStats] = await sql`
     SELECT
-      (COALESCE(SUM(cd.amount_cents), 0) + COALESCE(SUM(ad2.amount_cents), 0) + COALESCE(ap.lifetime_deposits_cents, 0))::int as total_cents,
+      (COALESCE(SUM(cd.amount_cents), 0) + COALESCE(SUM(ad2.amount_cents), 0) + COALESCE(MAX(ap.lifetime_deposits_cents), 0))::int as total_cents,
       (COUNT(DISTINCT cd.id) + COUNT(DISTINCT ad2.id))::int as donation_count,
       COUNT(DISTINCT COALESCE(cd.donor_id, ad2.donor_id))::int as supporter_count
     FROM discovered_artists da
