@@ -23,9 +23,10 @@ interface ArtistProps {
   slug: string;
   relatedArtists?: any[];
   campaigns?: any[];
+  balanceCents?: number;
 }
 
-export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [], campaigns = [] }: ArtistProps) {
+export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [], campaigns = [], balanceCents = 0 }: ArtistProps) {
   const name = artist.artist_name || 'Unknown Artist';
   const genres = (() => {
     const raw = artist.genres;

@@ -39,6 +39,7 @@ export async function POST(request: Request) {
     const metadata = paymentIntent?.metadata || session?.metadata || {};
     const { campaignId, type, artistId } = metadata;
     const grossCents = paymentIntent?.amount || session?.amount_total || 0;
+    const intentId = paymentIntent?.id || session?.id || '';
     
     // ── Artist donation: credit artist balance ────────────────
     if (type === 'artist_donation' && artistId) {
@@ -51,6 +52,11 @@ export async function POST(request: Request) {
       await sql`
         INSERT INTO artist_transactions (artist_id, amount_cents, type, description)
         VALUES (${artistId}, ${grossCents}, 'deposit', 'Fan donation')
+      `;
+      // Mark pending donation as completed
+      await sql`
+        UPDATE artist_donations SET status = 'completed'
+        WHERE stripe_payment_intent_id = ${intentId} AND status = 'pending'
       `;
       trackDonation(Math.round(grossCents / 100), metadata.donorId).catch(() => {});
       return NextResponse.json({ received: true });
@@ -69,7 +75,6 @@ export async function POST(request: Request) {
     }
 
     // Idempotency: prevent duplicate processing
-    const intentId = paymentIntent?.id || session?.id || '';
     if (intentId) {
       const existing = await sql`SELECT id FROM campaign_donations WHERE stripe_payment_intent_id = ${intentId} LIMIT 1`;
       if (existing.length > 0) return NextResponse.json({ received: true, duplicate: true });
