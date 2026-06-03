@@ -157,12 +157,12 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
           {/* Profile photo + Name row */}
           <div className="flex items-end gap-5 mb-4">
             {/* Photo */}
-            <div className="shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden border-4 border-[#0F0F23] shadow-xl -mt-12 md:-mt-16">
+            <div className="shrink-0 w-28 h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden border-4 border-[#0F0F23] shadow-xl -mt-14 md:-mt-20">
               {imageUrl ? (
                 <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center" style={{ background: gradient }}>
-                  <span className="text-3xl md:text-4xl font-bold text-white/20 select-none">{initial}</span>
+                  <span className="text-4xl md:text-5xl font-bold text-white/20 select-none">{initial}</span>
                 </div>
               )}
             </div>
@@ -220,6 +220,11 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 }`}>
                 {following ? 'Following' : '+ Follow'}
               </button>
+              <button onClick={() => navigator.clipboard.writeText(window.location.href)}
+                className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-xs hover:bg-white/[0.08] transition-all"
+                title="Share profile">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </button>
               {socialButtons.length > 0 && (
                 <div className="flex items-center gap-1">
                   {socialButtons.slice(0, 3).map(s => (
@@ -238,9 +243,9 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6">
             {[
               { value: stats.total_tracks, label: 'Tracks', icon: <Music size={14} /> },
-              { value: stats.total_submissions, label: 'Videos', icon: <Video size={14} /> },
-              { value: stats.total_views >= 1000 ? `${(stats.total_views / 1000).toFixed(1)}K` : stats.total_views || 0, label: 'Views', icon: <BarChart3 size={14} /> },
-              { value: `$${(totalDonations / 100).toFixed(0)}`, label: 'Raised', icon: <DollarSign size={14} /> },
+              { value: stats.total_submissions, label: 'Submissions', icon: <Video size={14} /> },
+              { value: stats.total_submissions > 0 ? `${stats.total_submissions} created` : '—', label: 'Videos Made', icon: <BarChart3 size={14} /> },
+              { value: `$${(totalDonations / 100).toFixed(0)}`, label: 'Donations', icon: <DollarSign size={14} /> },
             ].map(s => (
               <div key={s.label} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center text-muted-foreground/60">{s.icon}</div>
@@ -355,15 +360,13 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                     <Sparkles size={14} className="text-amber-400" />
                     Quick facts about {name}
                   </h2>
-                  <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <dl className="grid grid-cols-3 gap-4">
                     {[
-                      { label: 'Genre', value: genres.slice(0, 3).join(', ') || '—' },
-                      { label: 'Monthly listeners', value: listeners > 0 ? `${listeners >= 1000 ? (listeners / 1000).toFixed(1) + 'K' : listeners}` : '—' },
-                      { label: 'Followers', value: artist.total_followers > 0 ? `${artist.total_followers >= 1000 ? (artist.total_followers / 1000).toFixed(1) + 'K' : artist.total_followers}` : '—' },
+                      { label: 'Genre', value: genres.slice(0, 2).join(', ') || '—' },
+                      { label: 'Listeners', value: listeners > 0 ? `${listeners >= 1000 ? (listeners / 1000).toFixed(1) + 'K' : listeners}` : (artist.total_followers > 0 ? `${artist.total_followers >= 1000 ? (artist.total_followers / 1000).toFixed(1) + 'K' : artist.total_followers}` : '—') },
                       { label: 'Streams', value: artist.total_streams > 0 ? `${artist.total_streams >= 1000000 ? (artist.total_streams / 1000000).toFixed(1) + 'M' : artist.total_streams >= 1000 ? (artist.total_streams / 1000).toFixed(1) + 'K' : artist.total_streams}` : '—' },
                       { label: 'Tracks', value: stats.total_tracks },
                       { label: 'Raised', value: `$${(totalDonations / 100).toFixed(0)}` },
-                      { label: 'Supporters', value: supporterCount || '—' },
                       { label: 'Top CPM', value: topCpm ? `$${(parseFloat(topCpm) * 1000).toFixed(0)}/1M views` : '—' },
                     ].map(f => (
                       <div key={f.label}>
@@ -406,11 +409,18 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                         return (
                           <div key={track.id}
                             className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-primary/15 transition-all">
-                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0 relative group/thumb">
                               {track.cover_art_url ? (
                                 <img src={track.cover_art_url} alt={track.track_title} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center"><Music size={16} className="text-white/10" /></div>
+                              )}
+                              {track.track_url && (
+                                <a href={track.track_url} target="_blank" rel="noopener noreferrer"
+                                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/thumb:opacity-100 transition-opacity"
+                                  title={`Listen to ${track.track_title}`}>
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                                </a>
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -520,42 +530,88 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
             )}
           </div>
 
-          {/* ── RIGHT COLUMN: Related Artists + Embed + Claim + Cross-links ── */}
+          {/* ── RIGHT COLUMN: Sticky CTA + Related + Embed + Claim + Links ── */}
           <div className="space-y-6">
-            {/* Related Artists */}
-            {relatedArtists.length > 0 && (
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Users size={12} /> Similar Artists
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {relatedArtists.slice(0, 4).map((ra: any) => (
-                    <ArtistCard key={ra.id} artist={ra} />
-                  ))}
+            {/* Sticky CTA card (desktop only) */}
+            <div className="lg:sticky lg:top-24 space-y-6">
+              {/* Primary CTA card */}
+              <div className="rounded-2xl bg-gradient-to-br from-primary/[0.04] to-primary/[0.02] border border-primary/[0.08] p-5 text-center space-y-4">
+                <h3 className="font-bold text-sm">{name}</h3>
+                <div className="space-y-2">
+                  <Link href={`/checkout?type=donation&artistSlug=${slug}`}
+                    className="block w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold hover:shadow-[0_0_16px_rgba(239,68,68,0.3)] transition-all">
+                    <Heart size={14} className="inline mr-1.5" />Support ${(totalDonations / 100).toFixed(0)}
+                  </Link>
+                  <button onClick={() => setShowSubmitModal(true)}
+                    className="block w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-bold hover:shadow-[0_0_16px_rgba(34,197,94,0.3)] transition-all">
+                    <Video size={14} className="inline mr-1.5" />Make a Video
+                  </button>
                 </div>
+                <p className="text-[9px] text-muted-foreground/40">No upfront cost · 80% creator payout</p>
               </div>
-            )}
 
-            {/* Embed widget */}
-            <ArtistEmbed artistSlug={slug} artistName={name} />
+              {/* Listen on Spotify (if available) */}
+              {tracks[0]?.track_url && (
+                <a href={tracks[0].track_url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-green-500/5 border border-green-500/10 hover:bg-green-500/10 transition-all">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                  <span className="text-xs font-medium text-green-400">Listen on Spotify</span>
+                </a>
+              )}
 
-            {/* Claim page */}
-            <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-4 text-center">
-              <p className="text-xs text-muted-foreground/60 mb-2">Is this your artist page?</p>
-              <Link href={`/login?redirect=/claim?artist=${slug}`}
-                className="text-xs text-primary hover:underline font-medium">
-                Claim this page →
-              </Link>
-            </div>
+              {/* Similar Artists — compact */}
+              {relatedArtists.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <Users size={12} /> Similar Artists
+                  </h3>
+                  <div className="space-y-2">
+                    {relatedArtists.slice(0, 4).map((ra: any) => (
+                      <Link key={ra.id} href={`/artist/${ra.slug}`}
+                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/[0.03] transition-all">
+                        <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 bg-white/[0.04]">
+                          {ra.spotify_image_url ? (
+                            <img src={ra.spotify_image_url} alt={ra.artist_name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-white/20 font-bold">
+                              {ra.artist_name?.[0]?.toUpperCase() || '?'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{ra.artist_name}</p>
+                          <p className="text-[9px] text-muted-foreground/50 truncate">
+                            {ra.monthly_listeners ? `${ra.monthly_listeners >= 1000 ? (ra.monthly_listeners / 1000).toFixed(1) + 'K' : ra.monthly_listeners} listeners` : ''}
+                          </p>
+                        </div>
+                        <span className="text-[9px] text-primary/60 shrink-0">View →</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            {/* Cross-links */}
-            <div className="space-y-1.5">
-              {getArtistLinks(genres).map((link, i) => (
-                <Link key={i} href={link.url}
-                  className="block text-[11px] text-muted-foreground/50 hover:text-primary/70 transition-colors">
-                  → {link.anchor}
+              {/* Embed widget */}
+              <ArtistEmbed artistSlug={slug} artistName={name} />
+
+              {/* Claim page */}
+              <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-4 text-center">
+                <p className="text-xs text-muted-foreground/60 mb-2">Is this your artist page?</p>
+                <Link href={`/login?redirect=/claim?artist=${slug}`}
+                  className="text-xs text-primary hover:underline font-medium">
+                  Claim this page →
                 </Link>
-              ))}
+              </div>
+
+              {/* Cross-links */}
+              <div className="space-y-1.5">
+                {getArtistLinks(genres).map((link, i) => (
+                  <Link key={i} href={link.url}
+                    className="block text-[11px] text-muted-foreground/50 hover:text-primary/70 transition-colors">
+                    → {link.anchor}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </div>

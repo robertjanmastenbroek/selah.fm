@@ -39,16 +39,12 @@ export default function ArtistEmbed({ artistSlug, artistName }: Props) {
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <Heart size={14} className="text-primary" />
-          Embeddable widget
+          Embed profile
         </h3>
-        <a
-          href={`/artist/${artistSlug}/embed`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[10px] text-primary hover:underline flex items-center gap-1"
-        >
-          Preview <ExternalLink size={10} />
-        </a>
+        <button onClick={handleCopy}
+          className="text-[10px] text-primary hover:underline flex items-center gap-1 font-medium">
+          {copied ? '✅ Copied!' : 'Copy embed code'}
+        </button>
       </div>
       <p className="text-xs text-muted-foreground">
         Add this widget to your website or Linktree so fans can find and support you on Selah.fm.
