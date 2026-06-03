@@ -200,7 +200,10 @@ export default function MessagesPage() {
       setUnreadTotal(convs.reduce((s: number, c: Conversation) => s + c.unread_count, 0));
       
       // Pre-select user from URL param — wait for currentUserId, skip self
-      if (preselectedUser && currentUserId && preselectedUser !== currentUserId) {
+      if (preselectedUser && currentUserId) {
+        if (preselectedUser === currentUserId) {
+          setPreselectLoading(false);
+        } else {
         const match = convs.find((c: Conversation) => c.other_user.id === preselectedUser);
         if (match) {
           selectConversation(match.other_user);
@@ -227,7 +230,7 @@ export default function MessagesPage() {
         setPreselectLoading(false);
       }
     } catch (e) { console.error('loadConversations error:', e); } finally { setLoading(false); }
-  }, [preselectedUser]);
+  }, [preselectedUser, currentUserId]);
 
   useEffect(() => { loadConversations(); }, [loadConversations, currentUserId]);
 
