@@ -230,7 +230,8 @@ export async function GET(request: Request) {
         results.answered++;
         log.push(`  ✅ Answered ${iv.id.slice(0, 8)}`);
       } catch (e: any) {
-        log.push(`  ❌ Answer ${iv.id.slice(0, 8)}: ${e.message?.slice(0, 80) || 'unknown error'}`);
+        const errMsg = e?.message || String(e) || 'unknown error';
+        log.push(`  ❌ Answer ${iv.id.slice(0, 8)}: ${errMsg.slice(0, 200)}`);
       }
     }
     log.push(`${results.answered} answered`);
@@ -344,7 +345,9 @@ export async function GET(request: Request) {
         results.posts++;
         log.push(`  ✅ Post: ${article.title?.slice(0, 60)}`);
       } catch (e: any) {
-        log.push(`  ❌ Post err: ${e.message?.slice(0, 80) || 'unknown'}`);
+        const errMsg = e?.message || String(e) || 'unknown';
+        const errStack = e?.stack ? e.stack.split('\n').slice(0, 2).join(' ') : '';
+        log.push(`  ❌ Post err: ${errMsg.slice(0, 200)}${errStack ? ' | ' + errStack.slice(0, 150) : ''}`);
       }
     }
     log.push(`${results.posts} posts`);

@@ -16,30 +16,39 @@ interface DeepSeekMessage {
 async function chat(messages: DeepSeekMessage[], options: { temperature?: number; max_tokens?: number; frequency_penalty?: number; presence_penalty?: number; top_p?: number } = {}) {
   if (!DEEPSEEK_API_KEY) throw new Error('DEEPSEEK_API_KEY not configured');
 
-  const res = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      messages,
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.max_tokens ?? 2000,
-      frequency_penalty: options.frequency_penalty ?? 0,
-      presence_penalty: options.presence_penalty ?? 0,
-      top_p: options.top_p ?? 1,
-    }),
-  });
+  // 120s timeout — prevents hanging when DeepSeek is slow on large prompts
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120_000);
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`DeepSeek API error ${res.status}: ${err}`);
+  try {
+    const res = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.max_tokens ?? 2000,
+        frequency_penalty: options.frequency_penalty ?? 0,
+        presence_penalty: options.presence_penalty ?? 0,
+        top_p: options.top_p ?? 1,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`DeepSeek API error ${res.status}: ${err.slice(0, 200)}`);
+    }
+
+    const data = await res.json();
+    return data.choices[0].message.content;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const data = await res.json();
-  return data.choices[0].message.content;
 }
 
 // ── Question Generation ──────────────────────────────────────────
@@ -379,12 +388,13 @@ Original JSON: ${JSON.stringify(raw).slice(0, 8000)}`;
   } catch {
     // Fallback: extract what we can — use a proper title-based slug
     const fallbackTitle = interviewTranscript.split('\n')[0]?.slice(0, 70) || 'Music Promotion Tips';
+    const responseText = (typeof response === 'string') ? response : interviewTranscript;
     return {
       title: fallbackTitle,
       meta_description: interviewTranscript.slice(0, 160),
       slug: fallbackTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) + '-' + Date.now().toString(36).slice(0, 6),
-      content_html: `<p>${response.replace(/\n/g, '</p><p>')}</p>`,
-      excerpt: response.slice(0, 200),
+      content_html: `<p>${responseText.replace(/\n/g, '</p><p>')}</p>`,
+      excerpt: responseText.slice(0, 200),
       tags: ['music-promotion', 'content-creation'],
       image_suggestions: [{ type: 'featured', description: 'Music promotion marketplace dashboard' }],
     };
