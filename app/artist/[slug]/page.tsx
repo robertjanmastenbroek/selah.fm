@@ -271,6 +271,7 @@ export default async function ArtistPage({ params }: Props) {
   }
 
   const schema: Record<string, any> = {
+  const socialLinks = artist.social_links || {};
     '@context': 'https://schema.org',
     '@graph': [
       {
@@ -335,8 +336,7 @@ export default async function ArtistPage({ params }: Props) {
     ],
   };
 
-  // Build social links
-  const socialLinks = artist.social_links || {};
+  // Build social links (defined before schema for sameAs use)
   const socialButtons: { label: string; url: string; icon: string }[] = [];
   if (artist.instagram_handle) socialButtons.push({ label: 'Instagram', url: `https://instagram.com/${artist.instagram_handle}`, icon: '📸' });
   if (artist.tiktok_handle) socialButtons.push({ label: 'TikTok', url: `https://tiktok.com/@${artist.tiktok_handle}`, icon: '🎵' });
