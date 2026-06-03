@@ -234,14 +234,15 @@ export async function GET(request: Request) {
     }
     log.push(`${results.answered} answered`);
 
-    // Step 4: Generate up to 4 posts per run (fills 2 days of 09:00+15:00 slots)
+    // Step 4: Generate 1 post per run (each post takes 2-3 min of DeepSeek calls)
+    // Pipeline runs every 6h at 08:00, 14:00, 20:00, 02:00 UTC → 1 post/run = 4/day
     const answered = await sql`
       SELECT bi.id, bi.transcript, bq.raw_question FROM batch_interviews bi
       JOIN batch_questions bq ON bq.id = bi.source_question_id
       WHERE bi.batch_id = ${batchId} AND bi.status = 'answered' AND bi.transcript IS NOT NULL
         AND NOT EXISTS (SELECT 1 FROM blog_posts bp WHERE bp.interview_id = bi.id)
       ORDER BY bi.created_at DESC
-      LIMIT 4
+      LIMIT 1
     `;
     for (const iv of answered) {
       try {

@@ -12,6 +12,7 @@ export const maxDuration = 600;
 const WORKERS: Record<number, { path: string; params?: string }[]> = {
   // Outreach pipeline paused — 2,563 unclaimed campaigns with zero activity (ROADMAP #8)
   // 0:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }, { path: '/api/cron/creator-outreach' }],
+  2:  [{ path: '/api/cron/blog-pipeline' }],
   3:  [{ path: '/api/cron/email-outreach' }],
   5:  [{ path: '/api/cron/creator-discovery' }],
   // 6:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
@@ -20,6 +21,7 @@ const WORKERS: Record<number, { path: string; params?: string }[]> = {
   10: [{ path: '/api/cron/blog-publish' }, { path: '/api/cron/outreach-followup' }],
   11: [{ path: '/api/cron/creator-outreach' }, { path: '/api/cron/reengage' }],
   // 12: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
+  14: [{ path: '/api/cron/blog-pipeline' }],
   15: [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/blog-publish' }],
   17: [{ path: '/api/cron/creator-discovery' }],
   // 18: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
