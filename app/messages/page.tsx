@@ -355,12 +355,11 @@ export default function MessagesPage() {
   };
 
   const sendMessage = async () => {
-    // Read input from React state (simpler than DOM refs)
+    if (!selectedUser || sending) return;
     const text = input.trim();
-    if (!text || !selectedUser || sending) return;
+    if (!text) return;
     const receiverId = selectedUser.id;
     
-    // Clear input
     setInput('');
     setSending(true);
 
@@ -379,14 +378,17 @@ export default function MessagesPage() {
       });
       clearTimeout(timeout);
       const data = await res.json();
-      if (data.message) {
+      if (data?.message) {
         setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: data.message.id, created_at: data.message.created_at } : m));
-      } else if (data.error) {
+        loadConversations();
+      } else if (data?.error) {
         setMessages(prev => prev.filter(m => m.id !== tempId));
         setInput(text);
         setSendError(true);
         setTimeout(() => setSendError(false), 3000);
         console.error('Failed to send message:', data.error);
+      } else {
+        console.error('Unexpected API response:', data);
       }
     } catch (e: any) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
@@ -397,6 +399,7 @@ export default function MessagesPage() {
       else console.error('Network error sending message:', e);
     }
     setSending(false);
+    inputRef.current?.focus();
   };
 
   const timeAgo = (dateStr: string) => {
@@ -618,7 +621,10 @@ export default function MessagesPage() {
                     value={input}
                     onChange={e => handleInputChange(e.target.value)}
                     onKeyDown={e => {
-                      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
                     }}
                     placeholder="Message..."
                     rows={1}
