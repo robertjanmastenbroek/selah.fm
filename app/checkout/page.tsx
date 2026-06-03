@@ -168,14 +168,11 @@ export default function CheckoutPage() {
   // Fetch campaign or artist data
   useEffect(() => {
     if (artistSlug) {
-      fetch(`/api/artists?search=${encodeURIComponent(artistSlug)}&limit=1&sort=name`)
-        .then(r => r.json()).then(d => {
-          if (d.artists?.length > 0) {
-            fetch(`/api/artists/${d.artists[0].slug}`)
-              .then(r => r.json()).then(ad => {
-                if (ad.artist) setArtistCheckout(ad);
-              }).catch(() => {}).finally(() => setLoading(false));
-          } else setLoading(false);
+      // Search by slug (not name — slug is from the artist page URL)
+      fetch(`/api/artists/${encodeURIComponent(artistSlug)}`)
+        .then(r => r.json()).then(ad => {
+          if (ad.artist) setArtistCheckout(ad);
+          setLoading(false);
         }).catch(() => setLoading(false));
     } else if (campaignId) {
       fetch(`/api/campaigns/${campaignId}`)
