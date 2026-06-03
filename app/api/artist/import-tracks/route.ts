@@ -66,7 +66,11 @@ export async function POST(request: Request) {
         `https://api.spotify.com/v1/artists/${spotifyArtistId}/top-tracks?market=US`,
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
-      if (!tracksRes.ok) return NextResponse.json({ error: 'Failed to fetch Spotify tracks' }, { status: 502 });
+      if (!tracksRes.ok) {
+        const spotifyError = await tracksRes.text().catch(() => 'Unknown error');
+        console.error('Spotify tracks API error:', tracksRes.status, spotifyError);
+        return NextResponse.json({ error: `Spotify returned: ${spotifyError.slice(0, 200)}` }, { status: 502 });
+      }
       const tracksData = await tracksRes.json();
 
       tracks = (tracksData.tracks || []).map((t: any) => ({
