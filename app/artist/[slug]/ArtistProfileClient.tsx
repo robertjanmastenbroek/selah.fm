@@ -60,28 +60,48 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
   const initial = name[0]?.toUpperCase() || '?';
   const totalDonations = stats.total_donations_cents || 0;
   const supporterCount = stats.supporter_count || 0;
+  const topCpm = tracks[0]?.cpm_rate_cents ? (tracks[0].cpm_rate_cents / 100).toFixed(2) : null;
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
-  // Follow state (localStorage-based)
+  // Follow state (server-persisted + localStorage fallback)
   const [following, setFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   useEffect(() => {
-    const stored = localStorage.getItem('selah_follows');
-    if (stored) {
-      const follows = JSON.parse(stored);
-      setFollowing(!!follows[slug]);
-    }
+    // Try server first
+    fetch(`/api/artists/${slug}/follow`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { if (d.following !== undefined) setFollowing(d.following); })
+      .catch(() => {
+        // Fallback to localStorage
+        const stored = localStorage.getItem('selah_follows');
+        if (stored) {
+          const follows = JSON.parse(stored);
+          setFollowing(!!follows[slug]);
+        }
+      });
   }, [slug]);
 
-  const toggleFollow = () => {
-    const stored = localStorage.getItem('selah_follows');
-    const follows = stored ? JSON.parse(stored) : {};
-    if (following) {
-      delete follows[slug];
-    } else {
-      follows[slug] = { name, followedAt: Date.now() };
-    }
-    localStorage.setItem('selah_follows', JSON.stringify(follows));
+  const toggleFollow = async () => {
+    if (followLoading) return;
+    setFollowLoading(true);
+    // Optimistic UI
     setFollowing(!following);
+    try {
+      const res = await fetch(`/api/artists/${slug}/follow`, {
+        method: 'POST', credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.following !== undefined) setFollowing(data.following);
+    } catch {
+      // Fallback to localStorage
+      setFollowing(!following);
+      const stored = localStorage.getItem('selah_follows');
+      const follows = stored ? JSON.parse(stored) : {};
+      if (following) delete follows[slug];
+      else follows[slug] = { name, followedAt: Date.now() };
+      localStorage.setItem('selah_follows', JSON.stringify(follows));
+    }
+    setFollowLoading(false);
   };
 
   // Track sorting
@@ -249,6 +269,20 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
           </div>
         </div>
 
+        {/* Social proof — raised amount prominent */}
+        {totalDonations > 0 && (
+          <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-500/5 to-green-500/5 border border-emerald-500/10 flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold text-emerald-400">${(totalDonations / 100).toFixed(0)}</p>
+              <p className="text-xs text-muted-foreground">raised by {supporterCount} supporters</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground/60">{stats.total_submissions} submissions</p>
+              <p className="text-sm text-muted-foreground/60">{stats.total_tracks} tracks</p>
+            </div>
+          </div>
+        )}
+
         {/* Active campaigns section */}
         {campaigns.length > 0 && (
           <div className="mb-8">
@@ -281,7 +315,30 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
           {/* ── LEFT COLUMN: About + Tracks + Activity + Videos + Comments ── */}
           <div className="lg:col-span-2 space-y-10">
 
-            {/* About section (moved up) */}
+            {/* Quick facts — LLM-friendly data block */}
+            <section className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-5">
+              <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <Sparkles size={14} className="text-amber-400" />
+                Quick facts about {name}
+              </h2>
+              <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {[
+                  { label: 'Genre', value: genres.slice(0, 3).join(', ') || '—' },
+                  { label: 'Monthly listeners', value: listeners > 0 ? `${listeners >= 1000 ? (listeners / 1000).toFixed(1) + 'K' : listeners}` : '—' },
+                  { label: 'Tracks on Selah.fm', value: stats.total_tracks },
+                  { label: 'Total raised', value: `$${(totalDonations / 100).toFixed(0)}` },
+                  { label: 'Supporters', value: supporterCount || '—' },
+                  { label: 'Top CPM', value: topCpm ? `$${(parseFloat(topCpm) * 1000).toFixed(0)}/1M views` : '—' },
+                ].map(f => (
+                  <div key={f.label}>
+                    <dt className="text-[10px] text-muted-foreground uppercase tracking-wider">{f.label}</dt>
+                    <dd className="text-sm font-semibold mt-0.5">{f.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+
+            {/* About section */}
             {bio && (
               <section>
                 <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
@@ -319,7 +376,9 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 <div className="grid gap-2">
                   {sortedTracks.map((track: any) => {
                     const cpm = track.cpm_rate_cents ? (track.cpm_rate_cents / 100).toFixed(2) : '0.00';
-                    const hasCampaign = !!track.campaign_slug;
+                    const hasActiveCampaign = campaigns.some((c: any) =>
+                      c.track_title?.toLowerCase() === track.track_title?.toLowerCase()
+                    );
                     return (
                       <div key={track.id}
                         className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-primary/15 transition-all">
@@ -333,7 +392,14 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                         </div>
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold truncate">{track.track_title}</p>
+                          <p className="text-sm font-semibold truncate">
+                            {track.track_title}
+                            {hasActiveCampaign && (
+                              <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                Active budget
+                              </span>
+                            )}
+                          </p>
                           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                             <span className="text-emerald-400 font-medium">${(parseFloat(cpm) * 1000).toFixed(0)}/1M views</span>
                             {track.submissions_count > 0 && <span className="ml-2">· {track.submissions_count} submissions</span>}
@@ -341,8 +407,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                           </p>
                         </div>
                         {/* Action */}
-                        {hasCampaign ? (
-                          <Link href={`/c/${track.campaign_slug}`}
+                        {hasActiveCampaign ? (
+                          <Link href={`/c/${campaigns.find((c: any) => c.track_title?.toLowerCase() === track.track_title?.toLowerCase())?.slug || track.track_title}`}
                             className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-primary/[0.04] transition-all shrink-0">
                             Submit video
                           </Link>
