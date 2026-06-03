@@ -232,9 +232,18 @@ function buildWordContext(artist: ArtistData): string {
   } else if (artist.totalFollowers > 1000) {
     parts.push('a growing following');
   }
-  if (artist.hasCampaigns) parts.push(`${artist.campaignCount} active campaign${artist.campaignCount !== 1 ? 's' : ''} on Selah.fm`);
+  if (artist.hasCampaigns) parts.push(`${artist.campaignCount} campaign${artist.campaignCount !== 1 ? 's' : ''} on Selah.fm`);
   if (artist.submissionCount > 0) parts.push(`${artist.submissionCount} creator submission${artist.submissionCount !== 1 ? 's' : ''}`);
   if (artist.genres.length > 0) parts.push(`genre: ${artist.genres.slice(0, 3).join(', ')}`);
+  if (artist.careerDays > 0) {
+    const years = Math.floor(artist.careerDays / 365);
+    const months = Math.floor((artist.careerDays % 365) / 30);
+    if (years > 0) parts.push(`career: ${years} year${years > 1 ? 's' : ''}${months > 0 ? `, ${months} month${months > 1 ? 's' : ''}` : ''}`);
+    else parts.push(`career: ${months} month${months > 1 ? 's' : ''}`);
+  }
+  if (artist.trackTitles.length > 0) {
+    parts.push(`sample tracks: ${artist.trackTitles.slice(0, 5).join(', ')}`);
+  }
 
   return parts.join('\n') || 'Independent musician building their catalog.';
 }
@@ -274,6 +283,27 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     SELECT COUNT(*)::int FROM artist_tracks WHERE artist_id = ${artistId} AND enabled = true
   `;
 
+  // Career timeline — first and most recent track dates
+  const [timeline] = await sql`
+    SELECT MIN(created_at) as first_track, MAX(created_at) as latest_track
+    FROM artist_tracks WHERE artist_id = ${artistId} AND enabled = true
+  `;
+
+  let careerDays = 0;
+  let daysSinceLastTrack = 365;
+  if (timeline?.first_track) {
+    careerDays = Math.floor((Date.now() - new Date(timeline.first_track).getTime()) / 86400000);
+  }
+  if (timeline?.latest_track) {
+    daysSinceLastTrack = Math.floor((Date.now() - new Date(timeline.latest_track).getTime()) / 86400000);
+  }
+
+  // Track titles for genre inference + bio detail
+  const trackTitles = await sql`
+    SELECT title FROM artist_tracks WHERE artist_id = ${artistId} AND enabled = true
+    ORDER BY created_at DESC LIMIT 10
+  `;
+
   // Count campaigns
   const [{ campaign_count }] = await sql`
     SELECT COUNT(*)::int FROM campaign_claims WHERE discovered_artist_id = ${artistId}
@@ -286,6 +316,16 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     JOIN campaign_claims cc ON cc.campaign_id = c.id
     WHERE cc.discovered_artist_id = ${artistId}
   `;
+
+  // Infer genre from track titles if DB genre is empty
+  let inferredGenre = '';
+  if (genres.length === 0 && trackTitles.length > 0) {
+    const titleList = trackTitles.map((t: any) => t.title).join(', ');
+    inferredGenre = await inferGenreFromTracks(artist.artist_name, titleList);
+    if (inferredGenre && inferredGenre !== 'unknown') {
+      genres = [inferredGenre];
+    }
+  }
 
   return {
     id: artist.id,
@@ -305,9 +345,37 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     locationCountry: '',
     hasSpotifyId: false,
     hasImage: false,
-    careerDays: 0,
-    daysSinceLastTrack: 365,
+    careerDays,
+    daysSinceLastTrack,
+    trackTitles: trackTitles.map((t: any) => t.title),
   };
+}
+
+async function inferGenreFromTracks(name: string, trackTitles: string): Promise<string> {
+  try {
+    const key = process.env.DEEPSEEK_API_KEY;
+    if (!key) return '';
+
+    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: 'You infer music genres from track titles and artist names. Respond with ONLY a single genre name. If uncertain, respond with "unknown".' },
+          { role: 'user', content: `Artist: "${name}". Track titles: ${trackTitles}. What genre is this music?` },
+        ],
+        max_tokens: 20,
+        temperature: 0.1,
+      }),
+    });
+    if (!res.ok) return '';
+    const data = await res.json();
+    const result = data.choices?.[0]?.message?.content?.trim().toLowerCase() || '';
+    return result === 'unknown' ? '' : result;
+  } catch {
+    return '';
+  }
 }
 
 async function saveBio(artistId: string, bio: string, score: number, angle: string, tone: string): Promise<void> {

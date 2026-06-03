@@ -47,6 +47,8 @@ export interface ArtistData {
   careerDays: number;
   /** Days since most recent track */
   daysSinceLastTrack: number;
+  /** Up to 10 track titles for genre inference + bio detail */
+  trackTitles: string[];
 }
 
 // ─── Scoring function ────────────────────────────────────────
