@@ -70,7 +70,12 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       .then(d => {
         const msgs = d.messages;
         if (Array.isArray(msgs)) {
-          setMessages(msgs);
+          // Merge: preserve optimistic messages not yet confirmed
+          setMessages(prev => {
+            const serverIds = new Set(msgs.map((m: any) => m.id));
+            const localOnly = prev.filter(m => m.id.startsWith('opt-') && !serverIds.has(m.id));
+            return localOnly.length > 0 ? [...msgs, ...localOnly] : msgs;
+          });
           // Determine own user ID from the messages
           const otherId = userId;
           for (const m of msgs) {

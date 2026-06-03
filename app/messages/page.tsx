@@ -225,14 +225,21 @@ export default function MessagesPage() {
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
-  // Poll for new messages
+  // Poll for new messages — preserve optimistic messages
   useEffect(() => {
     if (!selectedUser) return;
     pollRef.current = setInterval(async () => {
       try {
         const res = await fetch(`/api/messages?with=${selectedUser.id}`, { credentials: 'include' });
         const data = await res.json();
-        if (data.messages) setMessages(data.messages);
+        if (data.messages) {
+          // Merge: keep optimistic messages (temp-* id) not yet confirmed by server
+          const serverIds = new Set(data.messages.map((m: any) => m.id));
+          setMessages(prev => {
+            const localOnly = prev.filter(m => m.id.startsWith('temp-') && !serverIds.has(m.id));
+            return localOnly.length > 0 ? [...data.messages, ...localOnly] : data.messages;
+          });
+        }
         
         // Mark as read
         fetch('/api/messages', {
@@ -244,7 +251,7 @@ export default function MessagesPage() {
         // Refresh conversations for updated previews
         loadConversations();
       } catch {}
-    }, 15000);
+    }, 10000); // Reduced from 15s to 10s for snappier delivery
     return () => clearInterval(pollRef.current);
   }, [selectedUser]);
 
@@ -424,31 +431,51 @@ export default function MessagesPage() {
               <div ref={messagesRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.map((m, i) => {
                   const isMe = m.sender_id === currentUserId;
-                  const showTimestamp = i === 0 || new Date(m.created_at).getTime() - new Date(messages[i-1].created_at).getTime() > 300000;
+                  const isOptimistic = m.id.startsWith('temp-');
                   const isLast = i === messages.length - 1;
+                  
+                  // Date separator logic
+                  const prevMsg = i > 0 ? messages[i-1] : null;
+                  const showDateSep = !prevMsg || new Date(m.created_at).toDateString() !== new Date(prevMsg.created_at).toDateString();
+                  const showTimeSep = !prevMsg || new Date(m.created_at).getTime() - new Date(prevMsg.created_at).getTime() > 300000;
+                  
+                  // Format date label
+                  const msgDate = new Date(m.created_at);
+                  const today = new Date();
+                  const dateLabel = showDateSep
+                    ? (msgDate.toDateString() === today.toDateString() ? 'Today'
+                      : msgDate.toDateString() === new Date(today.setDate(today.getDate()-1)).toDateString() ? 'Yesterday'
+                      : msgDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }))
+                    : null;
+
                   return (
                     <div key={m.id}>
-                      {showTimestamp && (
+                      {dateLabel && (
+                        <div className="flex items-center gap-3 py-2">
+                          <div className="flex-1 h-px bg-white/[0.04]" />
+                          <span className="text-[10px] text-muted-foreground/40 font-medium shrink-0">{dateLabel}</span>
+                          <div className="flex-1 h-px bg-white/[0.04]" />
+                        </div>
+                      )}
+                      {showTimeSep && !dateLabel && (
                         <p className="text-center text-[10px] text-muted-foreground/40 mb-3">
-                          {new Date(m.created_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                          {' · '}
                           {formatTime(m.created_at)}
                         </p>
                       )}
-                      <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} ${isOptimistic ? 'opacity-70' : ''}`}>
                         <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                           isMe
                             ? 'bg-[#4338CA] text-white rounded-br-md'
                             : 'bg-white/[0.04] text-foreground rounded-bl-md'
                         }`}>
                           {m.content}
+                          {isMe && isLast && (
+                            <span className="ml-1.5 inline-flex text-[9px] opacity-60">
+                              {isOptimistic ? '◌' : m.read ? '✓✓' : '✓'}
+                            </span>
+                          )}
                         </div>
                       </div>
-                      {isLast && isMe && (
-                        <p className="text-right text-[9px] text-muted-foreground/30 mt-1 mr-1">
-                          {m.read ? 'Read' : 'Delivered'}
-                        </p>
-                      )}
                     </div>
                   );
                 })}
