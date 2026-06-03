@@ -119,6 +119,35 @@ function DashboardContent() {
     setSaving(false);
   };
 
+  // ─── Track import state ─────────────────────────────────────
+  const [importUrl, setImportUrl] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ ok?: boolean; imported?: number; skipped?: number; message?: string; error?: string } | null>(null);
+
+  const handleImport = async () => {
+    if (!importUrl.trim()) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const res = await fetch('/api/artist/import-tracks', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: importUrl.trim() }),
+      });
+      const data = await res.json();
+      setImportResult(data);
+      if (data.ok) {
+        addToast(data.message || 'Tracks imported!', 'success');
+        reloadArtist();
+        reloadCampaigns();
+      }
+    } catch {
+      setImportResult({ error: 'Network error' });
+      addToast('Import failed', 'error');
+    }
+    setImporting(false);
+  };
+
   // ─── Earnings ───────────────────────────────────────────────
   const { data: earningsData } = useSWR('/api/earnings', fetcher, swrConfig);
 
@@ -485,6 +514,39 @@ function DashboardContent() {
                         {saving ? 'Saving...' : 'Save changes'}
                       </Button>
                       {!bioChanged && <span className="text-xs text-muted-foreground/50">No unsaved changes</span>}
+                    </div>
+                  </CardContent></Card>
+
+                  {/* Import tracks from link */}
+                  <Card><CardContent className="p-5 space-y-3">
+                    <h3 className="text-xs font-semibold flex items-center gap-2">
+                      <Music size={14} className="text-primary" />
+                      Import tracks
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground">
+                      Paste your Spotify, Bandcamp, or Deezer profile link to auto-import your tracks.
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <input value={importUrl} onChange={e => setImportUrl(e.target.value)}
+                          placeholder="https://open.spotify.com/artist/..."
+                          className="flex-1 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30"
+                          onKeyDown={e => e.key === 'Enter' && handleImport()} />
+                        <button onClick={handleImport} disabled={importing || !importUrl.trim()}
+                          className="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-semibold disabled:opacity-40 hover:opacity-90 transition-all flex items-center gap-1.5 shrink-0">
+                          {importing ? <><Loader2 size={14} className="animate-spin" /> Scanning</> : 'Import'}
+                        </button>
+                      </div>
+                      {importResult && (
+                        <div className={`text-xs p-3 rounded-lg ${importResult.ok ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                          {importResult.ok
+                            ? `✅ ${importResult.message || 'Imported!'}`
+                            : importResult.error || 'Import failed'}
+                        </div>
+                      )}
+                      <p className="text-[9px] text-muted-foreground/40">
+                        Supports: Spotify artist links, Bandcamp pages, Deezer artist profiles. Max 20 tracks.
+                      </p>
                     </div>
                   </CardContent></Card>
 
