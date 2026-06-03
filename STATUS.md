@@ -211,18 +211,34 @@ See `BLUEPRINT.md` (execution plan), `VISION.md` (architecture), `GROWTH_AUDIT.m
 | **AI/Automation** | Comprehensive automation. Missing: LLMO bios, AI comment moderation. |
 | **Business** | Revenue model exists on paper. Zero revenue in practice. Needs 1,000× scale for profitability. |
 
-### 🔴 Blog Pipeline Fix
-**Root cause:** DeepSeek fetch in `chat()` had no `AbortSignal.timeout()` — the enormous ARTICLE_PROMPT (~6K tokens) caused requests to hang indefinitely. Fallback in `generateArticle()` then tried `.replace()` on undefined `response`, throwing a silent TypeError. Pipeline had 6 answered interviews in June batch but 0 blog posts.
+### 🔴 Blog Pipeline Fix (June 3 — full overhaul, round 2)
+**Root cause #1:** DeepSeek fetch in `chat()` had no `AbortSignal.timeout()` — the enormous ARTICLE_PROMPT (~6K tokens) caused requests to hang indefinitely. Fallback in `generateArticle()` then tried `.replace()` on undefined `response`, throwing a silent TypeError. Pipeline had 6 answered interviews in June batch but 0 blog posts.
 
 **Fix:**
 - `lib/blog-engine.ts` — Added `AbortSignal.timeout(120s)` to fetch, `responseText` fallback for undefined response
 - `app/api/cron/blog-pipeline/route.ts` — Improved error logging to 200 chars with stack traces
 - Migration: Added UNIQUE index on `used_questions.normalized_text` (required by `ON CONFLICT`)
 
+**Root cause #2:** 7 structural issues found in full audit:
+1. **Titles not enforced as questions** — `enforceQuestionTitle()` had soft check that let non-questions through. Post "How to Monetize a Smaller Audience: Direct Sales Beat Viral Views" was a headline, not a question.
+2. **1 post/day instead of 2** — Scheduling spread 2 posts 1 day apart. Pipeline ran once daily at 08:00 UTC.
+3. **Interview throughput too slow** — LIMIT 3 per run with 891 questions = 297 days to exhaust the batch.
+4. **20h cooldown blocked multiple runs** — Couldn't add second pipeline run.
+5. **Publish cron out of sync** — Ran at 10 UTC but posts scheduled at 09 UTC. 1h gap.
+6. **Railway 30s load balancer timeout** — Each post needs 2-3 min of DeepSeek calls. Connection killed before function completes.
+7. **Creator questions underrepresented** — ~70% artist, 30% creator. Not 50/50.
+
+**Fix round 2 (3 commits):**
+- `blog-pipeline/route.ts` — `enforceQuestionTitle()` now ALWAYS uses source question. Interview LIMIT 3→6.
+- `blog-pipeline/route.ts` — Scheduling: 2 slots/day (09:00 + 15:00 UTC). Pipeline runs at 02, 08, 14, 20 UTC.
+- `blog-pipeline/route.ts` — Cooldown 20h→6h. Post generation LIMIT 2→1 (faster per run).
+- `blog-pipeline/route.ts` — Fire-and-forget pattern: respond immediately, process in background.
+- `dispatcher/route.ts` — Added blog-pipeline at UTC 02, 14, 20. Added blog-publish at UTC 09, 15.
+
 **Result:**
-- Blog posts: 17 → 21 (+4 new auto-generated)
-- Scheduled posts: 0 → 5 (through June 7)
-- Pipeline now runs at 08:00 UTC daily
+- Blog posts: 21 → 28 (+7 new auto-generated, all question-format titles)
+- Scheduled posts: 5 → 11 (full 2/day cadence through June 12)
+- Pipeline runs 4×/day, fire-and-forget (returns immediately, processes in background)
 
 ### Updated Key Files
 | File | Change |
