@@ -112,7 +112,7 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
           coverArtUrl: coverArt,
           galleryImages: [],
           cpmRate: parseFloat(cpm),
-          budget: 0,
+          budget: 25,
           maxPayout: parseInt(maxPayout),
           driveUrl,
           hashtags: hashtags || undefined,
