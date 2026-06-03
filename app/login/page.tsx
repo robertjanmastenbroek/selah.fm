@@ -53,7 +53,8 @@ function LoginForm() {
         // trackLogin('email');
         setTimeout(() => { window.location.href = redirect || '/browse'; }, 300);
       } else {
-        fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'signup_start', path: window.location.pathname, metadata: { method: 'email' } }) }).catch(()=>{});
+        const sid = sessionStorage.getItem('selah_session_id') || '';
+        fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'signup_start', path: window.location.pathname, session_id: sid, metadata: { method: 'email' } }) }).catch(()=>{});
         const { error: authError } = await supabase.auth.signUp({
           email,
           password,

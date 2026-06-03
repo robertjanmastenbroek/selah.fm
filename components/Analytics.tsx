@@ -9,20 +9,52 @@ export default function Analytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Track pageview in our DB for real-time analytics
+  // Track pageview in our DB — session tracking, referrer, UTM, user flow
   useEffect(() => {
     try {
-      fetch('/api/analytics/pageview', {
+      // Generate or reuse session ID (groups all events from one visit)
+      let sessionId = sessionStorage.getItem('selah_session_id');
+      if (!sessionId) {
+        sessionId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+        sessionStorage.setItem('selah_session_id', sessionId);
+        
+        // First event of session: capture referrer and all UTM params
+        const firstRef = document.referrer || '';
+        const firstUtmSource = searchParams.get('utm_source') || '';
+        const firstUtmMedium = searchParams.get('utm_medium') || '';
+        const firstUtmCampaign = searchParams.get('utm_campaign') || '';
+        
+        if (firstRef || firstUtmSource) {
+          sessionStorage.setItem('selah_session_ref', firstRef);
+          sessionStorage.setItem('selah_session_utm_source', firstUtmSource);
+          sessionStorage.setItem('selah_session_utm_medium', firstUtmMedium);
+          sessionStorage.setItem('selah_session_utm_campaign', firstUtmCampaign);
+        }
+      }
+
+      const ref = sessionStorage.getItem('selah_session_ref') || '';
+      const utmSource = sessionStorage.getItem('selah_session_utm_source') || searchParams.get('utm_source') || '';
+      const utmMedium = sessionStorage.getItem('selah_session_utm_medium') || searchParams.get('utm_medium') || '';
+      const utmCampaign = sessionStorage.getItem('selah_session_utm_campaign') || searchParams.get('utm_campaign') || '';
+
+      // Fire page_view event with full context
+      fetch('/api/analytics/event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          event: 'page_view',
           path: pathname,
-          referrer: document.referrer,
-          utm_source: searchParams.get('utm_source'),
-          utm_medium: searchParams.get('utm_medium'),
-          utm_campaign: searchParams.get('utm_campaign'),
+          session_id: sessionId,
+          referrer: ref || document.referrer,
+          utm_source: utmSource,
+          utm_medium: utmMedium,
+          utm_campaign: utmCampaign,
+          metadata: {
+            title: document.title,
+            search: searchParams.toString(),
+          },
         }),
-      }).catch(() => {}); // Fire-and-forget, never blocks rendering
+      }).catch(() => {});
     } catch {}
   }, [pathname]);
 
