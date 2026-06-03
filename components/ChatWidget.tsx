@@ -65,15 +65,15 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
 
   // ── Fetch messages for active conversation ────────────────────
   const fetchMessages = useCallback((userId: string) => {
-    fetch(`/api/messages?userId=${userId}`)
+    fetch(`/api/messages?userId=${userId}`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
-        if (Array.isArray(d) && d.length > 0) {
-          setMessages(d);
-          // Determine own user ID from the messages: find a message where
-          // sender_id or receiver_id doesn't match the other user's ID
+        const msgs = d.messages;
+        if (Array.isArray(msgs)) {
+          setMessages(msgs);
+          // Determine own user ID from the messages
           const otherId = userId;
-          for (const m of d) {
+          for (const m of msgs) {
             if (m.sender_id !== otherId) {
               setOwnUserId(m.sender_id);
               break;
@@ -124,16 +124,47 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
     }
   }, [open, fetchConversations]);
 
-  // Only poll when a conversation is active AND the widget is open
+  // ── Real-time: SSE stream + polling fallback ────────────────
+  const sseRef = useRef<EventSource | null>(null);
   useEffect(() => {
     if (!activeConv?.other_id || !open) {
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
       return;
     }
+
+    // Initial fetch
     fetchMessages(activeConv.other_id);
-    pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 30000);
+
+    // Try SSE for real-time updates
+    try {
+      const es = new EventSource(`/api/messages/stream?with=${activeConv.other_id}`, { withCredentials: true });
+      sseRef.current = es;
+
+      es.addEventListener('messages', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.messages?.length > 0) {
+            setMessages(data.messages);
+            setOwnUserId(data.messages.find((m: any) => m.sender_id !== activeConv.other_id)?.sender_id || '');
+          }
+        } catch {}
+      });
+
+      es.onerror = () => {
+        // SSE failed — fall back to polling
+        es.close();
+        sseRef.current = null;
+        pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 15000);
+      };
+    } catch {
+      // SSE not supported — fall back to polling
+      pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 15000);
+    }
+
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     };
   }, [activeConv, open, fetchMessages]);
 

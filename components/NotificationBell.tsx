@@ -13,6 +13,7 @@ const typeIcons: Record<string, React.ElementType> = {
   comment: MessageCircle,
   reaction: Heart,
   donation: Heart,
+  message: MessageCircle,
 };
 
 function timeAgo(dateStr: string): string {

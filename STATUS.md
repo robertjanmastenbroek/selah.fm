@@ -279,3 +279,35 @@ See `BLUEPRINT.md` (execution plan), `VISION.md` (architecture), `GROWTH_AUDIT.m
 
 **Total: 1 commit from current → HEAD**
 **8 files modified, 2 research documents created**
+
+---
+
+## ✅ SESSION: June 3, 2026 — Messaging System Overhaul (1 commit)
+
+### 7 Bugs Fixed
+
+| # | Bug | Fix | Severity |
+|---|-----|-----|----------|
+| 1 | **Notification CHECK constraint blocks 'message' type** | Migration: added `'message'` + `'comment'` + `'reaction'` + `'donation'` types to constraint | 🔴 CRITICAL — message notifications silently failed |
+| 2 | **ChatWidget fetchMessages reads wrong API response** | Was checking `Array.isArray(d)` on `{messages: [...]}`; fixed to `d.messages` | 🔴 CRITICAL — never showed messages in overlay |
+| 3 | **Mobile blank screen after selecting conversation** | Fixed `showList` state management; added `preselectLoading` to show loading state | 🟡 HIGH |
+| 4 | **Preselected user race condition** | Made user search async/await instead of fire-and-forget; added `preselectLoading` guard | 🟡 HIGH |
+| 5 | **NotificationBell doesn't handle 'message' type** | Added `message: MessageCircle` to `typeIcons` map | 🟡 MEDIUM |
+| 6 | **No real-time delivery (30s polling)** | Added SSE endpoint at `/api/messages/stream` with 3s push; ChatWidget connects and falls back to 15s polling | 🟡 MEDIUM |
+| 7 | **Messages page mobile UX** | `showList` now properly hides list when user is preselected on mobile; loading states added | 🟢 LOW |
+
+### New Files
+| File | Purpose |
+|------|---------|
+| `app/api/messages/stream/route.ts` | SSE endpoint — pushes new messages every 3s to connected clients |
+| `supabase/migrations/20260603200000_fix_notifications_type.sql` | Adds 'message' + other types to notifications CHECK constraint |
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `components/ChatWidget.tsx` | Fixed API response parsing (was completely broken), added SSE support + polling fallback |
+| `app/messages/page.tsx` | Fixed mobile blank screen, race condition, added preselectLoading state |
+| `components/NotificationBell.tsx` | Added 'message' icon type |
+
+**Total: 1 commit from current → HEAD**
+**3 files modified, 2 files created, 1 migration added**

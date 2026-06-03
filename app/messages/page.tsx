@@ -175,6 +175,7 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [unreadTotal, setUnreadTotal] = useState(0);
+  const [preselectLoading, setPreselectLoading] = useState(!!preselectedUser);
   const msgEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pollRef = useRef<NodeJS.Timeout>();
@@ -200,23 +201,23 @@ export default function MessagesPage() {
         const match = convs.find((c: Conversation) => c.other_user.id === preselectedUser);
         if (match) {
           selectConversation(match.other_user);
+          if (isMobile) setShowList(false);
         } else {
           // No existing conversation — fetch user by ID directly
-          fetch("/api/users/search?id=" + encodeURIComponent(preselectedUser), { credentials: "include" })
-            .then(r => r.json())
-            .then(d => {
-              const user = d.users?.[0];
-              if (user) {
-                setSelectedUser({
-                  id: user.id,
-                  display_name: user.display_name || "User",
-                  profile_image_url: user.profile_image_url || "",
-                });
-                setMessages([]);
-              }
-            })
-            .catch(() => {});
+          const searchRes = await fetch("/api/users/search?id=" + encodeURIComponent(preselectedUser), { credentials: "include" });
+          const searchData = await searchRes.json();
+          const user = searchData.users?.[0];
+          if (user) {
+            setSelectedUser({
+              id: user.id,
+              display_name: user.display_name || "User",
+              profile_image_url: user.profile_image_url || "",
+            });
+            setMessages([]);
+            if (isMobile) setShowList(false);
+          }
         }
+        setPreselectLoading(false);
       }
     } catch {} finally { setLoading(false); }
   }, [preselectedUser]);
