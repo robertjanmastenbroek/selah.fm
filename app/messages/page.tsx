@@ -156,6 +156,12 @@ export default function MessagesPage() {
         }
         setPreselectLoading(false);
       }
+
+      // Auto-select most recent conversation if none selected and no URL params
+      // (WhatsApp/Telegram pattern — shows last chat immediately on desktop)
+      if (!selectedUser && !preselectedUser && convs.length > 0) {
+        selectUser(convs[0].other_user);
+      }
     } catch (e) { console.error('loadConversations:', e); } finally { setLoading(false); }
   }, [preselectedUser, currentUserId]);
 
