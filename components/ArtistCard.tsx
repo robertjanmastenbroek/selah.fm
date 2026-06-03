@@ -26,11 +26,17 @@ export default function ArtistCard({ artist }: Props) {
         const parsed = JSON.parse(raw);
         return Array.isArray(parsed) ? parsed : [raw];
       } catch {
-        // PostgreSQL array format: {punk,rock} or just plain text
+        // PostgreSQL array format: {punk,rock}
         if (raw.startsWith('{') && raw.endsWith('}')) {
           return raw.slice(1, -1).split(',').map((g: string) => g.trim()).filter(Boolean);
         }
-        return [raw];
+        // Extract content within quotes: BLISTER["pop"] → ["pop"]
+        const quoted = raw.match(/"([^"]+)"/g);
+        if (quoted && quoted.length > 0) {
+          return quoted.map((g: string) => g.replace(/"/g, '')).filter(Boolean);
+        }
+        // Return as single-item array (clean up brackets)
+        return [raw.replace(/[[\]{}"]/g, '').trim()];
       }
     }
     return [String(raw)];
