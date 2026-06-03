@@ -36,68 +36,58 @@ export async function POST(request: Request) {
 
     // ─── Spotify ─────────────────────────────────────────
     if (lowerUrl.includes('spotify.com')) {
-      const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-      const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-      if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
-        return NextResponse.json({ error: 'Spotify API not configured. Try a Bandcamp link instead.' }, { status: 400 });
-      }
-
-      // Get Spotify access token
-      const tokenRes = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: 'Basic ' + Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString('base64'),
-        },
-        body: 'grant_type=client_credentials',
+      // No API needed — scrape the page for the artist name, then use iTunes search
+      // Spotify pages have OG meta tags with the artist name even without JS
+      const pageRes = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SelahBot/1.0)' },
+        signal: AbortSignal.timeout(10000),
       });
-      if (!tokenRes.ok) return NextResponse.json({ error: 'Spotify auth failed' }, { status: 502 });
-      const { access_token } = await tokenRes.json();
 
-      // Extract artist ID from URL: spotify.com/artist/ID or open.spotify.com/artist/ID
-      const artistMatch = url.match(/spotify\.com\/artist\/([a-zA-Z0-9]+)/);
-      if (!artistMatch) {
-        return NextResponse.json({ error: 'Could not extract Spotify artist ID from URL. Use: open.spotify.com/artist/ID' }, { status: 400 });
+      let artistName = '';
+      if (pageRes.ok) {
+        const html = await pageRes.text();
+        // Extract from og:title or twitter:title meta tag
+        const ogMatch = html.match(/<meta[^>]+property="og:title"[^>]+content="([^"]+)"/i);
+        const twitterMatch = html.match(/<meta[^>]+name="twitter:title"[^>]+content="([^"]+)"/i);
+        const titleMatch = html.match(/<title>([^<]+)<\/title>/i);
+        artistName = ogMatch?.[1] || twitterMatch?.[1] || titleMatch?.[1] || '';
+        // Clean up: remove "| Spotify" suffix
+        artistName = artistName.replace(/\s*\|\s*Spotify.*$/i, '').trim();
       }
-      const spotifyArtistId = artistMatch[1];
 
-      // Try top-tracks first (no market param — avoids regional restrictions)
-      const tracksRes = await fetch(
-        `https://api.spotify.com/v1/artists/${spotifyArtistId}/top-tracks`,
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-      
-      if (tracksRes.ok) {
-        const tracksData = await tracksRes.json();
-        tracks = (tracksData.tracks || []).map((t: any) => ({
-          title: t.name,
-          url: t.external_urls?.spotify || '',
-          coverArt: t.album?.images?.[0]?.url || '',
-        }));
-      } else {
-        // Fallback: search iTunes (no API key needed, public API)
+      // Fallback to the claimed artist name if page scrape didn't work
+      if (!artistName) {
         const [artistInfo] = await sql`
           SELECT artist_name FROM discovered_artists da
           JOIN artist_profiles ap ON ap.artist_id = da.id
           WHERE ap.claimed_by_user_id = ${user.id}
           LIMIT 1
         `;
-        const searchQuery = artistInfo?.artist_name || '';
+        artistName = artistInfo?.artist_name || '';
+      }
 
-        const itunesRes = await fetch(
-          `https://itunes.apple.com/search?term=${encodeURIComponent(searchQuery)}&entity=song&limit=10&media=music`,
-          { signal: AbortSignal.timeout(10000) }
-        );
-        if (itunesRes.ok) {
-          const itunesData = await itunesRes.json();
-          tracks = (itunesData.results || [])
-            .filter((t: any) => t.artistName?.toLowerCase() === searchQuery.toLowerCase())
-            .map((t: any) => ({
-              title: t.trackName || t.trackCensoredName || '',
-              url: t.trackViewUrl || '',
-              coverArt: t.artworkUrl100?.replace('100x100bb', '300x300bb') || '',
-            }));
-        }
+      if (!artistName) {
+        return NextResponse.json({ error: 'Could not determine artist name from the link.' }, { status: 400 });
+      }
+
+      // Search iTunes by the extracted artist name
+      const itunesRes = await fetch(
+        `https://itunes.apple.com/search?term=${encodeURIComponent(artistName)}&entity=song&limit=15&media=music`,
+        { signal: AbortSignal.timeout(10000) }
+      );
+      if (itunesRes.ok) {
+        const itunesData = await itunesRes.json();
+        const nameLower = artistName.toLowerCase();
+        tracks = (itunesData.results || [])
+          .filter((t: any) => t.artistName?.toLowerCase() === nameLower)
+          .map((t: any) => ({
+            title: t.trackName || t.trackCensoredName || '',
+            url: t.trackViewUrl || '',
+            coverArt: t.artworkUrl100?.replace('100x100bb', '300x300bb') || '',
+          }));
+      }
+      if (tracks.length === 0) {
+        return NextResponse.json({ error: `No tracks found for "${artistName}" on iTunes. Try a Bandcamp link.` }, { status: 404 });
       }
 
     // ─── Bandcamp ────────────────────────────────────────
