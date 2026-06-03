@@ -563,14 +563,30 @@ export default function MessagesPage() {
                               </span>
                             )}
                           </div>
-                          {/* Copy on hover */}
-                          <button
-                            onClick={() => navigator.clipboard.writeText(m.content)}
-                            className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]"
-                            title="Copy message"
-                          >
-                            📋
-                          </button>
+                          {/* Actions on hover */}
+                          <div className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
+                            <button onClick={() => navigator.clipboard.writeText(m.content)}
+                              className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Copy">📋</button>
+                            {isMe && !isOptimistic && (
+                              <>
+                                <button onClick={async () => {
+                                  const newText = prompt('Edit message:', m.content);
+                                  if (newText && newText !== m.content) {
+                                    await fetch('/api/messages', { method: 'PATCH', credentials: 'include',
+                                      headers: {'Content-Type':'application/json'},
+                                      body: JSON.stringify({ message_id: m.id, content: newText }) });
+                                    // Refresh via SSE/poll
+                                  }
+                                }} className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Edit">✏️</button>
+                                <button onClick={async () => {
+                                  if (confirm('Delete this message?')) {
+                                    await fetch(`/api/messages?id=${m.id}`, { method: 'DELETE', credentials: 'include' });
+                                    setMessages(prev => prev.filter(msg => msg.id !== m.id));
+                                  }
+                                }} className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Delete">🗑️</button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

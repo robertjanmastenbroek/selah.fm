@@ -129,25 +129,61 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { sender_id } = body;
+    const { sender_id, message_id, content } = body;
 
-    if (!sender_id) {
-      return NextResponse.json({ error: 'sender_id is required' }, { status: 400 });
+    // Edit message content (own messages only, within 24h)
+    if (message_id && content) {
+      const [msg] = await sql`
+        UPDATE messages SET content = ${content.trim()}, edited_at = NOW()
+        WHERE id = ${message_id} AND sender_id = ${user.id}
+          AND created_at > NOW() - INTERVAL '24 hours'
+        RETURNING id, content, created_at, edited_at
+      `;
+      if (!msg) return NextResponse.json({ error: 'Message not found or too old to edit' }, { status: 400 });
+      return NextResponse.json({ message: msg });
     }
 
-    const result = await sql`
-      UPDATE messages SET read = true
-      WHERE receiver_id = ${user.id} AND sender_id = ${sender_id} AND read = false
+    // Mark messages as read
+    if (sender_id) {
+      await sql`
+        UPDATE messages SET read = true
+        WHERE receiver_id = ${user.id} AND sender_id = ${sender_id} AND read = false
+      `;
+      const [countRow] = await sql`
+        SELECT COUNT(*)::int AS count
+        FROM messages WHERE receiver_id = ${user.id} AND sender_id = ${sender_id} AND read = false
+      `;
+      return NextResponse.json({ updated: countRow?.count || 0 });
+    }
+
+    return NextResponse.json({ error: 'sender_id or message_id+content required' }, { status: 400 });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE /api/messages?id=MESSAGE_ID
+ * Delete own message within 24 hours.
+ */
+export async function DELETE(request: Request) {
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const messageId = searchParams.get('id');
+    if (!messageId) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+    const [deleted] = await sql`
+      DELETE FROM messages
+      WHERE id = ${messageId} AND sender_id = ${user.id}
+        AND created_at > NOW() - INTERVAL '24 hours'
+      RETURNING id
     `;
 
-    // Count how many were actually updated
-    const [countRow] = await sql`
-      SELECT COUNT(*)::int AS count
-      FROM messages
-      WHERE receiver_id = ${user.id} AND sender_id = ${sender_id} AND read = false
-    `;
-
-    return NextResponse.json({ updated: countRow?.count || 0 });
+    if (!deleted) return NextResponse.json({ error: 'Message not found or too old to delete' }, { status: 400 });
+    return NextResponse.json({ deleted: true });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

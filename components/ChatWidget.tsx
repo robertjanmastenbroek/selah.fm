@@ -40,6 +40,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
     if (me?.user?.id && !ownUserId) setOwnUserId(me.user.id);
   }, [me, ownUserId]);
   const msgEnd = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -178,9 +179,11 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
     };
   }, [activeConv, open, fetchMessages]);
 
-  // ── Auto-scroll to bottom when messages change ────────────────
+  // ── Auto-scroll messages container ─────────────────────────
   useEffect(() => {
-    msgEnd.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // ── Focus input when opening a conversation ───────────────────
@@ -367,30 +370,60 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
                 </div>
               ) : (
                 /* Chat thread */
-                <div className="p-4 space-y-3">
+                <div ref={messagesRef} className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.length === 0 ? (
                     <div className="text-center py-10 text-sm text-muted-foreground">
                       No messages yet. Say hello!
                     </div>
                   ) : (
-                    messages.map(m => {
-                      // Determine if this message is from the current user
+                    messages.map((m, i) => {
                       const isOwn = ownUserId
                         ? m.sender_id === ownUserId
                         : m.sender_id !== activeConv.other_id;
+                      const isOptimistic = m.id.startsWith('opt-');
+                      const isLast = i === messages.length - 1;
+                      const prevMsg = i > 0 ? messages[i-1] : null;
+                      const showDateSep = !prevMsg || new Date(m.created_at).toDateString() !== new Date(prevMsg.created_at).toDateString();
+                      const msgDate = new Date(m.created_at);
+                      const today = new Date();
+                      const dateLabel = showDateSep
+                        ? (msgDate.toDateString() === today.toDateString() ? 'Today'
+                          : msgDate.toDateString() === new Date(today.setDate(today.getDate()-1)).toDateString() ? 'Yesterday'
+                          : msgDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }))
+                        : null;
+
                       return (
-                        <div
-                          key={m.id}
-                          className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                              isOwn
-                                ? 'bg-primary text-primary-foreground rounded-br-md'
-                                : 'bg-white/[0.06] text-foreground rounded-bl-md'
-                            } ${m.id.startsWith('opt-') ? 'opacity-70' : ''}`}
-                          >
-                            {m.content}
+                        <div key={m.id}>
+                          {dateLabel && (
+                            <div className="flex items-center gap-3 py-2">
+                              <div className="flex-1 h-px bg-white/[0.04]" />
+                              <span className="text-[10px] text-muted-foreground/40 font-medium shrink-0">{dateLabel}</span>
+                              <div className="flex-1 h-px bg-white/[0.04]" />
+                            </div>
+                          )}
+                          <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${isOptimistic ? 'opacity-70' : ''}`}>
+                            <div className="group relative max-w-[80%]">
+                              <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                                isOwn
+                                  ? 'bg-primary text-primary-foreground rounded-br-md'
+                                  : 'bg-white/[0.06] text-foreground rounded-bl-md'
+                              }`}>
+                                {m.content}
+                                {isOwn && isLast && (
+                                  <span className="ml-1.5 inline-flex text-[9px] opacity-60">
+                                    {isOptimistic ? '◌' : '✓'}
+                                  </span>
+                                )}
+                              </div>
+                              {/* Copy on hover */}
+                              <button
+                                onClick={() => navigator.clipboard.writeText(m.content)}
+                                className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]"
+                                title="Copy message"
+                              >
+                                📋
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
