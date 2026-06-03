@@ -204,30 +204,31 @@ export default function MessagesPage() {
         if (preselectedUser === currentUserId) {
           setPreselectLoading(false);
         } else {
-        const match = convs.find((c: Conversation) => c.other_user.id === preselectedUser);
-        if (match) {
-          selectConversation(match.other_user);
-          if (isMobile) setShowList(false);
-        } else {
-          // No existing conversation — fetch user by ID directly
-          try {
-            const searchRes = await fetch("/api/users/search?id=" + encodeURIComponent(preselectedUser), { credentials: "include" });
-            if (searchRes.ok) {
-              const searchData = await searchRes.json();
-              const user = searchData.users?.[0];
-              if (user) {
-                setSelectedUser({
-                  id: user.id,
-                  display_name: user.display_name || "User",
-                  profile_image_url: user.profile_image_url || "",
-                });
-                setMessages([]);
-                if (isMobile) setShowList(false);
+          const match = convs.find((c: Conversation) => c.other_user.id === preselectedUser);
+          if (match) {
+            selectConversation(match.other_user);
+            if (isMobile) setShowList(false);
+          } else {
+            // No existing conversation — fetch user by ID directly
+            try {
+              const searchRes = await fetch("/api/users/search?id=" + encodeURIComponent(preselectedUser), { credentials: "include" });
+              if (searchRes.ok) {
+                const searchData = await searchRes.json();
+                const user = searchData.users?.[0];
+                if (user) {
+                  setSelectedUser({
+                    id: user.id,
+                    display_name: user.display_name || "User",
+                    profile_image_url: user.profile_image_url || "",
+                  });
+                  setMessages([]);
+                  if (isMobile) setShowList(false);
+                }
               }
-            }
-          } catch (e) { console.error('User search error:', e); }
+            } catch (e) { console.error('User search error:', e); }
+          }
+          setPreselectLoading(false);
         }
-        setPreselectLoading(false);
       }
     } catch (e) { console.error('loadConversations error:', e); } finally { setLoading(false); }
   }, [preselectedUser, currentUserId]);
