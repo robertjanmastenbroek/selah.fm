@@ -274,12 +274,30 @@ export default async function ArtistPage({ params }: Props) {
     '@context': 'https://schema.org',
     '@graph': [
       {
+        '@type': 'WebPage',
+        '@id': `https://selah.fm/artist/${params.slug}#webpage`,
+        url: `https://selah.fm/artist/${params.slug}`,
+        name: `${artist.artist_name} — Music Promotion Profile | Selah.fm`,
+        description: (bio || `Support ${artist.artist_name} on Selah.fm`).slice(0, 200),
+        mainEntity: { '@id': `https://selah.fm/artist/${params.slug}#artist` },
+      },
+      {
         '@type': 'MusicGroup',
+        '@id': `https://selah.fm/artist/${params.slug}#artist`,
         name: artist.artist_name,
+        url: `https://selah.fm/artist/${params.slug}`,
         description: (bio || `Independent ${genres.slice(0, 2).join(' and ')} artist on Selah.fm`).slice(0, 200),
         genre: genres.join(', ') || undefined,
         image: artist.spotify_image_url || undefined,
         identifier: artist.spotify_id ? `spotify:${artist.spotify_id}` : undefined,
+        sameAs: [
+          ...(artist.spotify_id ? [`https://open.spotify.com/artist/${artist.spotify_id}`] : []),
+          ...(socialLinks.spotify ? [socialLinks.spotify] : []),
+          ...(socialLinks.youtube ? [socialLinks.youtube] : []),
+          ...(socialLinks.bandcamp ? [socialLinks.bandcamp] : []),
+          ...(socialLinks.soundcloud ? [socialLinks.soundcloud] : []),
+          ...(artist.instagram_handle ? [`https://instagram.com/${artist.instagram_handle}`] : []),
+        ].filter(Boolean),
         ...(supporterCount > 0 ? {
           aggregateRating: {
             '@type': 'AggregateRating',
