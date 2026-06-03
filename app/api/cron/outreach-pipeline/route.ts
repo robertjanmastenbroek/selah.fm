@@ -64,6 +64,15 @@ export async function GET(request: Request) {
       }
 
       if (existingArtist) {
+        // Check MAX track cap — prevent compilation album floods
+        const [trackCount] = await sql`
+          SELECT COUNT(*)::int as count FROM artist_tracks WHERE artist_id = ${existingArtist.id}
+        `;
+        if ((trackCount?.count || 0) >= 50) {
+          log.push(`  ⏭️ Artist ${existingArtist.artist_name} already has ${trackCount.count} tracks — skipping (compilation guard)`);
+          continue;
+        }
+
         // Artist exists — add this track as a new artist_tracks entry
         log.push(`  → Adding track "${a.latest_track_name}" to existing artist ${existingArtist.artist_name}`);
         try {

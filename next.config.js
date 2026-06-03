@@ -30,6 +30,14 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Allow iframing for embed widgets
+        source: '/artist/:slug/embed',
+        headers: [
+          { key: 'X-Frame-Options', value: 'ALLOWALL' },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+        ],
+      },
+      {
         // Security headers for all routes
         source: '/(.*)',
         headers: [
