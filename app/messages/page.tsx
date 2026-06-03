@@ -52,12 +52,7 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
 
   const startConversation = () => {
     if (!selectedUser) return;
-    // Artists (marked with 🎵) link to their artist page instead of messaging
-    if (selectedUser._type === 'artist') {
-      router.push(`/artist/${selectedUser._slug || selectedUser.id}`);
-    } else {
-      router.push(`/messages?user=${selectedUser.id}`);
-    }
+    router.push(`/messages?user=${selectedUser.id}`);
     setOpen(false);
     setQuery('');
     setSelectedUser(null);
@@ -127,9 +122,6 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
                             <p className="text-sm font-medium truncate">{s.display_name || 'User'}</p>
                             {s.email && <p className="text-[10px] text-muted-foreground/50 truncate">{s.email}</p>}
                           </div>
-                          <span className="text-[10px] text-muted-foreground/40 shrink-0">
-                            {s._type === 'artist' ? 'Artist' : 'User'}
-                          </span>
                         </button>
                       ))}
                     </motion.div>
@@ -150,11 +142,10 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{selectedUser.display_name || 'User'}</p>
                     {selectedUser.email && <p className="text-[10px] text-muted-foreground/50 truncate">{selectedUser.email}</p>}
-                    {selectedUser._type === 'artist' && <p className="text-[10px] text-amber-400/60">Artist profile — view their page</p>}
                   </div>
                   <button onClick={startConversation}
                     className="px-4 py-2 rounded-xl bg-[#4338CA] text-white text-xs font-semibold hover:bg-[#4338CA]/90 transition-all">
-                    {selectedUser._type === 'artist' ? 'View' : 'Message'}
+                    Message
                   </button>
                 </div>
               )}
