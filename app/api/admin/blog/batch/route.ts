@@ -216,7 +216,10 @@ async function fetchRealQuestions() {
     });
   } catch (e: any) {
     // Always fall back to curated questions, filtering used ones
-    const usedRows = await sql`SELECT normalized_text FROM used_questions WHERE status IN ('answered', 'skipped')`.catch(() => ({ rows: [] }));
+    let usedRows: any[] = [];
+    try {
+      usedRows = await sql`SELECT normalized_text FROM used_questions WHERE status IN ('answered', 'skipped')`;
+    } catch {} // Non-critical query — empty set on failure
     const usedSet = new Set(usedRows.rows?.map((r: any) => r.normalized_text) || []);
 
     const fallbackQs: { question: string; url: string; platform: string; category: string }[] = getFallbackQuestions(30)

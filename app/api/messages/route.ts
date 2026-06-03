@@ -114,10 +114,12 @@ export async function POST(request: Request) {
     `;
 
     // Create notification for receiver (fire-and-forget)
-    sql`
-      INSERT INTO notifications (user_id, type, message, link)
-      VALUES (${receiver_id}, 'message', ${'New message from ' + senderName}, ${'/messages?user=' + user.id})
-    `.catch(() => {});
+    try {
+      await sql`
+        INSERT INTO notifications (user_id, type, message, link)
+        VALUES (${receiver_id}, 'message', ${'New message from ' + senderName}, ${'/messages?user=' + user.id})
+      `;
+    } catch {} // Notification failure is non-critical
 
     return NextResponse.json({ message: msg });
   } catch (e: any) {
