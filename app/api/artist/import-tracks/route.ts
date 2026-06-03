@@ -61,23 +61,52 @@ export async function POST(request: Request) {
       }
       const spotifyArtistId = artistMatch[1];
 
-      // Fetch top tracks from Spotify
+      // Try top-tracks first (no market param — avoids regional restrictions)
       const tracksRes = await fetch(
-        `https://api.spotify.com/v1/artists/${spotifyArtistId}/top-tracks?market=US`,
+        `https://api.spotify.com/v1/artists/${spotifyArtistId}/top-tracks`,
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
-      if (!tracksRes.ok) {
-        const spotifyError = await tracksRes.text().catch(() => 'Unknown error');
-        console.error('Spotify tracks API error:', tracksRes.status, spotifyError);
-        return NextResponse.json({ error: `Spotify returned: ${spotifyError.slice(0, 200)}` }, { status: 502 });
-      }
-      const tracksData = await tracksRes.json();
+      
+      if (tracksRes.ok) {
+        const tracksData = await tracksRes.json();
+        tracks = (tracksData.tracks || []).map((t: any) => ({
+          title: t.name,
+          url: t.external_urls?.spotify || '',
+          coverArt: t.album?.images?.[0]?.url || '',
+        }));
+      } else {
+        // Fallback: search for the artist's top tracks by name
+        const [artistInfo] = await sql`
+          SELECT artist_name FROM discovered_artists da
+          JOIN artist_profiles ap ON ap.artist_id = da.id
+          WHERE ap.claimed_by_user_id = ${user.id}
+          LIMIT 1
+        `;
+        const searchQuery = artistInfo?.artist_name || '';
 
-      tracks = (tracksData.tracks || []).map((t: any) => ({
-        title: t.name,
-        url: t.external_urls?.spotify || '',
-        coverArt: t.album?.images?.[0]?.url || '',
-      }));
+        const searchRes = await fetch(
+          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=10&market=from_token`,
+          { headers: { Authorization: `Bearer ${access_token}` } }
+        );
+        if (!searchRes.ok) {
+          const spotifyError = await searchRes.text().catch(() => 'Unknown error');
+          console.error('Spotify search API error:', searchRes.status, spotifyError);
+          return NextResponse.json({ error: `Spotify returned: ${spotifyError.slice(0, 200)}` }, { status: 502 });
+        }
+        const searchData = await searchRes.json();
+
+        // Filter tracks by the artist name to get only this artist's tracks
+        const artistNameLower = searchQuery.toLowerCase();
+        tracks = (searchData.tracks?.items || [])
+          .filter((t: any) =>
+            t.artists?.some((a: any) => a.name?.toLowerCase() === artistNameLower)
+          )
+          .map((t: any) => ({
+            title: t.name,
+            url: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}`,
+            coverArt: t.album?.images?.[0]?.url || '',
+          }));
+      }
 
     // ─── Bandcamp ────────────────────────────────────────
     } else if (lowerUrl.includes('bandcamp.com')) {
