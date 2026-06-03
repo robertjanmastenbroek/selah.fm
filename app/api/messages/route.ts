@@ -61,19 +61,21 @@ export async function GET(request: Request) {
       ORDER BY lpo.created_at DESC
     `;
 
-    const conversations = rows.map((r: any) => ({
-      other_user: {
-        id: r.other_user_id,
-        display_name: r.display_name,
-        profile_image_url: r.profile_image_url,
-      },
-      last_message: {
-        content: r.last_message_content,
-        created_at: r.last_message_at,
-      },
-      unread_count: r.unread_count,
-      campaign_id: r.campaign_id,
-    }));
+    const conversations = rows
+      .filter((r: any) => r.other_user_id !== userId) // exclude self
+      .map((r: any) => ({
+        other_user: {
+          id: r.other_user_id,
+          display_name: r.display_name,
+          profile_image_url: r.profile_image_url,
+        },
+        last_message: {
+          content: r.last_message_content,
+          created_at: r.last_message_at,
+        },
+        unread_count: r.unread_count,
+        campaign_id: r.campaign_id,
+      }));
 
     return NextResponse.json({ conversations });
   } catch (e: any) {
