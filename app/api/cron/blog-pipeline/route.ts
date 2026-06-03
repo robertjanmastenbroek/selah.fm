@@ -355,38 +355,41 @@ export async function GET(request: Request) {
     // Step 5: Schedule 2 posts per day (09:00 and 15:00 UTC slots)
     if (results.posts > 0) {
       const drafts = await sql`SELECT id FROM blog_posts WHERE status = 'draft' ORDER BY created_at DESC LIMIT ${results.posts}`;
-      const existingDates = await sql`SELECT publish_at::date as d FROM blog_posts WHERE status = 'scheduled' AND publish_at::date >= CURRENT_DATE ORDER BY d`;
-      const takenSlots = new Set(existingDates.map((r: any) => {
-        const d = typeof r.d === 'string' ? r.d : new Date(r.d).toISOString().slice(0, 10);
-        return d;
-      }));
       
-      // Start scheduling from tomorrow
-      let scheduleDay = new Date(); scheduleDay.setDate(scheduleDay.getDate() + 1);
+      // Track which date+hour slots are already taken
+      const existingSlots = await sql`
+        SELECT publish_at::date as d, EXTRACT(HOUR FROM publish_at)::int as h
+        FROM blog_posts WHERE status = 'scheduled' AND publish_at::date >= CURRENT_DATE
+      `;
+      const takenSlots = new Set(
+        existingSlots.map((r: any) => {
+          const dateStr = typeof r.d === 'string' ? r.d : new Date(r.d).toISOString().slice(0, 10);
+          return `${dateStr}-${r.h}`;
+        })
+      );
+      
       const DAY_SLOTS = [9, 15]; // 09:00 UTC and 15:00 UTC — 2 posts per day
-      let slotIdx = 0;
       
       for (const draft of drafts) {
-        // Find next available day with room
-        while (takenSlots.has(scheduleDay.toISOString().slice(0, 10))) {
-          scheduleDay.setDate(scheduleDay.getDate() + 1);
-          slotIdx = 0;
-        }
+        // Find next available date+slot
+        let scheduleDay = new Date(); scheduleDay.setDate(scheduleDay.getDate() + 1);
+        let found = false;
         
-        const hour = DAY_SLOTS[slotIdx % DAY_SLOTS.length];
-        const publishAt = new Date(scheduleDay);
-        publishAt.setUTCHours(hour, 0, 0, 0);
-        
-        await sql`UPDATE blog_posts SET status = 'scheduled', publish_at = ${publishAt.toISOString()} WHERE id = ${draft.id}`;
-        slotIdx++;
-        results.scheduled++;
-        log.push(`Scheduled: ${publishAt.toISOString().slice(0, 16)}Z`);
-        
-        // If we've filled both slots for this day, move to next day
-        if (slotIdx >= DAY_SLOTS.length) {
-          takenSlots.add(scheduleDay.toISOString().slice(0, 10));
-          scheduleDay.setDate(scheduleDay.getDate() + 1);
-          slotIdx = 0;
+        while (!found) {
+          for (const hour of DAY_SLOTS) {
+            const slotKey = `${scheduleDay.toISOString().slice(0, 10)}-${hour}`;
+            if (!takenSlots.has(slotKey)) {
+              const publishAt = new Date(scheduleDay);
+              publishAt.setUTCHours(hour, 0, 0, 0);
+              await sql`UPDATE blog_posts SET status = 'scheduled', publish_at = ${publishAt.toISOString()} WHERE id = ${draft.id}`;
+              takenSlots.add(slotKey);
+              results.scheduled++;
+              log.push(`Scheduled: ${publishAt.toISOString().slice(0, 16)}Z`);
+              found = true;
+              break;
+            }
+          }
+          if (!found) scheduleDay.setDate(scheduleDay.getDate() + 1);
         }
       }
     }
