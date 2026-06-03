@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Heart, Video, Music, ExternalLink, MessageCircle, Users, DollarSign, Sparkles, Check, ChevronDown, BarChart3 } from 'lucide-react';
+import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
 import ActivityFeed from '@/components/ActivityFeed';
 import PageComments from '@/components/PageComments';
@@ -126,6 +127,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
 
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
+      <Header />
       {/* ════════════════════════════════════════════════ */}
       {/* COVER BANNER — full-width, 4:1 ratio */}
       {/* ════════════════════════════════════════════════ */}
