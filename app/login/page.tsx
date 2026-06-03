@@ -26,6 +26,19 @@ function LoginForm() {
   const [forgotSent, setForgotSent] = useState(false);
   const [ageConsent, setAgeConsent] = useState(false);
 
+  // Capture signup source on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const source = {
+      referrer: document.referrer || "",
+      utm_source: params.get("utm_source") || "",
+      utm_medium: params.get("utm_medium") || "",
+      utm_campaign: params.get("utm_campaign") || "",
+      path: window.location.pathname + window.location.search,
+    };
+    sessionStorage.setItem("selah_signup_source", JSON.stringify(source));
+  }, []);
+
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,7 +83,7 @@ function LoginForm() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { 
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${refCode ? "&ref="+refCode : ""}`,
       },
     });
   };
