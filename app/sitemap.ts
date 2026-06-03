@@ -64,21 +64,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let artistPages: MetadataRoute.Sitemap = [];
   try {
     const artists = await sql`
-      SELECT ap.slug, MAX(GREATEST(at.updated_at, da.updated_at)) as lastmod
+      SELECT ap.slug, MAX(GREATEST(at.updated_at, da.updated_at)) as lastmod,
+             MAX(da.monthly_listeners) as max_listeners,
+             COUNT(at.id) as track_count,
+             COUNT(DISTINCT cc.campaign_id) as campaign_count
       FROM artist_profiles ap
       JOIN discovered_artists da ON da.id = ap.artist_id
       LEFT JOIN artist_tracks at ON at.artist_id = da.id AND at.enabled = true
+      LEFT JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
       WHERE EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)
       GROUP BY ap.slug
       ORDER BY MAX(da.monthly_listeners) DESC NULLS LAST
       LIMIT 2000
     `;
-    artistPages = artists.map((a: any) => ({
-      url: `${baseUrl}/artist/${a.slug}`,
-      lastModified: a.lastmod || new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }));
+    artistPages = artists.map((a: any) => {
+      // Dynamic priority: artists with more data get higher priority
+      const hasCampaigns = (a.campaign_count || 0) > 0;
+      const hasListeners = (a.max_listeners || 0) > 0;
+      const hasTracks = (a.track_count || 0) > 0;
+      const score = (hasListeners ? 0.15 : 0) + (hasCampaigns ? 0.1 : 0) + (hasTracks ? 0.05 : 0);
+      const priority = Math.min(1.0, 0.7 + score);
+      return {
+        url: `${baseUrl}/artist/${a.slug}`,
+        lastModified: a.lastmod || new Date(),
+        changeFrequency: hasCampaigns ? ('daily' as const) : ('weekly' as const),
+        priority: parseFloat(priority.toFixed(2)),
+      };
+    });
   } catch {}
 
   // Genre landing pages
