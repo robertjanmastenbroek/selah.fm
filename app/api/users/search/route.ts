@@ -55,13 +55,19 @@ export async function GET(request: NextRequest) {
     `;
 
     // Mask emails and add type label
-    const results = users.map((u: any) => ({
-      id: u.id,
-      display_name: u.display_name + (u.is_creator === 0 ? ' 📹' : ''),
-      profile_image_url: u.profile_image_url,
-      email: u.email ? u.email.charAt(0) + '***@' + u.email.split('@')[1] : null,
-      _type: 'user' as const,
-    }));
+    const results = users.map((u: any) => {
+      let maskedEmail = null;
+      if (u.email && u.email.includes('@')) {
+        maskedEmail = u.email.charAt(0) + '***@' + u.email.split('@')[1];
+      }
+      return {
+        id: u.id,
+        display_name: u.display_name || 'User',
+        profile_image_url: u.profile_image_url,
+        email: maskedEmail,
+        _type: 'user' as const,
+      };
+    });
 
     return NextResponse.json({ users: results });
   } catch (error) {

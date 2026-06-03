@@ -199,8 +199,8 @@ export default function MessagesPage() {
       setConversations(convs);
       setUnreadTotal(convs.reduce((s: number, c: Conversation) => s + c.unread_count, 0));
       
-      // Pre-select user from URL param — even without existing conversations
-      if (preselectedUser) {
+      // Pre-select user from URL param — skip if it's the current user (self-message)
+      if (preselectedUser && preselectedUser !== currentUserId) {
         const match = convs.find((c: Conversation) => c.other_user.id === preselectedUser);
         if (match) {
           selectConversation(match.other_user);
