@@ -31,7 +31,6 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const sendingRef = useRef(false);
   const [sending, setSending] = useState(false);
   const [ownUserId, setOwnUserId] = useState('');
   const [otherTyping, setOtherTyping] = useState(false);
@@ -231,10 +230,9 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
 
   // ── Send message ──────────────────────────────────────────────
   const send = async () => {
-    if (!input.trim() || !activeConv || sendingRef.current) return;
+    if (!input.trim() || !activeConv || sending) return;
     const content = input.trim();
     setInput('');
-    sendingRef.current = true;
     setSending(true);
 
     // Optimistic update: add message to local state immediately
@@ -275,7 +273,9 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
 
       // Replace optimistic message with server response
       const sent = await res.json();
-      setMessages(prev => prev.map(m => m.id === optimisticId ? { ...sent, sender_name: 'You' } : m));
+      if (sent.message) {
+        setMessages(prev => prev.map(m => m.id === optimisticId ? { ...m, id: sent.message.id, created_at: sent.message.created_at, sender_name: 'You' } : m));
+      }
       // Refresh conversations list to update the last message preview
       fetchConversations();
     } catch (e: any) {
@@ -286,7 +286,6 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       if (e?.name === 'AbortError') console.error('Message send timed out');
       else console.error('Network error sending message:', e);
     } finally {
-      sendingRef.current = false;
       setSending(false);
     }
   };

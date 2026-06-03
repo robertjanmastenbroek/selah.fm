@@ -174,7 +174,6 @@ export default function MessagesPage() {
   const [input, setInput] = useState('');
   const loadingRef = useRef(true);
   const [loading, setLoading] = useState(true);
-  const sendingRef = useRef(false);
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [unreadTotal, setUnreadTotal] = useState(0);
@@ -356,15 +355,13 @@ export default function MessagesPage() {
   };
 
   const sendMessage = async () => {
-    // Use refs to avoid React state batching race conditions
-    const text = inputRef.current?.value?.trim();
-    if (!text || !selectedUser || sendingRef.current) return;
+    // Read input from React state (simpler than DOM refs)
+    const text = input.trim();
+    if (!text || !selectedUser || sending) return;
     const receiverId = selectedUser.id;
     
-    // Clear input IMMEDIATELY via DOM (faster than setInput)
-    if (inputRef.current) inputRef.current.value = '';
+    // Clear input
     setInput('');
-    sendingRef.current = true;
     setSending(true);
 
     // Optimistic UI
@@ -399,9 +396,7 @@ export default function MessagesPage() {
       if (e.name === 'AbortError') console.error('Message send timed out');
       else console.error('Network error sending message:', e);
     }
-    sendingRef.current = false;
     setSending(false);
-    inputRef.current?.focus();
   };
 
   const timeAgo = (dateStr: string) => {
