@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send, MessageCircle, User, X } from 'lucide-react';
+import { ArrowLeft, Send, MessageCircle, User, X, AlertCircle } from 'lucide-react';
 
 interface UserInfo { id: string; display_name: string; profile_image_url?: string; }
 interface Conversation { other_user: UserInfo; last_message: { content: string; created_at: string }; unread_count: number; }
@@ -362,24 +362,32 @@ export default function MessagesPage() {
     setMessages(prev => [...prev, { id: tempId, sender_id: currentUserId, receiver_id: selectedUser.id, content, created_at: new Date().toISOString(), read: false }]);
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
       const res = await fetch('/api/messages', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ receiver_id: selectedUser.id, content }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data = await res.json();
       if (data.message) {
         setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: data.message.id, created_at: data.message.created_at } : m));
       } else if (data.error) {
-        // Remove optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== tempId));
-        setInput(content); // Restore input text
+        setInput(content);
+        setSendError(true);
+        setTimeout(() => setSendError(false), 3000);
         console.error('Failed to send message:', data.error);
       }
-    } catch {
-      // Network error — remove optimistic message
+    } catch (e: any) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
       setInput(content);
+      setSendError(true);
+      setTimeout(() => setSendError(false), 3000);
+      if (e.name === 'AbortError') console.error('Message send timed out');
+      else console.error('Network error sending message:', e);
     }
     setSending(false);
     inputRef.current?.focus();
@@ -405,6 +413,7 @@ export default function MessagesPage() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const [showList, setShowList] = useState(true);
   const [otherTyping, setOtherTyping] = useState(false);
+  const [sendError, setSendError] = useState(false);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const typingPollRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -612,9 +621,12 @@ export default function MessagesPage() {
                   <button
                     onClick={sendMessage}
                     disabled={!input.trim() || sending}
-                    className="w-9 h-9 rounded-full bg-[#4338CA] flex items-center justify-center shrink-0 disabled:opacity-30 hover:opacity-90 transition-opacity"
+                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 disabled:opacity-30 hover:opacity-90 transition-all ${
+                      sendError ? 'bg-red-500 animate-pulse' : 'bg-[#4338CA]'
+                    }`}
+                    title={sendError ? 'Message failed — try again' : 'Send'}
                   >
-                    <Send size={14} className="text-white" />
+                    {sendError ? <X size={14} className="text-white" /> : <Send size={14} className="text-white" />}
                   </button>
                 </div>
               </div>

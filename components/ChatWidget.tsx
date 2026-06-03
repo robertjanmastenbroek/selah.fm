@@ -34,6 +34,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
   const [sending, setSending] = useState(false);
   const [ownUserId, setOwnUserId] = useState('');
   const [otherTyping, setOtherTyping] = useState(false);
+  const [sendError, setSendError] = useState(false);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const typingPollRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -247,11 +248,15 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
     setMessages(prev => [...prev, optimisticMsg]);
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ receiver_id: activeConv.other_id, content }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Unknown error' }));
@@ -272,10 +277,12 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       // Refresh conversations list to update the last message preview
       fetchConversations();
     } catch (e) {
-      // Network error — remove optimistic message, restore input
       setMessages(prev => prev.filter(m => m.id !== optimisticId));
       setInput(content);
-      console.error('Network error sending message:', e);
+      setSendError(true);
+      setTimeout(() => setSendError(false), 3000);
+      if (e.name === 'AbortError') console.error('Message send timed out');
+      else console.error('Network error sending message:', e);
     } finally {
       setSending(false);
     }
@@ -508,10 +515,12 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
                 <button
                   onClick={send}
                   disabled={!input.trim() || sending}
-                  className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground disabled:opacity-40 transition-opacity hover:opacity-90 active:scale-95"
-                  aria-label="Send message"
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center disabled:opacity-40 transition-all hover:opacity-90 active:scale-95 ${
+                    sendError ? 'bg-red-500 animate-pulse' : 'bg-primary'
+                  }`}
+                  aria-label={sendError ? 'Failed to send' : 'Send message'}
                 >
-                  <Send size={16} />
+                  {sendError ? <X size={16} /> : <Send size={16} />}
                 </button>
               </div>
             )}
