@@ -11,6 +11,24 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const q = request.nextUrl.searchParams.get('q')?.trim();
+    const id = request.nextUrl.searchParams.get('id')?.trim();
+
+    // Direct ID lookup — for preselected user in messages
+    if (id) {
+      const users = await sql`
+        SELECT u.id, u.display_name, u.profile_image_url, u.email
+        FROM users u
+        WHERE u.id = ${id}
+        LIMIT 1
+      `;
+      const results = users.map((u: any) => ({
+        id: u.id,
+        display_name: u.display_name,
+        profile_image_url: u.profile_image_url,
+        _type: 'user' as const,
+      }));
+      return NextResponse.json({ users: results });
+    }
     // No query = return all users (so New Message dialog shows everyone)
     // With query = filter by name/email with prefix matching
     const users = !q || q.length < 1 ? await sql`

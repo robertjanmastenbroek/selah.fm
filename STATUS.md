@@ -1,6 +1,6 @@
 # Selah.fm — Project Status
 
-**Last updated:** June 2, 2026 (EOD)
+**Last updated:** June 3, 2026 (late)
 **Core files:** ~55 React components, 35 API routes, 20+ pages
 **Database:** Supabase (campaigns, submissions, users, donations)
 
@@ -250,3 +250,32 @@ See `BLUEPRINT.md` (execution plan), `VISION.md` (architecture), `GROWTH_AUDIT.m
 
 **Total: 3 commits from `6116ccb` → current**
 **3 files modified, 1 migration added, 4 new blog posts auto-generated (21 total)**
+
+---
+
+## ✅ SESSION: June 3, 2026 — Artist Page SEO + LLMO Overhaul + Messaging Fix (1 commit)
+
+### Critical Fixes (6 gaps closed)
+| Fix | Files | Description |
+|-----|-------|-------------|
+| **404 fallback** | `app/artist/[slug]/page.tsx` | Added name-based fallback query + logging for slug mismatches |
+| **Sitemap lastmod** | `app/sitemap.ts` | Removed `da.comment_count` from `GREATEST` (type error), fixed GROUP BY |
+| **Meta descriptions** | `app/artist/[slug]/page.tsx` | Enriched with track name, CPM rate, monthly listeners — unique per artist |
+| **Dynamic FAQPage** | `app/artist/[slug]/page.tsx` | 4-5 artist-specific Q&A + genre-tailored questions (was 2 generic) |
+| **Schema enrichment** | `app/artist/[slug]/page.tsx` | Added `description`, `aggregateRating`, `potentialAction` to MusicGroup |
+| **Internal linking** | `lib/internal-links.ts` | Expanded from 3 to 6+ links, added genre-specific + tool links |
+
+### New Features
+| Feature | Files | Description |
+|---------|-------|-------------|
+| **Active campaigns section** | `app/artist/[slug]/page.tsx` + `ArtistProfileClient.tsx` | Shows active campaigns with CPM/budget, links to /c/[slug] |
+| **Messaging preselected user fix** | `app/messages/page.tsx` + `app/api/users/search/route.ts` | Added `?id=UUID` support — now loads user by ID directly instead of broken name-prefix search |
+
+### Research Documents
+| Document | Contents |
+|----------|----------|
+| `ARTIST_PAGE_RESEARCH.md` | Full competitor analysis (25 platforms), SEO (6/10), LLMO (3/10), UX (7/10) scores, all issues ranked P0-P3 |
+| `ARTIST_SEO_LLMO_PLAN.md` | 5-phase execution plan: ~500 lines across ~10 files, 8 hours dev, ~$155 total cost |
+
+**Total: 1 commit from current → HEAD**
+**8 files modified, 2 research documents created**

@@ -35,12 +35,28 @@ export function getPageLink(page: string): LinkTarget | null {
  * Generate artist-card cross-links for a specific artist page.
  * Links to: browse, tools, and related content.
  */
-export function getArtistLinks(): LinkTarget[] {
-  return [
+export function getArtistLinks(genres?: string[]): LinkTarget[] {
+  const links: LinkTarget[] = [
     { url: '/browse', anchor: 'browse more independent artists', context: 'artist' },
     { url: '/welcome-creators', anchor: 'earn per view as a creator', context: 'creator' },
+    { url: '/welcome-artists', anchor: 'learn how artists promote music on Selah.fm', context: 'artist-guide' },
     { url: '/tools/cpm-calculator', anchor: 'calculate your CPM rate', context: 'tool' },
+    { url: '/tools/creator-earnings', anchor: 'estimate your creator earnings per view', context: 'tool' },
+    { url: '/tools/promotion-budget', anchor: 'plan your music promotion budget', context: 'tool' },
   ];
+
+  // Add genre-specific links
+  if (genres?.length) {
+    for (const genre of genres.slice(0, 2)) {
+      links.push({
+        url: `/browse/genre/${genre.toLowerCase()}`,
+        anchor: `browse ${genre.toLowerCase()} music artists and campaigns`,
+        context: 'genre',
+      });
+    }
+  }
+
+  return links;
 }
 
 /**

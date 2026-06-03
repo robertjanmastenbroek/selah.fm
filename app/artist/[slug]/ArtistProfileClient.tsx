@@ -20,9 +20,10 @@ interface ArtistProps {
   socialButtons: { label: string; url: string; icon: string }[];
   slug: string;
   relatedArtists?: any[];
+  campaigns?: any[];
 }
 
-export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [] }: ArtistProps) {
+export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [], campaigns = [] }: ArtistProps) {
   const name = artist.artist_name || 'Unknown Artist';
   const genres = (() => {
     const raw = artist.genres;
@@ -248,6 +249,30 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
           </div>
         </div>
 
+        {/* Active campaigns section */}
+        {campaigns.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
+              <Sparkles size={14} className="text-amber-400" />
+              Active campaigns
+            </h2>
+            <div className="grid gap-2">
+              {campaigns.map((c: any) => (
+                <Link key={c.id} href={`/c/${c.slug}`}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all group">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate group-hover:text-emerald-300 transition-colors">{c.track_title}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                      ${((c.cpm_rate_cents || 0) / 100 * 1000).toFixed(0)}/1M views · ${((c.total_budget_cents || 0) / 100).toFixed(0)} budget
+                    </p>
+                  </div>
+                  <span className="text-xs text-emerald-400 font-medium shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">Join →</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ════════════════════════════════════════════════ */}
         {/* TWO-COLUMN LAYOUT */}
         {/* ════════════════════════════════════════════════ */}
@@ -400,7 +425,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
 
             {/* Cross-links */}
             <div className="space-y-1.5">
-              {getArtistLinks().map((link, i) => (
+              {getArtistLinks(genres).map((link, i) => (
                 <Link key={i} href={link.url}
                   className="block text-[11px] text-muted-foreground/50 hover:text-primary/70 transition-colors">
                   → {link.anchor}

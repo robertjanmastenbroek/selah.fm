@@ -201,11 +201,11 @@ export default function MessagesPage() {
         if (match) {
           selectConversation(match.other_user);
         } else {
-          // No existing conversation — create a virtual user to start chatting
-          fetch("/api/users/search?q=" + encodeURIComponent(preselectedUser.slice(0, 8)), { credentials: "include" })
+          // No existing conversation — fetch user by ID directly
+          fetch("/api/users/search?id=" + encodeURIComponent(preselectedUser), { credentials: "include" })
             .then(r => r.json())
             .then(d => {
-              const user = (d.users || []).find((u: any) => u.id === preselectedUser);
+              const user = d.users?.[0];
               if (user) {
                 setSelectedUser({
                   id: user.id,

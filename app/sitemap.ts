@@ -64,13 +64,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let artistPages: MetadataRoute.Sitemap = [];
   try {
     const artists = await sql`
-      SELECT ap.slug, MAX(GREATEST(at.updated_at, da.updated_at, COALESCE(da.comment_count, 0))) as lastmod
+      SELECT ap.slug, MAX(GREATEST(at.updated_at, da.updated_at)) as lastmod
       FROM artist_profiles ap
       JOIN discovered_artists da ON da.id = ap.artist_id
       LEFT JOIN artist_tracks at ON at.artist_id = da.id AND at.enabled = true
       WHERE EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)
-      GROUP BY ap.slug, da.updated_at, da.comment_count
-      ORDER BY da.monthly_listeners DESC NULLS LAST
+      GROUP BY ap.slug
+      ORDER BY MAX(da.monthly_listeners) DESC NULLS LAST
       LIMIT 2000
     `;
     artistPages = artists.map((a: any) => ({
