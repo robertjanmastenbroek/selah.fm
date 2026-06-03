@@ -198,7 +198,7 @@ function DashboardContent() {
   // ─── Tabs ───────────────────────────────────────────────────
   const tabs: { id: TabId; label: string; icon: any }[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'campaigns', label: isArtist ? 'Campaigns' : 'Submissions', icon: Megaphone },
+    { id: 'campaigns', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone },
     { id: 'profile', label: 'Profile', icon: UserCircle },
     { id: 'earnings', label: 'Earnings', icon: DollarSign },
   ];
@@ -223,9 +223,16 @@ function DashboardContent() {
             </p>
           </div>
           {isArtist && (
-            <Button onClick={() => setWizardOpen(true)} size="sm">
-              <Plus size={16} className="mr-1" /> New campaign
-            </Button>
+            <div className="flex items-center gap-3">
+              {artistData?.balance_cents > 0 && (
+                <span className="text-xs text-muted-foreground/60">
+                  Balance: <span className="text-emerald-400 font-semibold">{formatDollars(artistData.balance_cents)}</span>
+                </span>
+              )}
+              <Button onClick={() => setWizardOpen(true)} size="sm">
+                <Plus size={16} className="mr-1" /> New track
+              </Button>
+            </div>
           )}
         </div>
 
@@ -252,10 +259,10 @@ function DashboardContent() {
             {/* Quick stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {(isArtist ? [
-                { label: 'Active campaigns', value: String(activeCount), icon: Megaphone },
+                { label: 'Tracks', value: String(artistTracks.length || activeCount), icon: Megaphone },
                 { label: 'Submissions', value: String(totalSubmissions), icon: Video },
-                { label: 'Total views', value: formatViews(totalViews), icon: TrendingUp },
-                { label: 'Budget spent', value: formatDollars(totalSpent), icon: DollarSign },
+                { label: 'Views', value: formatViews(totalViews), icon: TrendingUp },
+                { label: 'Balance', value: formatDollars(artistData?.balance_cents || 0), icon: DollarSign },
               ] : [
                 { label: 'Submissions', value: String(earningsData?.submissions?.length || 0), icon: Video },
                 { label: 'Total earned', value: formatDollars(earningsData?.totalEarned || 0), icon: DollarSign },
@@ -281,25 +288,27 @@ function DashboardContent() {
                   <div>
                     <p className="font-semibold text-sm">
                       {isArtist
-                        ? activeCount > 0 ? `${activeCount} active campaign${activeCount > 1 ? 's' : ''} running`
-                        : 'Ready to launch your first campaign?'
-                        : 'Browse campaigns and start creating content'}
+                        ? artistTracks.length > 0
+                          ? `${artistTracks.length} track${artistTracks.length > 1 ? 's' : ''} in your catalog`
+                          : 'Add your first track to get started'
+                        : 'Browse artists and start creating content'}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {isArtist
-                        ? activeCount > 0 ? `$${formatDollars(rawCampaigns[0]?.total_budget_cents || 0)} total budget across all campaigns`
-                        : 'Upload a track, set your CPM, and creators will promote it'
-                        : 'Find campaigns that match your style and earn per verified view'}
+                        ? artistTracks.length > 0
+                          ? `Import more tracks from Spotify, Bandcamp, or Deezer`
+                          : 'Import from Spotify, Bandcamp, or add manually'
+                        : 'Find artists that match your style and earn per verified view'}
                     </p>
                   </div>
                 </div>
-                {isArtist && !activeCount && (
-                  <Button size="sm" onClick={() => setWizardOpen(true)} className="shrink-0 ml-3">
-                    Create campaign
+                {isArtist && artistTracks.length === 0 && (
+                  <Button size="sm" onClick={() => switchTab('profile')} className="shrink-0 ml-3">
+                    Add tracks
                   </Button>
                 )}
                 {!isArtist && (
-                  <a href="/browse"><Button size="sm" className="shrink-0 ml-3">Browse campaigns</Button></a>
+                  <a href="/browse"><Button size="sm" className="shrink-0 ml-3">Browse artists</Button></a>
                 )}
               </CardContent>
             </Card>
@@ -323,7 +332,7 @@ function DashboardContent() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground/50">No recent activity — create a campaign to get started.</p>
+                    <p className="text-xs text-muted-foreground/50">No recent activity yet.</p>
                   )}
                 </CardContent>
               </Card>
@@ -379,9 +388,9 @@ function DashboardContent() {
                 ) : rawCampaigns.length === 0 ? (
                   <Card><CardContent className="p-12 text-center">
                     <Megaphone size={32} className="mx-auto mb-3 text-muted-foreground/20" />
-                    <p className="text-sm font-medium mb-1">No campaigns yet</p>
-                    <p className="text-xs text-muted-foreground mb-4">Create your first campaign and start getting submissions from creators.</p>
-                    <Button onClick={() => setWizardOpen(true)} size="sm"><Plus size={14} className="mr-1" /> Create campaign</Button>
+                    <p className="text-sm font-medium mb-1">No tracks yet</p>
+                    <p className="text-xs text-muted-foreground mb-4">Import your tracks from Spotify, Bandcamp, or add them manually.</p>
+                    <Button onClick={() => switchTab('profile')} size="sm"><Plus size={14} className="mr-1" /> Import tracks</Button>
                   </CardContent></Card>
                 ) : (
                   <div className="grid md:grid-cols-2 gap-4">
