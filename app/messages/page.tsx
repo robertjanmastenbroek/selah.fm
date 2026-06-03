@@ -74,7 +74,7 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
             <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 400, damping: 35 }}
               onClick={e => e.stopPropagation()}
-              className="relative z-10 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl p-6 space-y-4">
+              className="relative z-10 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl p-6 space-y-4 max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">New message</h3>
                 <button onClick={() => { setOpen(false); setQuery(''); setSelectedUser(null); setSuggestions([]); setShowDropdown(false); }}
