@@ -21,8 +21,14 @@ export const dynamic = 'force-dynamic';
 // ─── POST /api/artist/bio ───────────────────────────────────
 
 export async function POST(request: Request) {
-  const user = await getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  // Allow cron with secret header
+  const cronSecret = request.headers.get('x-cron-secret');
+  const isCron = cronSecret && cronSecret === process.env.CRON_SECRET;
+  
+  if (!isCron) {
+    const user = await getUser();
+    if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
 
   try {
     const { artistId } = await request.json();

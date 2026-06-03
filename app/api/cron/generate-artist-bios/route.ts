@@ -1,27 +1,100 @@
+/**
+ * app/api/cron/generate-artist-bios/route.ts
+ * Batch bio generation cron — processes 100 artists/night.
+ * Runs via the dispatcher at 00:00 UTC.
+ */
+
 import { NextResponse } from 'next/server';
-import { batchGenerateBios } from '@/lib/artist-content';
+import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 600;
+export const maxDuration = 300;
 
-/**
- * Cron: batch-generate SEO bios for artists without them.
- * Runs overnight. Processes 50 artists per run.
- * 1,800 artists × 50/run = 36 runs at $0.14/artist ≈ $252 total.
- */
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret') || request.headers.get('X-Cron-Secret') || '';
+  const secret = new URL(request.url).searchParams.get('secret');
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Fire-and-forget: return immediately, process in background
-  const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 200);
-  
-  batchGenerateBios(limit)
-    .then(result => console.log('Artist bios generated:', result))
-    .catch(e => console.error('Artist bios error:', e));
+  const results: { artist: string; score: number; words: number; status: string }[] = [];
+  const now = Date.now();
 
-  return NextResponse.json({ status: 'started', message: `Generating bios for up to ${limit} artists` });
+  try {
+    // Find 100 artists that need bios (prioritize by data richness)
+    const artists = await sql`
+      SELECT da.id, da.artist_name, da.monthly_listeners
+      FROM discovered_artists da
+      LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+      WHERE (aa.bio IS NULL OR LENGTH(aa.bio) < 100)
+        AND EXISTS (SELECT 1 FROM artist_tracks WHERE artist_id = da.id AND enabled = true)
+      ORDER BY da.monthly_listeners DESC NULLS LAST
+      LIMIT 100
+    `;
+
+    if (artists.length === 0) {
+      return NextResponse.json({ message: 'No artists need bios', processed: 0, elapsed: Date.now() - now });
+    }
+
+    // Process with concurrency of 3 to avoid rate limiting
+    const concurrency = 3;
+    const batches = [];
+    
+    for (let i = 0; i < artists.length; i += concurrency) {
+      const batch = artists.slice(i, i + concurrency);
+      const batchResults = await Promise.allSettled(
+        batch.map(a => generateBioForArtist(a.id, a.artist_name))
+      );
+      
+      for (let j = 0; j < batch.length; j++) {
+        const r = batchResults[j];
+        if (r.status === 'fulfilled') {
+          results.push(r.value);
+        } else {
+          results.push({ artist: batch[j].artist_name, score: 0, words: 0, status: `error: ${r.reason?.message?.slice(0, 50)}` });
+        }
+      }
+    }
+
+    const passed = results.filter(r => r.status === 'passed').length;
+    const failed = results.filter(r => r.status !== 'passed').length;
+
+    return NextResponse.json({
+      processed: artists.length,
+      passed,
+      failed,
+      results,
+      elapsed_ms: Date.now() - now,
+    });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message, results }, { status: 500 });
+  }
+}
+
+async function generateBioForArtist(artistId: string, artistName: string): Promise<{ artist: string; score: number; words: number; status: string }> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm'}/api/artist/bio`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-cron-secret': process.env.CRON_SECRET || '',
+      },
+      body: JSON.stringify({ artistId }),
+      signal: AbortSignal.timeout(60000),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      return { artist: artistName, score: 0, words: 0, status: `http_${res.status}: ${err.slice(0, 50)}` };
+    }
+
+    const data = await res.json();
+    return {
+      artist: artistName,
+      score: data.score || 0,
+      words: data.word_count || 0,
+      status: (data.score || 0) >= 70 ? 'passed' : `low_score_${data.score}`,
+    };
+  } catch (e: any) {
+    return { artist: artistName, score: 0, words: 0, status: `error: ${e.message?.slice(0, 50)}` };
+  }
 }
