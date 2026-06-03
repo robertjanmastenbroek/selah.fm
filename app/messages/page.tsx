@@ -15,14 +15,18 @@ function NewMessageButton({ onStart }: { onStart: () => void }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
-    fetch(`/api/users/search?q=${encodeURIComponent(query.trim())}`, { credentials: 'include' })
+    setLoading(true);
+    const q = query.trim();
+    fetch(`/api/users/search?q=${encodeURIComponent(q)}`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => setUsers(d.users || []))
-      .catch(() => setUsers([]));
+      .catch(() => setUsers([]))
+      .finally(() => setLoading(false));
   }, [query, open]);
 
   const select = (user: any) => {
@@ -42,32 +46,48 @@ function NewMessageButton({ onStart }: { onStart: () => void }) {
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setOpen(false); setQuery(''); }}>
+            className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setOpen(false); setQuery(''); setUsers([]); }}>
             <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
+            <motion.div initial={{ y: 30, opacity: 0, scale: 0.96 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 30, opacity: 0, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               onClick={e => e.stopPropagation()}
-              className="relative z-10 w-full max-w-md rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl p-6 max-h-[85vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">New message</h3>
-                <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-white/[0.06]"><X size={18} className="text-muted-foreground" /></button>
+              className="relative z-10 w-full max-w-lg rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center gap-3 p-5 border-b border-white/[0.06]">
+                <div className="relative flex-1">
+                  <input value={query} onChange={e => setQuery(e.target.value)}
+                    placeholder="Search users by name..."
+                    autoFocus
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3 text-sm text-foreground focus:outline-none focus:border-primary/30 placeholder:text-muted-foreground/50" />
+                  <button onClick={() => { setOpen(false); setQuery(''); setUsers([]); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-white/[0.06]"><X size={16} className="text-muted-foreground" /></button>
+                </div>
               </div>
-              <input value={query} onChange={e => setQuery(e.target.value)}
-                placeholder="Search by name..."
-                autoFocus
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground mb-3 focus:outline-none focus:border-primary/30 placeholder:text-muted-foreground" />
-              <div className="space-y-1 max-h-60 overflow-y-auto">
-                {users.map(u => (
-                  <button key={u.id} onClick={() => select(u)}
-                    className="w-full text-left px-3 py-2.5 rounded-xl flex items-center gap-3 hover:bg-white/[0.04] transition-colors">
-                    <div className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden">
-                      {u.profile_image_url ? <img src={u.profile_image_url} alt="" className="w-full h-full object-cover" /> : <User size={16} className="text-muted-foreground/40" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{u.display_name || 'User'}</p>
-                    </div>
-                  </button>
-                ))}
-                {users.length === 0 && query.length > 0 && <p className="text-xs text-muted-foreground/60 text-center py-4">No users found</p>}
+              {/* Results */}
+              <div className="max-h-80 overflow-y-auto py-2">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  </div>
+                ) : users.length === 0 ? (
+                  <div className="text-center py-10">
+                    <div className="w-12 h-12 rounded-full bg-white/[0.04] flex items-center justify-center mx-auto mb-3"><MessageCircle size={24} className="text-muted-foreground/30" /></div>
+                    <p className="text-sm text-muted-foreground mb-1">{query.trim() ? 'No users found' : 'Loading users...'}</p>
+                    <p className="text-xs text-muted-foreground/50">Try a different name or check the spelling.</p>
+                  </div>
+                ) : (
+                  users.map(u => (
+                    <button key={u.id} onClick={() => select(u)}
+                      className="w-full text-left px-5 py-3 flex items-center gap-3 hover:bg-white/[0.03] transition-colors border-b border-white/[0.02] last:border-0">
+                      <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden ring-1 ring-white/[0.04]">
+                        {u.profile_image_url ? <img src={u.profile_image_url} alt="" className="w-full h-full object-cover" /> : <User size={18} className="text-muted-foreground/40" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate">{u.display_name || 'User'}</p>
+                        {u.email && <p className="text-[10px] text-muted-foreground/50 truncate">{u.email}</p>}
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
             </motion.div>
           </motion.div>
