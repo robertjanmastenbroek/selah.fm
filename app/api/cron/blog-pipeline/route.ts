@@ -57,15 +57,13 @@ async function markQuestionUsed(text: string, blogPostId: string) {
   `;
 }
 
-/** Enforce question-title format for QAPage schema compatibility */
+/** Enforce question-title format — ALWAYS use the source question as the displayed title.
+ * The source question from the AI pool is a real query someone types into Google.
+ * The AI-generated title goes into meta_title for SEO, but the visible H1 must be the question. */
 function enforceQuestionTitle(title: string, sourceQuestion: string): string {
-  if (!title || !sourceQuestion) return title || sourceQuestion;
-  // If title already looks like a question, keep it
-  if (title.trim().endsWith('?') || /^(what|how|why|when|where|who|can|do|does|is|are|should|will|did)\b/i.test(title.trim())) {
-    return title;
-  }
-  // Use the source question as the title — it was a real question from the pool
-  return sourceQuestion;
+  if (sourceQuestion) return sourceQuestion;
+  if (title) return title;
+  return 'Music Promotion Question';
 }
 
 /**
@@ -83,12 +81,12 @@ export async function GET(request: Request) {
   const results = { questions: 0, interviews: 0, answered: 0, posts: 0, scheduled: 0 };
 
   try {
-    // Rate limit: only generate once per day unless force=true
+    // Rate limit: 6-hour cooldown — allows 4 pipeline runs/day for 2 posts/day cadence
     const force = searchParams.get('force') === 'true';
     if (!force) {
-      const [recentPost] = await sql`SELECT id FROM blog_posts WHERE created_at > NOW() - INTERVAL '20 hours' ORDER BY created_at DESC LIMIT 1`;
+      const [recentPost] = await sql`SELECT id FROM blog_posts WHERE created_at > NOW() - INTERVAL '6 hours' ORDER BY created_at DESC LIMIT 1`;
       if (recentPost) {
-        return NextResponse.json({ message: 'Already generated posts in the last 23 hours. Skipping to avoid duplicates.' });
+        return NextResponse.json({ message: 'Already generated posts recently. 6h cooldown active.' });
       }
     }
 
@@ -176,12 +174,12 @@ export async function GET(request: Request) {
       log.push(`Total sourced: ${results.questions} questions`);
     }
 
-    // Step 2: Generate interviews
+    // Step 2: Generate interviews — process 6 at a time to clear backlog faster
     const qs = await sql`
       SELECT bq.id, bq.raw_question FROM batch_questions bq
       WHERE bq.batch_id = ${batchId}
         AND NOT EXISTS (SELECT 1 FROM batch_interviews bi WHERE bi.source_question_id = bq.id)
-      LIMIT 3
+      LIMIT 6
     `;
     for (const q of qs) {
       try {
@@ -236,14 +234,14 @@ export async function GET(request: Request) {
     }
     log.push(`${results.answered} answered`);
 
-    // Step 4: Generate post (inline from admin route)
+    // Step 4: Generate up to 4 posts per run (fills 2 days of 09:00+15:00 slots)
     const answered = await sql`
       SELECT bi.id, bi.transcript, bq.raw_question FROM batch_interviews bi
       JOIN batch_questions bq ON bq.id = bi.source_question_id
       WHERE bi.batch_id = ${batchId} AND bi.status = 'answered' AND bi.transcript IS NOT NULL
         AND NOT EXISTS (SELECT 1 FROM blog_posts bp WHERE bp.interview_id = bi.id)
       ORDER BY bi.created_at DESC
-      LIMIT 2
+      LIMIT 4
     `;
     for (const iv of answered) {
       try {
@@ -352,20 +350,42 @@ export async function GET(request: Request) {
     }
     log.push(`${results.posts} posts`);
 
-    // Step 5: Schedule all generated posts (1 per day, starting tomorrow)
+    // Step 5: Schedule 2 posts per day (09:00 and 15:00 UTC slots)
     if (results.posts > 0) {
       const drafts = await sql`SELECT id FROM blog_posts WHERE status = 'draft' ORDER BY created_at DESC LIMIT ${results.posts}`;
       const existingDates = await sql`SELECT publish_at::date as d FROM blog_posts WHERE status = 'scheduled' AND publish_at::date >= CURRENT_DATE ORDER BY d`;
-      const taken = new Set(existingDates.map((r: any) => typeof r.d === 'string' ? r.d : new Date(r.d).toISOString().slice(0, 10)));
-      let next = new Date(); next.setDate(next.getDate() + 1); next.setUTCHours(9, 0, 0, 0);
+      const takenSlots = new Set(existingDates.map((r: any) => {
+        const d = typeof r.d === 'string' ? r.d : new Date(r.d).toISOString().slice(0, 10);
+        return d;
+      }));
+      
+      // Start scheduling from tomorrow
+      let scheduleDay = new Date(); scheduleDay.setDate(scheduleDay.getDate() + 1);
+      const DAY_SLOTS = [9, 15]; // 09:00 UTC and 15:00 UTC — 2 posts per day
+      let slotIdx = 0;
       
       for (const draft of drafts) {
-        while (taken.has(next.toISOString().slice(0, 10))) next.setDate(next.getDate() + 1);
-        await sql`UPDATE blog_posts SET status = 'scheduled', publish_at = ${next.toISOString()} WHERE id = ${draft.id}`;
-        taken.add(next.toISOString().slice(0, 10));
+        // Find next available day with room
+        while (takenSlots.has(scheduleDay.toISOString().slice(0, 10))) {
+          scheduleDay.setDate(scheduleDay.getDate() + 1);
+          slotIdx = 0;
+        }
+        
+        const hour = DAY_SLOTS[slotIdx % DAY_SLOTS.length];
+        const publishAt = new Date(scheduleDay);
+        publishAt.setUTCHours(hour, 0, 0, 0);
+        
+        await sql`UPDATE blog_posts SET status = 'scheduled', publish_at = ${publishAt.toISOString()} WHERE id = ${draft.id}`;
+        slotIdx++;
         results.scheduled++;
-        log.push(`Scheduled: ${next.toISOString().slice(0, 10)}`);
-        next.setDate(next.getDate() + 1);
+        log.push(`Scheduled: ${publishAt.toISOString().slice(0, 16)}Z`);
+        
+        // If we've filled both slots for this day, move to next day
+        if (slotIdx >= DAY_SLOTS.length) {
+          takenSlots.add(scheduleDay.toISOString().slice(0, 10));
+          scheduleDay.setDate(scheduleDay.getDate() + 1);
+          slotIdx = 0;
+        }
       }
     }
 
