@@ -33,6 +33,9 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [ownUserId, setOwnUserId] = useState('');
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const typingPollRef = useRef<ReturnType<typeof setInterval>>();
 
   // Get own user ID from shared SWR cache (TopNav already warmed it)
   const { data: me } = useSWR('/api/auth/me', fetcher, swrConfig);
@@ -173,11 +176,42 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 15000);
     }
 
+    // Poll for typing indicator every 3s
+    const pollTyping = () => {
+      if (!activeConv) return;
+      fetch(`/api/messages/typing?with=${activeConv.other_id}`, { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => setOtherTyping(d.typing || false))
+        .catch(() => setOtherTyping(false));
+    };
+    pollTyping();
+    typingPollRef.current = setInterval(pollTyping, 3000);
+
     return () => {
       if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+      if (typingPollRef.current) { clearInterval(typingPollRef.current); }
     };
   }, [activeConv, open, fetchMessages]);
+
+  // Fire typing indicator on input change
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    if (!activeConv || !value.trim()) return;
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    fetch('/api/messages/typing', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversation_with: activeConv.other_id }),
+    }).catch(() => {});
+    typingTimerRef.current = setTimeout(() => {
+      fetch('/api/messages/typing', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_with: activeConv.other_id }),
+      }).catch(() => {});
+    }, 3000);
+  };
 
   // ── Auto-scroll messages container ─────────────────────────
   useEffect(() => {
@@ -312,7 +346,12 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
                     <ArrowLeft size={16} />
                   </button>
                   <CreatorAvatar name={activeConv.other_name} size="sm" />
-                  <span className="font-medium text-sm">{activeConv.other_name}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-sm truncate block">{activeConv.other_name}</span>
+                    {otherTyping && (
+                      <span className="text-[10px] text-primary/60 animate-pulse">typing...</span>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
@@ -415,14 +454,29 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
                                   </span>
                                 )}
                               </div>
-                              {/* Copy on hover */}
-                              <button
-                                onClick={() => navigator.clipboard.writeText(m.content)}
-                                className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]"
-                                title="Copy message"
-                              >
-                                📋
-                              </button>
+                              {/* Actions on hover */}
+                              <div className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
+                                <button onClick={() => navigator.clipboard.writeText(m.content)}
+                                  className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Copy">📋</button>
+                                {isOwn && !isOptimistic && (
+                                  <>
+                                    <button onClick={async () => {
+                                      const newText = prompt('Edit message:', m.content);
+                                      if (newText && newText !== m.content) {
+                                        await fetch('/api/messages', { method: 'PATCH', credentials: 'include',
+                                          headers: {'Content-Type':'application/json'},
+                                          body: JSON.stringify({ message_id: m.id, content: newText }) });
+                                      }
+                                    }} className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Edit">✏️</button>
+                                    <button onClick={async () => {
+                                      if (confirm('Delete this message?')) {
+                                        await fetch(`/api/messages?id=${m.id}`, { method: 'DELETE', credentials: 'include' });
+                                        setMessages(prev => prev.filter(msg => msg.id !== m.id));
+                                      }
+                                    }} className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Delete">🗑️</button>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -440,7 +494,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
                 <input
                   ref={inputRef}
                   value={input}
-                  onChange={e => setInput(e.target.value)}
+                  onChange={e => handleInputChange(e.target.value)}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
