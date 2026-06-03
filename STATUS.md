@@ -353,3 +353,58 @@ See `BLUEPRINT.md` (execution plan), `VISION.md` (architecture), `GROWTH_AUDIT.m
 
 **Total: 1 commit from current → HEAD**
 **4 files modified, 2 files created, 1 migration applied**
+
+---
+
+## ✅ SESSION: June 3, 2026 — Growth Infrastructure (3 commits)
+
+### Earnings Leaderboard (`/earnings`)
+| Feature | Status |
+|---------|--------|
+| Public leaderboard with rank, avatar, earnings, views | ✅ |
+| Search/filter by creator name | ✅ |
+| Stats bar (total paid, total views, creators, top earner) | ✅ |
+| Top 3 badges (gold/silver/bronze) | ✅ |
+| How-to-earn guide for new visitors | ✅ |
+| Links to browse, earnings calculator, how-it-works | ✅ |
+
+### Newsletter Lead Magnet (`NewsletterSignup` component)
+| Feature | Status |
+|---------|--------|
+| Delayed popup (30s default, localStorage-dismissed) | ✅ |
+| Name + email capture → Resend audience | ✅ |
+| Welcome email with CPM Cheat Sheet (TikTok/Reels/Shorts table) | ✅ |
+| Graceful fallback when RESEND_API_KEY not set | ✅ |
+| Wired into root layout (visible on all pages) | ✅ |
+
+### New Files
+| File | Purpose |
+|------|---------|
+| `app/api/newsletter/signup/route.ts` | Newsletter API + Resend audience + welcome email |
+| `components/NewsletterSignup.tsx` | Client component with popup form |
+
+**Total: 3 commits from last session**
+**3 files modified, 2 files created**
+
+---
+
+## 📌 Upcoming: Organic Growth Features (When Users Arrive)
+
+These are designed to be implemented as a single focused session once the platform has active users.
+
+### Referral Loop (estimated ~2h)
+- **Mechanic**: Every user gets a unique referral code on signup. Referrer + referred each get $10 credit (or 5% bonus).
+- **Files needed**: `app/api/referrals/claim/route.ts`, migration for `referral_codes` table, `app/api/referrals/code/route.ts` for generation
+- **Referral prompts**: "Invite a creator to earn $10 credit" shown in campaign CTA, after submission, on share
+- **Dashboard section**: Show referral code, share buttons, earned credits
+
+### Instagram Content Automation (estimated ~2h)
+- **Mechanic**: Blog pipeline → generates a campaign spotlight post (80 chars, artist + track + CPM hook) → stores in `instagram_posts` table → manual review or auto-post via Instagram Graph API
+- **Files needed**: `lib/instagram-content.ts` (generation logic), `lib/instagram-api.ts` (publishing), `app/api/cron/instagram-publish/route.ts`
+- **Content type**: "🎵 Make content for [artist] → earn $[X]/1M views! Campaign live now on Selah.fm 🚀"
+- **Frequency**: 1-2 posts/day via cron
+
+### Referral in Bio Links (estimated ~30min)
+- **Mechanic**: Artist/creator landing page at `/r/[code]` that shows campaign + referral code pre-filled
+- **Files needed**: `app/r/[code]/page.tsx`, update signup flow to accept `?ref=` param
+- **Share prompts**: "Add selah.fm/r/[code] to your Instagram/TikTok bio"
