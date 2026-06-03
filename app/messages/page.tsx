@@ -195,10 +195,28 @@ export default function MessagesPage() {
       setConversations(convs);
       setUnreadTotal(convs.reduce((s: number, c: Conversation) => s + c.unread_count, 0));
       
-      // Pre-select user from URL param
-      if (preselectedUser && convs.length > 0) {
+      // Pre-select user from URL param — even without existing conversations
+      if (preselectedUser) {
         const match = convs.find((c: Conversation) => c.other_user.id === preselectedUser);
-        if (match) selectConversation(match.other_user);
+        if (match) {
+          selectConversation(match.other_user);
+        } else {
+          // No existing conversation — create a virtual user to start chatting
+          fetch("/api/users/search?q=" + encodeURIComponent(preselectedUser.slice(0, 8)), { credentials: "include" })
+            .then(r => r.json())
+            .then(d => {
+              const user = (d.users || []).find((u: any) => u.id === preselectedUser);
+              if (user) {
+                setSelectedUser({
+                  id: user.id,
+                  display_name: user.display_name || "User",
+                  profile_image_url: user.profile_image_url || "",
+                });
+                setMessages([]);
+              }
+            })
+            .catch(() => {});
+        }
       }
     } catch {} finally { setLoading(false); }
   }, [preselectedUser]);
