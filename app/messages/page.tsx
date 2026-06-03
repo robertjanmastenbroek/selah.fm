@@ -170,15 +170,17 @@ export default function MessagesPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState('');
+  const loadingRef = useRef(true);
   const [loading, setLoading] = useState(true);
+  const sendingRef = useRef(false);
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [preselectLoading, setPreselectLoading] = useState(!!preselectedUser);
   const msgEndRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval>>();
 
   // Fetch current user + conversations
@@ -280,22 +282,24 @@ export default function MessagesPage() {
     };
   }, [selectedUser]);
 
-  // Fire typing indicator on input change
+  // Fire typing indicator on input change (uses ref to avoid stale closures)
+  const typingTargetRef = useRef<string>('');
   const handleInputChange = (value: string) => {
     setInput(value);
+    typingTargetRef.current = selectedUser?.id || '';
     if (!selectedUser || !value.trim()) return;
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    const otherId = selectedUser.id;
     fetch('/api/messages/typing', {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conversation_with: selectedUser.id }),
+      body: JSON.stringify({ conversation_with: otherId }),
     }).catch(() => {});
-    // Auto-stop typing after 3s of no input
     typingTimerRef.current = setTimeout(() => {
       fetch('/api/messages/typing', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversation_with: selectedUser.id }),
+        body: JSON.stringify({ conversation_with: otherId }),
       }).catch(() => {});
     }, 3000);
   };
@@ -352,14 +356,20 @@ export default function MessagesPage() {
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || !selectedUser || sending) return;
-    const content = input.trim();
+    // Use refs to avoid React state batching race conditions
+    const text = inputRef.current?.value?.trim();
+    if (!text || !selectedUser || sendingRef.current) return;
+    const receiverId = selectedUser.id;
+    
+    // Clear input IMMEDIATELY via DOM (faster than setInput)
+    if (inputRef.current) inputRef.current.value = '';
     setInput('');
+    sendingRef.current = true;
     setSending(true);
 
     // Optimistic UI
     const tempId = 'temp-' + Date.now();
-    setMessages(prev => [...prev, { id: tempId, sender_id: currentUserId, receiver_id: selectedUser.id, content, created_at: new Date().toISOString(), read: false }]);
+    setMessages(prev => [...prev, { id: tempId, sender_id: currentUserId || '', receiver_id: receiverId, content: text, created_at: new Date().toISOString(), read: false }]);
 
     try {
       const controller = new AbortController();
@@ -367,7 +377,7 @@ export default function MessagesPage() {
       const res = await fetch('/api/messages', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ receiver_id: selectedUser.id, content }),
+        body: JSON.stringify({ receiver_id: receiverId, content: text }),
         signal: controller.signal,
       });
       clearTimeout(timeout);
@@ -376,19 +386,20 @@ export default function MessagesPage() {
         setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: data.message.id, created_at: data.message.created_at } : m));
       } else if (data.error) {
         setMessages(prev => prev.filter(m => m.id !== tempId));
-        setInput(content);
+        setInput(text);
         setSendError(true);
         setTimeout(() => setSendError(false), 3000);
         console.error('Failed to send message:', data.error);
       }
     } catch (e: any) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
-      setInput(content);
+      setInput(text);
       setSendError(true);
       setTimeout(() => setSendError(false), 3000);
       if (e.name === 'AbortError') console.error('Message send timed out');
       else console.error('Network error sending message:', e);
     }
+    sendingRef.current = false;
     setSending(false);
     inputRef.current?.focus();
   };

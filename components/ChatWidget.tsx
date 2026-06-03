@@ -31,6 +31,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
   const [activeConv, setActiveConv] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const sendingRef = useRef(false);
   const [sending, setSending] = useState(false);
   const [ownUserId, setOwnUserId] = useState('');
   const [otherTyping, setOtherTyping] = useState(false);
@@ -230,9 +231,10 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
 
   // ── Send message ──────────────────────────────────────────────
   const send = async () => {
-    if (!input.trim() || !activeConv || sending) return;
+    if (!input.trim() || !activeConv || sendingRef.current) return;
     const content = input.trim();
     setInput('');
+    sendingRef.current = true;
     setSending(true);
 
     // Optimistic update: add message to local state immediately
@@ -284,6 +286,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       if (e?.name === 'AbortError') console.error('Message send timed out');
       else console.error('Network error sending message:', e);
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   };
