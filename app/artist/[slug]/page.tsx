@@ -64,7 +64,7 @@ async function getArtistData(slug: string) {
     ORDER BY at.sort_order ASC, at.created_at DESC
   `;
 
-  // Fetch donation totals (campaign + artist-level)
+  // Fetch donation totals + submission stats (across all campaigns, not just artist_tracks)
   const [donationStats] = await sql`
     SELECT
       (COALESCE(SUM(cd.amount_cents), 0) + COALESCE(SUM(ad2.amount_cents), 0))::int as total_cents,
@@ -76,6 +76,18 @@ async function getArtistData(slug: string) {
     LEFT JOIN campaign_donations cd ON cd.campaign_id = c.id
     LEFT JOIN artist_donations ad2 ON ad2.artist_id = da.id AND ad2.status = 'completed'
     WHERE da.id = ${artistId}
+  `;
+
+  // Fetch ALL submissions count from campaign_claims (not just from artist_tracks)
+  const [submissionStats] = await sql`
+    SELECT
+      COALESCE(SUM(s.views_verified), 0)::int as total_views,
+      COUNT(s.id)::int as total_submissions,
+      COUNT(CASE WHEN s.review_status = 'approved' THEN 1 END)::int as approved_submissions
+    FROM submissions s
+    JOIN campaigns c ON c.id = s.campaign_id
+    JOIN campaign_claims cc ON cc.campaign_id = c.id
+    WHERE cc.discovered_artist_id = ${artistId}
   `;
 
   // Fetch recent approved submissions
@@ -136,8 +148,8 @@ async function getArtistData(slug: string) {
       total_donations_cents: donationStats.total_cents,
       donation_count: donationStats.donation_count,
       supporter_count: donationStats.supporter_count,
-      total_views: tracks.reduce((s: number, t: any) => s + (t.total_views || 0), 0),
-      total_submissions: tracks.reduce((s: number, t: any) => s + (t.submissions_count || 0), 0),
+      total_views: submissionStats.total_views,
+      total_submissions: submissionStats.total_submissions,
     },
     balance_cents: balanceRow?.balance_cents || 0,
     recent_submissions: recentSubmissions,
