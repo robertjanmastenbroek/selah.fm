@@ -13,7 +13,7 @@ const WORKERS: Record<number, { path: string; params?: string }[]> = {
   // Outreach pipeline paused — 2,563 unclaimed campaigns with zero activity (ROADMAP #8)
   // 0:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }, { path: '/api/cron/creator-outreach' }],
   0:  [{ path: '/api/cron/generate-artist-bios', params: 'limit=100' }],
-  1:  [{ path: '/api/cron/archive-activity' }],
+  1:  [{ path: '/api/cron/archive-activity' }, { path: '/api/cron/scrape-bandcamp' }],
   2:  [{ path: '/api/cron/blog-pipeline' }],
   3:  [{ path: '/api/cron/email-outreach' }],
   4:  [{ path: '/api/cron/blog-syndicate' }],

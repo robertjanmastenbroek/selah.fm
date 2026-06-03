@@ -234,6 +234,7 @@ function buildWordContext(artist: ArtistData): string {
   }
   if (artist.hasCampaigns) parts.push(`${artist.campaignCount} campaign${artist.campaignCount !== 1 ? 's' : ''} on Selah.fm`);
   if (artist.submissionCount > 0) parts.push(`${artist.submissionCount} creator submission${artist.submissionCount !== 1 ? 's' : ''}`);
+  if (artist.hasLocation) parts.push(`location: ${artist.locationCity}${artist.locationCountry ? `, ${artist.locationCountry}` : ''}`);
   if (artist.genres.length > 0) parts.push(`genre: ${artist.genres.slice(0, 3).join(', ')}`);
   if (artist.careerDays > 0) {
     const years = Math.floor(artist.careerDays / 365);
@@ -264,7 +265,7 @@ function fillTemplate(template: string, artist: ArtistData): string {
 async function loadArtistData(artistId: string): Promise<ArtistData | null> {
   const [artist] = await sql`
     SELECT da.id, da.artist_name, da.genres, da.monthly_listeners,
-           ap.total_streams, ap.total_followers
+           ap.total_streams, ap.total_followers, da.metadata
     FROM discovered_artists da
     LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
     WHERE da.id = ${artistId}
@@ -296,6 +297,26 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
   }
   if (timeline?.latest_track) {
     daysSinceLastTrack = Math.floor((Date.now() - new Date(timeline.latest_track).getTime()) / 86400000);
+  }
+
+  // Location from Bandcamp metadata
+  let locationCity = '';
+  let locationCountry = '';
+  if (artist.metadata?.location) {
+    const loc = artist.metadata.location;
+    if (typeof loc === 'string') {
+      // "Amsterdam, Netherlands" format
+      const parts = loc.split(',');
+      locationCity = parts[0]?.trim() || '';
+      locationCountry = parts[1]?.trim() || '';
+    } else if (typeof loc === 'object') {
+      locationCity = loc.city || '';
+      locationCountry = loc.country || loc.countryCode || '';
+    }
+    // Also check if loc is nested weirdly
+    if (!locationCity && typeof loc === 'object') {
+      locationCity = Object.values(loc)[0] || '';
+    }
   }
 
   // Track titles for genre inference + bio detail
@@ -330,9 +351,9 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     campaignCount: campaign_count || 0,
     submissionCount: submission_count || 0,
     supporterCount: 0,
-    hasLocation: false,
-    locationCity: '',
-    locationCountry: '',
+    hasLocation: !!locationCity,
+    locationCity,
+    locationCountry,
     hasSpotifyId: false,
     hasImage: false,
     careerDays,
