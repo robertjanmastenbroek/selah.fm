@@ -57,7 +57,26 @@ export default function ArtistDashboardSection() {
     );
   }
 
-  if (!artistData?.artist) return null;
+  if (!artistData?.artist) {
+    return (
+      <Card className="mb-8 border-amber-500/20 bg-amber-500/[0.02]">
+        <CardContent className="p-5 text-center space-y-3">
+          <Music size={24} className="mx-auto text-amber-400" />
+          <div>
+            <p className="font-semibold text-sm">No artist profile yet</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Create your artist profile to start managing tracks, tracking stats, and accepting campaigns.
+            </p>
+          </div>
+          <Link href="/onboarding?role=artist">
+            <Button size="sm" className="bg-primary hover:opacity-90">
+              Create artist profile →
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const { artist, tracks, stats } = artistData;
   const slug = artist.profile_slug || '';

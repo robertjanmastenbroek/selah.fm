@@ -62,7 +62,8 @@ export default function OnboardingPage() {
   const save = async () => {
     setSaving(true);
     try {
-      await fetch('/api/auth/me', {
+      // Update user profile
+      const meRes = await fetch('/api/auth/me', {
         method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -76,6 +77,21 @@ export default function OnboardingPage() {
           preferredCpm: cpm * 100,
         }),
       });
+      const meData = await meRes.json();
+
+      // If artist: create artist profile + on-page artist record
+      if (role === 'artist' && name) {
+        await fetch('/api/artist/claim', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            artistName: name,
+            genres: genres,
+            userId: meData?.user?.id,
+          }),
+        }).catch(e => console.error('Artist claim error:', e));
+      }
+
       // Clear onboarding state on completion
       localStorage.removeItem('selah-onboarding');
       setDone(true);
