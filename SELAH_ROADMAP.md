@@ -115,7 +115,10 @@ Layer 1: Data ← DONE
 ### Documents Created
 - ✅ BIO_ENGINE_RESEARCH.md — Full bio system research
 - ✅ BIO_ENGINE_REFINEMENTS.md — 10 gaps + tone + placement
+- ✅ BIO_ENGINE_DATA_RESEARCH.md — Data quality, genre detection, number honesty
+- ✅ BIO_UNIQUENESS_ARCHITECTURE.md — Composable component system, 507B combinations
 - ✅ SELAH_FM_COMPETITIVE_AUDIT.md — 30 gaps, 8 competitors
+- ✅ SELAH_ROADMAP.md — Full 6-week execution plan (this document)
 - ✅ CHAT_MASTER_PLAN.md — Messaging architecture
 - ✅ CHAT_AUDIT.md — Messenger bugs and fixes
 - ✅ ARTIST_PAGE_RESEARCH.md — Artist page gaps
@@ -133,11 +136,31 @@ Layer 1: Data ← DONE
 ### Why First
 Every competitor analysis agrees: **unique content per page is the foundation.** Wikipedia has 6M unique articles. Yelp has 200M unique reviews. We have 2K pages with 0 words of bio. Nothing else matters until this is fixed.
 
-### Work Items
+### Sub-Phase 0a: Bio Engine Architecture (25h)
+
+The bio engine uses a **composable component system** — each bio is assembled from independently generated modular slots with varying angles, tones, and opening styles. No two bios share the same generation path.
+
+**Architecture (507 billion possible combinations per artist):**
+
+- **50+ angles** — narrative frame (Discovery, Slow Build, Craftsman, Scene, DIY Story, etc.)
+- **8 tones** — Profile, Review, Feature, Data, Listener, Journalist, Fan, Critic
+- **65+ opening hooks** — Scene-setting, Direct statement, Question, Data-led, Metaphorical, etc.
+- **50+ sound descriptors** — Vibe, texture, emotion, craft, movement framings
+- **50+ journey framings** — Growth arc, Catalog arc, Audience arc, Craft arc, etc.
+- **50+ significance framings** — Value-based, Quality-based, Audience-based, Future-based
+- **50+ Selah.fm CTAs** — Join the community, Support directly, Create content, etc.
+- **Sliding frequency window** — words overused in recent 200 bios are avoided, no permanent bans
+- **Self-improvement** — generate 3 variations per artist, keep highest-scoring, learn from patterns
+- **Quality scoring** — word count, name presence, banned words, sentence variety, cosine similarity < 0.4
+
+**8 new library files (see Files to Create below)**
 
 | # | Task | Files | Hours | Cost |
 |---|------|-------|-------|------|
-| 0.1 | **Generate bios for all 2K artists** via DeepSeek API. Wire `generateArtistBio()` to a batch cron that processes 100/night. Each bio is 300-1,800 words depending on available data. | `lib/artist-content.ts`, `app/api/cron/generate-artist-bios/route.ts`, `app/api/cron/dispatcher/route.ts` | 3h | ~$10 API |
+| 0.1a | **Build composable bio engine** — 8 lib files with angle/tone/opening/descriptor/journey/closing/scorer modules | `lib/bio-*.ts` | 12h | $0 |
+| 0.1b | **Rewrite /api/artist/bio endpoint** — single-prompt → multi-slot composable generation | `app/api/artist/bio/route.ts` | 3h | $0 |
+| 0.1c | **Build batch cron** — 100 artists/night, 3 variations each, keep best | `app/api/cron/generate-artist-bios/route.ts`, `app/api/cron/dispatcher/route.ts` | 3h | ~$0.05 API |
+| 0.1d | **Test + iterate** — generate 50 bios, check quality scores, adjust | Various | 7h | ~$0.01 API |
 | 0.2 | **Expand internal links to 15+ per page.** Update `getArtistLinks()` to include genre pages, tool pages, blog posts, campaign pages, and similar artists. | `lib/internal-links.ts`, `app/artist/[slug]/page.tsx` | 1h | $0 |
 | 0.3 | **Add sameAs to schema.** For each artist, check if they have a Wikipedia/Wikidata entry. If so, add `sameAs` links to the MusicGroup schema. This unlocks Knowledge Panel eligibility. | `app/artist/[slug]/page.tsx` | 1h | $0 |
 | 0.4 | **Add author byline + Person schema.** Every artist page gets "By Selah.fm Music Team" and a corresponding Person schema entry. | `app/artist/[slug]/page.tsx` | 30min | $0 |
@@ -315,12 +338,13 @@ Scale only matters after the product is proven. Phase 0-3 builds the engine. Pha
 
 | Phase | What | Dev Hours | API/Infra Cost | New Pages | Dependencies |
 |-------|------|-----------|---------------|-----------|-------------|
-| **0** | Content Foundation | 6h | ~$15 (DeepSeek) | 2K+ bios | None — can start now |
-| **1** | Entity Graph & Pages | 8h | $0 | 19K+ (tracks + genres + cities) | Phase 0 (bios needed for entity graph) |
-| **2** | Community Layer | 16h | ~$5/month (storage) | Ongoing UGC per page | Phase 1 (track pages needed for track reviews) |
-| **3** | UGC & Backlinks | 8h | $0 | ~1K embeds (viral) | Phase 2 (UGC needed to amplify) |
-| **4** | Scale & Automation | 10h | ~$10/month (scrapers) | 50+/week new artists | Phase 0-3 (need the engine before scaling) |
-| **Total** | | **48h** | **~$30 one-time + $15/month** | **~25K+ pages → 1M+** | |
+| **0a** | Bio Engine Architecture | 25h | ~$0.06 API | 2K+ unique bios | None — can start now |
+| **0b** | Entity Graph + Schema | 3h | $0 | sameAs, Person schema, links | Phase 0a (bios exist) |
+| **1** | Entity Graph & Pages | 8h | $0 | 19K+ (tracks + genres + cities) | Phase 0 (content exists) |
+| **2** | Community Layer | 16h | ~$5/month (storage) | Ongoing UGC per page | Phase 1 (track pages exist) |
+| **3** | UGC & Backlinks | 8h | $0 | ~1K embeds (viral) | Phase 2 (UGC exists) |
+| **4** | Scale & Automation | 10h | ~$10/month (scrapers) | 50+/week new artists | Phase 0-3 (engine proven) |
+| **Total** | | **70h** | **~$15 one-time + $15/month** | **~25K+ pages → 1M+** | |
 
 ### Timeline
 
@@ -378,12 +402,17 @@ Total: 6 weeks to world-class
 | File | Purpose |
 |------|---------|
 | `app/api/cron/generate-artist-bios/route.ts` | Batch bio generation cron (100/night) |
-| `lib/bio-engine.ts` | Core article generation pipeline |
-| `lib/bio-interview.ts` | Interview generation prompts |
-| `lib/bio-writer.ts` | Article composition prompt |
-| `lib/bio-seo.ts` | SEO self-critique pass |
-| `lib/bio-schema.ts` | Schema markup generator |
-| `supabase/migrations/..._artist_articles.sql` | New table for articles |
+| `app/api/artist/bio/route.ts` | Bio generation API (composable multi-slot) |
+| `lib/bio-angles.ts` | 50+ angle definitions + selection criteria |
+| `lib/bio-openings.ts` | 65+ opening hook templates by type |
+| `lib/bio-descriptors.ts` | 50+ sound description framings |
+| `lib/bio-journeys.ts` | 50+ journey/narrative framings |
+| `lib/bio-closings.ts` | 50+ Selah.fm closing CTAs |
+| `lib/bio-scorer.ts` | Quality scoring: word count, banned words, cosine similarity, auto-regenerate |
+| `lib/bio-vocabulary.ts` | Sliding frequency window tracker — bans words used in 3+ of last 200 bios |
+| `lib/bio-schema.ts` | Schema markup generator (MusicGroup, sameAs, Person) |
+| `lib/bio-tone.ts` | 8 tone definitions (Profile, Review, Feature, Data, Listener, Journalist, Fan, Critic) |
+| `supabase/migrations/..._artist_articles.sql` | New table for articles with quality scores |
 
 ### Phase 1: Entity Graph & Pages
 | File | Purpose |
