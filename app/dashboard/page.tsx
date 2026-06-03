@@ -124,6 +124,33 @@ function DashboardContent() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ ok?: boolean; imported?: number; skipped?: number; message?: string; error?: string } | null>(null);
 
+  // ─── Manual track state ─────────────────────────────────────
+  const [manualTitle, setManualTitle] = useState('');
+  const [manualUrl, setManualUrl] = useState('');
+  const [manualAdding, setManualAdding] = useState(false);
+  const handleAddManualTrack = async () => {
+    if (!manualTitle.trim() || !artistSlug) return;
+    setManualAdding(true);
+    try {
+      const res = await fetch(`/api/artists/${artistSlug}/tracks`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: manualTitle.trim(), spotify_url: manualUrl.trim() || null, cpm_rate_cents: 10 }),
+      });
+      if (res.ok) {
+        addToast('Track added!', 'success');
+        setManualTitle('');
+        setManualUrl('');
+        reloadArtist();
+        reloadCampaigns();
+      } else {
+        const err = await res.json();
+        addToast(err.error || 'Failed to add track', 'error');
+      }
+    } catch { addToast('Network error', 'error'); }
+    setManualAdding(false);
+  };
+
   const handleImport = async () => {
     if (!importUrl.trim()) return;
     setImporting(true);
@@ -544,6 +571,24 @@ function DashboardContent() {
                             : importResult.error || 'Import failed'}
                         </div>
                       )}
+                      <details className="text-xs">
+                        <summary className="cursor-pointer text-muted-foreground/50 hover:text-muted-foreground text-[11px]">
+                          Or add a track manually →
+                        </summary>
+                        <div className="flex gap-2 mt-2">
+                          <input value={manualTitle} onChange={e => setManualTitle(e.target.value)}
+                            placeholder="Track name"
+                            className="flex-1 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30"
+                            onKeyDown={e => e.key === 'Enter' && handleAddManualTrack()} />
+                          <button onClick={handleAddManualTrack} disabled={manualAdding || !manualTitle.trim()}
+                            className="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-semibold disabled:opacity-40 hover:opacity-90 transition-all shrink-0">
+                            {manualAdding ? 'Adding...' : 'Add'}
+                          </button>
+                        </div>
+                        <input value={manualUrl} onChange={e => setManualUrl(e.target.value)}
+                          placeholder="Spotify URL (optional)"
+                          className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30 mt-1" />
+                      </details>
                       <p className="text-[9px] text-muted-foreground/40">
                         Supports: Spotify artist links, Bandcamp pages, Deezer artist profiles. Max 20 tracks.
                       </p>
