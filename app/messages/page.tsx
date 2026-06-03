@@ -69,12 +69,12 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => { setOpen(false); setQuery(''); setSelectedUser(null); setSuggestions([]); setShowDropdown(false); }}>
+            className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => { setOpen(false); setQuery(''); setSelectedUser(null); setSuggestions([]); setShowDropdown(false); }}>
             <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
-            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+            <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 35 }}
               onClick={e => e.stopPropagation()}
-              className="relative z-10 w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              className="relative z-10 w-full max-w-md rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl p-6 space-y-4 max-h-[85vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">New message</h3>
                 <button onClick={() => { setOpen(false); setQuery(''); setSelectedUser(null); setSuggestions([]); setShowDropdown(false); }}
@@ -187,12 +187,13 @@ export default function MessagesPage() {
     fetch('/api/auth/me', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { if (d.user) setCurrentUserId(d.user.id); })
-      .catch(() => {});
+      .catch((e) => console.error('Auth fetch error:', e));
   }, []);
 
   const loadConversations = useCallback(async () => {
     try {
       const res = await fetch('/api/messages', { credentials: 'include' });
+      if (!res.ok) { console.error('Conversations API error:', res.status); setLoading(false); return; }
       const data = await res.json();
       const convs = data.conversations || [];
       setConversations(convs);
@@ -206,22 +207,26 @@ export default function MessagesPage() {
           if (isMobile) setShowList(false);
         } else {
           // No existing conversation — fetch user by ID directly
-          const searchRes = await fetch("/api/users/search?id=" + encodeURIComponent(preselectedUser), { credentials: "include" });
-          const searchData = await searchRes.json();
-          const user = searchData.users?.[0];
-          if (user) {
-            setSelectedUser({
-              id: user.id,
-              display_name: user.display_name || "User",
-              profile_image_url: user.profile_image_url || "",
-            });
-            setMessages([]);
-            if (isMobile) setShowList(false);
-          }
+          try {
+            const searchRes = await fetch("/api/users/search?id=" + encodeURIComponent(preselectedUser), { credentials: "include" });
+            if (searchRes.ok) {
+              const searchData = await searchRes.json();
+              const user = searchData.users?.[0];
+              if (user) {
+                setSelectedUser({
+                  id: user.id,
+                  display_name: user.display_name || "User",
+                  profile_image_url: user.profile_image_url || "",
+                });
+                setMessages([]);
+                if (isMobile) setShowList(false);
+              }
+            }
+          } catch (e) { console.error('User search error:', e); }
         }
         setPreselectLoading(false);
       }
-    } catch {} finally { setLoading(false); }
+    } catch (e) { console.error('loadConversations error:', e); } finally { setLoading(false); }
   }, [preselectedUser]);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
@@ -254,12 +259,13 @@ export default function MessagesPage() {
       });
 
       es.onerror = () => {
-        // SSE failed — fall back to polling
+        console.error('SSE connection failed — falling back to polling');
         es.close();
         sseRef.current = null;
         startPolling();
       };
-    } catch {
+    } catch (e) {
+      console.error('SSE setup failed:', e);
       startPolling();
     }
 
@@ -269,7 +275,7 @@ export default function MessagesPage() {
       fetch(`/api/messages/typing?with=${selectedUser.id}`, { credentials: 'include' })
         .then(r => r.json())
         .then(d => setOtherTyping(d.typing || false))
-        .catch(() => setOtherTyping(false));
+        .catch(e => { console.error('Typing poll error:', e); setOtherTyping(false); });
     };
     pollTyping();
     typingPollRef.current = setInterval(pollTyping, 3000);
@@ -293,13 +299,13 @@ export default function MessagesPage() {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ conversation_with: otherId }),
-    }).catch(() => {});
+    }).catch(e => console.error('Typing indicator error:', e));
     typingTimerRef.current = setTimeout(() => {
       fetch('/api/messages/typing', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation_with: otherId }),
-      }).catch(() => {});
+      }).catch(e => console.error('Typing stop error:', e));
     }, 3000);
   };
 
@@ -324,10 +330,10 @@ export default function MessagesPage() {
           method: 'PATCH', credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sender_id: otherId }),
-        }).catch(() => {});
+        }).catch(e => console.error('Mark read error:', e));
         
         loadConversations();
-      } catch {}
+      } catch (e) { console.error('Polling error:', e); }
     }, 10000);
   };
 
@@ -342,16 +348,17 @@ export default function MessagesPage() {
     setSelectedUser(user);
     try {
       const res = await fetch(`/api/messages?with=${user.id}`, { credentials: 'include' });
-      const data = await res.json();
-      if (data.messages) setMessages(data.messages);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.messages) setMessages(data.messages);
+      }
       
-      // Mark as read
       fetch('/api/messages', {
         method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sender_id: user.id }),
-      }).catch(() => {});
-    } catch {}
+      }).catch(e => console.error('Mark read error:', e));
+    } catch (e) { console.error('selectConversation error:', e); }
   };
 
   const sendMessage = async () => {
@@ -505,11 +512,20 @@ export default function MessagesPage() {
 
         {/* ── Message Thread ── */}
         <div className={`flex-1 flex flex-col ${isMobile ? (selectedUser ? 'absolute inset-0 z-20 bg-[#0F0F23]' : 'hidden') : 'flex'} ${!selectedUser && !isMobile ? 'items-center justify-center' : ''}`}>
-          {!selectedUser ? (
-            <div className="text-center p-8">
-              <MessageCircle size={48} className="mx-auto mb-4 text-muted-foreground/10" />
-              <p className="text-muted-foreground text-sm">Select a conversation</p>
-              <p className="text-xs text-muted-foreground/40 mt-1">Choose a contact from the left to start chatting</p>
+          {preselectLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-xs text-muted-foreground">Loading conversation...</p>
+              </div>
+            </div>
+          ) : !selectedUser ? (
+            <div className="hidden md:flex flex-1 items-center justify-center">
+              <div className="text-center p-8">
+                <MessageCircle size={48} className="mx-auto mb-4 text-muted-foreground/10" />
+                <p className="text-muted-foreground text-sm">Select a conversation</p>
+                <p className="text-xs text-muted-foreground/40 mt-1">Choose a contact from the left to start chatting</p>
+              </div>
             </div>
           ) : (
             <>
