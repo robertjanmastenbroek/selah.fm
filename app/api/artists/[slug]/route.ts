@@ -97,6 +97,11 @@ export async function GET(
       ORDER BY pc.created_at DESC LIMIT 5
     `;
 
+    // Fetch balance
+    const [balanceRow] = await sql`
+      SELECT balance_cents FROM artist_profiles WHERE artist_id = ${artistId}
+    `;
+
     return NextResponse.json({
       artist: artistRow,
       tracks,
@@ -108,6 +113,7 @@ export async function GET(
         total_views: tracks.reduce((s: number, t: any) => s + (t.total_views || 0), 0),
         total_submissions: tracks.reduce((s: number, t: any) => s + (t.submissions_count || 0), 0),
       },
+      balance_cents: balanceRow?.balance_cents || 0,
       recent_activity: recentActivity,
       recent_submissions: recentSubmissions,
       recent_donors: recentDonors,

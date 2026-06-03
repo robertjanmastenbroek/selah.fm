@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR, { useSWRConfig } from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
@@ -635,8 +636,45 @@ function DashboardContent() {
             <Card><CardContent className="p-6">
               {isArtist ? (
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-sm">Campaign funding</h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <h3 className="font-semibold text-sm">Balance</h3>
+                  <div className="rounded-2xl bg-gradient-to-br from-primary/[0.04] to-emerald-500/[0.02] border border-primary/10 p-6 text-center">
+                    <p className="text-4xl font-bold">{formatDollars(artistData?.balance_cents || 0)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {artistData?.pending_payouts_cents > 0
+                        ? `${formatDollars(artistData.pending_payouts_cents)} pending in submissions`
+                        : 'Available for creator payouts'}
+                    </p>
+                    <div className="flex items-center justify-center gap-3 mt-4">
+                      <Link href={`/checkout?type=donation&artistSlug=${artistSlug}`}>
+                        <Button size="sm"><Plus size={14} className="mr-1" /> Add funds</Button>
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Recent transactions */}
+                  {artistData?.transactions?.length > 0 ? (
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground font-medium mt-4 mb-2">Recent transactions</p>
+                      {artistData.transactions.slice(0, 10).map((t: any) => (
+                        <div key={t.id} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-white/[0.02]">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`shrink-0 ${t.type === 'deposit' ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {t.type === 'deposit' ? '+' : '-'}
+                            </span>
+                            <span className="truncate text-muted-foreground">{t.description || t.type}</span>
+                          </div>
+                          <span className="font-medium shrink-0 ml-2">
+                            {t.type === 'deposit' ? '+' : '-'}${(Math.abs(t.amount_cents) / 100).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground/50 text-center pt-3">
+                      No transactions yet. Add funds to get started.
+                    </p>
+                  )}
+                  <div className="grid grid-cols-3 gap-4 pt-2">
                     {[
                       { label: 'Total deposited', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.total_budget_cents || 0), 0)) },
                       { label: 'Spent', value: formatDollars(totalSpent) },
