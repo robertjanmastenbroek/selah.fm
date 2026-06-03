@@ -75,7 +75,7 @@ export async function POST(request: Request) {
           coverArt: t.album?.images?.[0]?.url || '',
         }));
       } else {
-        // Fallback: search for the artist's top tracks by name
+        // Fallback: search iTunes (no API key needed, public API)
         const [artistInfo] = await sql`
           SELECT artist_name FROM discovered_artists da
           JOIN artist_profiles ap ON ap.artist_id = da.id
@@ -84,28 +84,20 @@ export async function POST(request: Request) {
         `;
         const searchQuery = artistInfo?.artist_name || '';
 
-        const searchRes = await fetch(
-          `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=10&market=from_token`,
-          { headers: { Authorization: `Bearer ${access_token}` } }
+        const itunesRes = await fetch(
+          `https://itunes.apple.com/search?term=${encodeURIComponent(searchQuery)}&entity=song&limit=10&media=music`,
+          { signal: AbortSignal.timeout(10000) }
         );
-        if (!searchRes.ok) {
-          const spotifyError = await searchRes.text().catch(() => 'Unknown error');
-          console.error('Spotify search API error:', searchRes.status, spotifyError);
-          return NextResponse.json({ error: `Spotify returned: ${spotifyError.slice(0, 200)}` }, { status: 502 });
+        if (itunesRes.ok) {
+          const itunesData = await itunesRes.json();
+          tracks = (itunesData.results || [])
+            .filter((t: any) => t.artistName?.toLowerCase() === searchQuery.toLowerCase())
+            .map((t: any) => ({
+              title: t.trackName || t.trackCensoredName || '',
+              url: t.trackViewUrl || '',
+              coverArt: t.artworkUrl100?.replace('100x100bb', '300x300bb') || '',
+            }));
         }
-        const searchData = await searchRes.json();
-
-        // Filter tracks by the artist name to get only this artist's tracks
-        const artistNameLower = searchQuery.toLowerCase();
-        tracks = (searchData.tracks?.items || [])
-          .filter((t: any) =>
-            t.artists?.some((a: any) => a.name?.toLowerCase() === artistNameLower)
-          )
-          .map((t: any) => ({
-            title: t.name,
-            url: t.external_urls?.spotify || `https://open.spotify.com/track/${t.id}`,
-            coverArt: t.album?.images?.[0]?.url || '',
-          }));
       }
 
     // ─── Bandcamp ────────────────────────────────────────
