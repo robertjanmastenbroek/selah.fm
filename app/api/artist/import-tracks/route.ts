@@ -237,7 +237,7 @@ export async function POST(request: Request) {
       // Link via campaign_claims
       await sql`
         INSERT INTO campaign_claims (campaign_id, claim_code, discovered_artist_id, status)
-        VALUES (${campaign.id}, ${campaignSlug + '-' + artist.id.slice(0, 6)}, ${artist.id}, 'active')
+        VALUES (${campaign.id}, ${campaignSlug + '-' + artist.id.slice(0, 6)}, ${artist.id}, 'claimed')
       `;
 
       created.push({ title: t.title, slug: campaign.slug });
