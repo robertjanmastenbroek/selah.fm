@@ -269,7 +269,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 <p className="text-[11px] text-muted-foreground mt-0.5">Donate to help promote their music</p>
               </div>
               <Button className="bg-red-500 hover:bg-red-600 text-white shrink-0 text-xs">
-                Donate {totalDonations > 0 ? 'again' : 'now'} ${(totalDonations / 100).toFixed(0)} raised
+                Donate
               </Button>
             </Link>
 
@@ -279,10 +279,10 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 <Video size={24} className="text-emerald-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm">Make a Video</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Pick a track, create content, earn per view</p>
+                <p className="font-bold text-sm">Create</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Pick a track, make content, earn per view</p>
               </div>
-              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white shrink-0 text-xs">Start Creating →</Button>
+              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white shrink-0 text-xs">Create</Button>
             </button>
           </div>
         </div>
@@ -441,12 +441,12 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                             {hasActiveCampaign ? (
                               <Link href={`/c/${campaigns.find((c: any) => c.track_title?.toLowerCase() === track.track_title?.toLowerCase())?.slug || track.track_title}`}
                                 className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-primary/[0.04] transition-all shrink-0">
-                                Submit video
+                                Submit
                               </Link>
                             ) : (
                               <button onClick={() => setShowSubmitModal(true)}
                                 className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all shrink-0">
-                                Make content
+                                Create
                               </button>
                             )}
                           </div>
@@ -540,11 +540,11 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 <div className="space-y-2">
                   <Link href={`/checkout?type=donation&artistSlug=${slug}`}
                     className="block w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold hover:shadow-[0_0_16px_rgba(239,68,68,0.3)] transition-all">
-                    <Heart size={14} className="inline mr-1.5" />Support ${(totalDonations / 100).toFixed(0)}
+                    Donate
                   </Link>
                   <button onClick={() => setShowSubmitModal(true)}
                     className="block w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-bold hover:shadow-[0_0_16px_rgba(34,197,94,0.3)] transition-all">
-                    <Video size={14} className="inline mr-1.5" />Make a Video
+                    Create
                   </button>
                 </div>
                 <p className="text-[9px] text-muted-foreground/40">No upfront cost · 80% creator payout</p>
@@ -626,12 +626,12 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
           <Link href={`/checkout?type=donation&artistSlug=${slug}`}
             className="flex-1 py-3 rounded-xl text-xs font-semibold text-center border border-white/[0.12] bg-white/[0.02] text-muted-foreground hover:text-white hover:bg-white/[0.05] transition-all flex items-center justify-center gap-1.5">
             <Heart size={14} className="text-red-400" />
-            Donate ${totalDonations > 0 ? 'again' : ''}
+            Donate
           </Link>
           <button onClick={() => setShowSubmitModal(true)}
             className="flex-1 py-3 rounded-xl text-xs font-bold text-center bg-gradient-to-r from-emerald-500 to-emerald-600 text-white active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5">
             <Video size={14} />
-            Make a Video
+            Create
           </button>
         </div>
       </div>
