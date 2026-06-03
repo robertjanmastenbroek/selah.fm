@@ -315,7 +315,7 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     }
     // Also check if loc is nested weirdly
     if (!locationCity && typeof loc === 'object') {
-      locationCity = Object.values(loc)[0] || '';
+      locationCity = String(Object.values(loc)[0] || '');
     }
   }
 
