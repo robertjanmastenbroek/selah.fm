@@ -317,16 +317,6 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     WHERE cc.discovered_artist_id = ${artistId}
   `;
 
-  // Infer genre from track titles if DB genre is empty
-  let inferredGenre = '';
-  if (genres.length === 0 && trackTitles.length > 0) {
-    const titleList = trackTitles.map((t: any) => t.title).join(', ');
-    inferredGenre = await inferGenreFromTracks(artist.artist_name, titleList);
-    if (inferredGenre && inferredGenre !== 'unknown') {
-      genres = [inferredGenre];
-    }
-  }
-
   return {
     id: artist.id,
     name: artist.artist_name,
@@ -349,33 +339,6 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     daysSinceLastTrack,
     trackTitles: trackTitles.map((t: any) => t.title),
   };
-}
-
-async function inferGenreFromTracks(name: string, trackTitles: string): Promise<string> {
-  try {
-    const key = process.env.DEEPSEEK_API_KEY;
-    if (!key) return '';
-
-    const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: 'You infer music genres from track titles and artist names. Respond with ONLY a single genre name. If uncertain, respond with "unknown".' },
-          { role: 'user', content: `Artist: "${name}". Track titles: ${trackTitles}. What genre is this music?` },
-        ],
-        max_tokens: 20,
-        temperature: 0.1,
-      }),
-    });
-    if (!res.ok) return '';
-    const data = await res.json();
-    const result = data.choices?.[0]?.message?.content?.trim().toLowerCase() || '';
-    return result === 'unknown' ? '' : result;
-  } catch {
-    return '';
-  }
 }
 
 async function saveBio(artistId: string, bio: string, score: number, angle: string, tone: string): Promise<void> {
