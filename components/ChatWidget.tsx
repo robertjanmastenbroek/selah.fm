@@ -276,12 +276,12 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
       setMessages(prev => prev.map(m => m.id === optimisticId ? { ...sent, sender_name: 'You' } : m));
       // Refresh conversations list to update the last message preview
       fetchConversations();
-    } catch (e) {
+    } catch (e: any) {
       setMessages(prev => prev.filter(m => m.id !== optimisticId));
       setInput(content);
       setSendError(true);
       setTimeout(() => setSendError(false), 3000);
-      if (e.name === 'AbortError') console.error('Message send timed out');
+      if (e?.name === 'AbortError') console.error('Message send timed out');
       else console.error('Network error sending message:', e);
     } finally {
       setSending(false);
