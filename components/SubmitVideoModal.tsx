@@ -21,6 +21,7 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [artistBalance, setArtistBalance] = useState<number | null>(null);
 
   useEffect(() => {
     if (open && tracks.length > 0 && !selectedTrack) {
@@ -29,6 +30,13 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
     setError('');
     setSuccess(false);
     setContentUrl('');
+    // Fetch artist balance
+    if (open && artistSlug) {
+      fetch(`/api/artists/${artistSlug}`)
+        .then(r => r.json())
+        .then(d => { if (d.balance_cents !== undefined) setArtistBalance(d.balance_cents); })
+        .catch(() => setArtistBalance(null));
+    }
   }, [open]);
 
   const detectPlatform = (url: string) => {
@@ -87,6 +95,16 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
               <div>
                 <h2 className="text-sm font-bold">Make a video for {artistName}</h2>
                 <p className="text-[10px] text-muted-foreground mt-0.5">Pick a track and submit your video link</p>
+                {artistBalance !== null && (
+                  <p className="text-[10px] mt-1 flex items-center gap-1">
+                    <span className={artistBalance > 0 ? 'text-emerald-400' : 'text-amber-400'}>
+                      {artistBalance > 0 ? '●' : '○'}
+                    </span>
+                    {artistBalance > 0
+                      ? `Artist budget: $${(artistBalance / 100).toFixed(2)}`
+                      : 'Artist hasn\'t funded their account yet'}
+                  </p>
+                )}
               </div>
               <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-muted-foreground">
                 <X size={16} />

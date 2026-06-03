@@ -245,8 +245,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
             {[
               { value: stats.total_tracks, label: 'Tracks', icon: <Music size={14} /> },
               { value: stats.total_submissions, label: 'Submissions', icon: <Video size={14} /> },
-              { value: stats.total_submissions > 0 ? `${stats.total_submissions} created` : '—', label: 'Videos Made', icon: <BarChart3 size={14} /> },
-              { value: `$${(totalDonations / 100).toFixed(0)}`, label: 'Donations', icon: <DollarSign size={14} /> },
+              { value: `$${(totalDonations / 100).toFixed(0)}`, label: 'Raised', icon: <DollarSign size={14} /> },
+              { value: balanceCents > 0 ? `$${(balanceCents / 100).toFixed(2)}` : '—', label: 'Budget', icon: <Sparkles size={14} /> },
             ].map(s => (
               <div key={s.label} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center text-muted-foreground/60">{s.icon}</div>

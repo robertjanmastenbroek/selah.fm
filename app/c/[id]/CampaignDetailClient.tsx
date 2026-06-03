@@ -328,25 +328,23 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
           <div className="md:w-[40%] px-5 py-6 md:py-8 md:flex md:flex-col md:justify-center md:border-l md:border-white/[0.06]">
             <div className="border-t border-white/06 mb-5 md:hidden" />
 
-            {/* Progress ring + key stats */}
+            {/* Key stats — simplified */}
             <div className="flex items-center gap-4 mb-6">
-              <CircleProgress pct={progress} size={72} />
               <div className="flex-1 min-w-0 space-y-1">
                 <div>
-                  <span className="text-lg font-bold">${spent.toFixed(0)}</span>
-                  <span className="text-xs text-muted-foreground ml-1.5">spent</span>
-                  {budget > 0 && <span className="text-xs text-muted-foreground ml-1">of ${budget.toFixed(0)}</span>}
+                  <span className="text-lg font-bold">{submissions}</span>
+                  <span className="text-xs text-muted-foreground ml-1.5">submissions</span>
+                  <span className="mx-2 text-muted-foreground/20">·</span>
+                  <span className="text-lg font-bold">{views.toLocaleString()}</span>
+                  <span className="text-xs text-muted-foreground ml-1.5">views</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <LiveTicker campaignId={id} />
-                  <span className="flex items-center gap-1 text-primary/60">📈 Live campaign</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{submissions} submissions</span>
-                  <span>·</span>
-                  <span>{views.toLocaleString()} views</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1 text-emerald-400">✅ Verified views</span>
+                  {artistSlug && (
+                    <Link href={`/artist/${artistSlug}`} className="text-primary hover:underline">
+                      View artist →
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
