@@ -26,6 +26,8 @@ export async function GET(request: Request) {
 
     // Artists with at least one enabled track
     conditions.push('EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)');
+    // Only show artists with real Spotify profile images (not track covers or Bandcamp thumbnails)
+    conditions.push('ap.spotify_image_url LIKE \'%scdn.co/image/ab676161%\'');
 
     if (genre) {
       conditions.push(`da.genres::text ILIKE $${p('%' + genre + '%')}`);
@@ -73,6 +75,7 @@ export async function GET(request: Request) {
     const countParams: any[] = [];
     const countConditions: string[] = [
       'EXISTS (SELECT 1 FROM artist_tracks at2 WHERE at2.artist_id = da.id AND at2.enabled = true)',
+      'ap.spotify_image_url LIKE \'%scdn.co/image/ab676161%\'',
     ];
     if (genre) { countConditions.push(`da.genres::text ILIKE $$1`); countParams.push(`%${genre}%`); }
     if (search) { countConditions.push(`da.artist_name ILIKE $${countParams.length + 1}`); countParams.push(`%${search}%`); }
@@ -80,6 +83,7 @@ export async function GET(request: Request) {
 
     const [{ total }] = await sql.raw(`
       SELECT COUNT(*)::int as total FROM discovered_artists da
+      JOIN artist_profiles ap ON ap.artist_id = da.id
       ${countWhere ? 'WHERE ' + countWhere : ''}
     `, countParams.length > 0 ? countParams : []);
 

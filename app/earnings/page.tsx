@@ -20,11 +20,35 @@ export default function EarningsPage() {
   const [entries, setEntries] = useState<EarningsEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [me, setMe] = useState<any>(null);
+  const [myEarnings, setMyEarnings] = useState<any>(null);
+
+  const [stats, setStats] = useState({ total_paid_cents: 0, total_views: 0, unique_creators: 0 });
+
+  // Fetch auth state and personal earnings
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.user) {
+          setMe(d.user);
+          // Fetch personal earnings
+          fetch('/api/earnings', { credentials: 'include' })
+            .then(r => r.json())
+            .then(ed => setMyEarnings(ed))
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/earnings/leaderboard', { credentials: 'include' })
       .then(r => r.json())
-      .then(d => setEntries(d.entries || []))
+      .then(d => {
+        setEntries(d.entries || []);
+        if (d.stats) setStats(d.stats);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -67,15 +91,48 @@ export default function EarningsPage() {
           </p>
         </motion.div>
 
+        {/* My earnings — shown when authenticated */}
+        {me && myEarnings && (
+          <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-primary/[0.04] to-emerald-500/[0.02] border border-primary/10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <DollarSign size={16} className="text-primary" />
+              </div>
+              <p className="text-sm font-semibold">Your earnings</p>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: 'Total earned', value: formatDollars(myEarnings.totalEarned || 0) },
+                { label: 'Paid out', value: formatDollars(myEarnings.totalPaid || 0) },
+                { label: 'Pending', value: formatDollars(myEarnings.totalPending || 0) },
+              ].map(s => (
+                <div key={s.label}>
+                  <p className="text-lg font-bold">{s.value}</p>
+                  <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">{s.label}</p>
+                </div>
+              ))}
+            </div>
+            {myEarnings.submissions?.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-2">
+                {myEarnings.submissions.slice(0, 3).map((s: any) => (
+                  <div key={s.id} className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground truncate">{s.track_title}</span>
+                    <span className="font-medium shrink-0 ml-2">{formatDollars(s.payout_amount_cents || 0)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Stats overview */}
-        {entries.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            {[
-              { label: 'Total paid out', value: formatDollars(entries.reduce((s, e) => s + e.total_earnings_cents, 0)), icon: DollarSign },
-              { label: 'Total views', value: formatViews(entries.reduce((s, e) => s + e.total_views, 0)), icon: TrendingUp },
-              { label: 'Active creators', value: entries.length.toString(), icon: Music },
-              { label: 'Top earner', value: entries[0] ? formatDollars(entries[0].total_earnings_cents) : '$0', icon: Star },
-            ].map((stat, i) => {
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          {[
+            { label: 'Total paid out', value: stats.total_paid_cents > 0 ? formatDollars(stats.total_paid_cents) : '$0', icon: DollarSign },
+            { label: 'Total views', value: stats.total_views > 0 ? formatViews(stats.total_views) : '0', icon: TrendingUp },
+            { label: 'Active creators', value: stats.unique_creators > 0 ? stats.unique_creators.toString() : (entries.length ? entries.length.toString() : '0'), icon: Music },
+            { label: 'Top earner', value: entries[0] ? formatDollars(entries[0].total_earnings_cents) : '$0', icon: Star },
+          ].map((stat, i) => {
               const Icon = stat.icon;
               return (
                 <div key={i} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
@@ -86,7 +143,6 @@ export default function EarningsPage() {
               );
             })}
           </div>
-        )}
 
         {/* Search */}
         <div className="relative mb-6">
