@@ -396,8 +396,9 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                   {sortedTracks.length === 0 ? (
                     <p className="text-sm text-muted-foreground/50 py-6 text-center">No tracks listed yet. Check back soon.</p>
                   ) : (
+                    <>
                     <div className="grid gap-2">
-                      {sortedTracks.map((track: any) => {
+                      {sortedTracks.slice(0, 20).map((track: any) => {
                         const cpm = track.cpm_rate_cents ? (track.cpm_rate_cents / 100).toFixed(2) : '0.00';
                         const hasActiveCampaign = campaigns.some((c: any) =>
                           c.track_title?.toLowerCase() === track.track_title?.toLowerCase()
@@ -442,6 +443,12 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                         );
                       })}
                     </div>
+                    {sortedTracks.length > 20 && (
+                      <p className="text-xs text-muted-foreground/50 text-center pt-2">
+                        + {sortedTracks.length - 20} more tracks — not all verified
+                      </p>
+                    )}
+                    </>
                   )}
                 </section>
               </div>
@@ -577,7 +584,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
       <SubmitVideoModal
         open={showSubmitModal}
         onClose={() => setShowSubmitModal(false)}
-        tracks={tracks}
+        tracks={tracks.slice(0, 20)}
         artistSlug={slug}
         artistName={name}
       />

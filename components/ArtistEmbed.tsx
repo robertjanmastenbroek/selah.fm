@@ -26,10 +26,11 @@ export default function ArtistEmbed({ artistSlug, artistName }: Props) {
     try {
       await navigator.clipboard.writeText(embedCode);
       setCopied(true);
-      addToast('Embed code copied!', 'success');
+      try { addToast('Embed code copied!', 'success'); } catch {}
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      addToast('Failed to copy', 'error');
+      // Fallback: select text manually
+      try { addToast('Select the code and copy manually (Cmd+C)', 'error'); } catch {}
     }
   };
 
