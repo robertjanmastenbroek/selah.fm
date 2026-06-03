@@ -444,7 +444,7 @@ export default function MessagesPage() {
             <motion.div
               initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
               exit={{ x: -20, opacity: 0 }}
-              className={`flex-col border-r border-white/[0.06] bg-white/[0.01] ${isMobile ? 'w-full absolute inset-0 z-10' : 'w-80 shrink-0 relative'}`}
+              className={`flex-col border-r border-white/[0.06] bg-white/[0.01] ${isMobile ? 'w-full absolute inset-0 z-10' : 'flex w-80 shrink-0'}`}
             >
               <div className="p-5 border-b border-white/[0.06]">
                 <div className="flex items-center justify-between">
@@ -504,7 +504,7 @@ export default function MessagesPage() {
         </AnimatePresence>
 
         {/* ── Message Thread ── */}
-        <div className={`flex-1 flex flex-col ${isMobile ? (selectedUser ? 'absolute inset-0 z-20 bg-[#0F0F23]' : 'hidden') : ''} ${!selectedUser && !isMobile ? 'items-center justify-center' : ''}`}>
+        <div className={`flex-1 flex flex-col ${isMobile ? (selectedUser ? 'absolute inset-0 z-20 bg-[#0F0F23]' : 'hidden') : 'flex'} ${!selectedUser && !isMobile ? 'items-center justify-center' : ''}`}>
           {!selectedUser ? (
             <div className="text-center p-8">
               <MessageCircle size={48} className="mx-auto mb-4 text-muted-foreground/10" />
