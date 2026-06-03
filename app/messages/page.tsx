@@ -199,8 +199,8 @@ export default function MessagesPage() {
       setConversations(convs);
       setUnreadTotal(convs.reduce((s: number, c: Conversation) => s + c.unread_count, 0));
       
-      // Pre-select user from URL param — skip if it's the current user (self-message)
-      if (preselectedUser && preselectedUser !== currentUserId) {
+      // Pre-select user from URL param — wait for currentUserId, skip self
+      if (preselectedUser && currentUserId && preselectedUser !== currentUserId) {
         const match = convs.find((c: Conversation) => c.other_user.id === preselectedUser);
         if (match) {
           selectConversation(match.other_user);
@@ -229,7 +229,7 @@ export default function MessagesPage() {
     } catch (e) { console.error('loadConversations error:', e); } finally { setLoading(false); }
   }, [preselectedUser]);
 
-  useEffect(() => { loadConversations(); }, [loadConversations]);
+  useEffect(() => { loadConversations(); }, [loadConversations, currentUserId]);
 
   // ── SSE for real-time delivery ────────────────────────────
   const sseRef = useRef<EventSource | null>(null);
