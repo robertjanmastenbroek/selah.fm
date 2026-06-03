@@ -236,6 +236,17 @@ function buildWordContext(artist: ArtistData): string {
   if (artist.submissionCount > 0) parts.push(`${artist.submissionCount} creator submission${artist.submissionCount !== 1 ? 's' : ''}`);
   if (artist.hasLocation) parts.push(`location: ${artist.locationCity}${artist.locationCountry ? `, ${artist.locationCountry}` : ''}`);
   if (artist.genres.length > 0) parts.push(`genre: ${artist.genres.slice(0, 3).join(', ')}`);
+  // YouTube enrichment data
+  if (artist.metadata?.youtube?.subscribers) {
+    parts.push(`youtube subscribers: ${artist.metadata.youtube.subscribers >= 1000 ? (artist.metadata.youtube.subscribers / 1000).toFixed(1) + 'K' : artist.metadata.youtube.subscribers}`);
+  }
+  if (artist.metadata?.youtube?.total_views) {
+    parts.push(`youtube total views: ${artist.metadata.youtube.total_views >= 1000000 ? (artist.metadata.youtube.total_views / 1000000).toFixed(1) + 'M' : artist.metadata.youtube.total_views >= 1000 ? (artist.metadata.youtube.total_views / 1000).toFixed(1) + 'K' : artist.metadata.youtube.total_views}`);
+  }
+  // Wikipedia extract snippet
+  if (artist.metadata?.wikipedia?.extract) {
+    parts.push(`wikipedia: ${artist.metadata.wikipedia.extract.substring(0, 200)}`);
+  }
   if (artist.careerDays > 0) {
     const years = Math.floor(artist.careerDays / 365);
     const months = Math.floor((artist.careerDays % 365) / 30);
@@ -375,6 +386,7 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     careerDays,
     daysSinceLastTrack,
     trackTitles: trackTitles.map((t: any) => t.title),
+    metadata: artist.metadata,
   };
 }
 

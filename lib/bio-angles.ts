@@ -49,6 +49,8 @@ export interface ArtistData {
   daysSinceLastTrack: number;
   /** Up to 10 track titles for genre inference + bio detail */
   trackTitles: string[];
+  /** Enriched metadata from Bandcamp, Wikipedia, YouTube */
+  metadata?: any;
 }
 
 // ─── Scoring function ────────────────────────────────────────
