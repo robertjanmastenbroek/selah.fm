@@ -134,62 +134,28 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
     }
   }, [open, fetchConversations]);
 
-  // ── Real-time: SSE stream + polling fallback ────────────────
-  const sseRef = useRef<EventSource | null>(null);
+  // ── Polling (no SSE) + typing indicator ─────────────────
   useEffect(() => {
     if (!activeConv?.other_id || !open) {
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-      if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
+      if (typingPollRef.current) { clearInterval(typingPollRef.current); }
       return;
     }
 
-    // Initial fetch
+    // Fetch messages + typing
     fetchMessages(activeConv.other_id);
-
-    // Try SSE for real-time updates
-    try {
-      const es = new EventSource(`/api/messages/stream?with=${activeConv.other_id}`, { withCredentials: true });
-      sseRef.current = es;
-
-      es.addEventListener('messages', (e: MessageEvent) => {
-        try {
-          const data = JSON.parse(e.data);
-          if (data.messages?.length > 0) {
-            // Merge: keep local optimistic messages not yet confirmed by server
-            const serverIds = new Set(data.messages.map((m: any) => m.id));
-            setMessages(prev => {
-              const localOnly = prev.filter(m => m.id.startsWith('opt-') && !serverIds.has(m.id));
-              return localOnly.length > 0 ? [...data.messages, ...localOnly] : data.messages;
-            });
-            setOwnUserId(data.messages.find((m: any) => m.sender_id !== activeConv.other_id)?.sender_id || '');
-          }
-        } catch {}
-      });
-
-      es.onerror = () => {
-        // SSE failed — fall back to polling
-        es.close();
-        sseRef.current = null;
-        pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 15000);
-      };
-    } catch {
-      // SSE not supported — fall back to polling
-      pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 15000);
-    }
-
-    // Poll for typing indicator every 3s
     const pollTyping = () => {
       if (!activeConv) return;
       fetch(`/api/messages/typing?with=${activeConv.other_id}`, { credentials: 'include' })
-        .then(r => r.json())
-        .then(d => setOtherTyping(d.typing || false))
-        .catch(() => setOtherTyping(false));
+        .then(r => r.json()).then(d => setOtherTyping(d.typing || false)).catch(() => setOtherTyping(false));
     };
     pollTyping();
+
+    // Poll both on interval
+    pollRef.current = setInterval(() => fetchMessages(activeConv.other_id), 5000);
     typingPollRef.current = setInterval(pollTyping, 3000);
 
     return () => {
-      if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
       if (typingPollRef.current) { clearInterval(typingPollRef.current); }
     };
