@@ -6,8 +6,10 @@ import { createBrowserClient } from '@supabase/ssr';
  * Uses the singleton pattern to avoid creating multiple instances.
  */
 export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error('Supabase client initialized without URL or ANON_KEY');
+  }
+  return createBrowserClient(url, key);
 }

@@ -35,3 +35,11 @@ jobs:
           GOOGLE_CLIENT_SECRET: dummy
           STRIPE_SECRET_KEY: sk_test_dummy
           NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_dummy
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+          SUPABASE_DATABASE_URL: postgresql://dummy:dummy@localhost:5432/postgres
+          SUPABASE_SERVICE_ROLE_KEY: placeholder
+          CRON_SECRET: ci-test-cron-secret
+          RESEND_API_KEY: re_placeholder
+          RESEND_AUDIENCE_ID: dummy
+          DEEPSEEK_API_KEY: sk-dummy-key-for-ci

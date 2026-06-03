@@ -1,109 +1,257 @@
-# Selah.fm — Chat System Audit
-**Date:** 2026-06-03
-**Goal:** World-class messaging — match WhatsApp/Telegram quality
+# Selah.fm Chat System — Research & Audit
+
+## Reference Platforms
+
+| Platform | Daily Active Users | Key UX Pattern | Why It Works |
+|----------|-------------------|----------------|--------------|
+| WhatsApp | 2B+ | Sparse list, green/white bubbles, input always visible | Minimal cognitive load, predictable layout |
+| Telegram | 800M+ | Feature-rich but clean — edit, delete, reply, emoji, pinned | Power features behind taps, not in your face |
+| iMessage | 1B+ | Full-bleed bubbles, no container boxes, tapbacks | Feels native on every Apple device |
+| Discord | 200M+ | Sidebar channels, inline replies, message actions on hover | Server-first, but DMs use standard chat pattern |
+| Signal | 40M+ | Strong privacy cues, disappearing messages, contact avatars | Trust signals built into every interaction |
+
+## Common Architecture (All Major Chat Apps)
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Header: Back, Avatar/Name, Typing/Call buttons     │  ← Sticky top
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  Messages Area (flex-1, overflow-y-auto)            │  ← Scrollable
+│  ┌───────────────────────────────────────────────┐  │
+│  │  Date separator: Monday                       │  │
+│  │  ┌──────────────┐ ┌──────────────────────┐    │  │
+│  │  │ Their bubble │ │  My bubble  ✓✓ │    │  │
+│  │  └──────────────┘ └──────────────────────┘    │  │
+│  │  "is typing..."                               │  │
+│  └───────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────┤
+│  Input Bar: TextArea + Send (sticky bottom)         │  ← Sticky bottom
+│  [type a message...                     ] [➤]       │
+└─────────────────────────────────────────────────────┘
+```
+
+## Audit: Where We Went Wrong
+
+### 1. Architecture — Wrong Foundation
+
+**Problem:** We built `pages/messages/page.tsx` as a single flat component with TWO layout modes (mobile vs desktop) controlled by a `useState<boolean>`. Every state change triggers a re-render of both panels.
+
+**WhatsApp/Telegram do:** Separate `ConversationList` and `MessageThread` components that mount/unmount independently. No shared state besides the selected conversation ID.
+
+**Our cost:** When the user types a message, the entire page re-renders including:
+- The conversation list (unnecessary, it's behind a motion animation)
+- The header 
+- All previous messages
+- The input area
+
+**Fix for v2:** Split into `<ConversationList>` and `<MessageThread>` that communicate via a query parameter or context.
+
+### 2. Layout — Overlapping Panels on Mobile
+
+**Problem:** We use `absolute inset-0 z-10/z-20` to overlap panels on mobile. This requires careful z-index management and creates visual flickering during transitions.
+
+**WhatsApp does:** Each screen is a separate `Route` in the navigation stack. On mobile, list and thread are NEVER visible at the same time. On desktop, they're side-by-side via CSS grid.
+
+**Fix for v2:** Use React Router's stack navigation for mobile (like `react-stack-router`), or simply mount/unmount the two panels. No overlapping absolute positioning.
+
+### 3. SSE — Wrong Approach for Serverless
+
+**Problem:** We use SSE on Railway serverless. Railway functions have a hard 60s max duration and cold-start latency. SSE connections time out constantly.
+
+**Real-time approach:** Polling is the correct approach for serverless. WhatsApp Web uses WebSocket because they have persistent servers. We should optimize polling (3s interval, abort on navigation) and add client-side optimistic updates.
+
+**Why SSE is wrong here:**
+- Railway kills functions after 60s
+- Cold starts mean 1-3s delay on reconnect
+- SSE creates a long-lived DB connection per user (costly)
+- SSE is uni-directional (can't push to server)
+
+**Fix:** Remove SSE entirely. Use 5s polling with `AbortSignal.timeout`. The 3s vs 5s latency difference is imperceptible. Add optimistic updates for instant UX.
+
+### 4. State Management — Too Many Moving Parts
+
+**Current state variables (18):**
+```
+loading, messages, conversations, input, selectedUser, sending, currentUserId,
+unreadTotal, preselectLoading, showList, isMobile, otherTyping, sendError,
+sseRef.current, pollRef.current, typingTimerRef.current, typingPollRef.current, msgEndRef
+```
+
+**WhatsApp internal model:** Each conversation has a `Message[]` array. The UI re-renders individual message bubbles, not the whole page.
+
+**Fix for v2:** Use `useReducer` for message state, separate concerns into custom hooks (`useMessages`, `useConversations`, `useInput`).
+
+### 5. NewMessageButton — Modal Complexity Overload
+
+**Problem:** The "New" button opens a modal with:
+- Live search (debounced 200ms, calls API)
+- Autocomplete dropdown (z-index clipping issues)
+- Selected user preview
+- "Message" button that navigates
+
+**WhatsApp does:** A simple push-to-screen with a search bar at the top. No modal, no autocomplete. Just a search input and a filtered contact list.
+
+**Fix:** Remove the modal. Replace with a full-screen search (mobile) or sidebar overlay (desktop). Or keep the modal but make it MUCH simpler — just a search input + contact results.
+
+### 6. Error Handling — Silent Failures
+
+**Problem:** We fixed `.catch(() => {})` with `.catch(e => console.error(...))` but that's still not user-visible. When an API call fails, the message silently disappears and the text comes back.
+
+**WhatsApp does:** Shows a red exclamation mark next to the failed message. User can tap to retry. No input restoration — the failed message stays visible.
+
+**Fix:** Keep failed messages in the list with a red ❗ indicator. Add a retry handler. Remove the `setInput(text)` restore — the user might have typed something new.
+
+### 7. Conversation List — Doesn't Surface Creator Stats
+
+**Problem:** The conversation list only shows `display_name` and last message. No context about who this person is.
+
+**Discord does:** Shows user's role, status (online/offline), and mutual servers.
+
+**Fix for v2:** Add user type badges (🎵Artist, 📹Creator), online status dots, and mutual campaign count to the conversation list.
+
+### 8. Typing Indicator — Extra Network Calls
+
+**Problem:** Every keystroke fires a `POST /api/messages/typing`. On a single message, that's 3-5 network calls.
+
+**WhatsApp does:** Batches typing status locally. Only sends a packet every 3-5 seconds, not on every keystroke.
+
+**Fix:** Debounce the typing POST to 3s intervals. Use a `lastTypingSent` ref to avoid duplicate calls.
+
+### 9. Edit/Delete — Confirmation Overhead
+
+**Problem:** Edit uses `prompt()` (browser dialog). Delete uses `confirm()`.
+
+**Telegram does:** Tap-and-hold → context menu → Edit → inline text field replaces the bubble. No prompt() dialogs.
+
+**Fix:** Replace `prompt()` with an inline text editor that replaces the message bubble. Replace `confirm()` with a subtle undo banner ("Message deleted · Undo").
+
+### 10. No Keyboard Shortcuts
+
+**Problem:** Only Enter to send. Nothing else.
+
+**iMessage/Telegram offer:**
+- Shift+Enter = new line (we have this ✅)
+- Esc = clear input / close context menu
+- Cmd+K = search conversations
+- Up arrow = edit last message
 
 ---
 
-## Current Architecture
+## Target Architecture for v2
 
-Two separate chat interfaces:
+### Component Tree
 
-### 1. Messages Page (`/messages`)
-- Full-page layout: conversation list (left) + message thread (right)
-- Polling every 10s for new messages
-- Optimistic sends via `temp-{timestamp}` IDs
-- SSE endpoint exists but not wired to this page
+```
+MessagesPage
+├── ConversationList (left panel / full-screen on mobile)
+│   ├── ConversationListHeader ("Messages" + "New" button)
+│   └── ConversationItems (scrollable, each with avatar + name + last msg)
+│
+└── MessageThread (right panel / full-screen on mobile)
+    ├── ThreadHeader (back button, avatar, name, typing)
+    ├── MessagesArea (scrollable, virtualized for 100s of messages)
+    │   ├── DateSeparator
+    │   ├── MessageBubble (left-aligned for theirs, right-aligned for mine)
+    │   └── FailedBanner (red retry bar at bottom)
+    └── InputBar (textarea + send button)
+```
 
-### 2. ChatWidget (Floating overlay)
-- Float bubble on right side of every page
-- SSE connection for real-time delivery
-- Polling fallback every 15s
-- Optimistic sends via `opt-{timestamp}` IDs
+### Mobile Navigation
 
-### API Endpoints
-- `GET /api/messages` — list conversations
-- `GET /api/messages?with=USER_ID` — get messages for a conversation
-- `POST /api/messages` — send a message
-- `PATCH /api/messages` — mark messages as read
-- `GET /api/messages/stream?with=USER_ID` — SSE for real-time
+```
+ConversationList (full screen)
+  → tap conversation → slide left
+  → MessageThread (full screen)
+  ← tap back arrow → slide right
+  → ConversationList
+```
+
+### State as useReducer
+
+```typescript
+type MessageState = {
+  conversations: Conversation[];
+  messages: Message[];
+  selectedUserId: string | null;
+  currentUserId: string;
+  sending: boolean;
+  failedMessages: Set<string>;  // message ids that failed
+};
+```
+
+### Real-time (No SSE)
+
+```typescript
+// Simple polling with optimistic updates
+useEffect(() => {
+  if (!selectedUser) return;
+  const interval = setInterval(async () => {
+    const res = await fetch(`/api/messages?with=${selectedUser.id}`, { 
+      signal: AbortSignal.timeout(5000) 
+    });
+    // Merge with existing optimistic messages
+  }, 5000);
+  return () => clearInterval(interval);
+}, [selectedUser]);
+```
+
+### Error Handling
+
+```typescript
+// Keep failed messages visible with retry
+interface Message {
+  id: string;
+  content: string;
+  status: 'sending' | 'sent' | 'failed';
+}
+```
+
+### Files to Create v2
+
+| File | Purpose |
+|------|---------|
+| `app/messages/ConversationList.tsx` | Left panel component |
+| `app/messages/MessageThread.tsx` | Right panel component |
+| `app/messages/hooks/useMessages.ts` | Message state reducer + fetch |
+| `app/messages/hooks/useInput.ts` | Input state + typing indicator |
+| `app/messages/MessageBubble.tsx` | Single bubble (handles send/read/delivery) |
+| `app/messages/InputBar.tsx` | Textarea + send + attachments |
+
+### What to Keep
+
+- ✔ Optimistic message creation (temp IDs)
+- ✔ Date separators with Today/Yesterday
+- ✔ Delivery status (◌/✓/✓✓)
+- ✔ Edit/delete own messages
+- ✔ Typing indicator
+- ✔ User search for new conversations
+- ✔ Container scroll (not page scroll)
+
+### What to Remove
+
+- ❌ SSE entirely (replace with 5s polling)
+- ❌ NewMessageButton modal (replace with simple full-screen search)
+- ❌ `prompt()` and `confirm()` dialogs (replace with inline edit + undo)
+- ❌ useRef-based sending guard (use reducer state instead)
+- ❌ Motion/AnimatePresence on every message render (expensive on long convos)
+- ❌ `catch {}` that silently swallow errors
 
 ---
 
-## Bugs Found & Fixed Today
+## Summary of Changes Needed
 
-| # | Bug | Fix | Status |
-|---|-----|-----|--------|
-| 1 | **Polling overwrites optimistic messages** — 15s poll fires between optimistic add and POST response, deleting the message from the UI | Both `MessagesPage` and `ChatWidget` now merge optimistic messages (`temp-*`/`opt-*` IDs) when polling/SSE replaces state | ✅ |
-| 2 | **scrollIntoView scrolls the page** — Auto-scroll pushed the thread header off-screen on desktop | Changed to `messagesRef.scrollTop = scrollHeight` on the messages container | ✅ |
-| 3 | **SSE sends diffs instead of full state** — ChatWidget did `setMessages(diff)` which replaced the entire conversation with just 1 new message | SSE now sends the full message list; ChatWidget merges with optimistic state | ✅ |
-| 4 | **No date separators** — No "Today"/"Yesterday" headers between messages | Added WhatsApp-style date separators with horizontal rules | ✅ |
-| 5 | **No delivery indicators** — No "sending/sent/delivered" status on messages | Added ◌ (sending) / ✓ (sent) / ✓✓ (read) inline indicators | ✅ |
+| Area | Current | Target | Effort |
+|------|---------|--------|--------|
+| Component structure | Single 700-line file | 6 focused files | 2h |
+| Real-time | SSE (broken) | 5s polling (stable) | 30min |
+| State | 18 useState | 1 useReducer + 3 hooks | 1h |
+| Mobile layout | absolute z-index overlap | full-screen stack | 1h |
+| New message | Modal with autocomplete | Simple full-screen search | 30min |
+| Error handling | `.catch(console.error)` | Red ❗ + retry button | 1h |
+| Edit/delete | `prompt()` / `confirm()` | Inline edit + undo | 1h |
+| Conversation list | Name only | Name + badges + status | 30min |
+| Typing indicator | Every keystroke | 3s debounced batch | 15min |
 
----
+**Total: ~7.5h for a complete rewrite**
 
-## Gaps vs WhatsApp/Telegram (Remaining)
-
-| Feature | WhatsApp | Telegram | Selah (Current) | Priority |
-|---------|----------|----------|-----------------|----------|
-| **Real-time delivery** | WebSocket (instant) | WebSocket (instant) | SSE (3s delay) + polling (10s) | P0 |
-| **Typing indicators** | ✅ Shows when they're typing | ✅ Shows when they're typing | ❌ Not implemented | P1 |
-| **Read receipts** | ✓✓ blue ticks | ✓✓ blue ticks | ✓ (read=true from state, not real-time) | P1 |
-| **Message status** | Single ✓ / Double ✓✓ / Blue ✓✓ | Single ✓ / Double ✓✓ / Blue ✓✓ | ◌ / ✓ / ✓✓ (inline, basic) | P2 |
-| **Attachment support** | Images, video, voice, docs | Images, video, voice, docs, files | ❌ Text only | P2 |
-| **Reply to message** | ✅ Swipe to reply | ✅ Tap to reply | ❌ Not implemented | P3 |
-| **Message search** | ✅ Global search | ✅ Global + per-chat | ❌ Not implemented | P3 |
-| **Group chats** | ✅ Yes | ✅ Yes | ❌ Not implemented | P3 |
-| **Emoji reactions** | ✅ To individual messages | ✅ To individual messages | ❌ Not implemented | P3 |
-| **Voice messages** | ✅ Built-in recorder | ✅ Built-in recorder | ❌ Not implemented | P3 |
-| **Message editing/deletion** | ✅ Edit within 15m, delete for everyone | ✅ Edit anytime, delete for everyone | ❌ Can't edit or delete | P2 |
-| **End-to-end encryption** | ✅ Default | ✅ Optional secret chats | ❌ Not implemented | P4 |
-| **Push notifications** | ✅ Native push | ✅ Native push | ❌ Only email digest (daily) | P1 |
-| **Online/offline status** | ✅ Shows last seen | ✅ Shows last seen | ❌ Not implemented | P2 |
-| **Conversation search** | ✅ Yes | ✅ Yes | ❌ Not implemented | P3 |
-
----
-
-## Priority Plan
-
-### Phase 1: Core Reliability (Done — Deployed)
-- ✅ Fix optimistic message race condition (polling + SSE)
-- ✅ Fix scroll behavior (container scroll, not page scroll)
-- ✅ Add date separators (Today/Yesterday/Date)
-- ✅ Add delivery status (sending/sent/delivered)
-
-### Phase 2: Real-Time Parity (This week)
-1. **Wire SSE to Messages Page** — Connect `/messages` page to the SSE stream instead of polling
-2. **Typing indicators** — `POST /api/messages/typing` + display "is typing..." in thread header
-3. **Real-time read receipts** — Push read status via SSE when messages are marked read
-4. **Push notifications** — Register service worker + web push API for message notifications
-
-### Phase 3: UX Polish (Next week)
-5. **Message actions** — Long-press/right-click menu: copy, edit, delete
-6. **Conversation search** — Search within conversations
-7. **Reply threading** — Swipe to reply on mobile, tap on desktop
-8. **Emoji picker** — Inline emoji picker for messages
-
-### Phase 4: Feature Parity (Future)
-9. **Image/file sharing** — Upload images via existing ImageUpload component
-10. **Voice messages** — Record and send audio
-11. **Online status** — Show when users were last online
-12. **Group conversations** — Multi-user chat rooms
-
----
-
-## Key Technical Improvements Needed
-
-### Wire SSE to Messages Page
-Currently only ChatWidget uses SSE. The Messages page uses 10s polling.
-**Add:** Connect to SSE in Messages page when a conversation is active.
-**File:** `app/messages/page.tsx` — add EventSource connection similar to ChatWidget.
-
-### Persistent Typing Indicator
-**Add:** `POST /api/messages/typing` endpoint that stores typing status in Redis or a DB table with TTL.
-**Client:** On keystroke in input field, fire POST every 3s. Display indicator when other user is typing.
-**Cleanup:** TTL auto-expires after 5s of no keystrokes.
-
-### Web Push Notifications
-**Add:** Service worker registration → push subscription → send notification on message.
-**Backend:** Use web push API (`web-push` npm package) or Resend for email fallback.
-**Note:** Push notifications require HTTPS and a registered service worker.
