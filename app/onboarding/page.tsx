@@ -13,6 +13,15 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [role, setRole] = useState<'artist'|'creator'|null>(null);
+  // Read role from URL param (passed from signup) to skip duplicate step
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get('role');
+    if (roleParam === 'artist' || roleParam === 'creator') {
+      setRole(roleParam);
+      setStep(1); // Skip role selection step
+    }
+  }, []);
   const [name, setName] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
   const [platforms, setPlatforms] = useState<string[]>([]);

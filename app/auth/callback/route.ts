@@ -78,9 +78,10 @@ export async function GET(request: Request) {
           `;
         }
         
-        // New user or never completed onboarding → onboarding flow
+        // New user or never completed onboarding → onboarding flow with role
         if ((!existing || !existing.onboarded_at) && next === '/browse') {
-          finalUrl = new URL('/onboarding', origin);
+          const userType = user.user_metadata?.user_type || user.user_metadata?.is_artist ? 'artist' : 'creator';
+          finalUrl = new URL(`/onboarding?role=${userType}`, origin);
         }
       } catch {
         // DB query failed — still redirect to onboarding to be safe

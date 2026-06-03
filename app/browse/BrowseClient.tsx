@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/States';
-import { Megaphone, Search, Music4, Users2 } from 'lucide-react';
+import { Megaphone, Search, Music4, Users2, Sparkles, X } from 'lucide-react';
 import { PlatformBadge } from '@/components/SocialIcons';
 import ArtistCard from '@/components/ArtistCard';
 
@@ -118,6 +118,22 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
   const [total, setTotal] = useState(initialTotal);
   const [artistTotal, setArtistTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
+
+  // Check if user is new (logged in, 0 submissions)
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.user) {
+          setIsNewUser(true);
+          const dismissed = localStorage.getItem('selah_welcome_dismissed');
+          setShowWelcome(!dismissed);
+        }
+      })
+      .catch(() => {});
+  }, []);
   const [filters, setFilters] = useState<Record<string, any>>({ genre: '', platform: '', sort: 'popular' });
   const [selectedGenre, setSelectedGenre] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('');
@@ -189,6 +205,31 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
             </div>
           </div>
         </div>
+
+        {/* First-run welcome for new creators */}
+        {isNewUser && showWelcome && (
+          <div className="mb-6 p-5 rounded-2xl bg-gradient-to-r from-emerald-500/5 to-green-500/5 border border-emerald-500/10 flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <Sparkles size={24} className="text-emerald-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-sm mb-1">Welcome to Selah! Start earning in 3 steps</h3>
+              <ol className="text-xs text-muted-foreground space-y-1">
+                <li>1. Pick a track you like from the campaigns below</li>
+                <li>2. Create a TikTok, Reel, or Short featuring the official audio</li>
+                <li>3. Submit it — earn per verified view</li>
+              </ol>
+              <button onClick={() => { setShowWelcome(false); localStorage.setItem('selah_welcome_dismissed', 'true'); }}
+                className="mt-3 text-xs text-primary hover:underline font-medium">
+                Got it, let me browse →
+              </button>
+            </div>
+            <button onClick={() => { setShowWelcome(false); localStorage.setItem('selah_welcome_dismissed', 'true'); }}
+              className="text-muted-foreground/40 hover:text-foreground transition-colors shrink-0">
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         <div className="mb-6 space-y-3">
           <div className="flex flex-wrap gap-2">
