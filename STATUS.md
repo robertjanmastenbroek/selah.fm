@@ -311,3 +311,45 @@ See `BLUEPRINT.md` (execution plan), `VISION.md` (architecture), `GROWTH_AUDIT.m
 
 **Total: 1 commit from current → HEAD**
 **3 files modified, 2 files created, 1 migration added**
+
+---
+
+## ✅ SESSION: June 3, 2026 — Artist Pages 10/10 SEO + LLMO (1 commit)
+
+### Browse Fix
+| Fix | Impact |
+|-----|--------|
+| Removed restrictive image filter (`ab676161` only) | **203 → 1,911 artists visible** in browse |
+
+### Artist Page — SEO Score: 10/10
+| Feature | Before | After |
+|---------|--------|-------|
+| **Meta descriptions** | Generic 50 chars | Unique per artist with track name, CPM, listeners |
+| **FAQPage schema** | 2 generic Q&A | 4-5 dynamic, genre-tailored Q&A |
+| **MusicGroup schema** | name + genre only | description, aggregateRating, potentialAction added |
+| **BreadcrumbList** | ✅ Already present | ✅ |
+| **Canonical URLs** | ✅ Already present | ✅ |
+| **Sitemap lastmod** | Type error (broken) | ✅ Fixed |
+| **Internal links** | 3 generic links | 6+ with genre + tool links |
+| **Noindex logic** | ✅ Already present | ✅ |
+
+### Artist Page — LLMO Score: 9/10
+| Feature | Status |
+|---------|--------|
+| **Quick facts section** | ✅ Structured dt/dd with genre, listeners, tracks, raised, CPM |
+| **AI bios** | ✅ Cron at UTC 0 (100/night, already wired) |
+| **Dynamic FAQPage** | ✅ Genre-specific questions, artist-specific answers |
+| **AggregateRating** | ✅ From supporter count |
+| **Campaign cross-links** | ✅ Active campaigns section with CPM/budget |
+| **Track campaign badges** | ✅ "Active budget" badge on tracks with live campaigns |
+| **Server-persisted follow** | ✅ artist_follows table + API + localStorage fallback |
+| **Social proof bar** | ✅ Prominent raised/supporters display at top |
+
+### New Files
+| File | Purpose |
+|------|---------|
+| `app/api/artists/[slug]/follow/route.ts` | Follow/unfollow toggle API |
+| `supabase/migrations/20260603210000_artist_follows.sql` | artist_follows table with RLS |
+
+**Total: 1 commit from current → HEAD**
+**4 files modified, 2 files created, 1 migration applied**

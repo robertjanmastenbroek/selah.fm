@@ -325,6 +325,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 {[
                   { label: 'Genre', value: genres.slice(0, 3).join(', ') || '—' },
                   { label: 'Monthly listeners', value: listeners > 0 ? `${listeners >= 1000 ? (listeners / 1000).toFixed(1) + 'K' : listeners}` : '—' },
+                  { label: 'Total followers', value: artist.total_followers > 0 ? `${artist.total_followers >= 1000 ? (artist.total_followers / 1000).toFixed(1) + 'K' : artist.total_followers}` : '—' },
+                  { label: 'Total streams', value: artist.total_streams > 0 ? `${artist.total_streams >= 1000000 ? (artist.total_streams / 1000000).toFixed(1) + 'M' : artist.total_streams >= 1000 ? (artist.total_streams / 1000).toFixed(1) + 'K' : artist.total_streams}` : '—' },
                   { label: 'Tracks on Selah.fm', value: stats.total_tracks },
                   { label: 'Total raised', value: `$${(totalDonations / 100).toFixed(0)}` },
                   { label: 'Supporters', value: supporterCount || '—' },
