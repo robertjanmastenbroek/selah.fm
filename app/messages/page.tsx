@@ -32,8 +32,16 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
       setSearching(true);
+      const trimmed = query.trim();
       try {
-        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query.trim())}`, { credentials: 'include' });
+        let url;
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
+          // Looks like a UUID — search by ID
+          url = `/api/users/search?id=${encodeURIComponent(trimmed)}`;
+        } else {
+          url = `/api/users/search?q=${encodeURIComponent(trimmed)}`;
+        }
+        const res = await fetch(url, { credentials: 'include' });
         const data = await res.json();
         setSuggestions(data.users || []);
         setShowDropdown(true);
@@ -80,16 +88,17 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
                 <button onClick={() => { setOpen(false); setQuery(''); setSelectedUser(null); setSuggestions([]); setShowDropdown(false); }}
                   className="p-1 rounded-lg hover:bg-white/[0.06] transition-colors"><X size={18} className="text-muted-foreground" /></button>
               </div>
-              <p className="text-xs text-muted-foreground">Select a user below or search by name to start a conversation.</p>
+              <p className="text-xs text-muted-foreground">Search by name or paste a user ID to start a conversation.</p>
               
               {/* Live search input with autocomplete */}
               <div className="relative">
                 <div className="flex gap-2">
                   <Input value={query}
-                    onChange={e => { setQuery(e.target.value); setSelectedUser(null); setShowDropdown(false); }}
+                    onChange={e => { setQuery(e.target.value); setSelectedUser(null); }}
                     placeholder="Search by name..."
                     className="flex-1 text-sm rounded-xl h-11 bg-white/[0.04] border-white/[0.06]"
                     autoFocus
+                    onFocus={() => { if (suggestions.length > 0) setShowDropdown(true); }}
                   />
                   {searching && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="w-5 h-5 border-2 border-[#4338CA]/30 border-t-[#4338CA] rounded-full animate-spin" /></div>}
                 </div>
