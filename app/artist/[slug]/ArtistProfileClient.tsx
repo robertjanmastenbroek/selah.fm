@@ -10,6 +10,7 @@ import ArtistEmbed from '@/components/ArtistEmbed';
 import SubmissionReactions from '@/components/SubmissionReactions';
 import SubmitVideoModal from '@/components/SubmitVideoModal';
 import ArtistCard from '@/components/ArtistCard';
+import ArtistStreamingStats from '@/components/ArtistStreamingStats';
 import { getArtistLinks } from '@/lib/internal-links';
 
 interface ArtistProps {
@@ -62,6 +63,16 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
   const supporterCount = stats.supporter_count || 0;
   const topCpm = tracks[0]?.cpm_rate_cents ? (tracks[0].cpm_rate_cents / 100).toFixed(2) : null;
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('tracks');
+  const [streamingStats, setStreamingStats] = useState<any>(null);
+
+  // Fetch streaming stats on mount
+  useEffect(() => {
+    fetch(`/api/artist/${slug}/refresh`, { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { if (!d.error) setStreamingStats(d); })
+      .catch(() => {});
+  }, [slug]);
 
   // Follow state (server-persisted + localStorage fallback)
   const [following, setFollowing] = useState(false);
@@ -312,155 +323,192 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
         {/* ════════════════════════════════════════════════ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* ── LEFT COLUMN: About + Tracks + Activity + Videos + Comments ── */}
-          <div className="lg:col-span-2 space-y-10">
+          {/* ── LEFT COLUMN: Tabbed content (Tracks / Activity / About / Comments) ── */}
+          <div className="lg:col-span-2">
+            {/* Tab bar */}
+            <div className="flex border-b border-white/[0.06] mb-6 overflow-x-auto">
+              {[
+                { id: 'tracks', label: 'Tracks', icon: <Music size={13} /> },
+                { id: 'activity', label: 'Activity', icon: <BarChart3 size={13} /> },
+                { id: 'about', label: 'About', icon: <Users size={13} /> },
+                { id: 'comments', label: 'Comments', icon: <MessageCircle size={13} /> },
+              ].map(tab => (
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${
+                    activeTab === tab.id ? 'text-white' : 'text-muted-foreground hover:text-white/70'
+                  }`}>
+                  {tab.icon}
+                  {tab.label}
+                  {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />}
+                </button>
+              ))}
+            </div>
 
-            {/* Quick facts — LLM-friendly data block */}
-            <section className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-5">
-              <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <Sparkles size={14} className="text-amber-400" />
-                Quick facts about {name}
-              </h2>
-              <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {[
-                  { label: 'Genre', value: genres.slice(0, 3).join(', ') || '—' },
-                  { label: 'Monthly listeners', value: listeners > 0 ? `${listeners >= 1000 ? (listeners / 1000).toFixed(1) + 'K' : listeners}` : '—' },
-                  { label: 'Total followers', value: artist.total_followers > 0 ? `${artist.total_followers >= 1000 ? (artist.total_followers / 1000).toFixed(1) + 'K' : artist.total_followers}` : '—' },
-                  { label: 'Total streams', value: artist.total_streams > 0 ? `${artist.total_streams >= 1000000 ? (artist.total_streams / 1000000).toFixed(1) + 'M' : artist.total_streams >= 1000 ? (artist.total_streams / 1000).toFixed(1) + 'K' : artist.total_streams}` : '—' },
-                  { label: 'Tracks on Selah.fm', value: stats.total_tracks },
-                  { label: 'Total raised', value: `$${(totalDonations / 100).toFixed(0)}` },
-                  { label: 'Supporters', value: supporterCount || '—' },
-                  { label: 'Top CPM', value: topCpm ? `$${(parseFloat(topCpm) * 1000).toFixed(0)}/1M views` : '—' },
-                ].map(f => (
-                  <div key={f.label}>
-                    <dt className="text-[10px] text-muted-foreground uppercase tracking-wider">{f.label}</dt>
-                    <dd className="text-sm font-semibold mt-0.5">{f.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-
-            {/* About section */}
-            {bio && (
-              <section>
-                <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Users size={14} className="text-muted-foreground" />
-                  About {name}
-                </h2>
-                <p className="text-sm text-muted-foreground/70 leading-relaxed">{bio}</p>
-              </section>
-            )}
-
-            {/* Tracks with sorting */}
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold flex items-center gap-2">
-                  <Music size={14} className="text-muted-foreground" />
-                  Tracks by {name}
-                </h2>
-                <div className="flex items-center gap-1 bg-white/[0.03] rounded-lg p-0.5">
-                  {(['cpm', 'newest'] as const).map(s => (
-                    <button key={s} onClick={() => setSortBy(s)}
-                      className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
-                        sortBy === s ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground'
-                      }`}>
-                      {s === 'cpm' ? 'Highest CPM' : 'Newest'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {sortedTracks.length === 0 ? (
-                <p className="text-sm text-muted-foreground/50 py-6 text-center">
-                  No tracks listed yet. Check back soon.
-                </p>
-              ) : (
-                <div className="grid gap-2">
-                  {sortedTracks.map((track: any) => {
-                    const cpm = track.cpm_rate_cents ? (track.cpm_rate_cents / 100).toFixed(2) : '0.00';
-                    const hasActiveCampaign = campaigns.some((c: any) =>
-                      c.track_title?.toLowerCase() === track.track_title?.toLowerCase()
-                    );
-                    return (
-                      <div key={track.id}
-                        className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-primary/15 transition-all">
-                        {/* Cover */}
-                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0">
-                          {track.cover_art_url ? (
-                            <img src={track.cover_art_url} alt={track.track_title} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center"><Music size={16} className="text-white/10" /></div>
-                          )}
-                        </div>
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold truncate">
-                            {track.track_title}
-                            {hasActiveCampaign && (
-                              <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                Active budget
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                            <span className="text-emerald-400 font-medium">${(parseFloat(cpm) * 1000).toFixed(0)}/1M views</span>
-                            {track.submissions_count > 0 && <span className="ml-2">· {track.submissions_count} submissions</span>}
-                            {track.total_views > 0 && <span className="ml-2">· {track.total_views >= 1000 ? (track.total_views / 1000).toFixed(1) + 'K' : track.total_views} views</span>}
-                          </p>
-                        </div>
-                        {/* Action */}
-                        {hasActiveCampaign ? (
-                          <Link href={`/c/${campaigns.find((c: any) => c.track_title?.toLowerCase() === track.track_title?.toLowerCase())?.slug || track.track_title}`}
-                            className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-primary/[0.04] transition-all shrink-0">
-                            Submit video
-                          </Link>
-                        ) : (
-                          <button onClick={() => setShowSubmitModal(true)}
-                            className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all shrink-0">
-                            Make content
-                          </button>
-                        )}
+            {/* ── TAB: Tracks ── */}
+            {activeTab === 'tracks' && (
+              <div className="space-y-4">
+                {/* Quick facts mini */}
+                <section className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-5">
+                  <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Sparkles size={14} className="text-amber-400" />
+                    Quick facts about {name}
+                  </h2>
+                  <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {[
+                      { label: 'Genre', value: genres.slice(0, 3).join(', ') || '—' },
+                      { label: 'Monthly listeners', value: listeners > 0 ? `${listeners >= 1000 ? (listeners / 1000).toFixed(1) + 'K' : listeners}` : '—' },
+                      { label: 'Followers', value: artist.total_followers > 0 ? `${artist.total_followers >= 1000 ? (artist.total_followers / 1000).toFixed(1) + 'K' : artist.total_followers}` : '—' },
+                      { label: 'Streams', value: artist.total_streams > 0 ? `${artist.total_streams >= 1000000 ? (artist.total_streams / 1000000).toFixed(1) + 'M' : artist.total_streams >= 1000 ? (artist.total_streams / 1000).toFixed(1) + 'K' : artist.total_streams}` : '—' },
+                      { label: 'Tracks', value: stats.total_tracks },
+                      { label: 'Raised', value: `$${(totalDonations / 100).toFixed(0)}` },
+                      { label: 'Supporters', value: supporterCount || '—' },
+                      { label: 'Top CPM', value: topCpm ? `$${(parseFloat(topCpm) * 1000).toFixed(0)}/1M views` : '—' },
+                    ].map(f => (
+                      <div key={f.label}>
+                        <dt className="text-[10px] text-muted-foreground uppercase tracking-wider">{f.label}</dt>
+                        <dd className="text-sm font-semibold mt-0.5">{f.value}</dd>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
+                    ))}
+                  </dl>
+                </section>
 
-            {/* Activity Feed */}
-            <ActivityFeed artistSlug={slug} />
-
-            {/* Recent Submissions Gallery */}
-            {recentSubmissions.length > 0 && (
-              <section>
-                <h2 className="text-sm font-semibold flex items-center gap-2 mb-4">
-                  <Video size={14} className="text-muted-foreground" />
-                  Recent Videos
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {recentSubmissions.map((sub: any) => (
-                    <div key={sub.id} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/15 transition-all group">
-                      <a href={sub.content_url} target="_blank" rel="noopener noreferrer"
-                        className="block aspect-[9/16] bg-black/40 flex items-center justify-center relative overflow-hidden">
-                        <Video size={24} className="text-white/30 group-hover:scale-110 transition-transform" />
-                      </a>
-                      <div className="p-3 space-y-2">
-                        <p className="text-[10px] text-muted-foreground/60 truncate">{sub.track_title}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground/40">
-                            {(sub.views_verified || 0) >= 1000 ? `${(sub.views_verified / 1000).toFixed(1)}K views` : `${sub.views_verified || 0} views`}
-                          </span>
-                          <SubmissionReactions submissionId={sub.id} initialCounts={sub.reactions_count ? { heart: sub.reactions_count } : {}} />
-                        </div>
-                      </div>
+                {/* Tracks with sorting */}
+                <section>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-semibold flex items-center gap-2">
+                      <Music size={14} className="text-muted-foreground" />
+                      Tracks by {name}
+                    </h2>
+                    <div className="flex items-center gap-1 bg-white/[0.03] rounded-lg p-0.5">
+                      {(['cpm', 'newest'] as const).map(s => (
+                        <button key={s} onClick={() => setSortBy(s)}
+                          className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                            sortBy === s ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground'
+                          }`}>
+                          {s === 'cpm' ? 'Highest CPM' : 'Newest'}
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </section>
+                  </div>
+
+                  {sortedTracks.length === 0 ? (
+                    <p className="text-sm text-muted-foreground/50 py-6 text-center">No tracks listed yet. Check back soon.</p>
+                  ) : (
+                    <div className="grid gap-2">
+                      {sortedTracks.map((track: any) => {
+                        const cpm = track.cpm_rate_cents ? (track.cpm_rate_cents / 100).toFixed(2) : '0.00';
+                        const hasActiveCampaign = campaigns.some((c: any) =>
+                          c.track_title?.toLowerCase() === track.track_title?.toLowerCase()
+                        );
+                        return (
+                          <div key={track.id}
+                            className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-primary/15 transition-all">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0">
+                              {track.cover_art_url ? (
+                                <img src={track.cover_art_url} alt={track.track_title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center"><Music size={16} className="text-white/10" /></div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold truncate">
+                                {track.track_title}
+                                {hasActiveCampaign && (
+                                  <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    Active budget
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                                <span className="text-emerald-400 font-medium">${(parseFloat(cpm) * 1000).toFixed(0)}/1M views</span>
+                                {track.submissions_count > 0 && <span className="ml-2">· {track.submissions_count} submissions</span>}
+                                {track.total_views > 0 && <span className="ml-2">· {track.total_views >= 1000 ? (track.total_views / 1000).toFixed(1) + 'K' : track.total_views} views</span>}
+                              </p>
+                            </div>
+                            {hasActiveCampaign ? (
+                              <Link href={`/c/${campaigns.find((c: any) => c.track_title?.toLowerCase() === track.track_title?.toLowerCase())?.slug || track.track_title}`}
+                                className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-primary/[0.04] transition-all shrink-0">
+                                Submit video
+                              </Link>
+                            ) : (
+                              <button onClick={() => setShowSubmitModal(true)}
+                                className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all shrink-0">
+                                Make content
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              </div>
             )}
 
-            {/* Comments */}
-            <PageComments pageType="artist" pageId={artist.id} />
+            {/* ── TAB: Activity ── */}
+            {activeTab === 'activity' && (
+              <div className="space-y-8">
+                {/* Streaming stats (from artist_metrics) */}
+                <ArtistStreamingStats data={streamingStats} />
+
+                {/* Activity Feed */}
+                <ActivityFeed artistSlug={slug} />
+
+                {/* Recent Submissions Gallery */}
+                {recentSubmissions.length > 0 && (
+                  <section>
+                    <h2 className="text-sm font-semibold flex items-center gap-2 mb-4">
+                      <Video size={14} className="text-muted-foreground" />
+                      Recent Videos
+                    </h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {recentSubmissions.map((sub: any) => (
+                        <div key={sub.id} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/15 transition-all group">
+                          <a href={sub.content_url} target="_blank" rel="noopener noreferrer"
+                            className="block aspect-[9/16] bg-black/40 flex items-center justify-center relative overflow-hidden">
+                            <Video size={24} className="text-white/30 group-hover:scale-110 transition-transform" />
+                          </a>
+                          <div className="p-3 space-y-2">
+                            <p className="text-[10px] text-muted-foreground/60 truncate">{sub.track_title}</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-muted-foreground/40">
+                                {(sub.views_verified || 0) >= 1000 ? `${(sub.views_verified / 1000).toFixed(1)}K views` : `${sub.views_verified || 0} views`}
+                              </span>
+                              <SubmissionReactions submissionId={sub.id} initialCounts={sub.reactions_count ? { heart: sub.reactions_count } : {}} />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+
+            {/* ── TAB: About ── */}
+            {activeTab === 'about' && (
+              <div className="space-y-6">
+                {bio && (
+                  <section>
+                    <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Users size={14} className="text-muted-foreground" />
+                      About {name}
+                    </h2>
+                    <p className="text-sm text-muted-foreground/70 leading-relaxed">{bio}</p>
+                  </section>
+                )}
+                {!bio && (
+                  <p className="text-sm text-muted-foreground/50 py-6 text-center">
+                    No bio yet. Check back soon.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* ── TAB: Comments ── */}
+            {activeTab === 'comments' && (
+              <PageComments pageType="artist" pageId={artist.id} />
+            )}
           </div>
 
           {/* ── RIGHT COLUMN: Related Artists + Embed + Claim + Cross-links ── */}
