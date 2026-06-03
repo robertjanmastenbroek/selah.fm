@@ -230,7 +230,7 @@ export async function POST(request: Request) {
 
       const [campaign] = await sql`
         INSERT INTO campaigns (track_title, track_url, cover_art_url, cpm_rate_cents, total_budget_cents, budget_remaining_cents, max_payout_per_submission_cents, status, slug, artist_id)
-        VALUES (${t.title}, ${t.url || null}, ${t.coverArt || null}, 10, 0, 0, 1000, 'draft', ${campaignSlug}, ${artist.id})
+        VALUES (${t.title}, ${t.url || null}, ${t.coverArt || null}, 10, 0, 0, 1000, 'draft', ${campaignSlug}, ${user.id})
         RETURNING id, slug
       `;
 
