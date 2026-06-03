@@ -299,10 +299,26 @@ async function loadArtistData(artistId: string): Promise<ArtistData | null> {
     daysSinceLastTrack = Math.floor((Date.now() - new Date(timeline.latest_track).getTime()) / 86400000);
   }
 
-  // Location from Bandcamp metadata
+  // Location from metadata (Bandcamp or Wikipedia)
   let locationCity = '';
   let locationCountry = '';
-  if (artist.metadata?.location) {
+  const wiki = artist.metadata?.wikipedia;
+  
+  // Try Wikipedia first (more authoritative)
+  if (wiki?.location && wiki.found !== false) {
+    const loc = wiki.location;
+    // "American" → country only, "Amsterdam, Netherlands" → city + country
+    const nationalityMatch = loc.match(/^(American|British|Canadian|Australian|German|French|Dutch|Swedish|Norwegian|Danish|Japanese|Brazilian|Irish|Scottish|Welsh|Italian|Spanish|Mexican|South African|Nigerian|Ghanaian|Kenyan)$/i);
+    if (nationalityMatch) {
+      locationCountry = nationalityMatch[1];
+    } else {
+      const parts = loc.split(',');
+      locationCity = parts[0]?.trim() || '';
+      locationCountry = parts[1]?.trim() || '';
+    }
+  }
+  
+  if (artist.metadata?.location && !locationCity && !locationCountry) {
     const loc = artist.metadata.location;
     if (typeof loc === 'string') {
       // "Amsterdam, Netherlands" format
