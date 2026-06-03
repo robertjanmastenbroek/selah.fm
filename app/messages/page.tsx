@@ -177,6 +177,7 @@ export default function MessagesPage() {
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [preselectLoading, setPreselectLoading] = useState(!!preselectedUser);
   const msgEndRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const pollRef = useRef<NodeJS.Timeout>();
 
@@ -247,8 +248,12 @@ export default function MessagesPage() {
     return () => clearInterval(pollRef.current);
   }, [selectedUser]);
 
-  // Auto-scroll
-  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  // Auto-scroll messages container (not the page — keeps thread header visible)
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const selectConversation = async (user: UserInfo) => {
     setSelectedUser(user);
@@ -416,7 +421,7 @@ export default function MessagesPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div ref={messagesRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.map((m, i) => {
                   const isMe = m.sender_id === currentUserId;
                   const showTimestamp = i === 0 || new Date(m.created_at).getTime() - new Date(messages[i-1].created_at).getTime() > 300000;
