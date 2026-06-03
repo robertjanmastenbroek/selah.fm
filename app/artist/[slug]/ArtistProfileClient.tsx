@@ -9,6 +9,7 @@ import PageComments from '@/components/PageComments';
 import ArtistEmbed from '@/components/ArtistEmbed';
 import SubmissionReactions from '@/components/SubmissionReactions';
 import SubmitVideoModal from '@/components/SubmitVideoModal';
+import { getArtistLinks } from '@/lib/internal-links';
 
 interface ArtistProps {
   artist: any;
@@ -306,6 +307,16 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 className="text-xs text-primary hover:underline font-medium">
                 Claim this page →
               </Link>
+            </div>
+
+            {/* Internal cross-links */}
+            <div className="space-y-1.5">
+              {getArtistLinks().map((link, i) => (
+                <Link key={i} href={link.url}
+                  className="block text-[11px] text-muted-foreground/50 hover:text-primary/70 transition-colors">
+                  → {link.anchor}
+                </Link>
+              ))}
             </div>
           </div>
         </div>

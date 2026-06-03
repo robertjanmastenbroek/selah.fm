@@ -97,9 +97,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const trackLabel = stats.total_tracks === 1 ? '1 track' : `${stats.total_tracks} tracks`;
   const desc = `Support ${name} on Selah.fm. ${trackLabel} available. ${genres.slice(0, 2).join(', ')} artist. Donate, make videos, and earn per view.`;
 
+  // Noindex artists with no tracks and no activity (thin content)
+  const isThin = stats.total_tracks === 0 || (stats.total_donations_cents === 0 && (artist.comment_count || 0) === 0 && stats.total_submissions === 0);
+
   return {
     title: `${name} — Music Promotion & Fan Community | Selah.fm`,
     description: desc.slice(0, 160),
+    ...(isThin ? { robots: { index: false, follow: true } as const } : {}),
     openGraph: {
       title: `${name} — Selah.fm`,
       description: desc.slice(0, 160),
