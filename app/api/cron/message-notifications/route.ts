@@ -40,7 +40,7 @@ export async function GET(request: Request) {
         GROUP BY m.receiver_id
       ),
       already_notified AS (
-        SELECT DISTON user_id FROM message_notifications 
+        SELECT DISTINCT user_id FROM message_notifications 
         WHERE sent_at > NOW() - INTERVAL '24 hours'
       )
       SELECT 
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'Selah.fm <notifications@selah.fm>',
+            from: 'Selah.fm <info@selah.fm>',
             to: r.email,
             subject,
             html,
