@@ -1,14 +1,25 @@
+/**
+ * app/api/artist/bio/route.ts
+ * Composable multi-slot bio generation.
+ * Assembles bios from 8 independent slot libraries for ~37B+ unique combinations.
+ */
+
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUser } from '@/lib/supabase/server';
+import { scoreAngles, selectAngle, type ArtistData } from '@/lib/bio-angles';
+import { selectTone } from '@/lib/bio-tone';
+import { selectOpening } from '@/lib/bio-openings';
+import { selectDescriptors } from '@/lib/bio-descriptors';
+import { selectJourney } from '@/lib/bio-journeys';
+import { selectClosing } from '@/lib/bio-closings';
+import { scoreBio, formatScoreSummary } from '@/lib/bio-scorer';
+import { recordBio, getBannedWordsList } from '@/lib/bio-vocabulary';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * POST /api/artist/bio
- * Generates a 350-900 word bio for the given artist using DeepSeek V4 Flash.
- * Body: { artistId: string }
- */
+// ─── POST /api/artist/bio ───────────────────────────────────
+
 export async function POST(request: Request) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -17,48 +28,29 @@ export async function POST(request: Request) {
     const { artistId } = await request.json();
     if (!artistId) return NextResponse.json({ error: 'artistId required' }, { status: 400 });
 
-    // Load artist data from DB
-    const [artist] = await sql`
-      SELECT da.artist_name, da.genres, da.monthly_listeners,
-             ap.total_streams, ap.total_followers, ap.spotify_image_url
-      FROM discovered_artists da
-      LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
-      WHERE da.id = ${artistId}
-      LIMIT 1
-    `;
+    const artist = await loadArtistData(artistId);
     if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
 
-    const name = artist.artist_name;
-    
-    // Parse genres safely
-    const rawGenres = artist.genres;
-    let genres: string[] = [];
-    if (Array.isArray(rawGenres)) genres = rawGenres;
-    else if (typeof rawGenres === 'string') {
-      try { genres = JSON.parse(rawGenres); }
-      catch { genres = [rawGenres]; }
-    }
+    // Generate 3 variations, keep best
+    const results = await Promise.all(
+      [1, 2, 3].map(() => generateBioVariation(artist))
+    );
 
-    // Gather all available data
-    const monthlyListeners = artist.monthly_listeners || 0;
-    const totalStreams = artist.total_streams || 0;
-    const totalFollowers = artist.total_followers || 0;
+    const best = results.sort((a, b) => b.score.score - a.score.score)[0];
 
-    // Count tracks
-    const [{ count }] = await sql`
-      SELECT COUNT(*)::int FROM artist_tracks WHERE artist_id = ${artistId} AND enabled = true
-    `;
-    const trackCount = count || 0;
+    // Save to DB
+    await saveBio(artist.id, best.bio, best.score.score, best.angle.id, best.tone.id);
 
-    // Generate bio
-    const bio = await generateBio(name, genres, trackCount, monthlyListeners, totalStreams, totalFollowers);
+    // Record words for vocabulary tracking
+    recordBio(best.bio);
 
     return NextResponse.json({
-      bio,
-      word_count: bio.split(/\s+/).length,
-      artist: name,
-      genres_used: genres,
-      track_count: trackCount,
+      bio: best.bio,
+      score: best.score.score,
+      angle: best.angle.name,
+      tone: best.tone.name,
+      word_count: best.bio.split(/\s+/).filter(w => w.length > 0).length,
+      variations_generated: 3,
     });
   } catch (e: any) {
     console.error('Bio generation error:', e.message);
@@ -66,114 +58,136 @@ export async function POST(request: Request) {
   }
 }
 
-async function generateBio(
-  name: string,
-  genres: string[],
-  trackCount: number,
-  monthlyListeners: number,
-  totalStreams: number,
-  totalFollowers: number
+// ─── Bio Generation Engine ──────────────────────────────────
+
+interface BioVariation {
+  bio: string;
+  score: ReturnType<typeof scoreBio>;
+  angle: { id: string; name: string };
+  tone: { id: string; name: string };
+  components: {
+    opening: string;
+    descriptors: string[];
+    journey: string;
+    closing: string;
+  };
+}
+
+async function generateBioVariation(artist: ArtistData): Promise<BioVariation> {
+  // 1. Select angle + tone
+  const { angle, reasons } = selectAngle(artist);
+  const tone = selectTone(angle.tone);
+
+  // 2. Select opening hook from angle's preferred structure
+  const openingStyle = angle.structure.find(s => s.startsWith('opening-'))?.replace('opening-', '') || 'hook';
+  const opening = selectOpening(openingStyle);
+
+  // 3. Select 2 descriptors
+  const descriptors = selectDescriptors(2);
+
+  // 4. Select journey framing
+  const journeyType = angle.structure.find(s => s.startsWith('journey-') || s.startsWith('why-'));
+  const journey = selectJourney();
+
+  // 5. Select closing CTA
+  const closing = selectClosing();
+
+  // 6. Build data injection context
+  const wordContext = buildWordContext(artist);
+
+  // 7. Generate the full bio via AI
+  const bio = await generateFullBio(artist, angle, tone, opening, descriptors, journey, closing, wordContext);
+
+  // 8. Score
+  const score = scoreBio(bio, artist.name);
+
+  return {
+    bio,
+    score,
+    angle: { id: angle.id, name: angle.name },
+    tone: { id: tone.id, name: tone.name },
+    components: {
+      opening: opening.template,
+      descriptors: descriptors.map(d => d.text),
+      journey: journey.text,
+      closing: closing.text,
+    },
+  };
+}
+
+// ─── AI Generation ─────────────────────────────────────────
+
+async function generateFullBio(
+  artist: ArtistData,
+  angle: any,
+  tone: any,
+  opening: any,
+  descriptors: any[],
+  journey: any,
+  closing: any,
+  wordContext: string
 ): Promise<string> {
-  // Round numbers — never use exact counts
-  const streamStr = totalStreams >= 1000000
-    ? `over ${(totalStreams / 1000000).toFixed(1)} million streams`
-    : totalStreams >= 100000
-      ? `over ${Math.floor(totalStreams / 1000)}K streams`
-      : totalStreams >= 50000
-        ? `tens of thousands of streams`
-        : totalStreams >= 10000
-          ? `thousands of streams`
-          : '';
+  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+  if (!DEEPSEEK_API_KEY) throw new Error('DeepSeek API key not configured');
 
-  const followerStr = totalFollowers >= 100000
-    ? `over ${(totalFollowers / 1000).toFixed(0)}K followers`
-    : totalFollowers >= 10000
-      ? `thousands of followers`
-      : totalFollowers >= 1000
-        ? `a growing following`
-        : '';
+  const bannedWords = getBannedWordsList();
+  const des1 = descriptors[0];
+  const des2 = descriptors.length > 1 ? descriptors[1] : null;
 
-  const listenerStr = monthlyListeners >= 100000
-    ? `over ${(monthlyListeners / 1000).toFixed(0)}K monthly listeners`
-    : monthlyListeners >= 10000
-      ? `thousands of monthly listeners`
-      : monthlyListeners >= 1000
-        ? `a growing listener base`
-        : '';
+  // Inject artist data into templated slots
+  const openingText = fillTemplate(opening.template, artist);
+  const journeyText = fillTemplate(journey.text, artist);
+  const closingText = fillTemplate(closing.text, artist);
 
-  const trackStr = trackCount > 0
-    ? `${trackCount} tracks`
-    : 'music';
+  // Build descriptor sentences
+  const desSentence1 = `There's ${des1.text} — ${des1.followUp || ''}`;
+  const desSentence2 = des2 ? `Meanwhile, ${des2.text} — ${des2.followUp || ''}` : '';
 
-  // Build a keyword-rich first sentence
-  const genreStr = genres.length > 0 ? genres.join(', ') : '';
-  const keywordPhrase = genreStr
-    ? `${name} is a ${genreStr} artist`
-    : `${name} is a musical artist`;
+  const prompt = `Write a natural, flowing 3-5 paragraph profile of the independent artist "${artist.name}".
 
-  // Determine depth tier based on data confidence
-  const hasSubstantialData = totalStreams > 10000 || monthlyListeners > 5000 || totalFollowers > 5000;
-  const depth = hasSubstantialData ? 'full' : 'short';
+CONTEXT about the artist:
+${wordContext}
 
-  // Keywords to target
-  const keywords = [
-    `${name} music`,
-    genreStr ? `${name} ${genreStr}` : null,
-    `listen to ${name}`,
-    genreStr ? `${genreStr} artist ${new Date().getFullYear()}` : `independent artist ${new Date().getFullYear()}`,
-    genreStr ? `new ${genreStr} music` : null,
-  ].filter(Boolean).join(', ');
-
-  const dataSection = [
-    trackStr,
-    streamStr,
-    followerStr,
-    listenerStr,
-  ].filter(Boolean).join('\n');
-
-  const basePrompt = `Write a ${depth === 'full' ? '500-800' : '250-400'} word profile of ${keywordPhrase}.
-
-VERIFIED DATA (use cautiously):
-${dataSection || 'Limited data available — write generally about their music.'}
-Tracks: ${trackCount}
-
-DATA INTEGRITY RULES (MANDATORY):
-1. Only use the data listed above. Do NOT invent any numbers, album names, tour dates, or collaborations.
-2. Round all numbers: write "over 150K streams" not exact counts.
-3. If data is limited, write generally about their music and creative journey.
-4. NEVER write specific follower counts, stream counts, or listener counts below 10K.
-   Instead say "a growing audience" or "a dedicated following."
-5. If genre wasn't provided above, do NOT guess a specific genre.
-   Say "their music" or "their sound" instead of "their rock sound."
-6. NEVER include fake quotes from the artist. Write in third person only.
-7. Never diminish: no "only," "despite," "but" before positive statements.
-
-KEYWORD STRATEGY:
-Naturally include these keywords in the first 150 words: ${keywords}
+TONE: ${tone.voice}
+${bannedWords ? `\nVOCABULARY RULES:\n${bannedWords}` : ''}
 
 STRUCTURE:
-- Paragraph 1: Opening — who they are, their sound. Include primary keywords.
-- Paragraph 2: Their music — describe the vibe and craft. Be warm but specific only with real data.
-- Paragraph 3: What makes them worth discovering.
-- Paragraph 4: Connection to Selah.fm — "Support ${name} on Selah.fm and earn per view creating content featuring their tracks."
-- End naturally. No abrupt sign-offs.
+You are given 4 pre-written sections below. INTEGRATE them naturally into a coherent profile. Do NOT paste them verbatim — weave them into your own prose.
 
-TONE: Warm, respectful, enthusiastic. Like a knowledgeable friend introducing you to great music. Always positive — this is a compliment the artist would be proud to share.`;
+Opening: ${openingText}
+
+Sound description: ${desSentence1}. ${desSentence2}
+
+Artist journey: ${journeyText}
+
+Closing: ${closingText}
+
+WRITING RULES:
+1. Write transition sentences between the sections so the bio reads as ONE cohesive article, not 4 separate paragraphs.
+2. Open with a hook that draws the reader in. End with a natural conclusion.
+3. Vary sentence length. Use short sentences for emphasis. Use longer sentences for flow.
+4. Do NOT use any of these words: landscape, realm, tapestry, testament, prolific, burgeoning, ever-evolving, journey, sonic, auditory, musical journey.
+5. Do NOT include invented quotes from the artist.
+6. Do NOT include lists, bullet points, or numbered sections.
+7. Mention "${artist.name}" and "Selah.fm" naturally within the text.
+8. Never diminish the artist. No "only," "despite," "although" used to qualify their achievements.
+9. If the data shows low numbers, focus on quality and potential instead.
+10. Write 400-700 words total across 3-5 paragraphs.`;
 
   const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+      'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
     },
     body: JSON.stringify({
       model: 'deepseek-chat',
       messages: [
         {
           role: 'system',
-          content: 'You are a music journalist writing warm, respectful profiles of independent artists. Every article is a genuine compliment the artist would be proud to share. You never invent facts.',
+          content: `You are a music journalist writing warm, respectful profiles of independent artists. Every article is a genuine compliment the artist would be proud to share. You write with ${tone.name.toLowerCase()} tone: ${tone.description}`,
         },
-        { role: 'user', content: basePrompt },
+        { role: 'user', content: prompt },
       ],
       max_tokens: 2000,
       temperature: 0.7,
@@ -181,12 +195,137 @@ TONE: Warm, respectful, enthusiastic. Like a knowledgeable friend introducing yo
   });
 
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`DeepSeek error: ${response.status} ${errText.slice(0, 200)}`);
+    const err = await response.text();
+    throw new Error(`DeepSeek error: ${response.status} ${err.slice(0, 200)}`);
   }
 
   const data = await response.json();
   let bio = data.choices?.[0]?.message?.content || '';
+  
+  // Clean formatting
   bio = bio.replace(/^#+\s*/gm, '').replace(/\*\*/g, '').replace(/^[-*]\s*/gm, '').trim();
+  
   return bio;
+}
+
+// ─── Helpers ────────────────────────────────────────────────
+
+function buildWordContext(artist: ArtistData): string {
+  const parts: string[] = [];
+
+  if (artist.trackCount > 0) parts.push(`${artist.trackCount} tracks`);
+  if (artist.totalStreams > 10000) {
+    parts.push(`over ${artist.totalStreams >= 1000000 ? (artist.totalStreams / 1000000).toFixed(1) + 'M' : Math.floor(artist.totalStreams / 1000) + 'K'} streams`);
+  } else if (artist.totalStreams > 0) {
+    parts.push('thousands of streams');
+  }
+  if (artist.totalFollowers > 100000) {
+    parts.push(`over ${Math.floor(artist.totalFollowers / 1000)}K followers`);
+  } else if (artist.totalFollowers > 10000) {
+    parts.push('thousands of followers');
+  } else if (artist.totalFollowers > 1000) {
+    parts.push('a growing following');
+  }
+  if (artist.hasCampaigns) parts.push(`${artist.campaignCount} active campaign${artist.campaignCount !== 1 ? 's' : ''} on Selah.fm`);
+  if (artist.submissionCount > 0) parts.push(`${artist.submissionCount} creator submission${artist.submissionCount !== 1 ? 's' : ''}`);
+  if (artist.genres.length > 0) parts.push(`genre: ${artist.genres.slice(0, 3).join(', ')}`);
+
+  return parts.join('\n') || 'Independent musician building their catalog.';
+}
+
+function fillTemplate(template: string, artist: ArtistData): string {
+  let result = template;
+  result = result.replace(/\{\{name\}\}/g, artist.name);
+  result = result.replace(/\{\{tracks\}\}/g, String(artist.trackCount));
+  result = result.replace(/\{\{streams\}\}/g, artist.totalStreams > 10000
+    ? `over ${artist.totalStreams >= 1000000 ? (artist.totalStreams / 1000000).toFixed(1) + 'M' : Math.floor(artist.totalStreams / 1000) + 'K'} streams`
+    : 'streams');
+  result = result.replace(/\{\{followers\}\}/g, artist.totalFollowers > 10000
+    ? `${Math.floor(artist.totalFollowers / 1000)}K followers`
+    : 'a growing audience');
+  return result;
+}
+
+async function loadArtistData(artistId: string): Promise<ArtistData | null> {
+  const [artist] = await sql`
+    SELECT da.id, da.artist_name, da.genres, da.monthly_listeners,
+           ap.total_streams, ap.total_followers
+    FROM discovered_artists da
+    LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
+    WHERE da.id = ${artistId}
+    LIMIT 1
+  `;
+  if (!artist) return null;
+
+  const rawGenres = artist.genres;
+  let genres: string[] = [];
+  if (Array.isArray(rawGenres)) genres = rawGenres;
+  else if (typeof rawGenres === 'string') {
+    try { genres = JSON.parse(rawGenres); } catch { genres = [rawGenres]; }
+  }
+
+  const [{ count }] = await sql`
+    SELECT COUNT(*)::int FROM artist_tracks WHERE artist_id = ${artistId} AND enabled = true
+  `;
+
+  // Count campaigns
+  const [{ campaign_count }] = await sql`
+    SELECT COUNT(*)::int FROM campaign_claims WHERE discovered_artist_id = ${artistId}
+  `;
+
+  // Count submissions
+  const [{ submission_count }] = await sql`
+    SELECT COUNT(*)::int FROM submissions s
+    JOIN campaigns c ON c.id = s.campaign_id
+    JOIN campaign_claims cc ON cc.campaign_id = c.id
+    WHERE cc.discovered_artist_id = ${artistId}
+  `;
+
+  return {
+    id: artist.id,
+    name: artist.artist_name,
+    genres,
+    genreCount: genres.length,
+    trackCount: count || 0,
+    monthlyListeners: artist.monthly_listeners || 0,
+    totalStreams: artist.total_streams || 0,
+    totalFollowers: artist.total_followers || 0,
+    hasCampaigns: (campaign_count || 0) > 0,
+    campaignCount: campaign_count || 0,
+    submissionCount: submission_count || 0,
+    supporterCount: 0,
+    hasLocation: false,
+    locationCity: '',
+    locationCountry: '',
+    hasSpotifyId: false,
+    hasImage: false,
+    careerDays: 0,
+    daysSinceLastTrack: 365,
+  };
+}
+
+async function saveBio(artistId: string, bio: string, score: number, angle: string, tone: string): Promise<void> {
+  // Check if audit record exists
+  const [existing] = await sql`
+    SELECT id FROM artist_audits WHERE discovered_artist_id = ${artistId} LIMIT 1
+  `;
+
+  if (existing) {
+    await sql`
+      UPDATE artist_audits SET bio = ${bio}, audited_at = NOW()
+      WHERE id = ${existing.id}
+    `;
+  } else {
+    await sql`
+      INSERT INTO artist_audits (discovered_artist_id, bio, audited_at)
+      VALUES (${artistId}, ${bio}, NOW())
+    `;
+  }
+
+  // Also store metadata about the generation
+  await sql`
+    INSERT INTO artist_articles (discovered_artist_id, title, body, word_count, status, generated_at)
+    VALUES (${artistId}, ${'Profile: ' + (await sql`SELECT artist_name FROM discovered_artists WHERE id = ${artistId}`).then((r: any) => r[0]?.artist_name || '')}, ${bio}, ${bio.split(/\s+/).length}, 'published', NOW())
+    ON CONFLICT (discovered_artist_id) DO UPDATE SET body = ${bio}, word_count = ${bio.split(/\s+/).length}, generated_at = NOW()
+  `.catch(() => {});
 }
