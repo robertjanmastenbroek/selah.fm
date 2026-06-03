@@ -179,7 +179,7 @@ export default function MessagesPage() {
   const msgEndRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const pollRef = useRef<NodeJS.Timeout>();
+  const pollRef = useRef<ReturnType<typeof setInterval>>();
 
   // Fetch current user + conversations
   useEffect(() => {
@@ -225,15 +225,91 @@ export default function MessagesPage() {
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
 
-  // Poll for new messages — preserve optimistic messages
+  // ── SSE for real-time delivery ────────────────────────────
+  const sseRef = useRef<EventSource | null>(null);
   useEffect(() => {
     if (!selectedUser) return;
+    
+    // Try SSE for real-time updates
+    try {
+      const es = new EventSource(`/api/messages/stream?with=${selectedUser.id}`, { withCredentials: true });
+      sseRef.current = es;
+
+      es.addEventListener('messages', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.messages) {
+            const serverIds = new Set(data.messages.map((m: any) => m.id));
+            setMessages(prev => {
+              const localOnly = prev.filter(m => m.id.startsWith('temp-') && !serverIds.has(m.id));
+              return localOnly.length > 0 ? [...data.messages, ...localOnly] : data.messages;
+            });
+            // Update own user ID
+            const otherId = selectedUser.id;
+            const found = data.messages.find((m: any) => m.sender_id !== otherId);
+            if (found) setCurrentUserId(found.sender_id);
+          }
+        } catch {}
+      });
+
+      es.onerror = () => {
+        // SSE failed — fall back to polling
+        es.close();
+        sseRef.current = null;
+        startPolling();
+      };
+    } catch {
+      startPolling();
+    }
+
+    // Poll for typing indicator every 3s
+    const pollTyping = () => {
+      if (!selectedUser) return;
+      fetch(`/api/messages/typing?with=${selectedUser.id}`, { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => setOtherTyping(d.typing || false))
+        .catch(() => setOtherTyping(false));
+    };
+    pollTyping();
+    typingPollRef.current = setInterval(pollTyping, 3000);
+
+    return () => {
+      if (sseRef.current) { sseRef.current.close(); sseRef.current = null; }
+      if (pollRef.current) { clearInterval(pollRef.current); }
+      if (typingPollRef.current) { clearInterval(typingPollRef.current); }
+    };
+  }, [selectedUser]);
+
+  // Fire typing indicator on input change
+  const handleInputChange = (value: string) => {
+    setInput(value);
+    if (!selectedUser || !value.trim()) return;
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    fetch('/api/messages/typing', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversation_with: selectedUser.id }),
+    }).catch(() => {});
+    // Auto-stop typing after 3s of no input
+    typingTimerRef.current = setTimeout(() => {
+      fetch('/api/messages/typing', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_with: selectedUser.id }),
+      }).catch(() => {});
+    }, 3000);
+  };
+
+  // Polling fallback (used when SSE fails)
+  const startPolling = () => {
+    if (!selectedUser) return;
+    if (pollRef.current) clearInterval(pollRef.current);
+    const otherId = selectedUser.id;
     pollRef.current = setInterval(async () => {
       try {
-        const res = await fetch(`/api/messages?with=${selectedUser.id}`, { credentials: 'include' });
+        const res = await fetch(`/api/messages?with=${otherId}`, { credentials: 'include' });
         const data = await res.json();
         if (data.messages) {
-          // Merge: keep optimistic messages (temp-* id) not yet confirmed by server
           const serverIds = new Set(data.messages.map((m: any) => m.id));
           setMessages(prev => {
             const localOnly = prev.filter(m => m.id.startsWith('temp-') && !serverIds.has(m.id));
@@ -241,19 +317,16 @@ export default function MessagesPage() {
           });
         }
         
-        // Mark as read
         fetch('/api/messages', {
           method: 'PATCH', credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sender_id: selectedUser.id }),
+          body: JSON.stringify({ sender_id: otherId }),
         }).catch(() => {});
         
-        // Refresh conversations for updated previews
         loadConversations();
       } catch {}
-    }, 10000); // Reduced from 15s to 10s for snappier delivery
-    return () => clearInterval(pollRef.current);
-  }, [selectedUser]);
+    }, 10000);
+  };
 
   // Auto-scroll messages container (not the page — keeps thread header visible)
   useEffect(() => {
@@ -331,6 +404,9 @@ export default function MessagesPage() {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const [showList, setShowList] = useState(true);
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const typingPollRef = useRef<ReturnType<typeof setInterval>>();
 
   const backToList = () => { setShowList(true); setSelectedUser(null); };
 
@@ -424,7 +500,18 @@ export default function MessagesPage() {
                     <User size={14} className="text-muted-foreground/40" />
                   )}
                 </div>
-                <p className="font-semibold text-sm">{selectedUser.display_name || 'User'}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{selectedUser.display_name || 'User'}</p>
+                  {otherTyping && (
+                    <p className="text-[10px] text-primary/60 animate-pulse">
+                      <span className="inline-flex gap-0.5">
+                        typing<span className="animate-bounce" style={{animationDelay:'0ms'}}>.</span>
+                        <span className="animate-bounce" style={{animationDelay:'150ms'}}>.</span>
+                        <span className="animate-bounce" style={{animationDelay:'300ms'}}>.</span>
+                      </span>
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Messages */}
@@ -463,17 +550,27 @@ export default function MessagesPage() {
                         </p>
                       )}
                       <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} ${isOptimistic ? 'opacity-70' : ''}`}>
-                        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                          isMe
-                            ? 'bg-[#4338CA] text-white rounded-br-md'
-                            : 'bg-white/[0.04] text-foreground rounded-bl-md'
-                        }`}>
-                          {m.content}
-                          {isMe && isLast && (
-                            <span className="ml-1.5 inline-flex text-[9px] opacity-60">
-                              {isOptimistic ? '◌' : m.read ? '✓✓' : '✓'}
-                            </span>
-                          )}
+                        <div className="group relative max-w-[75%]">
+                          <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                            isMe
+                              ? 'bg-[#4338CA] text-white rounded-br-md'
+                              : 'bg-white/[0.04] text-foreground rounded-bl-md'
+                          }`}>
+                            {m.content}
+                            {isMe && isLast && (
+                              <span className="ml-1.5 inline-flex text-[9px] opacity-60">
+                                {isOptimistic ? '◌' : m.read ? '✓✓' : '✓'}
+                              </span>
+                            )}
+                          </div>
+                          {/* Copy on hover */}
+                          <button
+                            onClick={() => navigator.clipboard.writeText(m.content)}
+                            className="absolute -top-1 right-0 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]"
+                            title="Copy message"
+                          >
+                            📋
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -488,7 +585,7 @@ export default function MessagesPage() {
                   <textarea
                     ref={inputRef}
                     value={input}
-                    onChange={e => setInput(e.target.value)}
+                    onChange={e => handleInputChange(e.target.value)}
                     onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
                     }}
