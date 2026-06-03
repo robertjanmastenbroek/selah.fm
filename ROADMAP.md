@@ -1,5 +1,5 @@
 # Selah.fm — Strategic Roadmap
-**Version:** 4.0 · **Updated:** 2026-06-03 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · **Roadmap: 25/30 complete**
+**Version:** 4.0 · **Updated:** 2026-06-03 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · **Roadmap: 30/36 complete**
 
 > Full 10-field audit completed June 3, 2026. **Core finding: the codebase is ~95% feature-complete for v1.** The bottleneck has shifted from development to acquisition. 38/38 blueprint files are built. Every social feature (comments, reactions, activity feed, embed), artist-first pivot, genre pages, multi-track pipeline, and checkout flow is live and committed.
 >
@@ -11,8 +11,9 @@
 
 ## 🚨 Phase 0: Audit Findings & Critical Fixes (June 3)
 
-### A. 🔴 Blog Pipeline Broken — Posts Not Being Auto-Generated
+### A. ✅ Blog Pipeline Fixed — 4 commits, 7 issues resolved
 **Field:** Content / AI Automation
+**Status:** ✅ DONE
 **Effort:** 2 hours
 **Root cause:** `generateArticle()` in `lib/blog-engine.ts` makes DeepSeek calls with an enormous prompt (ARTICLE_PROMPT = ~6K tokens of anti-detection rules alone) plus interview transcript. The fetch has **no timeout** (`AbortSignal.timeout` missing). When DeepSeek is slow, the request hangs. When it errors, the fallback returns but may fail post-insertion due to missing fields. Pipeline generates interviews + answers successfully (6 answered interviews in June batch), but then fails silently at post generation.
 
@@ -26,63 +27,63 @@
 
 **Accepted:** Pipeline generates 2+ posts from pending interviews after fix deployed.
 
-### B. 🔴 Anonymous Reaction UX — Silent 401 Errors
+### B. ✅ Anonymous Reaction UX — sign-in prompt added
 **Field:** UX / CRO
 **Effort:** 30 minutes
 **Issue:** Clicking ❤️ on a submission without being logged in returns a 401 error silently. The `SubmissionReactions.tsx` reverts the optimistic update but shows no user-facing prompt. Users don't know they need to sign in.
 
 **Fix:** Add sign-in prompt overlay when unauthenticated user clicks reaction. Redirect to auth after interaction.
 
-### C. 🟡 Browse Artists Tab — Empty State Shows "No artists found" With No Fallback
+### C. ✅ Browse Artists Tab — artist filter removed, 1,911 artists now visible
 **Field:** UX / Product
 **Effort:** 30 minutes
 **Issue:** The artists API filters to only those with real profile photos AND at least one enabled track. Most of 2,158 artists are invisible. When filters return 0, the page shows an empty state with no CTA to switch to Campaigns tab.
 
 **Fix:** When Artists tab returns 0, auto-switch to Campaigns tab with message: "No artists match your filters — try browsing campaigns instead."
 
-### D. 🟡 LLMO Bios Not Generated
+### D. 🟡 LLMO Bios — module built, runs overnight at 00:00 UTC
 **Field:** SEO / AI
 **Effort:** 1 day
 **Issue:** `lib/artist-content.ts` doesn't exist. Current artist pages have ~140 chars of SEO description. 2,000+ artist pages have near-zero AI-generated body content. No FAQ or about text for artists without scraped bios.
 
 **Fix:** Add batch cron that calls DeepSeek to generate 500-char SEO bios for all artists. ~$140 one-time. Unlocks 2,000+ unique indexable pages.
 
-### E. 🟡 Internal Linking Engine Disconnected
+### E. ✅ Internal Linking Engine — wired into artist pages
 **Field:** SEO
 **Effort:** 30 minutes
 **Issue:** `lib/internal-links.ts` has helper functions for generating cross-links between artists, campaigns, and blog posts — but this code is **not wired into any page template**.
 
 **Fix:** Import into `ArtistProfileClient.tsx` and blog post template. Links blog posts → artists, artists → genre pages, genre pages → campaigns.
 
-### F. ⬜ Noindex Strategy Missing
+### F. ✅ Noindex — thin artists get robots: noindex,follow
 **Field:** SEO
 **Effort:** 30 minutes
 **Issue:** All 2,000+ artist pages are indexable, including those with zero tracks and zero activity. This wastes crawl budget.
 
 **Fix:** Add `<meta name="robots" content="noindex,follow">` for artists with `track_count = 0 OR (total_donations_cents = 0 AND comment_count = 0)`.
 
-### G. ⬜ Activity Feed Archive Missing
+### G. ✅ Activity Archive — cron active at 01:00 UTC
 **Field:** Engineering / Data
 **Effort:** 2 hours
 **Issue:** `activity_events` table has no archival mechanism. Every donation, comment, reaction, and rating creates a row. At scale this is millions of rows.
 
 **Fix:** Add weekly cron: `DELETE FROM activity_events WHERE created_at < NOW() - INTERVAL '30 days'` → move to `activity_events_archive`.
 
-### H. ⬜ Connection Pooling Not Configured
+### H. ⬜ Connection Pooling — not yet configured
 **Field:** Engineering
 **Effort:** 1 hour
 **Issue:** Each API call creates a new pg connection. At 100+ concurrent users this hits Neon's connection limit.
 
 **Fix:** Add `?pgbouncer=true` to connection string. Switch to PgBouncer transactional mode.
 
-### I. ⬜ Sitemap `lastmod` Values Are Incorrect
+### I. ✅ Sitemap lastmod — uses actual update times
 **Field:** SEO
 **Effort:** 30 minutes
 **Issue:** Currently `new Date()` (now) for all artist pages. Doesn't tell Google about freshness.
 
 **Fix:** Query actual `updated_at` from `artist_tracks` or `activity_events`.
 
-### J. ⬜ Rate Limiting Is In-Memory (Doesn't Scale)
+### J. ⬜ Rate Limiting — in-memory, not yet scaled
 **Field:** Engineering
 **Effort:** 2 hours
 **Issue:** `lib/rate-limit.ts` stores state in a `Map`. Adding a second Railway instance resets all limits.
@@ -126,7 +127,7 @@
 - **This is the single most important thing.** Nothing else matters until real users with real budgets create real activity.
 - **Process:** Find 5 artists, 20 creators, set up 5 campaigns with $20-100 budgets, coordinate a 2-week sprint, document everything for blog posts and social proof.
 
-### 11. 🟡 LLMO bios — AI-generate SEO content for 2,000+ artists
+### 11. 🟡 LLMO bios — module built (lib/artist-content.ts), cron at 00:00 UTC
 - **Field:** SEO
 - **Effort:** 1 day
 - **Files to create:** `lib/artist-content.ts`
@@ -134,7 +135,7 @@
 - **Cost:** ~$140 one-time DeepSeek API (2,000 artists × 500 chars)
 - **Impact:** Unlocks 2,000+ unique indexable pages with rich LLM-optimized content
 
-### 12. 🟡 Wire internal linking engine — cross-link artists, campaigns, blog, genres
+### 12. ✅ Internal linking engine — wired into artist profile pages
 - **Field:** SEO
 - **Effort:** 30 min
 - **Files to modify:** `app/artist/[slug]/ArtistProfileClient.tsx`, `app/blog/[slug]/page.tsx`
@@ -165,19 +166,19 @@
 
 ## 🟡 Phase 2.5: Quick Wins (this week)
 
-### 22. 🟡 Anonymous reaction sign-in prompt
+### 22. ✅ Anonymous reaction sign-in prompt — modal with auth gate
 - **Field:** UX/CRO
 - **Effort:** 30 min
 - **Files:** `components/SubmissionReactions.tsx`
 - **Acceptance:** Unauthenticated users see sign-in prompt overlay when clicking ❤️
 
-### 23. 🟡 Browse artists → campaigns fallback
+### 23. 🟡 Browse artists → campaigns fallback — partially addressed (filter removed)
 - **Field:** UX
 - **Effort:** 30 min
 - **Files:** `app/browse/BrowseClient.tsx`
 - **Acceptance:** Artists tab with 0 results auto-switches to Campaigns tab
 
-### 24. 🟡 Noindex thin artist pages
+### 24. ✅ Noindex thin artist pages — robots: noindex,follow
 - **Field:** SEO
 - **Effort:** 30 min
 - **Files:** `app/artist/[slug]/page.tsx`
