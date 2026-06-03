@@ -337,7 +337,7 @@ export default function MessagesPage() {
                   <div className="p-8 text-center">
                     <MessageCircle size={32} className="mx-auto mb-3 text-muted-foreground/20" />
                     <p className="text-sm text-muted-foreground mb-2">No messages yet</p>
-                    <p className="text-xs text-muted-foreground/50">Start a conversation from a campaign or creator profile</p>
+                    <p className="text-xs text-muted-foreground/50">Find artists or creators you have worked with and click Message to start a conversation</p>
                   </div>
                 ) : (
                   conversations.map(c => (

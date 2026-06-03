@@ -272,7 +272,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
   const claimCode = campaign.claim_code;
 
   // Whether hero has scrolled past viewport for sticky bar
-  const stickyBarVisible = scrollY > heroBottom - 100;
+  const stickyBarVisible = true;
 
   return (
     <div className="min-h-screen bg-deep-navy">
@@ -339,11 +339,14 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <LiveTicker campaignId={id} />
+                  <span className="flex items-center gap-1 text-primary/60">📈 Live campaign</span>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <span>{submissions} submissions</span>
                   <span>·</span>
                   <span>{views.toLocaleString()} views</span>
+                  <span>·</span>
+                  <span className="flex items-center gap-1 text-emerald-400">✅ Verified views</span>
                 </div>
               </div>
             </div>
@@ -370,7 +373,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
             {/* Secondary: Share (icon only, not competing) */}
             <div className="flex items-center justify-between mt-4">
               <p className="text-[11px] text-muted-foreground/60">
-                No upfront cost · Free to start
+                No upfront cost · Free to start · You earn 80% · Platform fee 20%
               </p>
               <button onClick={() => setShareOpen(true)}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors">
@@ -404,11 +407,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       {/* ════════════════════════════════════════════════ */}
       {/* STICKY MOBILE BAR (always visible after scroll) */}
       {/* ════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {stickyBarVisible && (
-          <motion.div initial={{ y: 80 }} animate={{ y: 0 }} exit={{ y: 80 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            className="fixed bottom-0 inset-x-0 z-layer-sticky-bar md:hidden bg-deep-navy/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3">
+      <div className="fixed bottom-0 inset-x-0 z-layer-sticky-bar md:hidden bg-deep-navy/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1 mr-3">
                 <p className="text-xs font-semibold truncate font-display">{displayTitle}</p>
@@ -429,9 +428,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 </button>
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
 
       {/* ═══ MODALS ═══ */}
       <ShareModal open={shareOpen} onClose={() => setShareOpen(false)}

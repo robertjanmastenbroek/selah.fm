@@ -294,9 +294,7 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
                     <div className="p-8 text-center text-sm text-muted-foreground">
                       <img src="/images/empty-messages.png" alt="No messages" className="mx-auto mb-4 w-24 h-24 object-contain opacity-70" loading="lazy" />
                       <p>No messages yet</p>
-                      <p className="text-xs mt-1 text-muted-foreground/60">
-                        Find artists or creators and click Message to start a conversation.
-                      </p>
+                      <p className="text-xs mt-1 text-muted-foreground/60">Browse campaigns and click Message on any creator or artist profile to start chatting.</p>
                     </div>
                   ) : (
                     conversations.map(c => (

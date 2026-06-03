@@ -386,8 +386,27 @@ function DashboardContent() {
                 {/* CPM & max payout */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm text-muted-foreground mb-1.5 block">CPM ($/1M views)</label>
-                    <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)} />
+                    <label className="text-sm text-muted-foreground mb-1.5 block">CPM rate ($ per 1M views)</label>
+                    <div className="grid grid-cols-3 gap-2 mb-2">
+                      {[{v:"0.5",l:"$0.50/1M",d:"Budget"}, {v:"1",l:"$1/1M",d:"Standard",rec:true}, {v:"5",l:"$5/1M",d:"Premium"}].map(t => (
+                        <button key={t.v} type="button" onClick={() => setCpm(t.v)}
+                          className={`relative rounded-xl py-3 text-center transition-all border ${
+                            cpm === t.v
+                              ? "border-primary bg-primary/[0.08] text-primary"
+                              : "border-white/[0.06] bg-white/[0.02] text-muted-foreground hover:border-white/[0.12]"
+                          }`}>
+                          {t.rec && <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-[9px] font-bold text-emerald-400">Best</span>}
+                          <p className="text-sm font-bold">{t.l}</p>
+                          <p className="text-[9px] text-muted-foreground/60 mt-0.5">{t.d}</p>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="relative">
+                      <Input type="number" min="0.1" step="0.1" value={cpm} onChange={e => setCpm(e.target.value)}
+                        className="text-sm pl-7" />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/60">Custom rate per 1,000 verified views</p>
                   </div>
                   <div>
                     <label className="text-sm text-muted-foreground mb-1.5 block">Max payout per submission ($)</label>

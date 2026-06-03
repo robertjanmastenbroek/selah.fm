@@ -232,7 +232,7 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
           ) : artists.length === 0 ? (
             <>
             <EmptyState icon={<span className="text-4xl">🎵</span>} title="No artists found"
-              description={selectedGenre || filters.q ? 'Try adjusting your filters.' : 'Artists are added daily.'} />
+              description={selectedGenre || filters.q ? 'Try different filters or browse all genres — new campaigns added daily.' : 'Artists are added daily.'} />
             {/* Auto-switch to campaigns tab with message */}
             <div className="mt-4 text-center">
               <button onClick={() => switchTab('campaigns')}
@@ -250,7 +250,7 @@ export default function BrowseClient({ initialCampaigns = [], initialTotal = 0 }
           <>
             <CampaignGrid campaigns={campaigns} loading={loading} />
             {!loading && campaigns.length === 0 && (
-              <EmptyState icon={<span className="text-4xl">🔍</span>} title="No matching campaigns"
+              <EmptyState icon={<span className="text-4xl">🔍</span>} title="No campaigns match your filters"
                 description={selectedGenre || selectedPlatform || filters.q ? 'Try adjusting your filters.' : 'No campaigns yet.'} />
             )}
           </>
