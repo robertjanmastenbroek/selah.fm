@@ -419,7 +419,13 @@ export default function MessagesPage() {
     return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [showList, setShowList] = useState(true);
   const [otherTyping, setOtherTyping] = useState(false);
   const [sendError, setSendError] = useState(false);
@@ -431,13 +437,14 @@ export default function MessagesPage() {
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
       <Header />
-      <div className="max-w-5xl mx-auto h-[calc(100vh-56px)] flex">
+      <div className="max-w-5xl mx-auto h-[calc(100dvh-56px)] flex overflow-hidden">
         {/* ── Conversation List ── */}
         <AnimatePresence>
           {(showList || !isMobile) && (
             <motion.div
-              initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}
-              className={`${selectedUser && isMobile ? 'hidden' : 'flex'} flex-col border-r border-white/[0.06] bg-white/[0.01] ${isMobile ? 'w-full' : 'w-80 shrink-0'}`}
+              initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -20, opacity: 0 }}
+              className={`flex-col border-r border-white/[0.06] bg-white/[0.01] ${isMobile ? 'w-full absolute inset-0 z-10' : 'w-80 shrink-0 relative'}`}
             >
               <div className="p-5 border-b border-white/[0.06]">
                 <div className="flex items-center justify-between">
@@ -497,7 +504,7 @@ export default function MessagesPage() {
         </AnimatePresence>
 
         {/* ── Message Thread ── */}
-        <div className={`flex-1 flex flex-col ${!selectedUser && !isMobile ? 'items-center justify-center' : ''} ${selectedUser || isMobile ? '' : 'hidden md:flex'}`}>
+        <div className={`flex-1 flex flex-col ${isMobile ? (selectedUser ? 'absolute inset-0 z-20 bg-[#0F0F23]' : 'hidden') : ''} ${!selectedUser && !isMobile ? 'items-center justify-center' : ''}`}>
           {!selectedUser ? (
             <div className="text-center p-8">
               <MessageCircle size={48} className="mx-auto mb-4 text-muted-foreground/10" />
