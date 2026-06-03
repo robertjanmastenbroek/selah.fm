@@ -80,10 +80,6 @@ export async function GET(request: Request) {
   const log: string[] = [];
   const results = { questions: 0, interviews: 0, answered: 0, posts: 0, scheduled: 0 };
 
-  // Fire-and-forget: respond immediately, process in background
-  // Railway's load balancer kills HTTP connections at 30s, but the
-  // Node.js process continues (maxDuration=600 keeps it alive).
-  const startProcessing = async () => {
   try {
     // Rate limit: 6-hour cooldown — allows 4 pipeline runs/day
     const force = searchParams.get('force') === 'true';
@@ -448,14 +444,8 @@ export async function GET(request: Request) {
     }
 
     log.push(`Done: ${results.questions}Q ${results.interviews}I ${results.answered}A ${results.posts}P ${results.scheduled}S`);
-    console.log('Blog pipeline complete:', results);
+    return NextResponse.json({ results, log });
   } catch (e: any) {
-    console.error('Blog pipeline error:', e.message);
+    return NextResponse.json({ error: e.message, results, log }, { status: 500 });
   }
-  };
-
-  // Fire and forget — return immediately, process continues in background
-  startProcessing().catch(e => console.error('Blog pipeline crashed:', e));
-
-  return NextResponse.json({ status: 'started', message: 'Blog pipeline started in background' });
 }
