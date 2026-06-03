@@ -270,8 +270,8 @@ export default async function ArtistPage({ params }: Props) {
     }
   }
 
-  const schema: Record<string, any> = {
   const socialLinks = artist.social_links || {};
+  const schema: Record<string, any> = {
     '@context': 'https://schema.org',
     '@graph': [
       {
