@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     for (let i = 0; i < artists.length; i += concurrency) {
       const batch = artists.slice(i, i + concurrency);
       const batchResults = await Promise.allSettled(
-        batch.map(a => generateBioForArtist(a.id, a.artist_name))
+        batch.map((a: any) => generateBioForArtist(a.id, a.artist_name))
       );
       
       for (let j = 0; j < batch.length; j++) {
