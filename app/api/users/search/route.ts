@@ -11,19 +11,20 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const q = request.nextUrl.searchParams.get('q')?.trim();
-    if (!q || q.length < 1) {
-      return NextResponse.json({ users: [] });
-    }
-
-    const pattern = '%' + q + '%';
-
-    // Search real users by name/email — creators first (have submissions), then everyone else
-    const users = await sql`
+    // No query = return all users (so New Message dialog shows everyone)
+    // With query = filter by name/email with prefix matching
+    const users = !q || q.length < 1 ? await sql`
       SELECT DISTINCT u.id, u.display_name, u.profile_image_url, u.email,
         CASE WHEN EXISTS (SELECT 1 FROM submissions s WHERE s.creator_id = u.id) THEN 0 ELSE 1 END AS is_creator
       FROM users u
-      WHERE u.display_name ILIKE ${pattern}
-         OR u.email ILIKE ${pattern}
+      ORDER BY is_creator ASC, u.display_name ASC
+      LIMIT 50
+    ` : await sql`
+      SELECT DISTINCT u.id, u.display_name, u.profile_image_url, u.email,
+        CASE WHEN EXISTS (SELECT 1 FROM submissions s WHERE s.creator_id = u.id) THEN 0 ELSE 1 END AS is_creator
+      FROM users u
+      WHERE u.display_name ILIKE ${'%' + q + '%'}
+         OR u.email ILIKE ${'%' + q + '%'}
       ORDER BY 
         is_creator ASC,
         CASE 

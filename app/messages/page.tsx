@@ -22,9 +22,9 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
   const router = useRouter();
   const searchTimer = useRef<NodeJS.Timeout>();
 
-  // Debounced live search
+  // Debounced live search — on mount (empty query), show all users
   useEffect(() => {
-    if (!query.trim() || query.length < 1 || selectedUser) {
+    if (selectedUser) {
       setSuggestions([]);
       setShowDropdown(false);
       return;
@@ -80,14 +80,14 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
                 <button onClick={() => { setOpen(false); setQuery(''); setSelectedUser(null); setSuggestions([]); setShowDropdown(false); }}
                   className="p-1 rounded-lg hover:bg-white/[0.06] transition-colors"><X size={18} className="text-muted-foreground" /></button>
               </div>
-              <p className="text-xs text-muted-foreground">Search users, artists, or creators to start a conversation.</p>
+              <p className="text-xs text-muted-foreground">Select a user below or search by name to start a conversation.</p>
               
               {/* Live search input with autocomplete */}
               <div className="relative">
                 <div className="flex gap-2">
                   <Input value={query}
                     onChange={e => { setQuery(e.target.value); setSelectedUser(null); setShowDropdown(false); }}
-                    placeholder="Start typing a name..."
+                    placeholder="Search by name..."
                     className="flex-1 text-sm rounded-xl h-11 bg-white/[0.04] border-white/[0.06]"
                     autoFocus
                   />
@@ -152,7 +152,7 @@ function NewMessageButton({ campaignId, onConversationStart }: { campaignId?: st
 
               {/* Empty state */}
               {query.length > 0 && !searching && suggestions.length === 0 && !selectedUser && (
-                <p className="text-xs text-muted-foreground/60 text-center py-4">No results. Try a different name or search for an artist.</p>
+                <p className="text-xs text-muted-foreground/60 text-center py-4">No users found matching &quot;{query}&quot;. Try a different name.</p>
               )}
             </motion.div>
           </motion.div>
