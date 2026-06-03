@@ -372,7 +372,7 @@ export async function GET(request: Request) {
       
       for (const draft of drafts) {
         // Find next available date+slot
-        let scheduleDay = new Date(); scheduleDay.setDate(scheduleDay.getDate() + 1);
+        let scheduleDay = new Date();
         let found = false;
         
         while (!found) {
