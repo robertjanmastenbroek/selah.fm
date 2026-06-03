@@ -29,7 +29,7 @@
     --muted: 240 35% 19%;            /* #27273B */
     --muted-foreground: 215 16% 65%;  /* #9CA3AF — readable secondary text */
     --accent: 142 71% 45%;            /* #22C55E — green CTA (play + growth) */
-    --accent-foreground: 0 0% 5%;
+    --accent-foreground: 0 0% 95%;
 
     /* ── Semantic ─────────────────────────────────────────────── */
     --destructive: 0 84% 60%;         /* #EF4444 */
