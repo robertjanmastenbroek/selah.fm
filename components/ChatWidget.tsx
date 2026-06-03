@@ -145,7 +145,12 @@ export default function ChatWidget({ startWithUserId }: { startWithUserId?: stri
         try {
           const data = JSON.parse(e.data);
           if (data.messages?.length > 0) {
-            setMessages(data.messages);
+            // Merge: keep local optimistic messages not yet confirmed by server
+            const serverIds = new Set(data.messages.map((m: any) => m.id));
+            setMessages(prev => {
+              const localOnly = prev.filter(m => m.id.startsWith('opt-') && !serverIds.has(m.id));
+              return localOnly.length > 0 ? [...data.messages, ...localOnly] : data.messages;
+            });
             setOwnUserId(data.messages.find((m: any) => m.sender_id !== activeConv.other_id)?.sender_id || '');
           }
         } catch {}

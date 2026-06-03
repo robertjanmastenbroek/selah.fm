@@ -7,8 +7,8 @@ export const maxDuration = 60;
 /**
  * GET /api/messages/stream?with=USER_ID
  * Server-Sent Events endpoint for real-time message delivery.
- * Pushes new messages every 3 seconds when a conversation is active.
- * Falls back gracefully — client should also poll.
+ * Pushes the full message list every 3 seconds.
+ * Client should replace state on each event (not append).
  */
 export async function GET(request: Request) {
   const user = await getUser();
@@ -23,7 +23,6 @@ export async function GET(request: Request) {
   }
 
   const userId = user.id;
-  let lastMessageId: string | null = null;
   let keepAlive: NodeJS.Timeout | null = null;
 
   const stream = new ReadableStream({
@@ -36,12 +35,11 @@ export async function GET(request: Request) {
         try {
           controller.enqueue(`:keepalive\n\n`);
         } catch {
-          // Stream closed, clean up
           if (keepAlive) clearInterval(keepAlive);
         }
       }, 15000);
 
-      // Poll for new messages every 3 seconds
+      // Poll for messages every 3 seconds — always send full list
       const poll = async () => {
         try {
           const messages = await sql`
@@ -49,31 +47,18 @@ export async function GET(request: Request) {
             FROM messages m
             WHERE (m.sender_id = ${userId} AND m.receiver_id = ${otherUserId})
                OR (m.sender_id = ${otherUserId} AND m.receiver_id = ${userId})
-            ORDER BY m.created_at DESC
-            LIMIT 10
+            ORDER BY m.created_at ASC
+            LIMIT 50
           `;
 
-          if (messages.length > 0) {
-            // If we have a lastMessageId, only push messages newer than it
-            const newMessages = lastMessageId
-              ? messages.filter((m: any) => m.id !== lastMessageId).reverse()
-              : messages.reverse();
-
-            if (newMessages.length > 0) {
-              lastMessageId = messages[0].id;
-              controller.enqueue(`event: messages\ndata: ${JSON.stringify({ messages: newMessages })}\n\n`);
-            }
-          }
-
-          // Schedule next poll
+          controller.enqueue(`event: messages\ndata: ${JSON.stringify({ messages })}\n\n`);
           setTimeout(poll, 3000);
         } catch (e: any) {
           console.error('SSE poll error:', e.message);
-          setTimeout(poll, 5000); // Retry after longer delay on error
+          setTimeout(poll, 5000);
         }
       };
 
-      // Start polling after a short delay
       setTimeout(poll, 500);
     },
     cancel() {
