@@ -67,6 +67,22 @@ export async function GET() {
       WHERE cc.discovered_artist_id = ${artist.id}
     `;
 
+    // Fetch balance
+    const [balanceRow] = await sql`
+      SELECT balance_cents, lifetime_deposits_cents FROM artist_profiles WHERE artist_id = ${artist.id}
+    `;
+
+    // Pending payouts
+    const [pendingPayouts] = await sql`
+      SELECT COUNT(*)::int as count, COALESCE(SUM(s.payout_amount_cents), 0)::int as total_cents
+      FROM submissions s
+      JOIN campaigns c ON c.id = s.campaign_id
+      JOIN campaign_claims cc ON cc.campaign_id = c.id
+      WHERE cc.discovered_artist_id = ${artist.id}
+        AND s.review_status = 'approved'
+        AND s.payout_status != 'paid'
+    `;
+
     return NextResponse.json({
       artist,
       slug: artist.profile_slug || '',
@@ -79,6 +95,9 @@ export async function GET() {
         total_views: submissionStats.total_views,
         total_submissions: submissionStats.total_submissions,
       },
+      balance_cents: balanceRow?.balance_cents || 0,
+      lifetime_deposits_cents: balanceRow?.lifetime_deposits_cents || 0,
+      pending_payouts_cents: pendingPayouts.total_cents,
     });
   } catch (e: any) {
     console.error('Artist/me error:', e.message);

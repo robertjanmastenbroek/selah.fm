@@ -37,9 +37,25 @@ export async function POST(request: Request) {
     const session = event.type === 'checkout.session.completed' ? event.data.object : null;
 
     const metadata = paymentIntent?.metadata || session?.metadata || {};
-    const { campaignId, type } = metadata;
+    const { campaignId, type, artistId } = metadata;
     const grossCents = paymentIntent?.amount || session?.amount_total || 0;
     
+    // ── Artist donation: credit artist balance ────────────────
+    if (type === 'artist_donation' && artistId) {
+      await sql`
+        UPDATE artist_profiles SET
+          balance_cents = balance_cents + ${grossCents},
+          lifetime_deposits_cents = lifetime_deposits_cents + ${grossCents}
+        WHERE artist_id = ${artistId}
+      `;
+      await sql`
+        INSERT INTO artist_transactions (artist_id, amount_cents, type, description)
+        VALUES (${artistId}, ${grossCents}, 'deposit', 'Fan donation')
+      `;
+      trackDonation(Math.round(grossCents / 100), metadata.donorId).catch(() => {});
+      return NextResponse.json({ received: true });
+    }
+
     if (!campaignId || grossCents <= 0) {
       return NextResponse.json({ received: true });
     }

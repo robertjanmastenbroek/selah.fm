@@ -49,7 +49,7 @@ export async function POST(
     formData.set('amount', String(amount * 100)); // dollars → cents
     formData.set('currency', 'usd');
     formData.set('metadata[type]', 'artist_donation');
-    formData.set('metadata[artist_id]', artist.id);
+    formData.set('metadata[artistId]', artist.id);
     formData.set('metadata[artist_name]', artist.artist_name);
     if (body.donorEmail) formData.set('receipt_email', body.donorEmail);
 
