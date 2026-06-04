@@ -32,11 +32,17 @@ export default function CreateCampaignPage() {
     fetch('/api/auth/me', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
-        if (!d.user) { router.push('/login?redirect=/create'); return; }
-        if (d.user.tracks?.length) setTracks(d.user.tracks);
+        if (!d.user) { window.location.href = '/login?redirect=/create'; return; }
+        // Load user's existing tracks from API
+        fetch('/api/artists/me', { credentials: 'include' })
+          .then(r => r.json())
+          .then(artistData => {
+            if (Array.isArray(artistData?.tracks)) setTracks(artistData.tracks);
+          })
+          .catch(() => {});
       })
-      .catch(() => router.push('/login?redirect=/create'));
-  }, [router]);
+      .catch(() => { window.location.href = '/login?redirect=/create'; });
+  }, []);
 
   const totalSteps = 4;
   const nextStep = () => setStep(s => Math.min(s + 1, totalSteps - 1));
