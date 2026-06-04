@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100);
     const search = searchParams.get('search') || '';
 
-    const conditions: string[] = ['s.payout_status = \'paid\''];
+    const conditions: string[] = ['s.review_status = \'approved\''];
     const params: any[] = [];
     let pIdx = 1;
 
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
         COALESCE(SUM(s.views_verified), 0)::bigint AS total_views,
         COUNT(DISTINCT s.creator_id)::int AS unique_creators
       FROM submissions s
-      WHERE s.payout_status = 'paid'
+      WHERE s.review_status = 'approved'
     `);
 
     return NextResponse.json({
