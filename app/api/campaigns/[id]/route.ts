@@ -18,7 +18,7 @@ export async function GET(
             COALESCE(v.approved_submissions, '0') as approved_submissions,
             COALESCE(v.pending_submissions, '0') as pending_submissions,
             COALESCE(v.total_verified_views, '0') as total_verified_views,
-            COALESCE(u.display_name, da.artist_name) as artist_name,
+            COALESCE(da.artist_name, u.display_name) as artist_name,
             u.profile_image_url as artist_avatar,
             cc.claim_code,
             cc.claimed_at as claim_claimed_at
@@ -35,7 +35,7 @@ export async function GET(
             COALESCE(v.approved_submissions, '0') as approved_submissions,
             COALESCE(v.pending_submissions, '0') as pending_submissions,
             COALESCE(v.total_verified_views, '0') as total_verified_views,
-            COALESCE(u.display_name, da.artist_name) as artist_name,
+            COALESCE(da.artist_name, u.display_name) as artist_name,
             u.profile_image_url as artist_avatar,
             cc.claim_code,
             cc.claimed_at as claim_claimed_at

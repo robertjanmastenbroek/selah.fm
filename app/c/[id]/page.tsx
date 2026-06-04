@@ -13,7 +13,7 @@ async function getCampaign(id: string) {
     const campaigns = isUuid
       ? await sql`
           SELECT c.*, COALESCE(c.title, c.track_title) as title,
-            COALESCE(u.display_name, da.artist_name) as artist_name,
+            COALESCE(da.artist_name, u.display_name) as artist_name,
             da.social_links, da.artist_name as da_artist_name,
             aa.youtube_video_url as audit_youtube_url,
             aa.spotify_embed_url,
@@ -29,7 +29,7 @@ async function getCampaign(id: string) {
         `
       : await sql`
           SELECT c.*, COALESCE(c.title, c.track_title) as title,
-            COALESCE(u.display_name, da.artist_name) as artist_name,
+            COALESCE(da.artist_name, u.display_name) as artist_name,
             da.social_links, da.artist_name as da_artist_name,
             aa.youtube_video_url as audit_youtube_url,
             aa.spotify_embed_url,
@@ -170,7 +170,7 @@ export default async function CampaignPage({ params }: Props) {
   try {
     relatedCampaigns = await sql`
       SELECT c.slug, COALESCE(c.title, c.track_title) as title, c.track_title,
-        COALESCE(u.display_name, da.artist_name) as artist_name,
+        COALESCE(da.artist_name, u.display_name) as artist_name,
         c.cover_art_url, c.cpm_rate_cents
       FROM campaigns c
       LEFT JOIN users u ON u.id = c.artist_id

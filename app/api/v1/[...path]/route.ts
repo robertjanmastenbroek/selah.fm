@@ -77,7 +77,7 @@ export async function GET(
       const campaigns = await sql`
         SELECT c.slug, c.track_title, c.cpm_rate_cents, c.total_budget_cents,
                c.status, c.cover_art_url, c.created_at,
-               COALESCE(u.display_name, da.artist_name) as artist_name
+               COALESCE(da.artist_name, u.display_name) as artist_name
         FROM campaigns c
         LEFT JOIN users u ON u.id = c.artist_id
         LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
@@ -91,7 +91,7 @@ export async function GET(
     // /api/v1/campaigns/[slug] — single campaign
     if (segments[0] === 'campaigns' && segments[1]) {
       const [campaign] = await sql`
-        SELECT c.*, COALESCE(u.display_name, da.artist_name) as artist_name,
+        SELECT c.*, COALESCE(da.artist_name, u.display_name) as artist_name,
                ap.slug as artist_slug
         FROM campaigns c
         LEFT JOIN users u ON u.id = c.artist_id
