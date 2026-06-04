@@ -107,10 +107,9 @@ export async function GET(request: Request) {
           }
         }
         
-        // New user or never completed onboarding → onboarding flow with role
+        // New user → onboarding (step 0 asks for role — no guessing needed)
         if (isNewUser && next === '/browse') {
-          const userType = user.user_metadata?.user_type || user.user_metadata?.is_artist ? 'artist' : 'creator';
-          finalUrl = new URL(`/onboarding?role=${userType}`, origin);
+          finalUrl = new URL('/onboarding', origin);
         }
       } catch {
         // DB query failed — still redirect to onboarding to be safe

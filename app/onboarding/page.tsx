@@ -32,6 +32,16 @@ export default function OnboardingPage() {
   const [cpm, setCpm] = useState(2);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  // Analytics tracking
+  const trackEvent = (event: string, metadata?: any) => {
+    fetch('/api/analytics/event', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, path: window.location.pathname, metadata: { role, ...metadata }, session_id: sessionStorage.getItem('selah_session_id') || '' }),
+    }).catch(() => {});
+  };
+  // Track step views
+  useEffect(() => { if (step > 0 || role) trackEvent('onboarding_step', { step, role }); }, [step]);
+
   // Onboarding budget & CPM
   const [onboardBudget, setOnboardBudget] = useState(100);
   const [onboardCpm, setOnboardCpm] = useState(2);
@@ -91,6 +101,7 @@ export default function OnboardingPage() {
 
   const save = async () => {
     setSaving(true);
+    trackEvent('onboarding_complete', { role, budget: onboardBudget, cpm: onboardCpm });
     try {
       // Update user profile
       const meRes = await fetch('/api/auth/me', {
@@ -169,7 +180,7 @@ export default function OnboardingPage() {
               <div><h2 className="text-2xl font-bold mb-2">What brings you here?</h2><p className="text-muted-foreground text-sm">We&apos;ll personalize your experience.</p></div>
               <div className="grid grid-cols-2 gap-3">
                 {[{role:'artist'as const,icon:Music4,title:"I'm an artist",desc:'I want to promote my music'},{role:'creator'as const,icon:Clapperboard,title:"I'm a creator",desc:'I want to earn money creating content'}].map(r=>{const I=r.icon;return(
-                  <button key={r.role} onClick={()=>{setRole(r.role);nextStep();}} className="p-5 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] hover:border-primary/30 hover:bg-white/[0.05] transition-all text-left space-y-2">
+                  <button key={r.role} onClick={()=>{setRole(r.role);trackEvent('onboarding_role_selected',{role:r.role});nextStep();}} className="p-5 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] hover:border-primary/30 hover:bg-white/[0.05] transition-all text-left space-y-2">
                     <I size={28} strokeWidth={1.5} className="text-primary/60"/>
                     <div className="font-semibold text-sm">{r.title}</div><div className="text-xs text-muted-foreground">{r.desc}</div>
                   </button>

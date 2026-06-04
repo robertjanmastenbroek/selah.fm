@@ -76,6 +76,7 @@ function LoginForm() {
 
     try {
       if (mode === 'login') {
+        fetch('/api/analytics/event', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'login_submit', path:window.location.pathname, metadata:{ method: showEmailForm ? 'email' : 'google' } }) }).catch(()=>{});
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
         if (authError) { setError(authError.message); setLoading(false); return; }
         setTimeout(() => { window.location.href = redirect || '/browse'; }, 300);
@@ -107,6 +108,7 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
+    fetch('/api/analytics/event', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ event:'google_signin_click', path:window.location.pathname, metadata:{ mode } }) }).catch(()=>{});
     try {
       await supabase.auth.signInWithOAuth({
         provider: 'google',
