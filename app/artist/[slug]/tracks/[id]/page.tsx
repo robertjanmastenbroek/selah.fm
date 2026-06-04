@@ -21,7 +21,7 @@ async function getTrackData(slug: string, trackId: string) {
     if (isUuid) {
       result = await sql`
         SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents,
-               at.created_at, at.description,
+               at.created_at,
                da.artist_name, da.genres, da.monthly_listeners,
                ap.slug as profile_slug, ap.spotify_image_url,
                c.slug as campaign_slug, c.status as campaign_status,
@@ -38,7 +38,7 @@ async function getTrackData(slug: string, trackId: string) {
     } else {
       result = await sql`
         SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents,
-               at.created_at, at.description,
+               at.created_at,
                da.artist_name, da.genres, da.monthly_listeners,
                ap.slug as profile_slug, ap.spotify_image_url,
                c.slug as campaign_slug, c.status as campaign_status,
