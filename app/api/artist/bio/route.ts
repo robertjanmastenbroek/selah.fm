@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     await saveBio(artist.id, best.bio, best.score.score, best.angle.id, best.tone.id);
 
     // Record words for vocabulary tracking
-    recordBio(best.bio);
+    await recordBio(best.bio);
 
     return NextResponse.json({
       bio: best.bio,
@@ -136,7 +136,7 @@ async function generateFullBio(
   const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
   if (!DEEPSEEK_API_KEY) throw new Error('DeepSeek API key not configured');
 
-  const bannedWords = getBannedWordsList();
+  const bannedWords = await getBannedWordsList();
   const des1 = descriptors[0];
   const des2 = descriptors.length > 1 ? descriptors[1] : null;
 

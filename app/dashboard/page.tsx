@@ -11,10 +11,7 @@ import CampaignWizard from '@/components/CampaignWizard';
 import ArtistEmbed from '@/components/ArtistEmbed';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import {
   LayoutDashboard, Megaphone, UserCircle, DollarSign, Plus,
   ExternalLink, Music, Video, TrendingUp, Heart,
@@ -414,16 +411,13 @@ function DashboardContent() {
                                   ${((c.cpm_rate_cents || 0) / 100).toFixed(2)} CPM · ${((c.total_budget_cents || 0) / 100).toFixed(0)} budget
                                 </p>
                               </div>
-                              <Badge variant={c.status === 'active' ? 'default' : 'secondary'} className="shrink-0 ml-2">
                                 {c.status === 'active' ? 'Live' : c.status}
-                              </Badge>
                             </div>
                             <div className="grid grid-cols-3 gap-3 text-center text-xs">
                               <div><p className="font-bold text-sm">{c.approved_submissions || 0}</p>subs</div>
                               <div><p className="font-bold text-sm">{formatViews(parseInt(c.total_verified_views || '0'))}</p>views</div>
                               <div><p className="font-bold text-sm">{formatDollars((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0))}</p>spent</div>
                             </div>
-                            <Progress value={pct} className="h-1" />
                           </CardContent>
                         </Card>
                       );
@@ -450,9 +444,7 @@ function DashboardContent() {
                         </div>
                         <div className="text-right shrink-0 ml-3">
                           <p className="text-sm font-bold">{formatDollars(s.payout_amount_cents || 0)}</p>
-                          <Badge variant={s.payout_status === 'paid' ? 'default' : 'secondary'} className="text-[9px]">
                             {s.payout_status === 'paid' ? 'Paid' : s.review_status === 'approved' ? 'Approved' : s.review_status === 'rejected' ? 'Rejected' : 'Pending'}
-                          </Badge>
                           {s.review_status === 'rejected' && s.dispute_status !== 'pending' && s.dispute_status !== 'under_review' && (
                             <div className="mt-1">
                               <DisputeButton submissionId={s.id} />
@@ -543,7 +535,6 @@ function DashboardContent() {
                         </label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">@</span>
-                          <Input value={editInstagram} onChange={e => { setEditInstagram(e.target.value); setBioChanged(true); }}
                             placeholder="handle" className="pl-7 text-sm" />
                         </div>
                       </div>
@@ -553,7 +544,6 @@ function DashboardContent() {
                         </label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">@</span>
-                          <Input value={editTiktok} onChange={e => { setEditTiktok(e.target.value); setBioChanged(true); }}
                             placeholder="handle" className="pl-7 text-sm" />
                         </div>
                       </div>
