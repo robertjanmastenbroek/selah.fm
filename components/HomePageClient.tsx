@@ -233,7 +233,7 @@ export default function RootPage() {
               {stats.activeCampaigns > 0 && (
                 <div className="text-center">
                   <div className="text-[32px] md:text-[40px] font-bold text-white tracking-tight">{formatCount(stats.activeCampaigns)}</div>
-                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Active tracks</div>
+                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Funded tracks</div>
                 </div>
               )}
               {stats.artists > 0 && (

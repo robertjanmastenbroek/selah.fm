@@ -14,8 +14,8 @@ export async function GET() {
     const [artistCount] = await sql`SELECT COUNT(*)::int as count FROM users WHERE is_artist = true`;
     const [creatorCount] = await sql`SELECT COUNT(*)::int as count FROM users WHERE is_creator = true`;
 
-    // Campaign counts
-    const [campaignCount] = await sql`SELECT COUNT(*)::int as count FROM campaigns WHERE status = 'active'`;
+    // Funded campaigns (those with actual budget — the honest count)
+    const [campaignCount] = await sql`SELECT COUNT(*)::int as count FROM campaigns WHERE status = 'active' AND total_budget_cents > 0`;
 
     // Submission counts
     const [submissionCount] = await sql`SELECT COUNT(*)::int as count FROM submissions`;
