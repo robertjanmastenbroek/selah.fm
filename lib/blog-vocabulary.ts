@@ -31,6 +31,22 @@ const STOP_WORDS = new Set([
   'check', 'click', 'link', 'share', 'sign', 'subscribe',
   // Platform stop-words that saturate every post
   'selah', 'selahfm', 'music', 'artist', 'creators', 'promotion',
+  // Common contractions — these are structural, not vocabulary choices.
+  // Banning "don't" or "it's" would hurt the human voice, not help it.
+  "don't", "can't", "won't", "isn't", "wasn't", "aren't", "weren't",
+  "hasn't", "haven't", "hadn't", "doesn't", "didn't", "couldn't",
+  "wouldn't", "shouldn't", "mightn't", "mustn't", "needn't", "daren't",
+  "i've", "you've", "we've", "they've", "i'm", "you're", "we're",
+  "they're", "i'll", "you'll", "we'll", "they'll", "i'd", "you'd",
+  "we'd", "they'd", "it's", "that's", "here's", "there's", "what's",
+  "where's", "who's", "how's", "let's", "he's", "she's",
+  // Pronouns and common determiners that saturate blog text
+  'your', 'youre', 'youll', 'youve', 'youd', 'yours', 'yourself',
+  'everyone', 'everybody', 'someone', 'somebody', 'anyone', 'anybody',
+  'nobody', 'nothing', 'everything', 'something', 'anything',
+  // Generic filler that appears in every post
+  'actually', 'basically', 'essentially', 'literally', 'honestly',
+  'probably', 'maybe', 'perhaps', 'pretty', 'quite',
 ]);
 
 /** Extract meaningful words from HTML content (strip tags first) */
