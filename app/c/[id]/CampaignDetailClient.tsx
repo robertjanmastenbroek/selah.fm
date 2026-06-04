@@ -344,7 +344,7 @@ function ShareModal({ open, onClose, url, title, artistName, cpmDollars, trackTi
             <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-10 h-1 rounded-full bg-white/20" /></div>
             <div className="p-6 space-y-5">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-lg font-display">Share this campaign</h3>
+                <h3 className="font-semibold text-lg font-display">Share this promotion</h3>
                 <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"><X size={20} className="text-muted-foreground" /></button>
               </div>
               <p className="text-sm text-muted-foreground/60 truncate">{fullShareText}</p>
@@ -793,7 +793,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
     <div className="min-h-screen bg-deep-navy">
       <Header />
       <main className="max-w-2xl mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold font-display mb-4">Campaign not found</h1>
+        <h1 className="text-2xl font-bold font-display mb-4">Track promotion not found</h1>
         <p className="text-muted-foreground mb-6">This campaign doesn&apos;t exist or has been removed.</p>
         <Link href="/browse"><Button>Browse campaigns</Button></Link>
       </main>
