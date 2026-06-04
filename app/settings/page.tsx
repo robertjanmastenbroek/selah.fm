@@ -207,12 +207,12 @@ export default function SettingsPage() {
           <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.22,duration:0.4}}>
             <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6">
               <div className="flex items-center gap-2 mb-1"><Music4 size={16} strokeWidth={1.5} className="text-primary/60"/><h2 className="font-semibold text-sm">Roles</h2></div>
-              <p className="text-xs text-muted-foreground mb-5">Enable both roles to create campaigns AND earn by submitting videos.</p>
+              <p className="text-xs text-muted-foreground mb-5">Enable both roles to add tracks AND earn by submitting videos.</p>
               <div className="space-y-4">
                 <label className="flex items-center justify-between cursor-pointer">
                   <div>
                     <p className="text-sm font-medium">🎵 Artist</p>
-                    <p className="text-[11px] text-muted-foreground">Create campaigns and get your music promoted</p>
+                    <p className="text-[11px] text-muted-foreground">Add tracks and get your music promoted</p>
                   </div>
                   <div className={`relative w-11 h-6 rounded-full transition-colors ${isArtistAlso ? 'bg-primary' : 'bg-white/[0.08]'}`} onClick={() => setIsArtistAlso(!isArtistAlso)}>
                     <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isArtistAlso ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
@@ -222,7 +222,7 @@ export default function SettingsPage() {
                 <label className="flex items-center justify-between cursor-pointer">
                   <div>
                     <p className="text-sm font-medium">🎬 Creator</p>
-                    <p className="text-[11px] text-muted-foreground">Submit videos to campaigns and earn per view</p>
+                    <p className="text-[11px] text-muted-foreground">Submit videos to tracks and earn per view</p>
                   </div>
                   <div className={`relative w-11 h-6 rounded-full transition-colors ${isCreatorAlso ? 'bg-primary' : 'bg-white/[0.08]'}`} onClick={() => setIsCreatorAlso(!isCreatorAlso)}>
                     <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isCreatorAlso ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />

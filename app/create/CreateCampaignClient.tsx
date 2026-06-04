@@ -60,7 +60,7 @@ export default function CreateCampaignPage() {
       });
       const data = await res.json();
       if (data.error) { setError(data.error); setSaving(false); return; }
-      setSuccess('Campaign created!');
+      setSuccess('Track added!');
       setTimeout(() => router.push(`/c/${data.campaign?.slug || data.campaign?.id}`), 1500);
     } catch { setError('Failed to create campaign'); setSaving(false); }
   };
@@ -161,7 +161,7 @@ export default function CreateCampaignPage() {
           {/* STEP 2: Requirements */}
           {step === 2 && (
             <motion.div key="s2" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} className="space-y-5">
-              <h2 className="text-2xl font-bold">Campaign details</h2>
+              <h2 className="text-2xl font-bold">Track details</h2>
               <p className="text-muted-foreground text-sm">Tell creators what you're looking for.</p>
 
               <div className="space-y-2">

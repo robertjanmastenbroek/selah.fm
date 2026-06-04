@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const campaign = await getCampaign(params.id);
   if (!campaign) {
     return {
-      title: 'Campaign not found — Selah.fm',
+      title: 'Track not found — Selah.fm',
       openGraph: { images: [{ url: 'https://selah.fm/images/og-image.jpg' }] },
       twitter: { card: 'summary_large_image', images: ['https://selah.fm/images/og-image.jpg'] },
     };
@@ -167,7 +167,7 @@ export default async function CampaignPage({ params }: Props) {
     }
   } catch {}
 
-  // ── Server-rendered related campaigns for internal linking ──
+  // ── Server-rendered related tracks for internal linking ──
   let relatedCampaigns: any[] = [];
   try {
     relatedCampaigns = await sql`
@@ -211,8 +211,8 @@ export default async function CampaignPage({ params }: Props) {
 
       {/* Screen-reader SEO content — crawlable by Google even before JS loads */}
       <div className="sr-only" aria-hidden="true">
-        <h1>{displayTitle} — Music Promotion Campaign on Selah.fm</h1>
-        <p>{cpmPer1M ? `Join this campaign for "${trackTitle}" by ${artistName}. Create a short video and earn ${cpmPer1M} per 1M verified views on TikTok, Instagram Reels, or YouTube Shorts.` : `Join this campaign for "${trackTitle}" by ${artistName}. Create a short video and earn per verified view.`}</p>
+        <h1>{displayTitle} — Music Promotion Track on Selah.fm</h1>
+        <p>{cpmPer1M ? `Join this track for "${trackTitle}" by ${artistName}. Create a short video and earn ${cpmPer1M} per 1M verified views on TikTok, Instagram Reels, or YouTube Shorts.` : `Join this track for "${trackTitle}" by ${artistName}. Create a short video and earn per verified view.`}</p>
         <h2>How to participate:</h2>
         <ol>
           <li>Find the audio — search for &quot;{trackTitle}&quot; on TikTok, Instagram, or YouTube</li>
@@ -248,7 +248,7 @@ export default async function CampaignPage({ params }: Props) {
       {relatedCampaigns.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 pb-16" aria-labelledby="more-heading">
           <h2 id="more-heading" className="font-bold text-base mb-5" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
-            More campaigns
+            More tracks
           </h2>
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {relatedCampaigns.map((rc: any) => (

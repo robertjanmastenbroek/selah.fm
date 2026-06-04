@@ -71,7 +71,7 @@ export default function TosPage() {
             The CPM rate for a campaign is locked once the campaign receives its first Creator submission. 
             Once locked, the rate cannot be changed for that campaign. 
             If an Artist wishes to offer a different CPM rate, a new campaign must be created. 
-            Campaigns with zero submissions may have their CPM rate adjusted at any time.
+            Tracks with zero submissions may have their CPM rate adjusted at any time.
           </p>
 
           <h2 className="text-foreground font-semibold text-lg mt-8">7. Payout Timing</h2>

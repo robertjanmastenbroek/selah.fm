@@ -39,7 +39,7 @@ export default function WelcomeArtistsPage() {
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <Link href="/login?redirect=/onboarding" className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_0_32px_rgba(67,56,202,0.35)] active:scale-[0.97]" style={{ background: 'linear-gradient(135deg, #4338CA, #4338CA)' }}>
-              Start My Campaign <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5"/>
+              Add My Track <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5"/>
             </Link>
           </motion.div>
         </div>
@@ -63,7 +63,7 @@ export default function WelcomeArtistsPage() {
       <SectionWrap>
         <motion.div className="text-center mb-16" variants={fadeUp}><h2 className="text-3xl md:text-4xl font-heading tracking-tight mb-4">Finally, a marketplace that makes sense.</h2><p className="text-muted-foreground max-w-lg mx-auto">Three steps. Total control. Real results.</p></motion.div>
         <div className="max-w-4xl mx-auto px-6 grid md:grid-cols-3 gap-8">
-          {[{step:'01',icon:Target,title:'Create Your Campaign',desc:'Upload your track, set a CPM, define your budget.'},{step:'02',icon:Video,title:'Creators Make Content',desc:'Vetted creators browse. Those who love your sound make TikToks.'},{step:'03',icon:ShieldCheck,title:'Approve & Pay',desc:'Review every video. Pay only for verified views.'}].map((s,i)=>{const I=s.icon;return(
+          {[{step:'01',icon:Target,title:'Add Your Track',desc:'Upload your track, set a CPM, define your budget.'},{step:'02',icon:Video,title:'Creators Make Content',desc:'Vetted creators browse. Those who love your sound make TikToks.'},{step:'03',icon:ShieldCheck,title:'Approve & Pay',desc:'Review every video. Pay only for verified views.'}].map((s,i)=>{const I=s.icon;return(
             <motion.div key={i} variants={fadeUp} className="group text-center">
               <motion.div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] flex items-center justify-center text-primary" whileHover={{scale:1.08,backgroundColor:'rgba(67,56,202,0.08)'}}><I size={28} strokeWidth={1.5}/></motion.div>
               <p className="text-xs text-accent font-mono tracking-wider mb-3">{s.step}</p><h3 className="font-heading text-lg mb-3">{s.title}</h3><p className="text-sm text-muted-foreground leading-relaxed max-w-[280px] mx-auto">{s.desc}</p>
@@ -114,8 +114,8 @@ export default function WelcomeArtistsPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] rounded-full opacity-10 blur-3xl" style={{background:'radial-gradient(circle, rgba(67,56,202,0.2) 0%, transparent 70%)'}}/>
         <div className="max-w-xl mx-auto px-6 relative z-10">
           <motion.h2 className="text-3xl md:text-5xl font-heading mb-6 tracking-tight" initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} viewport={{once:true}}>Ready to stop guessing?</motion.h2>
-          <motion.p className="text-muted-foreground mb-10 text-base" initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true}}>No credit card required to browse. Fund your campaign when you're ready.</motion.p>
-          <Link href="/login?redirect=/onboarding" className="inline-flex items-center gap-2 px-10 py-4 rounded-xl font-semibold text-base text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_0_32px_rgba(67,56,202,0.35)] active:scale-[0.97]" style={{ background: 'linear-gradient(135deg, #4338CA, #4338CA)' }}>Start My First Campaign — Free <ArrowRight size={16}/></Link>
+          <motion.p className="text-muted-foreground mb-10 text-base" initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true}}>No credit card required to browse. Fund your promotion when you're ready.</motion.p>
+          <Link href="/login?redirect=/onboarding" className="inline-flex items-center gap-2 px-10 py-4 rounded-xl font-semibold text-base text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-[0_0_32px_rgba(67,56,202,0.35)] active:scale-[0.97]" style={{ background: 'linear-gradient(135deg, #4338CA, #4338CA)' }}>Add My First Track — Free <ArrowRight size={16}/></Link>
           <p className="text-xs text-muted-foreground mt-8"><Link href="/artists" className="hover:text-foreground transition-colors">Browse artists</Link><span className="mx-3 opacity-30">·</span><Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link></p>
         </div>
       </section>

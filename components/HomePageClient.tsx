@@ -378,7 +378,10 @@ export default function RootPage() {
           <motion.div className="text-center mb-12"
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
             <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-5">Live now</p>
-            <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">Featured campaigns</h2>
+            <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">Recommended campaigns</h2>
+              <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto">
+                Top campaigns matched to your taste. High-budget promotions from popular artists.
+              </p>
             <p className="text-white/35 max-w-md mx-auto text-sm">Artists looking for creators right now.</p>
           </motion.div>
 

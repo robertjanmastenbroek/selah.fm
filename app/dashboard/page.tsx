@@ -25,7 +25,7 @@ import DisputeButton from '@/components/DisputeButton';
 import DashboardChart from '@/components/DashboardChart';
 import { useToast } from '@/components/Toast';
 
-type TabId = 'overview' | 'campaigns' | 'profile' | 'earnings' | 'kanban';
+type TabId = 'overview' | 'tracks' | 'profile' | 'earnings' | 'kanban';
 
 export default function DashboardPage() {
   return (
@@ -53,7 +53,7 @@ function DashboardContent() {
 
   useEffect(() => {
     const t = searchParams.get('tab') as TabId | null;
-    if (t && ['overview','campaigns','profile','earnings'].includes(t)) setTab(t);
+    if (t && ['overview','tracks','profile','earnings'].includes(t)) setTab(t);
   }, [searchParams]);
 
   const switchTab = (t: TabId) => {
@@ -201,7 +201,7 @@ function DashboardContent() {
   // ─── Tabs ───────────────────────────────────────────────────
   const tabs: { id: TabId; label: string; icon: any }[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'campaigns', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone },
+    { id: 'tracks', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone },
     { id: 'profile', label: 'Profile', icon: UserCircle },
     { id: 'earnings', label: 'Earnings', icon: DollarSign },
   { id: 'kanban', label: 'Board', icon: <BarChart3 size={14} /> },  ];
@@ -361,8 +361,8 @@ function DashboardContent() {
           </div>
         )}
 
-        {/* ─── TAB: Campaigns (Artist) / Submissions (Creator) ── */}
-        {tab === 'campaigns' && (
+        {/* ─── TAB: Tracks (Artist) / Submissions (Creator) ── */}
+        {tab === 'tracks' && (
           <div className="space-y-4">
             {isArtist ? (
               <>
@@ -381,14 +381,14 @@ function DashboardContent() {
                   ))}
                 </div>
 
-                {/* Campaign grid */}
+                {/* Track grid */}
                 {campaignsLoading ? (
                   <div className="grid md:grid-cols-2 gap-4">
                     {[1,2].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
                   </div>
                 ) : campaignsErr ? (
                   <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">
-                    Failed to load campaigns. <button onClick={() => reloadCampaigns()} className="text-primary hover:underline">Retry</button>
+                    Failed to load tracks. <button onClick={() => reloadCampaigns()} className="text-primary hover:underline">Retry</button>
                   </CardContent></Card>
                 ) : rawCampaigns.length === 0 ? (
                   <Card><CardContent className="p-12 text-center">
@@ -482,7 +482,7 @@ function DashboardContent() {
   const colors = ['emerald', 'gray', 'blue'];
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-sm">Campaign Board</h3>
+      <h3 className="font-semibold text-sm">Track Board</h3>
       <div className="grid grid-cols-3 gap-3 min-h-[200px]">
         {cols.map((status, i) => (
           <div key={status} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
@@ -768,7 +768,7 @@ function DashboardContent() {
           </div>
         )}
 
-        {/* ─── Campaign Wizard Modal ──────────────────────── */}
+        {/* ─── Track Wizard Modal ──────────────────────── */}
         <CampaignWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onCreated={() => reloadCampaigns()} />
       </main>
     </div>

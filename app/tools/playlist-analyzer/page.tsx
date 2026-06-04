@@ -170,7 +170,7 @@ export default function PlaylistAnalyzerPage() {
             <div className="rounded-xl bg-primary/5 border border-primary/10 p-5 text-center">
               <p className="text-sm mb-3">Want real promotion from real creators?</p>
               <a href="/browse" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-all">
-                Browse campaigns on Selah.fm <ExternalLink size={14} />
+                Browse tracks on Selah.fm <ExternalLink size={14} />
               </a>
             </div>
           </motion.div>

@@ -29,11 +29,11 @@ const TOOL_META: Record<string, { title: string; description: string }> = {
 
 const TOOL_FAQ: Record<string, { q: string; a: string }[]> = {
   'cpm-calculator': [
-    { q: 'What is a good CPM rate for music promotion?', a: 'A good CPM rate depends on your goals. TikTok pays creators $0.02–0.04 per 1,000 views. Selah.fm lets artists start as low as $0.10 CPM ($100 per 1M views) — making music promotion accessible at any budget. Creators can earn up to $1,000 per 1M views at higher rates. You set the rate that works for your campaign.' },
+    { q: 'What is a good CPM rate for music promotion?', a: 'A good CPM rate depends on your goals. TikTok pays creators $0.02–0.04 per 1,000 views. Selah.fm lets artists start as low as $0.10 CPM ($100 per 1M views) — making music promotion accessible at any budget. Creators can earn up to $1,000 per 1M views at higher rates. You set the rate that works for your track.' },
     { q: 'How does CPM work for TikTok music promotion?', a: 'CPM (cost per mille) means you pay per 1,000 verified views. Instead of guessing with ads, you set a budget, creators make videos using your song, and you only pay when the views are verified. No bots. No wasted spend.' },
     { q: 'Why does TikTok pay creators so little?', a: "TikTok's Creator Fund splits a fixed pool among millions of creators. The math doesn't work in creators' favor — you need millions of views to earn meaningful money. Selah.fm flips this: artists directly pay creators at rates they set, so creators earn what their content is actually worth." },
     { q: 'Can content creators really make money from CPM?', a: 'Yes. At just $1 CPM ($1,000 per 1M views), a creator getting 100,000 views makes $100 — already 50x more than TikTok\'s Creator Fund. At higher rates, creators can earn serious income. Artists can start as low as $0.10 CPM, so there\'s room for everyone. Browse campaigns on Selah.fm to see real rates.' },
-    { q: 'What CPM rate should I set for my music campaign?', a: 'You can start as low as $0.10 CPM ($100 per 1M views) if you\'re testing the waters. Most artists set $1–5 CPM for solid creator interest. Higher rates attract more creators and better content. Start low, see what kind of submissions you get, and adjust up if you want more options. You\'re always in control.' },
+    { q: 'What CPM rate should I set for my music track?', a: 'You can start as low as $0.10 CPM ($100 per 1M views) if you\'re testing the waters. Most artists set $1–5 CPM for solid creator interest. Higher rates attract more creators and better content. Start low, see what kind of submissions you get, and adjust up if you want more options. You\'re always in control.' },
   ],
   'creator-earnings': [
     { q: 'How much do content creators earn per 1,000 views?', a: 'TikTok Creator Fund pays $0.02–0.04 per 1,000 views. YouTube Shorts pays $0.01–0.06. On Selah.fm, creators earn whatever CPM the artist sets — even at $1 CPM, that\'s $1,000 per 1M views, which is 25–50x more than platform funds. Higher CPM campaigns can pay creators even more for the same content.' },
@@ -164,7 +164,7 @@ export default async function ToolPage({ params }: Props) {
           {campaignCount > 0 && (
             <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              Live data from {campaignCount} active campaign{campaignCount !== 1 ? 's' : ''} on Selah.fm
+              Live data from {campaignCount} active track{campaignCount !== 1 ? 's' : ''} on Selah.fm
             </p>
           )}
         </header>
@@ -196,7 +196,7 @@ export default async function ToolPage({ params }: Props) {
             {params.slug === 'cpm-calculator' && (
               <>
                 <a href="/blog" className="text-sm text-primary hover:underline">CPM strategies for independent artists →</a>
-                <a href="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How to set your campaign CPM rate →</a>
+                <a href="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How to set your track CPM rate →</a>
               </>
             )}
             {params.slug === 'creator-earnings' && (

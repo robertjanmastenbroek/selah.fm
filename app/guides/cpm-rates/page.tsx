@@ -112,7 +112,7 @@ export default async function CpmRatesGuide() {
               <ul className="list-disc pl-5 space-y-2">
                 <li><strong>View verification infrastructure</strong> — we pull public view counts from TikTok, Instagram, and YouTube to verify every view.</li>
                 <li><strong>Payment processing</strong> — managing payouts to creators across Stripe Connect.</li>
-                <li><strong>Campaign hosting and discovery</strong> — your campaign is listed for creators to browse, filter, and submit to.</li>
+                <li><strong>Track hosting and discovery</strong> — your campaign is listed for creators to browse, filter, and submit to.</li>
                 <li><strong>Fraud detection</strong> — automated systems that flag suspicious view patterns.</li>
               </ul>
               <p>The fee is calculated on top of your CPM rate — it does not come out of the creator's earnings. Creators receive exactly the CPM rate you set. If you set $2,000/1M, creators earn $2,000 for every million views. The platform fee is a separate line item you pay as the artist.</p>

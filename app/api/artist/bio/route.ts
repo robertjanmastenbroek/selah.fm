@@ -413,9 +413,13 @@ async function saveBio(artistId: string, bio: string, score: number, angle: stri
     SELECT artist_name FROM discovered_artists WHERE id = ${artistId} LIMIT 1
   `;
   const title = 'Profile: ' + (artistRow?.artist_name || 'Unknown Artist');
-  await sql`
-    INSERT INTO artist_articles (discovered_artist_id, title, body, word_count, status, generated_at)
-    VALUES (${artistId}, ${title}, ${bio}, ${bio.split(/\s+/).length}, 'published', NOW())
-    ON CONFLICT (discovered_artist_id) DO UPDATE SET body = ${bio}, word_count = ${bio.split(/\s+/).length}, generated_at = NOW()
-  `.catch((e: any) => console.error('Async error in api/artist/bio/route.ts:', e));
+  try {
+    await sql`
+      INSERT INTO artist_articles (discovered_artist_id, title, body, word_count, status, generated_at)
+      VALUES (${artistId}, ${title}, ${bio}, ${bio.split(/\s+/).length}, 'published', NOW())
+      ON CONFLICT (discovered_artist_id) DO UPDATE SET body = ${bio}, word_count = ${bio.split(/\s+/).length}, generated_at = NOW()
+    `;
+  } catch (e: any) {
+    console.error('Async error saving artist_articles:', e.message);
+  }
 }
