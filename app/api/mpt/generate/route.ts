@@ -87,7 +87,7 @@ export async function POST(request: Request) {
           console.error(`[mpt/generate] Task failed:`, task.error);
           return NextResponse.json({ error: 'MPT render failed' }, { status: 502 });
         }
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/mpt/generate/route.ts:', e); }
     }
 
     if (!videoUrl) {
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     );
 
     // Ensure bucket exists
-    await supabase.storage.createBucket('outreach-videos', { public: true, fileSizeLimit: 52428800 }).catch(() => {});
+    await supabase.storage.createBucket('outreach-videos', { public: true, fileSizeLimit: 52428800 }).catch(e => console.error('Async error in api/mpt/generate/route.ts:', e));
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('outreach-videos')
@@ -162,7 +162,7 @@ async function generateScript(input: any): Promise<string> {
       const data = await res.json();
       return data.choices?.[0]?.message?.content?.trim() || '';
     }
-  } catch {}
+  } catch (e: any) { console.error('Unhandled error in api/mpt/generate/route.ts:', e); }
 
   return `This is ${input.artistName}. "${input.trackName}" deserves more ears. Campaign page built — creators earn per view. Zero upfront cost. Link in bio.`;
 }

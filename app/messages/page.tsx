@@ -162,7 +162,7 @@ export default function MessagesPage() {
       if (!selectedUser && !preselectedUser && convs.length > 0) {
         selectUser(convs[0].other_user);
       }
-    } catch (e) { console.error('loadConversations:', e); } finally { setLoading(false); }
+    } catch (e: any) { console.error('loadConversations:', e); } finally { setLoading(false); }
   }, [preselectedUser, currentUserId]);
 
   useEffect(() => { loadConversations(); }, [loadConversations, currentUserId]);
@@ -175,7 +175,7 @@ export default function MessagesPage() {
       if (res.ok) { const d = await res.json(); if (d.messages) setMessages(d.messages); }
       fetch('/api/messages', { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sender_id: user.id }) })
         .catch(e => console.error('Mark read:', e));
-    } catch (e) { console.error('selectConversation:', e); }
+    } catch (e: any) { console.error('selectConversation:', e); }
   };
 
   // ── Polling (no SSE) ──
@@ -196,9 +196,9 @@ export default function MessagesPage() {
           });
         }
         fetch('/api/messages', { method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sender_id: id }) })
-          .catch(() => {});
+          .catch(e => console.error('Async error in messages/page.tsx:', e));
         loadConversations();
-      } catch (e) { console.error('Poll:', e); }
+      } catch (e: any) { console.error('Poll:', e); }
     };
 
     pollRef.current = setInterval(poll, 5000);
@@ -375,7 +375,7 @@ export default function MessagesPage() {
                             <button onClick={() => navigator.clipboard.writeText(m.content)} className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Copy">📋</button>
                             {isMe && m.status !== 'sending' && m.status !== 'failed' && (
                               <>
-                                <button onClick={async () => { const n=prompt('Edit:',m.content); if(n&&n!==m.content){await fetch('/api/messages',{method:'PATCH',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({message_id:m.id,content:n})}).catch(()=>{});} }} className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Edit">✏️</button>
+                                <button onClick={async () => { const n=prompt('Edit:',m.content); if(n&&n!==m.content){await fetch('/api/messages',{method:'PATCH',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({message_id:m.id,content:n})}).catch(e => console.error('Async error in messages/page.tsx:', e));} }} className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Edit">✏️</button>
                                 <button onClick={async () => { if(confirm('Delete?')){await fetch(`/api/messages?id=${m.id}`,{method:'DELETE',credentials:'include'});setMessages(p=>p.filter(msg=>msg.id!==m.id));} }} className="p-1 rounded-md bg-white/[0.08] hover:bg-white/[0.12] text-muted-foreground text-[10px]" title="Delete">🗑️</button>
                               </>
                             )}

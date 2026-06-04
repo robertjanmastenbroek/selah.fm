@@ -413,5 +413,5 @@ async function saveBio(artistId: string, bio: string, score: number, angle: stri
     INSERT INTO artist_articles (discovered_artist_id, title, body, word_count, status, generated_at)
     VALUES (${artistId}, ${'Profile: ' + (await sql`SELECT artist_name FROM discovered_artists WHERE id = ${artistId}`).then((r: any) => r[0]?.artist_name || '')}, ${bio}, ${bio.split(/\s+/).length}, 'published', NOW())
     ON CONFLICT (discovered_artist_id) DO UPDATE SET body = ${bio}, word_count = ${bio.split(/\s+/).length}, generated_at = NOW()
-  `.catch(() => {});
+  `.catch((e: any) => console.error('Async error in api/artist/bio/route.ts:', e));
 }

@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         status TEXT NOT NULL DEFAULT 'unread',
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )
-    `.catch(() => {});
+    `.catch((e: any) => console.error('Async error in api/admin/emails/inbound/route.ts:', e));
 
     await sql`
       INSERT INTO inbound_emails (from_email, from_name, subject, body_text, body_html, created_at)

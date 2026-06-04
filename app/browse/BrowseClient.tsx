@@ -39,7 +39,7 @@ export default function BrowseClient() {
           setShowWelcome(!localStorage.getItem('selah_welcome_dismissed'));
         }
       })
-      .catch(() => {});
+      .catch(e => console.error('Async error in browse/BrowseClient.tsx:', e));
   }, []);
 
   const loadArtists = async (search?: string) => {
@@ -56,7 +56,7 @@ export default function BrowseClient() {
         setArtists(d.artists || []);
         setTotal(d.total || 0);
       }
-    } catch {} finally { setLoading(false); }
+    } catch (e: any) { console.error('Unhandled error in browse/BrowseClient.tsx:', e); } finally { setLoading(false); }
   };
 
   useEffect(() => { loadArtists(); }, [selectedGenre, selectedSort]);

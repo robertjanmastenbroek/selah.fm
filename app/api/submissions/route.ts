@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       });
       const vData = await verifyRes.json();
       if (typeof vData.views === 'number') initialViews = vData.views;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/submissions/route.ts:', e); }
 
     // Check campaign is active and has budget
     const campaign = await sql`SELECT status, budget_remaining_cents FROM campaigns WHERE id = ${campaignId}`;
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     `;
 
     // Server-side GA tracking
-    trackSubmitContent(platform, creatorId).catch(() => {});
+    trackSubmitContent(platform, creatorId).catch((e: any) => console.error('Async error in api/submissions/route.ts:', e));
 
     // Live ticker event
     const creatorName = session.name || 'Someone';
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
         last_initial: creatorLastInitial ? creatorLastInitial + '.' : '',
         platform: platformLabel,
       })})
-    `.catch(() => {});
+    `.catch((e: any) => console.error('Async error in api/submissions/route.ts:', e));
 
     // Notify the artist
     try {
@@ -158,9 +158,9 @@ export async function POST(request: Request) {
             subject: `New submission on "${campData.track_title}" — review it now`,
             html: `<p>Hi ${campData.display_name || 'Artist'},</p><p>Someone submitted a video for <strong>"${campData.track_title}"</strong> on Selah.fm.</p><p><a href="https://selah.fm/review">Review the submission →</a></p><p style="color:#888;font-size:13px;">You only pay for verified views after you approve.</p>`,
           }),
-        }).catch(() => {});
+        }).catch((e: any) => console.error('Async error in api/submissions/route.ts:', e));
       }
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/submissions/route.ts:', e); }
 
     return NextResponse.json(result[0]);
   } catch (e: any) {

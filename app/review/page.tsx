@@ -58,10 +58,10 @@ export default function ReviewPage() {
             .then(ad => {
               if (ad.artist?.id) setArtistId(ad.artist.id);
             })
-            .catch(() => {});
+            .catch(e => console.error('Async error in review/page.tsx:', e));
         }
       })
-      .catch(() => {});
+      .catch(e => console.error('Async error in review/page.tsx:', e));
   }, [profileData?.user?.display_name]);
 
   // Build the API URL: artistId takes priority over campaignId
@@ -117,7 +117,7 @@ export default function ReviewPage() {
           method: 'POST', credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ submissionId: id, content_url: data.content_url, campaign_id: data.campaign_id }),
-        }).catch(() => {});
+        }).catch(e => console.error('Async error in review/page.tsx:', e));
       }
       
       addToast(status === 'approved' ? 'Submission approved — creator will be paid' : 'Submission rejected', status === 'approved' ? 'success' : 'info');

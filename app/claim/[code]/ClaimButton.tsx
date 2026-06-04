@@ -46,7 +46,7 @@ export default function ClaimButton({ claimCode, artistName, campaignSlug }: {
       } else {
         setClaimed(true);
         // Record action for re-engagement system
-        fetch('/api/me/action', { method: 'POST', credentials: 'include' }).catch(() => {});
+        fetch('/api/me/action', { method: 'POST', credentials: 'include' }).catch(e => console.error('Async error in claim/[code]/ClaimButton.tsx:', e));
         // Redirect to their new campaign page after a brief celebration
         setTimeout(() => {
           router.push(`/c/${campaignSlug}`);

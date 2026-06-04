@@ -47,7 +47,7 @@ export async function GET(request: Request) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ text: tweetText.slice(0, 280) }),
-        }).catch(() => {});
+        }).catch(e => console.error('Async error in api/cron/blog-publish/route.ts:', e));
       }
 
       console.log(`Blog post published: "${post.title}" (${post.slug})`);

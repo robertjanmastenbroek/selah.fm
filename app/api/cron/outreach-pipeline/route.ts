@@ -280,7 +280,7 @@ export async function GET(request: Request) {
                     break;
                   }
                 }
-              } catch {}
+              } catch (e: any) { console.error('Unhandled error in api/cron/outreach-pipeline/route.ts:', e); }
             }
             if (imageData) {
               const ext = coverArtUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
@@ -339,7 +339,7 @@ export async function GET(request: Request) {
           // Force Facebook re-scrape (non-blocking fire-and-forget)
           const fbToken = process.env.FACEBOOK_ACCESS_TOKEN;
           if (fbToken) {
-            fetch(`https://graph.facebook.com/v18.0/?id=${encodeURIComponent(`https://selah.fm/c/${campaign.slug}`)}&scrape=true&access_token=${fbToken}`, { method: 'POST' }).catch(() => {});
+            fetch(`https://graph.facebook.com/v18.0/?id=${encodeURIComponent(`https://selah.fm/c/${campaign.slug}`)}&scrape=true&access_token=${fbToken}`, { method: 'POST' }).catch((e: any) => console.error('Async error in api/cron/outreach-pipeline/route.ts:', e));
           }
 
           // Enrich streaming links (Spotify/Apple Music) — fire-and-forget
@@ -359,8 +359,8 @@ export async function GET(request: Request) {
                 soundcloud: links.soundcloud,
               })}::jsonb
               WHERE id = ${artist.id}
-            `.catch(() => {});
-          }).catch(() => {});
+            `.catch((e: any) => console.error('Async error in api/cron/outreach-pipeline/route.ts:', e));
+          }).catch((e: any) => console.error('Async error in api/cron/outreach-pipeline/route.ts:', e));
 
           return { artist, error: false, skipped: false, msg: campaign.title };
         } catch (e: any) {

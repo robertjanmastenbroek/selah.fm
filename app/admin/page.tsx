@@ -22,7 +22,7 @@ export default function AdminOverviewPage() {
     fetch('/api/bugs', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setBugs(d.filter((b: any) => b.status === 'new').length); })
-      .catch(() => {});
+      .catch(e => console.error('Async error in admin/page.tsx:', e));
   }, []);
 
   if (error) {

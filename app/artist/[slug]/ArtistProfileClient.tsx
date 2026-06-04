@@ -80,7 +80,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
     fetch(`/api/artist/${slug}/refresh`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => { if (!d.error) setStreamingStats(d); })
-      .catch(() => {});
+      .catch(e => console.error('Async error in artist/[slug]/ArtistProfileClient.tsx:', e));
   }, [slug]);
 
   // Follow state (server-persisted + localStorage fallback)

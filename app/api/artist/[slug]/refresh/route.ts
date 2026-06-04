@@ -46,7 +46,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
           }
         }
       }
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/artist/[slug]/refresh/route.ts:', e); }
 
     // 3. Scrape Instagram/TikTok followers (on-demand, only if never scraped)
     const [audit] = await sql`
@@ -61,7 +61,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
             await sql`UPDATE artist_audits SET instagram_followers = ${ig.metrics[0].value} WHERE discovered_artist_id = ${artist.id}`;
             await storeMetrics(artist.id, 'instagram', ig.metrics);
           }
-        } catch {}
+        } catch (e: any) { console.error('Unhandled error in api/artist/[slug]/refresh/route.ts:', e); }
       }
       if (audit.tiktok_handle && !audit.tiktok_followers) {
         try {
@@ -70,7 +70,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
             await sql`UPDATE artist_audits SET tiktok_followers = ${tt.metrics[0].value} WHERE discovered_artist_id = ${artist.id}`;
             await storeMetrics(artist.id, 'tiktok', tt.metrics);
           }
-        } catch {}
+        } catch (e: any) { console.error('Unhandled error in api/artist/[slug]/refresh/route.ts:', e); }
       }
     }
 

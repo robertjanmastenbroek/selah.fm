@@ -95,7 +95,7 @@ export default async function BlogPostPage({ params }: Props) {
             };
             return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLD) }} />;
           }
-        } catch {}
+        } catch (e: any) { console.error('Unhandled error in blog/[slug]/page.tsx:', e); }
         return null;
       })()}
 

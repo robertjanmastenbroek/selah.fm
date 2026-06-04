@@ -134,7 +134,7 @@ async function fetchTikTokViews(url: string): Promise<number> {
       const redirectRes = await fetch(url, { redirect: 'manual', signal: AbortSignal.timeout(5000) });
       const location = redirectRes.headers.get('location');
       if (location) fullUrl = location;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/cron/update-views/route.ts:', e); }
   }
 
   // Extract video ID from TikTok URL
@@ -185,7 +185,7 @@ async function fetchTikTokViews(url: string): Promise<number> {
     try {
       const result = await strategy();
       if (result > 0) return result;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/cron/update-views/route.ts:', e); }
   }
 
   return 0;

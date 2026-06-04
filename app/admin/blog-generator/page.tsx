@@ -21,7 +21,7 @@ function GeneratorContent() {
     fetch('/api/admin/interview-capture?session=stats')
       .then(r => r.json())
       .then(d => setStats({ chunks: d.total_voice_chunks || 0, answers: d.total_answers || 0 }))
-      .catch(() => {});
+      .catch(e => console.error('Async error in admin/blog-generator/page.tsx:', e));
   }, []);
 
   const generate = async () => {

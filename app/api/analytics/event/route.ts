@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     sql`
       INSERT INTO analytics_events (event, path, metadata, ip_hash, user_agent, session_id, referrer, utm_source, utm_medium, utm_campaign, user_id)
       VALUES (${event}, ${path}, ${metadataJson}::jsonb, ${ipHash}, ${userAgent}, ${session_id || null}, ${referrer || null}, ${utm_source || null}, ${utm_medium || null}, ${utm_campaign || null}, ${user_id || null})
-    `.then(() => {}).catch(() => {});
+    `.then(() => {}).catch((e: any) => console.error('Async error in api/analytics/event/route.ts:', e));
 
     return NextResponse.json({ ok: true });
   } catch (e: any) {

@@ -32,7 +32,7 @@ export async function POST(request: Request) {
           }),
         });
         if (res.ok) sent = true;
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/admin/emails/send/route.ts:', e); }
     }
 
     // Log to email_logs table
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
         INSERT INTO email_logs (recipient, subject, status, metadata)
         VALUES (${to}, ${subject}, ${sent ? 'sent' : 'failed'}, ${JSON.stringify({ sent_by: session.email, body_preview: body.substring(0, 200) })})
       `;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/admin/emails/send/route.ts:', e); }
 
     return NextResponse.json({ ok: true, sent });
   } catch (e: any) {

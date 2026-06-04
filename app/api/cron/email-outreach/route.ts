@@ -100,7 +100,7 @@ export async function GET(request: Request) {
           await sql`UPDATE discovered_artists SET status = 'outreach_sent', updated_at = NOW() WHERE id = ${artist.id}`;
 
           // Add to Resend audience for future marketing (non-blocking)
-          addToAudience(artist.email_address, artist.artist_name).catch(() => {});
+          addToAudience(artist.email_address, artist.artist_name).catch(e => console.error('Async error in api/cron/email-outreach/route.ts:', e));
         }
 
         results.push({

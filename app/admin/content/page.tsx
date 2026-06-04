@@ -18,7 +18,7 @@ export default function ContentHub() {
         fetch('/api/admin/interview-capture?session=stats').then(r => r.json()),
       ]);
       setData({ blog: blogOverview, voice: voiceStats });
-    } catch (e) {}
+    } catch (e: any) {}
     setLoading(false);
   };
 

@@ -655,7 +655,7 @@ async function downloadImage(url: string): Promise<{ buffer: Buffer; mime: strin
           else if (buffer[0] === 0x52) mime = 'image/webp';
           return { buffer, mime };
         }
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/admin/outreach/route.ts:', e); }
     }
   }
   return null;
@@ -823,7 +823,7 @@ async function runSendEmail(artistId: string) {
       VALUES (${artist.id}, ${claim.campaign_id}, 'email', 'initial', ${email.body}, 'sent', NOW())
     `;
     await sql`UPDATE discovered_artists SET status = 'outreach_sent', updated_at = NOW() WHERE id = ${artist.id}`;
-    addToAudience(audit.email_address, artist.artist_name).catch(() => {});
+    addToAudience(audit.email_address, artist.artist_name).catch(e => console.error('Async error in api/admin/outreach/route.ts:', e));
   }
 
   return NextResponse.json(result);
@@ -849,7 +849,7 @@ async function runDiscoverCreators(limit: number) {
       `;
       stored++;
       if (c.email_address) withEmail++;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/admin/outreach/route.ts:', e); }
   }
 
   return NextResponse.json({ discovered: creators.length, stored, with_email: withEmail, creators: creators.filter(c => c.email_address).slice(0, 10) });
@@ -1030,7 +1030,7 @@ async function runReauditEmails(limit: number = 50) {
         found++;
         results.push({ artist: artist.artist_name, email: result.address, source: result.source });
       }
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/admin/outreach/route.ts:', e); }
   }
 
   return NextResponse.json({ processed: artists.length, found, results });

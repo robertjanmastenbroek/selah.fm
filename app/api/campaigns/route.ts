@@ -169,7 +169,7 @@ export async function GET(request: Request) {
         : `SELECT COUNT(*)::int FROM campaigns c LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id LEFT JOIN users u ON u.id = c.artist_id ${countWhere}`;
       const countResult = await sql.raw(countQuery, countParams);
       total = countResult[0]?.count || total;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/campaigns/route.ts:', e); }
 
     const page = campaigns.slice(offset, offset + limit);
 
@@ -237,7 +237,7 @@ export async function POST(request: Request) {
           imageMime = `image/${match[1] === 'jpeg' ? 'jpeg' : match[1]}`;
           imageBuffer = Buffer.from(match[2], 'base64');
           // Don't set finalCoverArt yet — we'll set it after we have the campaign ID
-        } catch {}
+        } catch (e: any) { console.error('Unhandled error in api/campaigns/route.ts:', e); }
       }
     }
 
@@ -268,7 +268,7 @@ export async function POST(request: Request) {
     }
 
     // Server-side GA tracking
-    trackCreateCampaign(trackTitle, budget || 0, userId).catch(() => {});
+    trackCreateCampaign(trackTitle, budget || 0, userId).catch(e => console.error('Async error in api/campaigns/route.ts:', e));
     return NextResponse.json(result[0]);
   } catch (e: any) {
     console.error('Campaign POST error:', e.message);

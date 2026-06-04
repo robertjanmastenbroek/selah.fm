@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         utmSource = refUrl.searchParams.get('utm_source');
         utmMedium = refUrl.searchParams.get('utm_medium');
         utmCampaign = refUrl.searchParams.get('utm_campaign');
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/analytics/pageview/route.ts:', e); }
     }
 
     // Skip obvious bots

@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         if (descParts.length >= 3) {
           owner = owner !== 'Unknown' ? owner : descParts[1]?.trim() || owner;
         }
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/tools/playlist-analyze/route.ts:', e); }
     }
 
     // ── Extract embedded state data (initialState → base64) ──────
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
             ownerFollowersFromState = playlistData.ownerV2.data.followers;
           }
         }
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/tools/playlist-analyze/route.ts:', e); }
     }
 
     // ── Fallback: parse description for "X items · Y saves" ──────

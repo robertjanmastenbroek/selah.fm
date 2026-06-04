@@ -219,7 +219,7 @@ async function fetchRealQuestions() {
     let usedRows: any[] = [];
     try {
       usedRows = await sql`SELECT normalized_text FROM used_questions WHERE status IN ('answered', 'skipped')`;
-    } catch {} // Non-critical query — empty set on failure
+    } catch (e: any) { console.error('Unhandled error in api/admin/blog/batch/route.ts:', e); } // Non-critical query — empty set on failure
     const rows = Array.isArray(usedRows) ? usedRows : (usedRows as any)?.rows || [];
     const usedSet = new Set(rows.map((r: any) => r.normalized_text));
 
@@ -250,7 +250,7 @@ async function markQuestionUsed(question: string, blogPostId?: string, status: s
           status = ${status},
           updated_at = NOW()
     `;
-  } catch (e) {
+  } catch (e: any) {
     console.error('Failed to mark question as used:', (e as Error).message);
   }
 }
@@ -376,7 +376,7 @@ async function autoAnswerAll(batchId: string) {
       });
       const res = await POST(req);
       if (res.ok) count++;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/admin/blog/batch/route.ts:', e); }
   }
   return NextResponse.json({ success: true, autoAnswered: count, total: pending.length });
 }
@@ -400,7 +400,7 @@ async function previewPost(interviewId: string) {
   let directAnswerText = '';
   const [sourceQ] = await sql`SELECT raw_question FROM batch_questions WHERE id = ${interview.source_question_id}`;
   if (sourceQ?.raw_question) {
-    try { const da = await generateDirectAnswer(sourceQ.raw_question); if (da) { directAnswerHtml = da.answer_html; directAnswerText = da.answer_text; } } catch {}
+    try { const da = await generateDirectAnswer(sourceQ.raw_question); if (da) { directAnswerHtml = da.answer_html; directAnswerText = da.answer_text; } } catch (e: any) { console.error('Unhandled error in api/admin/blog/batch/route.ts:', e); }
   }
   const fullHtml = directAnswerHtml + (directAnswerHtml ? '<hr>' : '') + (article.content_html || '');
 
@@ -584,7 +584,7 @@ async function finalizeBatch(batchId: string) {
       let directAnswerText = '';
       const [sourceQ] = await sql`SELECT raw_question FROM batch_questions WHERE id = ${interview.source_question_id}`;
       if (sourceQ?.raw_question) {
-        try { const da = await generateDirectAnswer(sourceQ.raw_question); if (da) { directAnswerHtml = da.answer_html; directAnswerText = da.answer_text; } } catch {}
+        try { const da = await generateDirectAnswer(sourceQ.raw_question); if (da) { directAnswerHtml = da.answer_html; directAnswerText = da.answer_text; } } catch (e: any) { console.error('Unhandled error in api/admin/blog/batch/route.ts:', e); }
       }
       const fullHtml = directAnswerHtml + (directAnswerHtml ? '<hr>' : '') + (article.content_html || '');
 

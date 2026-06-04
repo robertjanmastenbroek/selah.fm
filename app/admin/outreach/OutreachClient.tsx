@@ -36,7 +36,7 @@ export default function OutreachDashboard() {
       const q = await qRes.json(); const v = await vRes.json();
       setStats({ queue: q.total || 1196, generating: v.stats?.generating || 0, pending: v.stats?.pending || 0, approved: v.stats?.approved || 0, posted: v.stats?.posted || 0 });
       setVideos(v.videos || []);
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in admin/outreach/OutreachClient.tsx:', e); }
   }, []);
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function OutreachDashboard() {
               });
             }
             done++;
-          } catch (e) { done++; }
+          } catch (e: any) { done++; }
         }
 
         setGenProgress(`✅ ${done} videos generated with MPT`);

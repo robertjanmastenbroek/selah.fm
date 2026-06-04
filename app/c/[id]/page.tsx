@@ -166,7 +166,7 @@ export default async function CampaignPage({ params }: Props) {
       WHERE c.status IN ('active', 'draft') AND c.slug IS NOT NULL AND c.slug != ${canonicalSlug}
       ORDER BY c.created_at DESC LIMIT 6
     `;
-  } catch {}
+  } catch (e: any) { console.error('Unhandled error in c/[id]/page.tsx:', e); }
 
   // ── Multi-schema JSON-LD ────────────────────────────────────
   const jsonLd = campaign ? {

@@ -29,7 +29,7 @@ export default function AnalyticsDashboard() {
     fetch("/api/admin/user-flows?limit=10")
       .then(r => r.json())
       .then(d => setUserFlows(d.sessions || []))
-      .catch(() => {});
+      .catch(e => console.error('Async error in admin/analytics/AnalyticsClient.tsx:', e));
   }, [days]);
 
   if (loading) return <div className="p-8 text-muted-foreground">Loading analytics...</div>;
@@ -199,7 +199,7 @@ export default function AnalyticsDashboard() {
               fetch("/api/admin/user-flows?limit=10")
                 .then(r => r.json())
                 .then(d => setUserFlows(d.sessions || []))
-                .catch(() => {});
+                .catch(e => console.error('Async error in admin/analytics/AnalyticsClient.tsx:', e));
             }}
             className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
           >

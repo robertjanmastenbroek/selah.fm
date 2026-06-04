@@ -105,7 +105,7 @@ export async function POST(request: Request) {
               await storeMetrics(a.id, 'instagram', [{ name: 'followers', value: ig.followers, displayName: 'Followers' }]);
               r.instagram = ig.followers;
             }
-          } catch {}
+          } catch (e: any) { console.error('Unhandled error in api/crawl/route.ts:', e); }
         }
         if (a.tiktok_handle) {
           try {
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
               await storeMetrics(a.id, 'tiktok', [{ name: 'followers', value: tt.followers, displayName: 'Followers' }]);
               r.tiktok = tt.followers;
             }
-          } catch {}
+          } catch (e: any) { console.error('Unhandled error in api/crawl/route.ts:', e); }
         }
         results.push(r);
         await new Promise(r => setTimeout(r, 2000)); // Rate limit

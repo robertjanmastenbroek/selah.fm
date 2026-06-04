@@ -58,7 +58,7 @@ export async function POST(request: Request) {
         UPDATE artist_donations SET status = 'completed'
         WHERE stripe_payment_intent_id = ${intentId} AND status = 'pending'
       `;
-      trackDonation(Math.round(grossCents / 100), metadata.donorId).catch(() => {});
+      trackDonation(Math.round(grossCents / 100), metadata.donorId).catch((e: any) => console.error('Async error in api/stripe/webhook/route.ts:', e));
       return NextResponse.json({ received: true });
     }
 
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     // ── Fan donation: record + notify ───────────────────────
     if (type === 'campaign_donation') {
       // Server-side GA tracking
-      trackDonation(Math.round(grossCents / 100), metadata.donorId).catch(() => {});
+      trackDonation(Math.round(grossCents / 100), metadata.donorId).catch((e: any) => console.error('Async error in api/stripe/webhook/route.ts:', e));
       try {
         const { donorId, donorName, donorEmail, message } = metadata;
         const displayName = donorName || 'A fan';
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
             WHERE campaign_id = ${resolvedCampaignId} AND donor_name = ${displayName}
             AND created_at > NOW() - INTERVAL '10 seconds'
             ORDER BY created_at DESC LIMIT 1
-          `.catch(() => {});
+          `.catch((e: any) => console.error('Async error in api/stripe/webhook/route.ts:', e));
         }
 
         // Live ticker event
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
             last_initial: donorLastInitial ? donorLastInitial + '.' : '',
             amount: Math.round(grossCents / 100),
           })})
-        `.catch(() => {});
+        `.catch((e: any) => console.error('Async error in api/stripe/webhook/route.ts:', e));
 
         // Notify artist + send email
         const campaignRows = await sql`
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
                   cta: { text: 'View campaign', url: `https://selah.fm/c/${resolvedCampaignId}` },
                 }),
               }),
-            }).catch(() => {});
+            }).catch((e: any) => console.error('Async error in api/stripe/webhook/route.ts:', e));
           }
         }
       } catch (donationErr) {
@@ -169,7 +169,7 @@ export async function POST(request: Request) {
     // ── Deposit: add ticker event ────────────────────────────
     if (!type || type === 'campaign_deposit') {
       // Server-side GA tracking
-      trackFundCampaign(Math.round(grossCents / 100), metadata.userId).catch(() => {});
+      trackFundCampaign(Math.round(grossCents / 100), metadata.userId).catch((e: any) => console.error('Async error in api/stripe/webhook/route.ts:', e));
       try {
         const campaignRows = await sql`
           SELECT c.artist_id, c.track_title, u.display_name
@@ -185,9 +185,9 @@ export async function POST(request: Request) {
               first_name: artistFirst,
               amount: Math.round(grossCents / 100),
             })})
-          `.catch(() => {});
+          `.catch((e: any) => console.error('Async error in api/stripe/webhook/route.ts:', e));
         }
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/stripe/webhook/route.ts:', e); }
     }
 
     // ── Referral bonus: only on artist self-funding ──────────

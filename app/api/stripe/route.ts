@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     });
 
     // Server-side GA tracking
-    trackFundCampaign(depositAmount, session.id).catch(() => {});
+    trackFundCampaign(depositAmount, session.id).catch(e => console.error('Async error in api/stripe/route.ts:', e));
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret || '',

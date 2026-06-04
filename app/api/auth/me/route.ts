@@ -119,7 +119,7 @@ export async function PATCH(request: Request) {
         await markOnboarded(user.id, role);
         
         // Send welcome email #1 (fire-and-forget — don't block response)
-        sendWelcomeEmail(user.id, user.email || '', displayName, role, 0).catch(() => {});
+        sendWelcomeEmail(user.id, user.email || '', displayName, role, 0).catch(e => console.error('Async error in api/auth/me/route.ts:', e));
       }
     } catch {
       // Non-critical — onboarding still succeeds even if welcome email fails

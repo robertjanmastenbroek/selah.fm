@@ -36,10 +36,10 @@ export default function EarningsPage() {
           fetch('/api/earnings', { credentials: 'include' })
             .then(r => r.json())
             .then(ed => setMyEarnings(ed))
-            .catch(() => {});
+            .catch(e => console.error('Async error in earnings/page.tsx:', e));
         }
       })
-      .catch(() => {});
+      .catch(e => console.error('Async error in earnings/page.tsx:', e));
   }, []);
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function EarningsPage() {
         setEntries(d.entries || []);
         if (d.stats) setStats(d.stats);
       })
-      .catch(() => {})
+      .catch(e => console.error('Async error in earnings/page.tsx:', e))
       .finally(() => setLoading(false));
   }, []);
 

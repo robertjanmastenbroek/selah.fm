@@ -150,7 +150,7 @@ RULES:
               const data = await res.json();
               dmText = data.choices?.[0]?.message?.content?.trim() || '';
             }
-          } catch {}
+          } catch (e: any) { console.error('Unhandled error in api/admin/outreach/instagram/route.ts:', e); }
         }
 
         // Fallback if DeepSeek fails

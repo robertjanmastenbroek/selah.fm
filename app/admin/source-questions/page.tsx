@@ -35,7 +35,7 @@ export default function SourceQuestionsPage() {
       if (data.questions) setQuestions(data.questions);
       if (data.by_category) setByCategory(data.by_category);
       setMetadata({ already_used: data.already_used || 0, total_available: data.total_available || 0 });
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in admin/source-questions/page.tsx:', e); }
     setLoading(false);
   };
 
@@ -86,7 +86,7 @@ export default function SourceQuestionsPage() {
       // Remove from local state
       setQuestions(prev => prev.filter(q => q.question !== question));
       setMetadata(prev => ({ ...prev, already_used: (prev.already_used || 0) + 1 }));
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in admin/source-questions/page.tsx:', e); }
   };
 
   const batchGenerate = async () => {

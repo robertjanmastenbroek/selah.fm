@@ -47,7 +47,7 @@ export async function GET(request: Request) {
         try {
           const g = typeof artist.genres === 'string' ? JSON.parse(artist.genres) : (artist.genres || []);
           if (Array.isArray(g) && g.length > 0) genre = g[0];
-        } catch {}
+        } catch (e: any) { console.error('Unhandled error in api/cron/generate-outreach-videos/route.ts:', e); }
 
         const video = await generateOutreachVideo({
           artistName: artist.artist_name,
@@ -105,7 +105,7 @@ export async function GET(request: Request) {
             subject: `📱 ${goodVideos.length} IG outreach videos ready`,
             html: `<div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto"><h2>📱 Outreach Videos Ready</h2><p>${goodVideos.length} videos. Download, post, DM, mark as sent.</p>${list}<p style="color:#6B7280;font-size:13px;margin-top:24px">After posting: <a href="https://selah.fm/admin/outreach/instagram">mark as sent in dashboard</a></p></div>`,
           }),
-        }).catch(() => {});
+        }).catch(e => console.error('Async error in api/cron/generate-outreach-videos/route.ts:', e));
       }
     }
 

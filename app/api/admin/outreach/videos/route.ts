@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       if (!artist) return NextResponse.json({ error: 'Artist not found' }, { status: 404 });
 
       let genre = 'indie';
-      try { const g = typeof artist.genres === 'string' ? JSON.parse(artist.genres) : (artist.genres || []); if (Array.isArray(g) && g.length > 0) genre = g[0]; } catch {}
+      try { const g = typeof artist.genres === 'string' ? JSON.parse(artist.genres) : (artist.genres || []); if (Array.isArray(g) && g.length > 0) genre = g[0]; } catch (e: any) { console.error('Unhandled error in api/admin/outreach/videos/route.ts:', e); }
 
       const result = await generateOutreachVideoAsync({
         artistName: artist.artist_name, trackName: artist.track_name, genre,
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
       for (const artist of artists) {
         try {
           let genre = 'indie';
-          try { const g = typeof artist.genres === 'string' ? JSON.parse(artist.genres) : (artist.genres || []); if (Array.isArray(g) && g.length > 0) genre = g[0]; } catch {}
+          try { const g = typeof artist.genres === 'string' ? JSON.parse(artist.genres) : (artist.genres || []); if (Array.isArray(g) && g.length > 0) genre = g[0]; } catch (e: any) { console.error('Unhandled error in api/admin/outreach/videos/route.ts:', e); }
 
           const result = await generateOutreachVideoAsync({
             artistName: artist.artist_name, trackName: artist.track_name, genre,

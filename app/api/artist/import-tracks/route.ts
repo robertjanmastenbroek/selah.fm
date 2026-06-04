@@ -129,7 +129,7 @@ export async function POST(request: Request) {
               coverArt: jsonLd.image || '',
             }));
           }
-        } catch {}
+        } catch (e: any) { console.error('Unhandled error in api/artist/import-tracks/route.ts:', e); }
       }
 
       // Fallback to regex parsing if JSON-LD didn't work

@@ -41,7 +41,7 @@ export default function VideosClient() {
             loadVideos(); // Refresh the list
             break;
           }
-        } catch {}
+        } catch (e: any) { console.error('Unhandled error in admin/outreach/videos/VideosClient.tsx:', e); }
       }
     }, 5000);
 
@@ -55,7 +55,7 @@ export default function VideosClient() {
       const data = await res.json();
       setVideos(data.videos || []);
       setStats(data.stats || {});
-    } catch (e) { console.error(e); }
+    } catch (e: any) { console.error(e); }
     setLoading(false);
   }
 

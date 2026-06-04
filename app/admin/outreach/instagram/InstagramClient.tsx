@@ -48,7 +48,7 @@ export default function InstagramOutreachDashboard() {
       const res = await fetch('/api/admin/outreach/instagram?limit=50&status=pending');
       const data = await res.json();
       setQueue(data.queue || []);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
     }
     setLoading(false);
@@ -61,7 +61,7 @@ export default function InstagramOutreachDashboard() {
       const res = await fetch(`/api/admin/outreach/instagram?limit=50&status=${status}`);
       const data = await res.json();
       setSent(data.history || []);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
     }
     setLoading(false);
@@ -92,7 +92,7 @@ export default function InstagramOutreachDashboard() {
 
       setDmText(dmData.dm || '');
       setCaption(captionData.caption || '');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
     }
     setGenerating(false);
@@ -117,7 +117,7 @@ export default function InstagramOutreachDashboard() {
       setSelectedArtist(null);
       setDmText('');
       setCaption('');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
     }
     setSending(false);

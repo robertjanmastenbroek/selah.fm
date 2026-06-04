@@ -103,8 +103,30 @@ export default async function GenrePage({ params }: Props) {
 
   const related = (relatedGenres as Record<string, string[]>)[genre] || [];
 
+  // MusicGenre schema
+  const genreSchema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'MusicGenre',
+        name: label,
+        description: description?.slice(0, 200),
+        url: `https://selah.fm/browse/genre/${genre}`,
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Selah.fm', item: 'https://selah.fm' },
+          { '@type': 'ListItem', position: 2, name: 'Browse', item: 'https://selah.fm/browse' },
+          { '@type': 'ListItem', position: 3, name: label, item: `https://selah.fm/browse/genre/${genre}` },
+        ],
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(genreSchema) }} />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
         {/* Breadcrumb + heading */}
         <nav className="flex items-center gap-1.5 text-[11px] text-muted-foreground/40 mb-6">

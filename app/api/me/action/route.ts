@@ -13,7 +13,7 @@ export async function POST() {
     if (user) {
       await recordUserAction(user.id);
     }
-  } catch {}
+  } catch (e: any) { console.error('Unhandled error in api/me/action/route.ts:', e); }
   
   return NextResponse.json({ ok: true });
 }

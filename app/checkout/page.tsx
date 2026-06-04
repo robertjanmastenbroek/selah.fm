@@ -177,7 +177,7 @@ export default function CheckoutPage() {
     } else if (campaignId) {
       fetch(`/api/campaigns/${campaignId}`)
         .then(r => r.json()).then(d => { if (!d.error) setCampaign(d); })
-        .catch(() => {}).finally(() => setLoading(false));
+        .catch(e => console.error('Async error in checkout/page.tsx:', e)).finally(() => setLoading(false));
     } else setLoading(false);
   }, [campaignId, artistSlug]);
 

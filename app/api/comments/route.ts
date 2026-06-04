@@ -133,7 +133,7 @@ export async function POST(request: Request) {
         JOIN discovered_artists da ON da.artist_name ILIKE u.display_name
         WHERE da.id = ${pageId} AND u.id IS NOT NULL
         LIMIT 1
-      `.catch(() => {});
+      `.catch((e: any) => console.error('Async error in api/comments/route.ts:', e));
     }
 
     return NextResponse.json({ comment }, { status: 201 });

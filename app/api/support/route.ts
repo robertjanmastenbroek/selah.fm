@@ -210,7 +210,7 @@ export async function POST(request: Request) {
   }
 
   // Auto-detect potential bugs (fire-and-forget)
-  detectBug(message, history).catch(() => {});
+  detectBug(message, history).catch(e => console.error('Async error in api/support/route.ts:', e));
 
   // ── No match — suggest email support ─────────────────────────
   return NextResponse.json(

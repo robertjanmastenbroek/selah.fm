@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         INSERT INTO notifications (user_id, type, message, link)
         VALUES (${receiver_id}, 'message', ${'New message from ' + senderName}, ${'/messages?user=' + user.id})
       `;
-    } catch {} // Notification failure is non-critical
+    } catch (e: any) { console.error('Unhandled error in api/messages/route.ts:', e); } // Notification failure is non-critical
 
     return NextResponse.json({ message: msg });
   } catch (e: any) {

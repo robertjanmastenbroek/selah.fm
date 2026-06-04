@@ -68,7 +68,7 @@ export async function GET(
         ORDER BY created_at DESC LIMIT 20
       `;
       donations.supporters = supporters;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/campaigns/[id]/route.ts:', e); }
 
     return NextResponse.json({ ...campaign, donations });
   } catch (e: any) {

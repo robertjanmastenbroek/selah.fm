@@ -94,7 +94,7 @@ export default function InterviewStudio() {
 
   useEffect(() => {
     fetch('/api/admin/interview-capture')
-      .then(r => r.json()).then(d => { if (Array.isArray(d)) setSessions(d); }).catch(() => {});
+      .then(r => r.json()).then(d => { if (Array.isArray(d)) setSessions(d); }).catch(e => console.error('Async error in admin/interview/page.tsx:', e));
     fetchStats();
   }, []);
 
@@ -103,7 +103,7 @@ export default function InterviewStudio() {
       const r = await fetch('/api/admin/interview-capture?session=stats');
       const d = await r.json();
       setStats({ totalAnswers: d.total_answers || 0, totalChunks: d.total_voice_chunks || 0 });
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in admin/interview/page.tsx:', e); }
   };
 
   const topicCategories = [

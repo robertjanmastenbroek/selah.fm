@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     }));
-  } catch {}
+  } catch (e: any) { console.error('Unhandled error in sitemap.ts:', e); }
 
   // Campaign pages
   let campaignPages: MetadataRoute.Sitemap = [];
@@ -58,7 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly' as const,
       priority: 0.9,
     }));
-  } catch {}
+  } catch (e: any) { console.error('Unhandled error in sitemap.ts:', e); }
 
   // Artist profile pages (artists with at least one track)
   let artistPages: MetadataRoute.Sitemap = [];
@@ -91,7 +91,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: parseFloat(priority.toFixed(2)),
       };
     });
-  } catch {}
+  } catch (e: any) { console.error('Unhandled error in sitemap.ts:', e); }
+
+  // Track pages (per-track SEO pages)
+  let trackPages: MetadataRoute.Sitemap = [];
+  try {
+    const tracks = await sql`
+      SELECT at.id, ap.slug, at.updated_at
+      FROM artist_tracks at
+      JOIN discovered_artists da ON da.id = at.artist_id
+      JOIN artist_profiles ap ON ap.artist_id = da.id
+      WHERE at.enabled = true
+      ORDER BY at.created_at DESC
+      LIMIT 1000
+    `;
+    trackPages = tracks.map((t: any) => ({
+      url: `${baseUrl}/artist/${t.slug}/tracks/${t.id}`,
+      lastModified: new Date(t.updated_at),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    }));
+  } catch (e: any) { console.error('Track sitemap error:', e); }
 
   // Genre landing pages
   const GENRES = ['electronic', 'hip-hop', 'pop', 'rock', 'indie', 'r&b', 'jazz', 'metal',
@@ -109,6 +129,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...genrePages,
     ...blogPages,
     ...artistPages,
+    ...trackPages,
     ...campaignPages,
   ];
 }

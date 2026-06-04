@@ -109,7 +109,7 @@ function extractBandcampUrl(socialLinks: any): string | null {
     try {
       const parsed = JSON.parse(socialLinks);
       return extractBandcampUrl(parsed);
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/cron/scrape-bandcamp/route.ts:', e); }
   }
   return null;
 }
@@ -141,7 +141,7 @@ function extractLocation(html: string, artistName: string): string | null {
       const jsonLd = JSON.parse(jsonLdMatch[1]);
       const location = jsonLd.location?.name || jsonLd.contentLocation?.name;
       if (location) return location;
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/cron/scrape-bandcamp/route.ts:', e); }
   }
 
   return null;

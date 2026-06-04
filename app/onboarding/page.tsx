@@ -42,7 +42,7 @@ export default function OnboardingPage() {
         if (state.platforms) setPlatforms(state.platforms);
         if (state.cpm) setCpm(state.cpm);
         if (typeof state.step === 'number' && state.step > 0) setStep(state.step);
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in onboarding/page.tsx:', e); }
     }
   }, []);
 

@@ -106,7 +106,7 @@ export async function POST(request: Request) {
         if (creatorData.length > 0) {
           // Creator notified via NotificationBell above. Welcome emails handled via info@selah.fm
         }
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/review/route.ts:', e); }
 
       // Attempt auto-payout via Stripe
       let payoutNote: string | null = null;
@@ -142,9 +142,9 @@ export async function POST(request: Request) {
                       <p style="color:#888;font-size:13px;">Payouts are processed within 2-3 business days after setup. Works in 40+ countries.</p>
                     `,
                   }),
-                }).catch(() => {});
+                }).catch(e => console.error('Async error in api/review/route.ts:', e));
               }
-            } catch {}
+            } catch (e: any) { console.error('Unhandled error in api/review/route.ts:', e); }
           }
         } else {
           payoutNote = 'Payout processing';
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
       }
 
       // Server-side GA tracking
-      trackApproveSubmission(session.id).catch(() => {});
+      trackApproveSubmission(session.id).catch(e => console.error('Async error in api/review/route.ts:', e));
 
       const responseData = { ...result[0], payout_note: payoutNote };
       return NextResponse.json(responseData);
@@ -185,7 +185,7 @@ export async function POST(request: Request) {
         if (creatorData.length > 0) {
           // Creator notified via NotificationBell above. Rejection emails handled via info@selah.fm
         }
-      } catch {}
+      } catch (e: any) { console.error('Unhandled error in api/review/route.ts:', e); }
     }
 
     return NextResponse.json(result[0]);

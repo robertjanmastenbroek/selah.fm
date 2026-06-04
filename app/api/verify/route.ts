@@ -84,7 +84,7 @@ export async function POST(request: Request) {
               verified: false, pendingVerification: true,
             });
           }
-        } catch {}
+        } catch (e: any) { console.error('Unhandled error in api/verify/route.ts:', e); }
       }
       return NextResponse.json({
         platform: 'tiktok', views: 0,

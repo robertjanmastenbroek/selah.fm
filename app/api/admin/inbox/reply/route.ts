@@ -55,5 +55,5 @@ async function logEmail(recipient: string, subject: string, sent: boolean, reaso
       INSERT INTO email_logs (recipient, subject, sent, reason)
       VALUES (${recipient}, ${subject}, ${sent}, ${reason || null})
     `;
-  } catch {}
+  } catch (e: any) { console.error('Unhandled error in api/admin/inbox/reply/route.ts:', e); }
 }

@@ -62,7 +62,7 @@ export async function GET() {
         FROM campaigns WHERE total_budget_cents > 0
       `;
       totalDepositedCents = Number(deposits?.total || 0);
-    } catch {}
+    } catch (e: any) { console.error('Unhandled error in api/stats/route.ts:', e); }
 
     return NextResponse.json({
       artists: artistCount?.count || 0,

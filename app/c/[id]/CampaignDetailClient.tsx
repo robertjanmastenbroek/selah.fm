@@ -54,7 +54,7 @@ function ShareModal({ open, onClose, url, title, artistName, cpmDollars, trackTi
   const encodedShare = encodeURIComponent(fullShareText);
 
   const options = [
-    { name: 'Copy Link', action: async () => { try { await navigator.clipboard.writeText(url); } catch {} }, color: '#6366F1', bg: 'bg-indigo-500/10', icon: <Copy size={20} /> },
+    { name: 'Copy Link', action: async () => { try { await navigator.clipboard.writeText(url); } catch (e: any) { console.error('Unhandled error in c/[id]/CampaignDetailClient.tsx:', e); } }, color: '#6366F1', bg: 'bg-indigo-500/10', icon: <Copy size={20} /> },
     { name: 'X', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareTitle}\n\n${url}`)}`, color: '#fff', bg: 'bg-white/10',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
     { name: 'WhatsApp', href: `https://wa.me/?text=${encodedShare}`, color: '#25D366', bg: 'bg-green-500/10',
@@ -226,7 +226,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         if (d.error) setCampaign(null); else setCampaign(d); setLoading(false);
       }).catch(() => setLoading(false));
     } else {
-      fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => { if (!d.error) setCampaign(d); }).catch(() => {});
+      fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => { if (!d.error) setCampaign(d); }).catch(e => console.error('Async error in c/[id]/CampaignDetailClient.tsx:', e));
     }
   }, [id, initialCampaign]);
 
@@ -351,7 +351,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
 
             {/* ── Primary: Join campaign (creator CTA) ── */}
             <button onClick={() => {
-              fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'campaign_join_click', path: window.location.pathname, metadata: { campaign_id: id } }) }).catch(()=>{});
+              fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'campaign_join_click', path: window.location.pathname, metadata: { campaign_id: id } }) }).catch(e => console.error('Async error in c/[id]/CampaignDetailClient.tsx:', e));
               setJoinOpen(true);
             }}
               className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
