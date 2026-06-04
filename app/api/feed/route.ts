@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     const submissions = await sql`
       SELECT 
         s.id, 'submission' as type,
-        at.title as track_title,
+        c.track_title,
         da.artist_name,
         ap.slug as artist_slug,
         s.views_verified,
@@ -43,7 +43,6 @@ export async function GET(request: Request) {
       JOIN campaign_claims cc ON cc.campaign_id = c.id
       JOIN discovered_artists da ON da.id = cc.discovered_artist_id
       JOIN artist_profiles ap ON ap.artist_id = da.id
-      LEFT JOIN artist_tracks at ON at.artist_id = ap.id
       WHERE cc.discovered_artist_id = ANY(${followedIds})
         AND s.review_status = 'approved'
       ORDER BY s.created_at DESC

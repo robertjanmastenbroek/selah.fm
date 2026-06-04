@@ -61,9 +61,10 @@ export default function FeedPage() {
           <div className="space-y-2">
             {feed.map((item: any, i: number) => {
               const isSubmission = item.type === 'submission';
+              const trackSlug = (item.track_title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
               const href = isSubmission
-                ? `/artist/${item.artist_slug}/tracks/${item.id}`
-                : `/c/${item.id}`;
+                ? `/artist/${item.artist_slug}`
+                : `/artist/${item.artist_slug}/tracks/${trackSlug}`;
               return (
                 <Link key={`${item.type}-${item.id}-${i}`} href={href}
                   className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08] transition-all group">
