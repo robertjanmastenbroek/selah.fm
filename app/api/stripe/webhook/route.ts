@@ -190,31 +190,55 @@ export async function POST(request: Request) {
       } catch (e: any) { console.error('Unhandled error in api/stripe/webhook/route.ts:', e); }
     }
 
-    // ── Referral bonus: only on artist self-funding ──────────
+    // ── Referral bonus: 10% split on first deposit ────────────
     if (!type || type === 'campaign_deposit') {
       try {
         const campaignRows = await sql`
-          SELECT c.artist_id, u.email FROM campaigns c JOIN users u ON u.id = c.artist_id
+          SELECT c.artist_id, u.id as user_id FROM campaigns c JOIN users u ON u.id = c.artist_id
           WHERE c.id = ${resolvedCampaignId}
         `;
         if (campaignRows.length > 0) {
-          const artistEmail = campaignRows[0].email;
-          const artistId = campaignRows[0].artist_id;
+          const artistUserId = campaignRows[0].user_id;
 
-          const referralRows = await sql`
-            SELECT referrer_id FROM referrals WHERE referred_email = ${artistEmail} AND status = 'pending' LIMIT 1
+          // Check if this user was referred
+          const [userProfile] = await sql`
+            SELECT referred_by FROM users WHERE id = ${artistUserId} AND referred_by IS NOT NULL
           `;
-          if (referralRows.length > 0) {
-            const referrerId = referralRows[0].referrer_id;
-            const bonusTotal = Math.floor(grossCents * 0.10);
-            const bonusEach = Math.floor(bonusTotal / 2);
+          if (userProfile?.referred_by) {
+            const referrerId = userProfile.referred_by;
+            const grossDollars = grossCents / 100;
+            // Minimum $10 deposit to trigger bonus
+            if (grossDollars >= 10) {
+              const bonusTotal = Math.floor(grossCents * 0.10); // 10% total
+              const referrerBonus = Math.floor(bonusTotal / 2); // 5% to referrer
+              const refereeBonus = Math.floor(bonusTotal / 2); // 5% to referee
 
-            if (bonusEach > 0) {
-              await sql`UPDATE campaigns SET total_budget_cents = total_budget_cents + ${bonusEach}, budget_remaining_cents = budget_remaining_cents + ${bonusEach}, updated_at = NOW() WHERE artist_id = ${referrerId} AND status = 'active' LIMIT 1`;
-              await sql`UPDATE campaigns SET total_budget_cents = total_budget_cents + ${bonusEach}, budget_remaining_cents = budget_remaining_cents + ${bonusEach}, updated_at = NOW() WHERE id = ${resolvedCampaignId}`;
-              await sql`UPDATE referrals SET status = 'completed', completed_at = NOW() WHERE referred_email = ${artistEmail} AND status = 'pending'`;
-              const bonusDollars = (bonusEach / 100).toFixed(2);
-              await sql`INSERT INTO notifications (user_id, type, message, link) VALUES (${referrerId}, 'earning', ${`You earned $${bonusDollars} referral bonus!`}, '/dashboard'), (${artistId}, 'earning', ${`You received a $${bonusDollars} referral welcome bonus!`}, '/dashboard')`;
+              // Referrer: credit to withdrawable balance
+              if (referrerBonus > 0) {
+                await sql`SELECT public.award_referral_bonus(${referrerId}, ${referrerBonus}, ${resolvedCampaignId})`;
+              }
+
+              // Referee: credit to campaign budget
+              if (refereeBonus > 0) {
+                await sql`
+                  UPDATE campaigns SET
+                    total_budget_cents = total_budget_cents + ${refereeBonus},
+                    budget_remaining_cents = budget_remaining_cents + ${refereeBonus},
+                    updated_at = NOW()
+                  WHERE id = ${resolvedCampaignId}
+                `;
+              }
+
+              // Track the bonus on the donation
+              if (intentId) {
+                await sql`
+                  UPDATE campaign_donations SET referral_bonus_cents = ${bonusTotal}
+                  WHERE stripe_payment_intent_id = ${intentId}
+                `.catch(() => {});
+              }
+
+              const bonusDollars = (referrerBonus / 100).toFixed(2);
+              await sql`INSERT INTO notifications (user_id, type, message, link) VALUES (${referrerId}, 'earning', ${`You earned $${bonusDollars} referral bonus!`}, '/dashboard'), (${artistUserId}, 'earning', ${`You received a $${bonusDollars} referral welcome bonus!`}, '/dashboard')`;
             }
           }
         }

@@ -338,21 +338,8 @@ function DashboardContent() {
               </Card>
             )}
 
-            {/* Referral link */}
-            {profile && (
-              <Card>
-                <CardContent className="p-5 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Heart size={18} className="text-amber-400 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold">Refer & earn 5%</p>
-                      <p className="text-xs text-muted-foreground">Share your referral link — you both get 5% of first deposit</p>
-                    </div>
-                  </div>
-                  <ReferralCopy email={profile.email || ''} />
-                </CardContent>
-              </Card>
-            )}
+            {/* Referral section */}
+            {profile && <ReferralSection userId={profile.id} email={profile.email || ''} />}
           </div>
         )}
 
@@ -737,27 +724,101 @@ function DashboardContent() {
   );
 }
 
-/* ─── Referral copy button ──────────────────────────────────── */
-function ReferralCopy({ email }: { email: string }) {
+/* ─── REFERRAL SECTION ──────────────────────────────────────── */
+function ReferralSection({ userId, email }: { userId: string; email: string }) {
+  const { data: refData, mutate: reloadRef } = useSWR('/api/referral/code', fetcher, swrConfig);
+  const [withdrawing, setWithdrawing] = useState(false);
   const [copied, setCopied] = useState(false);
   const { addToast } = useToast();
-  const link = `https://selah.fm/login?ref=${encodeURIComponent(email)}`;
+
+  const referralCode = refData?.referral_code;
+  const earningsCents = refData?.referrer_earnings_cents || 0;
+  const pendingBonuses = refData?.pending_bonuses || 0;
+  const totalPendingCents = refData?.total_pending_cents || 0;
+  const referredUsers = refData?.referred_users || 0;
+  const shareLink = referralCode ? `https://selah.fm/login?ref=${referralCode}` : '#';
 
   const copy = () => {
-    navigator.clipboard.writeText(link).then(() => {
+    navigator.clipboard.writeText(shareLink).then(() => {
       setCopied(true);
       addToast('Referral link copied!', 'success');
       setTimeout(() => setCopied(false), 2000);
     }).catch(() => addToast('Failed to copy', 'error'));
   };
 
+  const withdraw = async () => {
+    if (withdrawing || totalPendingCents <= 0) return;
+    setWithdrawing(true);
+    try {
+      const res = await fetch('/api/referral/withdraw', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount_cents: totalPendingCents }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        addToast(data.message || 'Referral earnings withdrawn!', 'success');
+        reloadRef();
+      } else {
+        addToast(data.message || 'Failed to withdraw', 'error');
+      }
+    } catch { addToast('Network error', 'error'); }
+    setWithdrawing(false);
+  };
+
   return (
-    <div className="flex items-center gap-2 shrink-0">
-      <code className="text-[10px] bg-white/[0.04] px-2 py-1.5 rounded-lg font-mono max-w-[160px] truncate hidden sm:block">{link}</code>
-      <button onClick={copy} className="shrink-0 px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors flex items-center gap-1">
-        {copied ? <Check size={12} /> : <Copy size={12} />}
-        {copied ? 'Copied' : 'Copy'}
-      </button>
-    </div>
+    <Card>
+      <CardContent className="p-5 space-y-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <Heart size={18} className="text-amber-400 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold">Refer & earn</p>
+              <p className="text-xs text-muted-foreground">You earn 5% of every first deposit they make. They get 5% too.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+            <p className="text-lg font-bold text-emerald-400">${(earningsCents / 100).toFixed(2)}</p>
+            <p className="text-[10px] text-muted-foreground uppercase">Total earned</p>
+          </div>
+          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
+            <p className="text-lg font-bold">{referredUsers}</p>
+            <p className="text-[10px] text-muted-foreground uppercase">Referred</p>
+          </div>
+          {pendingBonuses > 0 && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <p className="text-lg font-bold text-amber-400">{pendingBonuses}</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Pending</p>
+            </div>
+          )}
+        </div>
+
+        {/* Share link + withdraw */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <code className="block text-[10px] bg-white/[0.04] px-3 py-2 rounded-lg font-mono truncate">{shareLink}</code>
+          </div>
+          <button onClick={copy} className="shrink-0 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors flex items-center gap-1">
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+          {pendingBonuses > 0 && (
+            <button onClick={withdraw} disabled={withdrawing}
+              className="shrink-0 px-3 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium transition-colors flex items-center gap-1 disabled:opacity-40">
+              {withdrawing ? <Loader2 size={12} className="animate-spin" /> : <DollarSign size={12} />}
+              Withdraw ${(totalPendingCents / 100).toFixed(2)}
+            </button>
+          )}
+        </div>
+
+        <p className="text-[10px] text-muted-foreground/40">
+          Share this link with creators and artists. When they sign up and deposit $10+, you both earn 5%.
+        </p>
+      </CardContent>
+    </Card>
   );
 }

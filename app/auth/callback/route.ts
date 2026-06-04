@@ -68,6 +68,7 @@ export async function GET(request: Request) {
       try {
         const rows = await sql`SELECT onboarded_at, profile_image_url FROM users WHERE id = ${user.id}`;
         const existing = rows[0];
+        const isNewUser = !existing || !existing.onboarded_at;
         
         // Save Google avatar if user doesn't have a profile image yet
         const googleAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
@@ -77,9 +78,27 @@ export async function GET(request: Request) {
             WHERE id = ${user.id}
           `;
         }
+
+        // ── Claim referral code on first signup ─────────────────
+        const refCode = requestUrl.searchParams.get('ref');
+        if (refCode && isNewUser) {
+          try {
+            // Find referrer by code
+            const [referrer] = await sql`
+              SELECT id FROM users WHERE referral_code = ${refCode} AND id != ${user.id}
+            `;
+            if (referrer) {
+              await sql`
+                UPDATE users SET referred_by = ${referrer.id} WHERE id = ${user.id}
+              `;
+            }
+          } catch (refErr) {
+            console.error('Referral claim failed:', refErr);
+          }
+        }
         
         // New user or never completed onboarding → onboarding flow with role
-        if ((!existing || !existing.onboarded_at) && next === '/browse') {
+        if (isNewUser && next === '/browse') {
           const userType = user.user_metadata?.user_type || user.user_metadata?.is_artist ? 'artist' : 'creator';
           finalUrl = new URL(`/onboarding?role=${userType}`, origin);
         }
