@@ -209,7 +209,7 @@ function SupporterGrid({ supporters, totalCount }: { supporters: any[]; totalCou
         {visible.map((s: any, i: number) => (
           <div
             key={i}
-            className="w-7 h-7 rounded-full border-2 border-deep-navy bg-gradient-to-br from-indigo-500 to-purple-600 
+            className="w-7 h-7 rounded-full border-2 border-[#0F0F23] bg-gradient-to-br from-indigo-500 to-purple-600 
               flex items-center justify-center text-[9px] font-bold text-white shrink-0"
             title={`${s.donor_name || 'Anonymous'}${s.amount_cents ? ` · $${(s.amount_cents / 100).toFixed(2)}` : ''}`}
           >
@@ -217,7 +217,7 @@ function SupporterGrid({ supporters, totalCount }: { supporters: any[]; totalCou
           </div>
         ))}
         {extra > 0 && (
-          <div className="w-7 h-7 rounded-full border-2 border-deep-navy bg-white/[0.06] flex items-center justify-center text-[9px] text-muted-foreground shrink-0">
+          <div className="w-7 h-7 rounded-full border-2 border-[#0F0F23] bg-white/[0.06] flex items-center justify-center text-[9px] text-muted-foreground shrink-0">
             +{extra}
           </div>
         )}
@@ -660,7 +660,7 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
 
 function CampaignSkeleton() {
   return (
-    <div className="min-h-screen bg-deep-navy">
+    <div className="min-h-screen bg-[#0F0F23]">
       <Header />
       <div className="md:flex md:flex-row md:min-h-[65vh]">
         <div className="md:w-[60%]">
@@ -797,7 +797,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
   if (loading) return <CampaignSkeleton />;
 
   if (!campaign) return (
-    <div className="min-h-screen bg-deep-navy">
+    <div className="min-h-screen bg-[#0F0F23]">
       <Header />
       <main className="max-w-2xl mx-auto px-4 py-20 text-center">
         <h1 className="text-2xl font-bold font-display mb-4">Track promotion not found</h1>
@@ -824,7 +824,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
   const claimCode = campaign.claim_code;
 
   return (
-    <div className="min-h-screen bg-deep-navy">
+    <div className="min-h-screen bg-[#0F0F23]">
       <Header />
 
       {/* ════════════════════════════════════════════════════════ */}
@@ -1029,30 +1029,28 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
 
               {/* Activity Timeline */}
               <ActivityTimeline campaign={campaign} />
-              {/* Trust bar */}
-              <div className="mt-4 flex items-center justify-between">
+              {/* Trust bar + actions */}
+              <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
                 <TrustBar />
-                <button onClick={() => setShareOpen(true)}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors shrink-0">
-                  <Share2 size={14} /> Share
-
-              {/* Save button */}
-              <button onClick={async () => {
-                try {
-                  const auth = await fetch('/api/auth/me', { credentials: 'include' });
-                  if (!auth.ok) { window.location.href = '/login'; return; }
-                  const res = await fetch(`/api/campaigns/${campaign.id}/interest`, {
-                    method: 'POST', credentials: 'include'
-                  });
-                  const d = await res.json();
-                  setSaved(d.saved);
-                } catch {}
-              }}
-                className="flex items-center gap-1.5 text-xs transition-colors shrink-0">
-                <Bookmark size={14} className={saved ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground hover:text-white'} />
-                <span className={campaign.saved ? 'text-amber-400' : 'text-muted-foreground hover:text-white'}>{saved ? 'Saved' : 'Save'}</span>
-              </button>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setShareOpen(true)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors active:scale-95">
+                    <Share2 size={14} /> Share
+                  </button>
+                  <button onClick={async () => {
+                    try {
+                      const auth = await fetch('/api/auth/me', { credentials: 'include' });
+                      if (!auth.ok) { window.location.href = '/login'; return; }
+                      const res = await fetch(`/api/campaigns/${campaign.id}/interest`, { method: 'POST', credentials: 'include' });
+                      const d = await res.json();
+                      setSaved(d.saved);
+                    } catch {}
+                  }}
+                    className="flex items-center gap-1.5 text-xs transition-colors active:scale-95">
+                    <Bookmark size={14} className={saved ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground hover:text-white'} />
+                    <span className={saved ? 'text-amber-400' : 'text-muted-foreground hover:text-white'}>{saved ? 'Saved' : 'Save'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Artist link */}
@@ -1062,6 +1060,54 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 </div>
               )}
             </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════════════ */}
+      {/* 3-STEP HOW IT WORKS */}
+      {/* ════════════════════════════════════════════════════════ */}
+      <div className="max-w-5xl mx-auto px-4 pt-8">
+        <div className="rounded-2xl bg-gradient-to-br from-indigo-500/[0.04] to-transparent border border-indigo-500/10 p-5 md:p-6 relative overflow-hidden">
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/[0.04] rounded-full blur-3xl pointer-events-none" />
+          <h3 className="text-sm font-bold mb-4 flex items-center gap-2 relative z-10">
+            <Sparkles size={14} className="text-indigo-400" />
+            How to earn promoting this track
+          </h3>
+          <div className="grid md:grid-cols-3 gap-4 relative z-10">
+            {[
+              {
+                step: 1,
+                title: 'Find the audio',
+                desc: 'Search for this track on TikTok, Instagram, or YouTube and use the official audio in your video.',
+                icon: <Music2 size={20} />,
+              },
+              {
+                step: 2,
+                title: 'Create & post',
+                desc: 'Record a vertical 15-60 second video. Be creative — engaging content earns more views, which earns more.',
+                icon: <Film size={20} />,
+              },
+              {
+                step: 3,
+                title: 'Submit & earn',
+                desc: `Submit your public video link. If approved, you earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} per 1M verified views — paid via Stripe.`,
+                icon: <DollarSign size={20} />,
+              },
+            ].map((s, i) => (
+              <div key={i} className="flex gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 shrink-0">
+                  {s.icon}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider">Step {s.step}</span>
+                  </div>
+                  <p className="text-xs font-semibold">{s.title}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5 leading-relaxed">{s.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -1079,12 +1125,47 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       </main>
 
       {/* ════════════════════════════════════════════════════════ */}
+      {/* FLOATING DESKTOP CTA BAR */}
+      {/* ════════════════════════════════════════════════════════ */}
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: scrollY > 400 ? 0 : 100, opacity: scrollY > 400 ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+        className="hidden md:flex fixed bottom-6 right-6 z-40 bg-[#0F0F23]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl p-4 items-center gap-4"
+      >
+        <div className="min-w-0 max-w-[200px]">
+          <p className="text-xs font-semibold truncate">{displayTitle}</p>
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <span>{artistName}</span>
+            {submissionCount > 0 && (
+              <>
+                <span className="text-muted-foreground/30">·</span>
+                <span className="text-indigo-400">{submissionCount} sub{submissionCount !== 1 ? 's' : ''}</span>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <Link href={`/checkout?type=donation&campaignId=${id}`}
+            className="px-3.5 py-2 text-[11px] font-semibold rounded-xl border border-white/[0.12] bg-white/[0.02] text-muted-foreground hover:text-white hover:bg-white/[0.05] hover:border-indigo-500/30 transition-all flex items-center gap-1.5 active:scale-95">
+            <Heart size={12} className="text-indigo-400/60" />
+            Support
+          </Link>
+          <button onClick={() => setJoinOpen(true)}
+            className="px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white active:scale-95 transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
+            <Sparkles size={13} />
+            Join — earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M
+          </button>
+        </div>
+      </motion.div>
+
+      {/* ════════════════════════════════════════════════════════ */}
       {/* STICKY MOBILE BAR */}
       {/* ════════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="fixed bottom-0 inset-x-0 z-layer-sticky-bar md:hidden bg-deep-navy/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3"
+        className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3"
       >
         <div className="flex items-center justify-between">
           <div className="min-w-0 flex-1 mr-3">
