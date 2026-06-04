@@ -411,7 +411,7 @@ export default function BrowseClient() {
               <p className="text-sm text-muted-foreground max-w-lg">
                 Browse artists and tracks, create content, and earn per verified view.
                 {(totalArtists > 0 || totalTracks > 0) && (
-                  <span className="text-emerald-400 font-medium"> <span>{totalArtists + totalTracks}+</span> tracks available.</span>
+                  <span className="text-emerald-400 font-medium"> <span>{tab === 'artists' ? totalArtists : totalTracks}+</span> {tab === 'artists' ? 'artists' : 'tracks'} available.</span>
                 )}
               </p>
             </div>
