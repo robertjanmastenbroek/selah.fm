@@ -5,6 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report e2e-report",
+    "test:lighthouse": "lhci autorun",
+    "test:all": "npm run test:e2e && npm run test:lighthouse",
     "start": "next start",
     "bugs:pull": "node scripts/fetch-new-bugs.mjs"
   },
@@ -36,6 +41,8 @@
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.15.1",
+    "@playwright/test": "^1.60.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.20.0",

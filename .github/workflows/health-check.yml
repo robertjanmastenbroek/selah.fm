@@ -1,0 +1,54 @@
+name: Post-Deploy Health Check
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Wait for Railway deploy
+        run: sleep 120
+
+      - name: Check health endpoint
+        run: |
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://selah.fm/api/health)
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check passed ($STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: health endpoint returned $STATUS, waiting 30s..."
+            sleep 30
+          done
+          echo "❌ Health check failed after 5 attempts"
+          
+          # Create rollback issue if this is main branch
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            curl -s -X POST \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "title": "🚨 Auto-rollback: Deploy failed health check",
+                "body": "Deploy at ${{ github.sha }} failed health verification. Run `node scripts/rollback.mjs 1` to rollback.",
+                "labels": ["bug", "rollback"]
+              }' \
+              "${{ github.api_url }}/repos/${{ github.repository }}/issues"
+          fi
+          exit 1
+
+      - name: Check key pages
+        run: |
+          PAGES=("https://selah.fm" "https://selah.fm/browse" "https://selah.fm/blog" "https://selah.fm/login")
+          for url in "${PAGES[@]}"; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+            if [ "$STATUS" != "200" ]; then
+              echo "❌ $url returned $STATUS"
+              exit 1
+            fi
+            echo "✅ $url -> $STATUS"
+          done
+          echo "✅ All key pages healthy"

@@ -1,0 +1,31 @@
+{
+  "ci": {
+    "assert": {
+      "assertions": {
+        "categories:performance": ["warn", { "aggregationMethod": "median", "minScore": 0.8 }],
+        "categories:accessibility": ["warn", { "aggregationMethod": "median", "minScore": 0.9 }],
+        "categories:best-practices": ["warn", { "aggregationMethod": "median", "minScore": 0.9 }],
+        "categories:seo": ["warn", { "aggregationMethod": "median", "minScore": 0.9 }]
+      }
+    },
+    "collect": {
+      "startServerCommand": "npm start",
+      "url": [
+        "https://selah.fm",
+        "https://selah.fm/browse",
+        "https://selah.fm/blog",
+        "https://selah.fm/login"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "throttlingMethod": "provided",
+        "onlyCategories": ["performance", "accessibility", "best-practices", "seo"]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./lighthouse-report"
+    }
+  }
+}
