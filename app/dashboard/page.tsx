@@ -1251,12 +1251,13 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
   const [copied, setCopied] = useState(false);
   const { addToast } = useToast();
 
+  const loaded = !!refData;
   const referralCode = refData?.referral_code;
   const earningsCents = refData?.referrer_earnings_cents || 0;
   const pendingBonuses = refData?.pending_bonuses || 0;
   const totalPendingCents = refData?.total_pending_cents || 0;
   const referredUsers = refData?.referred_users || 0;
-  const shareLink = referralCode ? `https://selah.fm/login?ref=${referralCode}` : '#';
+  const shareLink = referralCode ? `https://selah.fm/login?ref=${referralCode}` : '';
 
   const copy = () => {
     navigator.clipboard.writeText(shareLink).then(() => {
@@ -1310,12 +1311,21 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <code className="flex-1 text-[10px] bg-white/[0.04] px-3 py-2 rounded-lg font-mono truncate">{shareLink}</code>
-          <button onClick={copy}
-            className="shrink-0 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors flex items-center gap-1 active:scale-95">
-            {copied ? <Check size={12} /> : <Copy size={12} />}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
+          {loaded ? (
+            <>
+              <code className="flex-1 text-[10px] bg-white/[0.04] px-3 py-2 rounded-lg font-mono truncate">{shareLink}</code>
+              <button onClick={copy}
+                className="shrink-0 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors flex items-center gap-1 active:scale-95">
+                {copied ? <Check size={12} /> : <Copy size={12} />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center gap-2">
+              <div className="flex-1 h-8 rounded-lg bg-white/[0.04] animate-pulse" />
+              <div className="w-16 h-8 rounded-lg bg-white/[0.04] animate-pulse" />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
