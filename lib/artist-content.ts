@@ -30,26 +30,28 @@ async function chat(messages: { role: string; content: string }[], options: { te
   } finally { clearTimeout(timeout); }
 }
 
-const BIO_PROMPT_BASE = `You are writing SEO content for Selah.fm, a CPM marketplace for music promotion.
-Write an HTML-formatted bio for an independent musician targeting top 0.0001% quality.
+const BIO_PROMPT_BASE = `You are writing SEO content for Selah.fm, a CPM music promotion marketplace.
+Write a short HTML-formatted bio for an independent musician. This is a community-created support page — the artist has NOT necessarily claimed or endorsed it.
+
+CRITICAL — ONLY use the exact facts provided. Never invent details, never claim the artist "chose" or "joined" Selah.fm. Be honest if facts are limited. Never invent achievements or milestones.
 
 Structure:
 <h1>About [Artist Name]</h1>
-<p>Compelling opening paragraph about their music and style</p>
+<p>Opening paragraph with available information about the artist</p>
 <h2>Musical Style</h2>  
-<p>Details about their sound, genre, influences</p>
-<h2>Achievements</h2>
-<p>Notable milestones, audience stats</p>
+<p>What is known about their sound and genre (skip section if no facts provided)</p>
 <h2>Support on Selah.fm</h2>
-<p>How fans can donate and creators can earn per verified view making videos</p>
+<p>This page was created by the Selah.fm community to support the artist. If you're the artist, you can claim this page. Fans can donate or make videos.</p>
 
 Rules:
-- 120-200 words total
-- Natural founder-voice tone — no AI giveaways
-- <strong>Bold</strong> key terms
-- Never use: "Furthermore", "Moreover", "In conclusion", "testament", "delve", "myriad"
+- 60-120 words total. If very few facts, 30-50 words.
+- Natural, HONEST tone — no AI giveaways
+- Vary your opening. Do NOT start with "In a world where", "There's something refreshing about", "In an era where", "When it comes to"
+- Use concrete, specific language. Avoid vague descriptors like "captivating", "mesmerizing", "haunting"
+- Max 2 <strong>bold</strong> terms total
+- Never use: "Furthermore", "Moreover", "In conclusion", "chose", "partnered", "testament", "delve", "myriad", "burgeoning", "sonic tapestry"
 - Return ONLY valid HTML — no markdown, no code fences
-- Never invent details. Only use the facts provided below.`;
+- NEVER invent details. Only use the facts provided below.`;
 
 /**
  * Build the BIO_PROMPT, dynamically including overused words to avoid.
@@ -64,16 +66,16 @@ ${overusedWarning}`;
   return BIO_PROMPT_BASE;
 }
 
-const FAQ_PROMPT = `Generate 3 FAQ entries for this artist's Selah.fm profile page.
+const FAQ_PROMPT = `Generate 2 FAQ entries for this artist's Selah.fm community support page.
 Each FAQ must be a real question someone searching for this artist would ask.
 
 Return ONLY a JSON array: [{"question":"...","answer":"..."}]
 
 Rules:
-- Question 1: Always "How can I support [artist]?" with answer about donating on Selah.fm
-- Question 2: Always "How can I make a video for [artist]'s music?" with answer about earning per view
-- Question 3: A genre-specific question (e.g., "What genre is [artist]?")
-- Keep answers under 50 words each
+- Question 1: "How can I support [artist]?" with answer about donating on Selah.fm
+- Question 2: A genre-specific question (e.g., "What genre is [artist]?")
+- Keep answers under 40 words each
+- Be honest — don't claim the artist chose the platform
 - Return ONLY valid JSON, no other text`;
 
 /**
