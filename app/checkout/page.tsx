@@ -114,19 +114,11 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
       <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-xs space-y-1.5">
         <div className="flex justify-between">
           <span className="text-white/60">You pay</span>
-          <span className="font-semibold text-white">${amount.toFixed(2)}</span>
+          <span className="font-semibold text-white">$${amount.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between text-[10px]">
-          <span className="text-muted-foreground/50">Platform fee (20%)</span>
-          <span className="text-muted-foreground/50">−${(amount * 0.20).toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-[10px]">
-          <span className="text-muted-foreground/50">Stripe processing (2.9% + $0.30)</span>
-          <span className="text-muted-foreground/50">−${(amount * 0.029 + 0.30).toFixed(2)}</span>
-        </div>
-        <div className="border-t border-white/[0.06] pt-1.5 flex justify-between font-semibold">
-          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Goes to campaign</span>
-          <span className="text-emerald-400">$${Math.max(0, amount - amount * 0.20 - (amount * 0.029 + 0.30)).toFixed(2)}</span>
+        <div className="pt-1.5 flex justify-between font-semibold">
+          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Net to campaign</span>
+          <span className="text-emerald-400">$${(amount * 0.80).toFixed(2)}</span>
         </div>
       </div>
 
@@ -195,7 +187,7 @@ export default function CheckoutPage() {
 
   // Get clientSecret (debounced)
   useEffect(() => {
-    if (effectiveAmount < 1 || loading) return;
+    if (effectiveAmount < 5 || loading) return;
     const isArtistMode = !!artistSlug;
     if (!isArtistMode && !campaignId) return;
     setClientSecret('');
@@ -437,9 +429,9 @@ export default function CheckoutPage() {
                 <h3 className="font-semibold text-white/80">Payment not configured</h3>
                 <p className="text-xs text-white/40">Stripe keys need to be set for payments to work.</p>
               </div>
-            ) : effectiveAmount < 1 ? (
+            ) : effectiveAmount < 5 ? (
               <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center">
-                <p className="text-sm text-white/40">Enter an amount above to continue</p>
+                <p className="text-sm text-white/40">Minimum donation is $5</p>
               </div>
             ) : gettingSecret ? (
               <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-8 flex items-center justify-center">
