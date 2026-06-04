@@ -18,7 +18,6 @@ async function getCampaign(id: string) {
             NULL as audit_youtube_url,
             NULL as spotify_embed_url,
             ap.slug as artist_slug,
-            c.video_url
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
@@ -34,7 +33,6 @@ async function getCampaign(id: string) {
             NULL as audit_youtube_url,
             NULL as spotify_embed_url,
             ap.slug as artist_slug,
-            c.video_url
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
