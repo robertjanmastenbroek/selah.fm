@@ -151,13 +151,13 @@ export async function GET(request: Request) {
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           WHERE c.track_title ILIKE ${'%' + search + '%'} OR u.display_name ILIKE ${'%' + search + '%'}
-          ORDER BY c.created_at DESC LIMIT 200
+          ORDER BY c.created_at DESC LIMIT 5000
         `
         : await sql`
           SELECT c.*, u.display_name as artist_name, u.email as artist_email
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
-          ORDER BY c.created_at DESC LIMIT 200
+          ORDER BY c.created_at DESC LIMIT 5000
         `;
       return NextResponse.json(rows);
     }
