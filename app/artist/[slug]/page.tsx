@@ -13,10 +13,9 @@ async function getArtistData(slug: string) {
     SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
            da.social_links, da.latest_track_name, da.latest_track_cover_url,
            da.instagram_handle, da.tiktok_handle, da.spotify_id,
-           da.comment_count, da.wikipedia_url, da.wikidata_id,
-           ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
+           da.comment_count,            ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
            ap.total_streams, ap.total_platforms,
-           COALESCE(aa.bio, '')::text as bio
+           ''::text as bio
     FROM discovered_artists da
     LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
     WHERE ap.slug = ${slug}
@@ -31,10 +30,9 @@ async function getArtistData(slug: string) {
       SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
              da.social_links, da.latest_track_name, da.latest_track_cover_url,
              da.instagram_handle, da.tiktok_handle, da.spotify_id,
-             da.comment_count, da.wikipedia_url, da.wikidata_id,
-             ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
+             da.comment_count,              ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
              ap.total_streams, ap.total_platforms,
-             COALESCE(aa.bio, '')::text as bio
+             ''::text as bio
       FROM discovered_artists da
       LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
         WHERE LOWER(da.artist_name) LIKE ${'%' + slugName.toLowerCase() + '%'}
