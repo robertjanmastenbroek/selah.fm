@@ -160,7 +160,8 @@ async function getArtistData(slug: string) {
       // Single source of truth: lifetime_deposits_cents from artist_profiles
       total_donations_cents: profileDepositedCents,
       donation_count: donationStats.donation_count,
-      supporter_count: donationStats.supporter_count,
+      // At least 1 supporter if there are deposits (artist funds themselves)
+      supporter_count: Math.max(donationStats.supporter_count, profileDepositedCents > 0 ? 1 : 0),
       total_views: submissionStats.total_views,
       total_submissions: submissionStats.total_submissions,
     },
