@@ -1,0 +1,5 @@
+# This file serves as IndexNow key verification at https://selah.fm/INDEXNOW_KEY.txt
+# Replace the line below with the actual INDEXNOW_KEY value from your environment.
+# The content of this file must match the INDEXNOW_KEY environment variable exactly.
+# See: https://www.indexnow.org/documentation
+REPLACE_WITH_YOUR_INDEXNOW_KEY

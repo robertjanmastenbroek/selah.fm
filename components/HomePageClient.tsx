@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import {
   Music4, Clapperboard, ArrowRight, Shield,
-  BadgeCheck, Eye, Upload, DollarSign, Heart, Star, Check
+  BadgeCheck, Eye, Upload, DollarSign, Heart, Star, Check,
+  BarChart3, ChevronDown
 } from 'lucide-react';
 
 function formatCount(n: number): string {
@@ -20,6 +21,87 @@ function formatMoney(cents: number): string {
   if (cents >= 100_000_000) return '$' + (cents / 100_000_000).toFixed(1) + 'M';
   if (cents >= 100_000) return '$' + Math.floor(cents / 100_000) + 'K';
   return '$' + Math.max(0, Math.floor(cents / 100));
+}
+
+/* ─── INTERACTIVE CPM CALCULATOR ────────────────────────────── */
+function CalculatorSection() {
+  const [views, setViews] = useState(10000);
+  const [cpmDollars] = useState(10); // Default $10 CPM
+  const earnings = (views / 1000) * cpmDollars * 0.8;
+  const grossEarnings = (views / 1000) * cpmDollars;
+
+  const presets = [
+    { label: '1K', value: 1000 },
+    { label: '10K', value: 10000 },
+    { label: '100K', value: 100000 },
+    { label: '1M', value: 1000000 },
+  ];
+
+  const closestPreset = useMemo(() =>
+    presets.reduce((prev, curr) =>
+      Math.abs(curr.value - views) < Math.abs(prev.value - views) ? curr : prev
+    ), [views]);
+
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-indigo-500/[0.03] border border-indigo-500/10 p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <BarChart3 size={20} className="text-indigo-400" />
+        <div>
+          <p className="text-sm font-semibold text-white/90">Earnings calculator</p>
+          <p className="text-[10px] text-white/30">At $10.00 CPM (industry average)</p>
+        </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="flex justify-between items-end mb-2">
+          <span className="text-xs text-white/40">Estimated views</span>
+          <span className="text-lg font-bold text-white">
+            {views >= 1000000 ? `${(views / 1000000).toFixed(1)}M` : views >= 1000 ? `${(views / 1000).toFixed(0)}K` : views.toLocaleString()}
+          </span>
+        </div>
+        <div className="relative">
+          <input type="range" min={100} max={5000000} step={100} value={views}
+            onChange={(e) => setViews(parseInt(e.target.value))}
+            className="w-full h-2.5 rounded-full appearance-none bg-white/[0.08] cursor-pointer
+              [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+              [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-[#4338CA] [&::-webkit-slider-thumb]:to-[#6366F1]
+              [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-indigo-500/40"
+            style={{ background: `linear-gradient(to right, rgba(99,102,241,0.6) ${(views / 5000000) * 100}%, rgba(255,255,255,0.08) ${(views / 5000000) * 100}%)` }} />
+        </div>
+        <div className="flex justify-between mt-2">
+          {presets.map((p) => (
+            <button key={p.label} onClick={() => setViews(p.value)}
+              className={`text-[10px] px-3 py-1 rounded-full transition-all ${
+                closestPreset.value === p.value ? 'bg-indigo-500/20 text-indigo-300 font-semibold' : 'text-white/30 hover:text-white/60'
+              }`}>{p.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="p-4 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center">
+          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Platform fee (20%)</p>
+          <p className="text-lg font-bold text-amber-400">${((grossEarnings - earnings).toFixed(2))}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 text-center">
+          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">You earn</p>
+          <p className="text-2xl font-bold text-emerald-400">${earnings >= 1 ? earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : earnings.toFixed(2)}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 justify-center">
+        <span className="text-[9px] px-2 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/20">
+          $10/1K views
+        </span>
+        <span className="text-[9px] px-2 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/20">
+          80% creator share
+        </span>
+        <span className="text-[9px] px-2 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/20">
+          Verified views only
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export default function RootPage() {
@@ -184,6 +266,18 @@ export default function RootPage() {
         </motion.div>
       </section>
 
+      {/* ═══════════════ CPM CALCULATOR ═══════════════ */}
+      <section className="relative z-10 px-4 py-20 max-w-2xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-2 text-center">How much could you earn?</p>
+          <h2 className="text-3xl md:text-4xl font-heading tracking-tight mb-1 text-center">See it before you start</h2>
+          <p className="text-white/35 text-xs text-center mb-8">No signup required. Drag the slider to estimate your earnings.</p>
+
+          <CalculatorSection />
+        </motion.div>
+      </section>
+
       {/* ═══════════════ HOW IT WORKS ═══════════════ */}
       <section className="relative z-10 px-4 py-28 max-w-5xl mx-auto">
         <motion.div className="text-center mb-16"
@@ -338,6 +432,41 @@ export default function RootPage() {
           </motion.div>
         </section>
       )}
+
+      {/* ═══════════════ FAQ ═══════════════ */}
+      <section className="relative z-10 px-4 py-28 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-2 text-center">FAQ</p>
+          <h2 className="text-3xl md:text-4xl font-heading tracking-tight mb-10 text-center">Common questions</h2>
+
+          <div className="space-y-3">
+            {[
+              { q: 'How does pricing work?', a: 'Artists set their own CPM rate (cost per 1,000 verified views). Creators earn 80% of the CPM rate. Selah.fm takes a 20% platform fee. There are no upfront costs — you only pay for verified views you approve.' },
+              { q: 'Do I need to pay upfront?', a: 'No. You only pay when you approve a creator\'s video. You deposit funds to your campaign budget, and payments are deducted per approved view.' },
+              { q: 'Who are the creators?', a: 'Our creators are vetted music content makers on TikTok, Instagram Reels, and YouTube Shorts. They apply to your campaign, and you approve only the videos you like.' },
+              { q: 'How do creators get paid?', a: 'When you approve a submission, the creator earns their CPM rate per 1,000 verified views. Payouts are processed via Stripe within 2-3 business days.' },
+              { q: 'Can I promote any genre?', a: 'Absolutely. Selah.fm supports all music genres. Creators browse campaigns by genre to find tracks that match their style.' },
+            ].map((item, i) => (
+              <details key={i} className="group rounded-xl border border-white/[0.04] bg-white/[0.01] overflow-hidden">
+                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer text-sm font-medium text-white/70 hover:text-white transition-colors">
+                  {item.q}
+                  <ChevronDown size={14} className="text-white/20 group-open:rotate-180 transition-transform shrink-0 ml-3" />
+                </summary>
+                <div className="px-5 pb-4 text-xs text-white/30 leading-relaxed">
+                  {item.a}
+                </div>
+              </details>
+            ))}
+          </div>
+
+          <p className="text-center mt-8">
+            <Link href="/faq" className="text-xs text-[#818CF8] hover:text-[#A5B4FC] transition-colors">
+              Read all FAQs →
+            </Link>
+          </p>
+        </motion.div>
+      </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}
       <footer className="relative z-10 border-t border-white/[0.03] px-4 py-12">

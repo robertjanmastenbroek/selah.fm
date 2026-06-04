@@ -51,7 +51,15 @@
 | `OUTREACH.md` | 267 | Outreach strategy | ✅ ALL BUILT |
 | `MARKETING.md` | 188 | Marketing strategy | ✅ ALL BUILT |
 
-### 🟢 New Research (June 4, 2026)
+### 🟢 New Research (June 4-5, 2026)
+
+| Document | Lines | Topic | Status |
+|----------|-------|-------|--------|
+| `00-BLUEPRINT.md` | 72 | 0.0001% standard & execution | ✅ Partly built (track page sprint 1, wikidata enrichment) |
+| `COMMUNITY_BLUEPRINT.md` | 162 | Community & social features | ⬜ Not started |
+| `FINANCIAL_BLUEPRINT.md` | 239 | Financial flow (deposit → payout) | 🟡 In progress (stripe_events table done, reconcile cron exists) |
+| `GROWTH_BLUEPRINT.md` | 248 | Homepage · Analytics · Referral | ⬜ Not started |
+| `LAUNCH_CHECKLIST.md` | 136 | Curated launch plan | 🔴 ACTIVE (manual outreach in progress, user confirmed)
 
 | Document | Lines | Topic | Key Insight |
 |----------|-------|-------|-------------|

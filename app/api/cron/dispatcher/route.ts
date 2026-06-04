@@ -10,25 +10,21 @@ export const maxDuration = 600;
  */
 
 const WORKERS: Record<number, { path: string; params?: string }[]> = {
-  // Outreach pipeline paused — 2,563 unclaimed campaigns with zero activity (ROADMAP #8)
-  // 0:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }, { path: '/api/cron/creator-outreach' }],
   0:  [{ path: '/api/cron/generate-artist-bios', params: 'limit=100' }, { path: '/api/cron/enrich-wikipedia' }],
   1:  [{ path: '/api/cron/archive-activity' }, { path: '/api/cron/scrape-bandcamp' }],
-  2:  [{ path: '/api/cron/blog-pipeline' }],
+  2:  [{ path: '/api/cron/blog-pipeline' }, { path: '/api/cron/reconcile' }],
   3:  [{ path: '/api/cron/email-outreach' }],
   4:  [{ path: '/api/cron/blog-syndicate' }],
   5:  [{ path: '/api/cron/creator-discovery' }],
-  // 6:  [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
+  6:  [{ path: '/api/cron/enrich-wikidata', params: 'limit=200' }],
   8:  [{ path: '/api/cron/blog-pipeline' }, { path: '/api/cron/generate-outreach-videos' }, { path: '/api/cron/refresh-artist-metrics' }],
   9:  [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/welcome-sequence' }, { path: '/api/cron/blog-publish' }],
-  10: [{ path: '/api/cron/blog-publish' }, { path: '/api/cron/outreach-followup' }],
+  10: [{ path: '/api/cron/blog-publish' }, { path: '/api/cron/outreach-followup' }, { path: '/api/cron/indexnow-submit' }],
   11: [{ path: '/api/cron/creator-outreach' }, { path: '/api/cron/reengage' }],
   12: [{ path: '/api/cron/message-notifications' }],
-  // 12: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
   14: [{ path: '/api/cron/blog-pipeline' }],
   15: [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/blog-publish' }],
   17: [{ path: '/api/cron/creator-discovery' }],
-  // 18: [{ path: '/api/cron/outreach-pipeline', params: 'limit=50&audit=80&campaigns=30' }],
   20: [{ path: '/api/cron/blog-pipeline' }],
   21: [{ path: '/api/cron/email-outreach' }],
   22: [{ path: '/api/admin/outreach', params: 'action=reaudit_emails&limit=100' }],

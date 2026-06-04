@@ -14,6 +14,21 @@ async function getPost(slug: string) {
   return posts[0] || null;
 }
 
+/** Build enhanced JSON-LD with Person schema + correct author override */
+function buildEnhancedSchema(schemaMarkup: unknown, authorName: string, authorUrl: string): object | null {
+  if (!schemaMarkup) return null;
+  const base = typeof schemaMarkup === 'string' ? JSON.parse(schemaMarkup) : schemaMarkup;
+  if (!base['@graph']) return base;
+  // Override author in Article schema with the stored author_name
+  base['@graph'] = base['@graph'].map((item: any) => {
+    if (item['@type'] === 'Article') {
+      return { ...item, author: { '@type': 'Person', name: authorName, url: authorUrl } };
+    }
+    return item;
+  });
+  return base;
+}
+
 async function getRelatedPosts(currentSlug: string, tags: string[]) {
   if (!tags.length) return [];
   const related = await sql`
@@ -49,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: 'Selah.fm',
       images: ogImage ? [{ url: ogImage, width: 1200, height: 630 }] : [],
       publishedTime: post.published_at,
-      authors: ['Robert-Jan Mastenbroek'],
+      authors: [post.author_name || 'Selah.fm Music Team'],
     },
     twitter: {
       card: 'summary_large_image',
@@ -70,13 +85,24 @@ export default async function BlogPostPage({ params }: Props) {
     ? Math.max(1, Math.round(post.content_html.replace(/<[^>]*>/g, '').split(/\s+/).length / 200))
     : 5;
 
+  const authorName = post.author_name || 'Selah.fm Music Team';
+  const authorUrl = post.author_url || 'https://selah.fm/about';
+  const enhancedSchema = buildEnhancedSchema(post.schema_markup, authorName, authorUrl);
+
   return (
     <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23' }}>
-      {/* JSON-LD Schema (Article + FAQ) */}
-      {post.schema_markup && (
+      {/* JSON-LD Schema (Article + QAPage + Person — enhanced at render time) */}
+      {enhancedSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: typeof post.schema_markup === 'string' ? post.schema_markup : JSON.stringify(post.schema_markup) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(enhancedSchema) }}
+        />
+      )}
+      {/* Person schema — standalone fallback if schema_markup has no @graph */}
+      {!enhancedSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', name: authorName, url: authorUrl }) }}
         />
       )}
       {/* FAQ Schema (separate — Google prefers it standalone) */}
@@ -108,16 +134,37 @@ export default async function BlogPostPage({ params }: Props) {
         <header className="mb-10">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">{post.title}</h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            {/* Author byline with icon */}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <span className="font-medium text-foreground/70">{authorName}</span>
+            </div>
+            <span className="text-muted-foreground/30">·</span>
             {post.published_at && (
               <time dateTime={post.published_at}>
                 {new Date(post.published_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               </time>
             )}
-            <span>·</span>
-            <span>{readingTime} min read</span>
-            <span>·</span>
-            <span>Robert-Jan Mastenbroek</span>
+            <span className="text-muted-foreground/30">·</span>
+            <span className="flex items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-muted-foreground/50">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              {readingTime} min read
+            </span>
           </div>
+          {/* Author bio micro-link — subtle, SEO-friendly */}
+          {authorUrl && (
+            <div className="mt-1 text-xs text-muted-foreground/50">
+              by <a href={authorUrl} className="hover:text-primary transition-colors" rel="author">{authorName}</a>
+            </div>
+          )}
           {(post.tags || []).length > 0 && (
             <div className="flex gap-1.5 mt-4 flex-wrap">
               {(post.tags || []).map((tag: string) => (

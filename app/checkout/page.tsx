@@ -111,10 +111,22 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
         )}
       </div>
 
-      <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-xs">
-        <div className="flex justify-between font-semibold">
-          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> 100% to campaign</span>
-          <span className="text-emerald-400">${amount.toFixed(2)}</span>
+      <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-xs space-y-1.5">
+        <div className="flex justify-between">
+          <span className="text-white/60">You pay</span>
+          <span className="font-semibold text-white">${amount.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-[10px]">
+          <span className="text-muted-foreground/50">Platform fee (20%)</span>
+          <span className="text-muted-foreground/50">−${(amount * 0.20).toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-[10px]">
+          <span className="text-muted-foreground/50">Stripe processing (2.9% + $0.30)</span>
+          <span className="text-muted-foreground/50">−${(amount * 0.029 + 0.30).toFixed(2)}</span>
+        </div>
+        <div className="border-t border-white/[0.06] pt-1.5 flex justify-between font-semibold">
+          <span className="text-emerald-400 flex items-center gap-1"><Check size={10} /> Goes to campaign</span>
+          <span className="text-emerald-400">$${Math.max(0, amount - amount * 0.20 - (amount * 0.029 + 0.30)).toFixed(2)}</span>
         </div>
       </div>
 

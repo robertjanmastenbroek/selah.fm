@@ -13,6 +13,7 @@ async function getArtistData(slug: string) {
     SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
            da.social_links, da.latest_track_name, da.latest_track_cover_url,
            da.instagram_handle, da.tiktok_handle, da.spotify_id,
+           da.wikipedia_url, da.wikidata_id,
            da.comment_count,
            ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
            ap.total_streams, ap.total_platforms,
@@ -33,6 +34,7 @@ async function getArtistData(slug: string) {
       SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
              da.social_links, da.latest_track_name, da.latest_track_cover_url,
              da.instagram_handle, da.tiktok_handle, da.spotify_id,
+             da.wikipedia_url, da.wikidata_id,
              da.comment_count,
              ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
              ap.total_streams, ap.total_platforms,
@@ -271,6 +273,13 @@ export default async function ArtistPage({ params }: Props) {
   }
 
   const socialLinks = artist.social_links || {};
+
+  // Build identifiers array (spotify, wikidata) for Schema.org identifier
+  const identifiers = [
+    artist.spotify_id && `spotify:${artist.spotify_id}`,
+    artist.wikidata_id && `wikidata:${artist.wikidata_id}`,
+  ].filter(Boolean);
+
   const schema: Record<string, any> = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -290,7 +299,7 @@ export default async function ArtistPage({ params }: Props) {
         description: (bio || `Independent ${genres.slice(0, 2).join(' and ')} artist on Selah.fm`).slice(0, 200),
         genre: genres.join(', ') || undefined,
         image: artist.spotify_image_url || undefined,
-        identifier: artist.spotify_id ? `spotify:${artist.spotify_id}` : undefined,
+        identifier: identifiers.length > 0 ? identifiers : undefined,
         sameAs: [
           ...(artist.spotify_id ? [`https://open.spotify.com/artist/${artist.spotify_id}`] : []),
           ...(socialLinks.spotify ? [socialLinks.spotify] : []),
@@ -298,6 +307,7 @@ export default async function ArtistPage({ params }: Props) {
           ...(socialLinks.bandcamp ? [socialLinks.bandcamp] : []),
           ...(socialLinks.soundcloud ? [socialLinks.soundcloud] : []),
           ...(artist.instagram_handle ? [`https://instagram.com/${artist.instagram_handle}`] : []),
+          ...(artist.wikipedia_url ? [artist.wikipedia_url] : []),
         ].filter(Boolean),
         ...(supporterCount > 0 ? {
           aggregateRating: {

@@ -277,7 +277,7 @@ export async function GET(request: Request) {
             interview_id, title, slug, content_html, excerpt, featured_image,
             meta_title, meta_description, tags,
             primary_keyword, internal_links, faq_schema, word_count,
-            status, author_id
+            status, author_id, author_name, author_url
           ) VALUES (
             ${iv.id}, ${title}, ${slug}, ${cleanHtml}, ${article.excerpt}, ${featuredImage},
             ${title}, ${article.meta_description || article.excerpt}, ${article.tags || []},
@@ -286,7 +286,9 @@ export async function GET(request: Request) {
             ${JSON.stringify(article.faq_schema || null)},
             ${article.word_count_estimate || null},
             'draft',
-            (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1)
+            (SELECT id FROM users WHERE email = 'info@selah.fm' LIMIT 1),
+            'Selah.fm Music Team',
+            'https://selah.fm/about'
           )
           RETURNING id
         `;
@@ -304,7 +306,7 @@ export async function GET(request: Request) {
               description: article.meta_description || article.excerpt,
               image: featuredImage,
               datePublished: new Date().toISOString(),
-              author: { '@type': 'Person', name: 'Robert-Jan Mastenbroek', url: 'https://selah.fm/about' },
+              author: { '@type': 'Person', name: 'Selah.fm Music Team', url: 'https://selah.fm/about' },
               publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
               mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${slug}` },
             },

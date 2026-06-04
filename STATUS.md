@@ -1,10 +1,10 @@
 # Selah.fm — Project Status
 
-**Last updated:** June 4, 2026 (05:00 UTC)
-**HEAD:** `f479241` — Final polish: Reviews tab label, share buttons verified
-**Total commits:** 1,065
-**Codebase:** ~105 React components · 100+ API routes · 24 pages · 20 DB migrations · 38 planning docs
-**ROADMAP:** 34/36 items complete
+**Last updated:** June 4, 2026 (11:00 UTC)
+**HEAD:** `a715445` — Track page debug + user-flows SQL fix + referral system
+**Total commits:** 1,069
+**Codebase:** ~108 React components · 105+ API routes · 25 pages · 21 DB migrations · 40 planning docs
+**ROADMAP:** 35/36 items complete
 
 ---
 
@@ -78,7 +78,26 @@ The last STATUS.md was written after the Growth Infrastructure session. Since th
 - Reviews tab label corrected on artist page Comments tab
 - Share buttons UX verified across all pages
 
-### Additional Infrastructure Built
+#### Workstream 5: Wikidata/Wikipedia Knowledge Graph Integration — June 4-5
+
+**Goal:** Link 2,000+ artist profiles to Google's Knowledge Graph via Wikidata sameAs → unlocks Knowledge Panels, 30-50% higher CTR.
+
+| Component | Detail |
+|-----------|--------|
+| **Migration** | `supabase/migrations/20260605010000_wikidata_enrich.sql` — Adds `wikipedia_url` and `wikidata_id` columns to `discovered_artists` |
+| **SQL function** | `public.enrich_wikidata(uuid, text)` — Searches Wikidata API via `http` extension, stores Q-number + Wikipedia URL in columns and metadata |
+| **Batch function** | `public.enrich_wikidata_batch(limit)` — Processes N artists per call, returns results table |
+| **Schema update** | `app/artist/[slug]/page.tsx` — Queries `da.wikipedia_url, da.wikidata_id`, adds to MusicGroup `sameAs` array and `identifier` array |
+| **Cron route** | `app/api/cron/enrich-wikidata/route.ts` — Calls batch function, processes 200/night at 06:00 UTC via dispatcher |
+
+**SEO impact:** Each artist page now emits:
+- `sameAs: ["https://en.wikipedia.org/wiki/...", ...]` — direct Knowledge Graph link
+- `identifier: ["wikidata:Q12345", "spotify:abc123"]` — structured entity reference
+- Strongest signal Google has for Knowledge Panel eligibility
+
+---
+
+## Additional Infrastructure Built
 
 | Feature | Detail |
 |---------|--------|
@@ -146,6 +165,41 @@ The last STATUS.md was written after the Growth Infrastructure session. Since th
 **Dispatcher** (`app/api/cron/dispatcher/route.ts`) — single Railway cron entry at `0 * * * *` routes to 15+ workers at the right hours. No Railway cron syntax limitations.
 
 ---
+
+---
+
+## ✅ SESSION: June 4, 2026 — Sprint 1: Track Pages + Referral System + Homepage FAQ (4 commits)
+
+### Track Page World-Class Upgrade (2 commits)
+| Feature | File | Purpose |
+|---------|------|---------|
+| TrackDetailClient | `app/artist/[slug]/tracks/[id]/TrackDetailClient.tsx` | Client component with earnings calculator, CTA, mobile sticky bar |
+| Earnings calculator | In TrackDetailClient | Interactive CPM × views slider with live projections |
+| Trust badges | In TrackDetailClient | "Free to start", "You earn 80%", "Verified views only" |
+| Streaming platform links | In TrackDetailClient | Platform detection + link buttons |
+| Mobile sticky bar | In TrackDetailClient | Fixed bottom bar with CPM + Join/Create CTA |
+| JSON-LD schema | `page.tsx` (server) | MusicRecording + BreadcrumbList preserved server-side |
+
+### Referral System (1 commit)
+| Feature | Files | Purpose |
+|---------|-------|---------|
+| Referral earnings migration | `supabase/migrations/20260604120000_referral_earnings.sql` | `referrer_earnings_cents` on users, `referral_code`, `pending_referral_bonuses` table, `award_referral_bonus()` function |
+| GET referral code/earnings | `app/api/referral/code/route.ts` | Fetch user's referral info, earnings, pending bonuses |
+| POST claim referral | `app/api/referral/code/route.ts` | Link referee to referrer by referral code |
+| POST withdraw earnings | `app/api/referral/withdraw/route.ts` | Credit pending bonuses to active campaign |
+| Auth callback claim | `app/auth/callback/route.ts` | Auto-claim referral on first signup from `?ref=` |
+| Webhook bonus | `app/api/stripe/webhook/route.ts` | 10% split on first $10+ deposit, referrer gets balance, referee gets campaign credit |
+| Dashboard section | `app/dashboard/page.tsx` | Earnings display, referred count, pending badge, copy+withdraw buttons |
+
+### Bugs Fixed
+| Bug | Fix | Status |
+|-----|-----|--------|
+| Track page "Not found" on valid tracks | Wrong JOIN order — `at.artist_id` → `discovered_artists.id` (should be `artist_profiles.id`) | ✅ Deployed |
+| Blog-publish returning 401 | Only checked headers, dispatcher passes secret as query param | ✅ Deployed (prior session) |
+| Archive-activity returning 401 | Same auth bug as blog-publish | ✅ Deployed (prior session) |
+| Blog-pipeline 6h cooldown blocked runs | Removed redundant cooldown (dispatcher already limits runs) | ✅ Deployed (prior session) |
+| User-flows SQL error | `ANY(${sessionIds}::text[])` — removed incompatible `::text[]` cast | ✅ Committed |
+| Missing maxDuration on blog-publish | Added `maxDuration = 300` | ✅ Deployed (prior session) |
 
 ## 📊 Project Metrics
 

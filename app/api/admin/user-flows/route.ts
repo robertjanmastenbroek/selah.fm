@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       timeline = await sql`
         SELECT ae.session_id, ae.event, ae.path, ae.metadata, ae.created_at, ae.referrer
         FROM analytics_events ae
-        WHERE ae.session_id = ANY(${sessionIds}::text[])
+        WHERE ae.session_id = ANY(${sessionIds})
         ORDER BY ae.created_at ASC
       `;
     }

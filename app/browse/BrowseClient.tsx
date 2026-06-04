@@ -189,6 +189,12 @@ export default function BrowseClient() {
                 }`}>{g.charAt(0).toUpperCase() + g.slice(1)}</button>
             ))}
           </div>
+          {selectedGenre && (
+            <a href={`/browse/genre/${selectedGenre}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-primary/80 hover:text-primary border border-primary/20 hover:border-primary/40 bg-primary/[0.04] hover:bg-primary/[0.08] transition-all">
+              Browse all {selectedGenre.charAt(0).toUpperCase() + selectedGenre.slice(1)} artists →
+            </a>
+          )}
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Sort:</span>
             <select value={selectedSort} onChange={e => setSelectedSort(e.target.value)}
