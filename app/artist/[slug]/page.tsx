@@ -139,7 +139,15 @@ async function getArtistData(slug: string) {
       genres: artist.genres
         ? (Array.isArray(artist.genres) ? artist.genres : 
            typeof artist.genres === 'string' 
-             ? (() => { try { return JSON.parse(artist.genres); } catch { return [artist.genres]; } })()
+             ? (() => { 
+                try { const p = JSON.parse(artist.genres); return Array.isArray(p) ? p : [artist.genres]; } catch {
+                  // PostgreSQL array format: {rock} or {"rock"}
+                  if (artist.genres.startsWith('{') && artist.genres.endsWith('}')) {
+                    return artist.genres.slice(1, -1).split(',').map((g: string) => g.trim().replace(/^"|"$/g, '')).filter(Boolean);
+                  }
+                  return [artist.genres.replace(/[[\]{}"]/g, '').trim()];
+                }
+              })()
              : [artist.genres])
         : [],
       social_links: typeof artist.social_links === 'string'
