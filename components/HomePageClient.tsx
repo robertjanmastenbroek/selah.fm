@@ -156,7 +156,7 @@ export default function RootPage() {
     return () => window.removeEventListener('mousemove', handler);
   }, []);
 
-  const hasStats = stats.activeCampaigns > 0 || stats.creators > 0;
+  const hasStats = stats.activeCampaigns > 0 || stats.creators > 0 || stats.totalViews > 0 || stats.totalDepositedCents > 0;
 
   return (
     <div className="relative overflow-hidden min-h-screen" style={{ background: '#080817' }}>
@@ -232,7 +232,25 @@ export default function RootPage() {
               {stats.activeCampaigns > 0 && (
                 <div className="text-center">
                   <div className="text-[32px] md:text-[40px] font-bold text-white tracking-tight">{formatCount(stats.activeCampaigns)}</div>
-                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Active campaigns</div>
+                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Active tracks</div>
+                </div>
+              )}
+              {stats.artists > 0 && (
+                <div className="text-center">
+                  <div className="text-[32px] md:text-[40px] font-bold text-white tracking-tight">{formatCount(stats.artists)}</div>
+                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Artists</div>
+                </div>
+              )}
+              {stats.totalViews > 0 && (
+                <div className="text-center">
+                  <div className="text-[32px] md:text-[40px] font-bold text-[#818CF8] tracking-tight">{formatCount(stats.totalViews)}</div>
+                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Verified views</div>
+                </div>
+              )}
+              {stats.totalDepositedCents > 0 && (
+                <div className="text-center">
+                  <div className="text-[32px] md:text-[40px] font-bold text-[#22C55E] tracking-tight">{formatMoney(stats.totalDepositedCents)}</div>
+                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Total funded</div>
                 </div>
               )}
               {stats.creators > 0 && (
