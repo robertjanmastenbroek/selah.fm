@@ -18,7 +18,7 @@ import {
   Check, Sparkles, LoaderCircle, Save, Copy, Music2,
   ChartBar, SlidersHorizontal, Clock, Percent, Bug,
   Camera, Play, ArrowUpRight, BarChart3, Zap,
-  Wallet, Palette, Download, Film,
+  Wallet, Palette, Download, Film, X,
 } from 'lucide-react';
 import DisputeButton from '@/components/DisputeButton';
 import { useToast } from '@/components/Toast';
@@ -1003,69 +1003,165 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
 function SubmissionsInbox({ artistSlug }: { artistSlug: string }) {
   const [subs, setSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewing, setReviewing] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState('');
+  const [showFeedback, setShowFeedback] = useState<string | null>(null);
+  const { addToast } = useToast();
 
-  useEffect(() => {
+  const loadSubs = () => {
     fetch('/api/artist/submissions', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { if (Array.isArray(d.submissions)) setSubs(d.submissions); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(loadSubs, []);
+
+  const handleReview = async (submissionId: string, action: 'approve' | 'reject') => {
+    if (!submissionId) return;
+    setReviewing(submissionId);
+    try {
+      const res = await fetch('/api/artist/submissions', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submissionId, action, feedback: feedback.trim() || null }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        addToast(action === 'approve' ? 'Submission approved!' : 'Submission rejected', 'success');
+        setFeedback('');
+        setShowFeedback(null);
+        loadSubs();
+      } else {
+        addToast(data.error || 'Failed to review', 'error');
+      }
+    } catch {
+      addToast('Network error', 'error');
+    }
+    setReviewing(null);
+  };
 
   const pendingSubs = subs.filter(s => s.review_status === 'pending');
-  const recentSubs = subs.slice(0, 5);
+  const recentSubs = subs.slice(0, 10);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <Card><CardContent className="p-5"><div className="flex items-center gap-3">
+        <LoaderCircle size={14} className="animate-spin text-primary" />
+        <span className="text-xs text-muted-foreground">Loading submissions...</span>
+      </div></CardContent></Card>
+    );
+  }
   if (subs.length === 0) return null;
 
   return (
-    <Card className={pendingSubs.length > 0 ? 'border-amber-500/20' : ''}>
+    <Card className={pendingSubs.length > 0 ? 'border-amber-500/20 ring-1 ring-amber-500/10' : ''}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <Film size={14} className={pendingSubs.length > 0 ? 'text-amber-400' : 'text-primary'} />
-            Submissions
+            Submissions{` (${subs.length})`}
             {pendingSubs.length > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold">
-                {pendingSubs.length} new
-              </span>
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold"
+              >
+                {pendingSubs.length} pending
+              </motion.span>
             )}
           </h3>
-          <a href={`/artist/${artistSlug}`} className="text-[10px] text-primary hover:underline">Review all</a>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
           {recentSubs.map((s: any) => (
-            <div key={s.id} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-medium truncate">{s.track_title || 'Track'}</p>
-                  {s.review_status === 'pending' && (
-                    <span className="text-[9px] px-1 py-0.5 rounded-full bg-amber-500/10 text-amber-400 shrink-0">New</span>
+            <div key={s.id} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] space-y-2 hover:bg-white/[0.04] transition-colors">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-medium truncate">{s.track_title || 'Track'}</p>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    by <span className="text-foreground/60">{s.creator_name || 'Creator'}</span>
+                    {s.platform ? ` · ${s.platform}` : ''}
+                  </p>
+                  {s.review_feedback && (
+                    <div className="mt-1 text-[9px] text-muted-foreground/50 italic bg-white/[0.02] px-2 py-1 rounded">
+                      "{s.review_feedback}"
+                    </div>
                   )}
                 </div>
-                <p className="text-[10px] text-muted-foreground">
-                  {s.creator_name || 'Creator'} · {s.platform}
-                  {s.views_verified > 0 && ` · ${parseInt(s.views_verified).toLocaleString()} views`}
-                </p>
+                <div className="text-right shrink-0">
+                  {s.views_verified > 0 && (
+                    <p className="text-xs font-mono">{parseInt(s.views_verified).toLocaleString()} views</p>
+                  )}
+                  <p className="text-xs font-bold text-emerald-400">
+                    {s.payout_amount_cents ? `$${(s.payout_amount_cents/100).toFixed(2)}` : '—'}
+                  </p>
+                  {s.review_status === 'pending' ? (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400">Pending</span>
+                  ) : s.review_status === 'approved' ? (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Approved</span>
+                  ) : (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-400">Rejected</span>
+                  )}
+                </div>
               </div>
-              <div className="text-right shrink-0 ml-2">
-                <p className="text-xs font-bold">{s.payout_amount_cents ? `$${(s.payout_amount_cents/100).toFixed(2)}` : '—'}</p>
-                <span className={`text-[9px] font-medium ${
-                  s.review_status === 'approved' ? 'text-emerald-400' :
-                  s.review_status === 'rejected' ? 'text-rose-400' :
-                  s.review_status === 'pending' ? 'text-amber-400' : 'text-muted-foreground'
-                }`}>
-                  {s.review_status === 'approved' ? 'Approved' :
-                   s.review_status === 'rejected' ? 'Rejected' :
-                   s.review_status === 'pending' ? 'Pending' : s.review_status}
-                </span>
-              </div>
+
+              {/* Review actions */}
+              {s.review_status === 'pending' && (
+                <div className="space-y-2 pt-1">
+                  {showFeedback === s.id && (
+                    <textarea
+                      value={showFeedback === s.id ? feedback : ''}
+                      onChange={e => setFeedback(e.target.value)}
+                      placeholder="Optional feedback for the creator..."
+                      rows={2}
+                      className="w-full text-[10px] rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2 text-foreground placeholder:text-muted-foreground/40 resize-none focus:outline-none focus:border-primary/30"
+                    />
+                  )}
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={reviewing === s.id}
+                      onClick={() => { setShowFeedback(s.id === showFeedback ? null : s.id); setFeedback(''); }}
+                      className="text-[9px] px-2.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-muted-foreground transition-colors disabled:opacity-40"
+                    >
+                      {showFeedback === s.id ? 'Hide feedback' : 'Add feedback'}
+                    </motion.button>
+                    <div className="flex gap-1.5 ml-auto">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.95 }}
+                        disabled={reviewing === s.id}
+                        onClick={() => handleReview(s.id, 'approve')}
+                        className="text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors disabled:opacity-40 flex items-center gap-1"
+                      >
+                        {reviewing === s.id ? <LoaderCircle size={10} className="animate-spin" /> : <Check size={10} />}
+                        Approve
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.95 }}
+                        disabled={reviewing === s.id}
+                        onClick={() => handleReview(s.id, 'reject')}
+                        className="text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors disabled:opacity-40 flex items-center gap-1"
+                      >
+                        <X size={10} />
+                        Reject
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
-        {subs.length > 5 && (
-          <p className="text-[10px] text-center text-muted-foreground/40 pt-2">
-            +{subs.length - 5} more submission{subs.length - 5 !== 1 ? 's' : ''}
+        {subs.length > 10 && (
+          <p className="text-[10px] text-center text-muted-foreground/40 pt-3">
+            +{subs.length - 10} more submission{subs.length - 10 !== 1 ? 's' : ''}
           </p>
         )}
       </CardContent>
