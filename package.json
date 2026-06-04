@@ -11,7 +11,10 @@
     "test:lighthouse": "lhci autorun",
     "test:all": "npm run test:e2e && npm run test:lighthouse",
     "start": "next start",
-    "bugs:pull": "node scripts/fetch-new-bugs.mjs"
+    "bugs:pull": "node scripts/fetch-new-bugs.mjs",
+    "test:e2e:quick": "npx playwright test e2e/core.spec.ts --reporter=list",
+    "test:e2e:full": "npx playwright test --reporter=list",
+    "test:e2e:specific": "npx playwright test --reporter=list --grep"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

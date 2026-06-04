@@ -9,6 +9,7 @@ import CookieBanner from '@/components/CookieBanner';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import { Poppins, Righteous } from "next/font/google";
 import Analytics from '@/components/Analytics';
+import CommandPalette from '@/components/CommandPalette';
 import { cn } from "@/lib/utils";
 
 const poppins = Poppins({subsets:['latin'],weight:['300','400','500','600','700'],variable:'--font-sans',display:'swap',preload:true});
@@ -132,6 +133,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         <Suspense fallback={null}>
           <CookieBanner />
+          <CommandPalette />
         </Suspense>
         <Suspense fallback={null}>
           <NewsletterSignup source="selah.fm-layout" />

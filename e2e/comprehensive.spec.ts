@@ -472,3 +472,16 @@ test.describe('API: Save Campaign', () => {
     expect(res.ok()).toBeTruthy();
   });
 });
+
+// ─── GLOBAL SEARCH (Cmd+K) ──────────────────────────────────
+test.describe('UI: Command Palette Search', () => {
+  test('Cmd+K opens search overlay', async ({ page }) => {
+    await page.goto(BASE);
+    await page.waitForTimeout(1000);
+    await page.keyboard.press('Meta+k');
+    await page.waitForTimeout(500);
+    const searchInput = page.locator('input[placeholder*="Search"]');
+    await expect(searchInput).toBeVisible({ timeout: 3000 });
+    await page.keyboard.press('Escape');
+  });
+});
