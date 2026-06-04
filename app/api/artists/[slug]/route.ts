@@ -102,8 +102,16 @@ export async function GET(
       SELECT balance_cents FROM artist_profiles WHERE artist_id = ${artistId}
     `;
 
+    // Parse genres from TEXT[] or string to array
+    const parsedGenres = artistRow.genres
+      ? (Array.isArray(artistRow.genres) ? artistRow.genres : 
+         typeof artistRow.genres === 'string'
+           ? (() => { try { return JSON.parse(artistRow.genres); } catch { return [artistRow.genres]; } })()
+           : [artistRow.genres])
+      : [];
+
     return NextResponse.json({
-      artist: artistRow,
+      artist: { ...artistRow, genres: parsedGenres },
       tracks,
       stats: {
         total_tracks: tracks.length,

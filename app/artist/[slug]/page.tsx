@@ -139,7 +139,10 @@ async function getArtistData(slug: string) {
     artist: {
       ...artist,
       genres: artist.genres
-        ? (Array.isArray(artist.genres) ? artist.genres : [artist.genres])
+        ? (Array.isArray(artist.genres) ? artist.genres : 
+           typeof artist.genres === 'string' 
+             ? (() => { try { return JSON.parse(artist.genres); } catch { return [artist.genres]; } })()
+             : [artist.genres])
         : [],
       social_links: typeof artist.social_links === 'string'
         ? JSON.parse(artist.social_links)

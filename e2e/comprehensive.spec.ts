@@ -239,6 +239,24 @@ test.describe('UI: Artist Page', () => {
       expect(title).not.toContain('not found');
     }
   });
+
+  test('multiple artist pages load without crashing', async ({ page }) => {
+    const res = await page.request.get(`${BASE}/api/artists?limit=10`);
+    const body = await res.json();
+    let failures = 0;
+    
+    for (const a of (body.artists || []).slice(0, 5)) {
+      await page.goto(`${BASE}/artist/${a.slug}`);
+      await page.waitForTimeout(2000);
+      const title = await page.title();
+      if (title.toLowerCase().includes('not found') || title.toLowerCase().includes('error')) {
+        failures++;
+      }
+    }
+    
+    // Allow 1 failure out of 5 (some artists might genuinely not have profiles)
+    expect(failures).toBeLessThan(2);
+  });
 });
 
 test.describe('UI: Track Page', () => {
