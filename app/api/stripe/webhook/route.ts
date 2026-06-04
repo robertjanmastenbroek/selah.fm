@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import sql from '@/lib/db';
 import { emailWrapper } from '@/lib/email-templates';
 import { trackDonation, trackFundCampaign } from '@/lib/analytics-server';
+import { logAudit } from '@/lib/audit-log';
 
 export const maxDuration = 120;
 
@@ -126,6 +127,7 @@ async function processStripeEvent(event: Stripe.Event, stripe: Stripe) {
       WHERE stripe_payment_intent_id = ${intentId} AND status = 'pending'
     `;
     trackDonation(Math.round(grossCents / 100), metadata.donorId).catch(() => {});
+    logAudit(null, 'payment.artist_donation', 'user', artistId, { amount_cents: grossCents, intent_id: intentId }).catch(() => {});
     return;
   }
 
@@ -154,6 +156,11 @@ async function processStripeEvent(event: Stripe.Event, stripe: Stripe) {
         updated_at = NOW()
     WHERE id = ${resolvedCampaignId}
   `;
+
+  // Log to audit trail
+  logAudit(null, type === 'campaign_donation' ? 'payment.donation' : 'payment.deposit', 'campaign', resolvedCampaignId, {
+    amount_cents: grossCents, intent_id: intentId, type,
+  }).catch(() => {});
 
   // ── Fan donation: record + notify ───────────────────────
   if (type === 'campaign_donation') {

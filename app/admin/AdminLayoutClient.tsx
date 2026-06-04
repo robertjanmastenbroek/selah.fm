@@ -21,6 +21,7 @@ const nav = [
   { href: '/admin/blog-generator', label: 'Generate', icon: PenTool },
   { href: '/admin/content', label: 'Content', icon: Layers },
   { href: '/admin/interview', label: 'Interview', icon: Mic },
+  { href: '/admin/audit-log', label: 'Audit Log', icon: Shield },
 ];
 
 interface Props {
