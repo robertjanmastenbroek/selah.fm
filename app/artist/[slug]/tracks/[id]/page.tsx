@@ -45,7 +45,7 @@ async function getTrackData(slug: string, trackId: string) {
         LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
         LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
         LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
-        WHERE ap.slug = ${slug} AND LOWER(c.track_title) = ${trackId.replace(/-/g, ' ').toLowerCase()}
+        WHERE ap.slug = ${slug} AND unaccent(LOWER(c.track_title)) LIKE unaccent(${'%' + trackId.toLowerCase().replace(/-/g, '%') + '%'})
         LIMIT 1
       `;
     }
@@ -59,8 +59,8 @@ async function getTrackData(slug: string, trackId: string) {
         const fr = await sql`SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents, at.created_at, da.artist_name, da.genres, da.monthly_listeners, ap.slug as profile_slug, ap.spotify_image_url, NULL as campaign_slug, NULL as campaign_status, NULL as total_budget_cents, NULL as budget_remaining_cents FROM artist_tracks at JOIN discovered_artists da ON da.id = at.artist_id JOIN artist_profiles ap ON ap.artist_id = da.id WHERE ap.slug = ${slug} AND at.id = ${trackId} LIMIT 1`;
         if (fr[0]) track = fr[0];
       } else {
-        const lower = (trackId || "").replace(/-/g, " ").toLowerCase();
-        const fr = await sql`SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents, at.created_at, da.artist_name, da.genres, da.monthly_listeners, ap.slug as profile_slug, ap.spotify_image_url, NULL as campaign_slug, NULL as campaign_status, NULL as total_budget_cents, NULL as budget_remaining_cents FROM artist_tracks at JOIN discovered_artists da ON da.id = at.artist_id JOIN artist_profiles ap ON ap.artist_id = da.id WHERE ap.slug = ${slug} AND LOWER(at.title) = ${lower} LIMIT 1`;
+        const likePattern = '%' + trackId.toLowerCase().replace(/-/g, '%') + '%';
+        const fr = await sql`SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents, at.created_at, da.artist_name, da.genres, da.monthly_listeners, ap.slug as profile_slug, ap.spotify_image_url, NULL as campaign_slug, NULL as campaign_status, NULL as total_budget_cents, NULL as budget_remaining_cents FROM artist_tracks at JOIN discovered_artists da ON da.id = at.artist_id JOIN artist_profiles ap ON ap.artist_id = da.id WHERE ap.slug = ${slug} AND unaccent(LOWER(at.title)) LIKE unaccent(${likePattern}) LIMIT 1`;
         if (fr[0]) track = fr[0];
       }
     } catch (e2: any) { console.error('[TRACK] fallback failed:', e2.message); }
