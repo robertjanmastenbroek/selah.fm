@@ -16,6 +16,7 @@ async function getArtistData(slug: string) {
            da.comment_count,            ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
            ap.total_streams, ap.total_platforms,
            ap.balance_cents, ap.lifetime_deposits_cents,
+           ap.claimed_by_user_id,
            aa.bio
     FROM discovered_artists da
     LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
@@ -35,6 +36,7 @@ async function getArtistData(slug: string) {
              da.comment_count,              ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
              ap.total_streams, ap.total_platforms,
              ap.balance_cents, ap.lifetime_deposits_cents,
+             ap.claimed_by_user_id,
              aa.bio
       FROM discovered_artists da
       LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
@@ -416,6 +418,7 @@ export default async function ArtistPage({ params }: Props) {
         slug={params.slug}
         campaigns={campaigns}
         balanceCents={data.balance_cents}
+        claimedByUserId={artist.claimed_by_user_id}
       />
     </>
   );

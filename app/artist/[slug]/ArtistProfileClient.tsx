@@ -25,13 +25,14 @@ interface ArtistProps {
   relatedArtists?: any[];
   campaigns?: any[];
   balanceCents?: number;
+  claimedByUserId?: string;
 }
 
 function trackSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'track';
 }
 
-export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [], campaigns = [], balanceCents = 0 }: ArtistProps) {
+export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [], campaigns = [], balanceCents = 0, claimedByUserId }: ArtistProps) {
   const name = artist.artist_name || 'Unknown Artist';
   const genres = (() => {
     const raw = artist.genres;
@@ -242,6 +243,12 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 }`}>
                 {following ? 'Following' : '+ Follow'}
               </button>
+              {claimedByUserId && (
+                <Link href={`/messages?user=${claimedByUserId}`}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] border border-white/[0.08] text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-primary/[0.04] transition-all flex items-center gap-1.5">
+                  <MessageCircle size={13} /> Message
+                </Link>
+              )}
               <button onClick={() => navigator.clipboard.writeText(window.location.href)}
                 className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-xs hover:bg-white/[0.08] transition-all"
                 title="Share profile">

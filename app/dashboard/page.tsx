@@ -1106,7 +1106,11 @@ function SubmissionsInbox({ artistSlug }: { artistSlug: string }) {
                     <p className="text-xs font-medium truncate">{s.track_title || 'Track'}</p>
                   </div>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    by <span className="text-foreground/60">{s.creator_name || 'Creator'}</span>
+                    by{' '}
+                    <button onClick={() => window.open(`/messages?user=${s.creator_id}`, '_blank')}
+                      className="text-foreground/60 hover:text-primary underline underline-offset-2 transition-colors">
+                      {s.creator_name || 'Creator'}
+                    </button>
                     {s.platform ? ` · ${s.platform}` : ''}
                     {s.content_url && (
                       <a href={s.content_url} target="_blank" rel="noopener noreferrer"
