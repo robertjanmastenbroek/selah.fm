@@ -21,7 +21,6 @@ import {
 import DisputeButton from '@/components/DisputeButton';
 import DashboardChart from '@/components/DashboardChart';
 import { useToast } from '@/components/Toast';
-import DashboardErrorBoundary from '@/components/DashboardErrorBoundary';
 
 type TabId = 'overview' | 'tracks' | 'profile' | 'earnings' | 'kanban';
 
@@ -205,7 +204,6 @@ function DashboardContent() {
   { id: 'kanban', label: 'Board', icon: <BarChart3 size={14} /> },  ];
 
   return (
-    <DashboardErrorBoundary>
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-6">
@@ -228,7 +226,7 @@ function DashboardContent() {
             <div className="flex items-center gap-3">
               {artistData?.balance_cents > 0 && (
                 <span className="text-xs text-muted-foreground/60">
-                  Balance: <span className="text-emerald-400 font-semibold">{formatDollars(artistData?.balance_cents || 0)}</span>
+                  Balance: <span className="text-emerald-400 font-semibold">{formatDollars(artistData.balance_cents)}</span>
                 </span>
               )}
               <Button onClick={() => setWizardOpen(true)} size="sm">
@@ -494,7 +492,6 @@ function DashboardContent() {
         ))}
       </div>
     </div>
-    </DashboardErrorBoundary>
   );
 })()}
 {tab === 'profile' && (
