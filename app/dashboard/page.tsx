@@ -22,6 +22,7 @@ import {
   BarChart3, Filter, Clock, Percent
 } from 'lucide-react';
 import DisputeButton from '@/components/DisputeButton';
+import DashboardChart from '@/components/DashboardChart';
 import { useToast } from '@/components/Toast';
 
 type TabId = 'overview' | 'campaigns' | 'profile' | 'earnings';
@@ -315,64 +316,16 @@ function DashboardContent() {
               </CardContent>
             </Card>
 
-            {/* Submission funnel */}
+            {/* Dashboard chart — views over time + funnel */}
             {isArtist && rawCampaigns.length > 0 && (
-              <Card>
-                <CardContent className="p-5">
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                    <Filter size={14} className="text-primary" />
-                    Submission funnel
-                  </h3>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    {[
-                      { label: 'Submitted', value: totalSubmissions, color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20' },
-                      { label: 'Approved', value: rawCampaigns.reduce((s: number, c: any) => s + parseInt(c.approved_submissions || '0'), 0), color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-                      { label: 'Paid', value: earningsData?.totalPaid > 0 ? '✓' : '0', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
-                    ].map((item, i) => (
-                      <div key={i} className={`text-center p-3 rounded-xl border ${item.bg}`}>
-                        <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase">{item.label}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60">
-                    <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden flex">
-                      <div className="h-full bg-amber-400/60 rounded-l-full" style={{ width: '100%' }} />
-                      <div className="h-full bg-emerald-400/60" style={{ width: `${totalSubmissions > 0 ? (rawCampaigns.reduce((s: number, c: any) => s + parseInt(c.approved_submissions || '0'), 0) / totalSubmissions) * 100 : 0}%` }} />
-                      <div className="h-full bg-blue-400/60 rounded-r-full" style={{ width: `${totalSubmissions > 0 ? (earningsData?.totalPaid > 0 ? 10 : 0) : 0}%` }} />
-                    </div>
-                    <span className="font-mono">{totalSubmissions} total</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Approval rate */}
-            {isArtist && totalSubmissions > 0 && (
-              <Card>
-                <CardContent className="p-5">
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                    <Percent size={14} className="text-primary" />
-                    Approval metrics
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-                      <p className="text-2xl font-bold text-emerald-400">
-                        {totalSubmissions > 0
-                          ? Math.round((rawCampaigns.reduce((s: number, c: any) => s + parseInt(c.approved_submissions || '0'), 0) / totalSubmissions) * 100)
-                          : 0}%
-                      </p>
-                      <p className="text-[10px] text-muted-foreground uppercase">Approval rate</p>
-                    </div>
-                    <div className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-                      <p className="text-2xl font-bold text-indigo-400">
-                        ${totalSubmissions > 0 ? ((rawCampaigns.reduce((s: number, c: any) => s + ((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0)), 0) / totalSubmissions) / 100).toFixed(2) : '0.00'}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground uppercase">Avg. per sub</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <DashboardChart
+                campaigns={rawCampaigns}
+                isArtist={isArtist}
+                totalViews={totalViews}
+                totalSubmissions={totalSubmissions}
+                totalApproved={rawCampaigns.reduce((s: number, c: any) => s + parseInt(c.approved_submissions || '0'), 0)}
+                totalSpent={totalSpent}
+              />
             )}
 
             {/* Recent activity */}
