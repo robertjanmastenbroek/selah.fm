@@ -27,8 +27,8 @@ async function getTrackData(slug: string, trackId: string) {
                c.slug as campaign_slug, c.status as campaign_status,
                c.total_budget_cents, c.budget_remaining_cents
         FROM artist_tracks at
-        JOIN artist_profiles ap ON ap.id = at.artist_id
-        JOIN discovered_artists da ON da.id = ap.artist_id
+        JOIN discovered_artists da ON da.id = at.artist_id
+        JOIN artist_profiles ap ON ap.artist_id = da.id
         LEFT JOIN campaigns c ON c.id IN (
           SELECT cc.campaign_id FROM campaign_claims cc WHERE cc.discovered_artist_id = da.id
         )
@@ -44,8 +44,8 @@ async function getTrackData(slug: string, trackId: string) {
                c.slug as campaign_slug, c.status as campaign_status,
                c.total_budget_cents, c.budget_remaining_cents
         FROM artist_tracks at
-        JOIN artist_profiles ap ON ap.id = at.artist_id
-        JOIN discovered_artists da ON da.id = ap.artist_id
+        JOIN discovered_artists da ON da.id = at.artist_id
+        JOIN artist_profiles ap ON ap.artist_id = da.id
         LEFT JOIN campaigns c ON c.id IN (
           SELECT cc.campaign_id FROM campaign_claims cc WHERE cc.discovered_artist_id = da.id
         )
