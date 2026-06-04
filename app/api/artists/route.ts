@@ -76,15 +76,16 @@ export async function GET(request: Request) {
     // Total count
     const countParams: any[] = [];
     const countConditions: string[] = ['ap.slug IS NOT NULL'];
-    if (genre) { countConditions.push(`da.genres::text ILIKE $$1`); countParams.push(`%${genre}%`); }
-    if (search) { countConditions.push(`da.artist_name ILIKE $${countParams.length + 1}`); countParams.push(`%${search}%`); }
+    let cp = (v: any) => { countParams.push(v); return countParams.length; };
+    if (genre) { countConditions.push(`da.genres::text ILIKE $${cp('%' + genre + '%')}`); }
+    if (search) { countConditions.push(`da.artist_name ILIKE $${cp('%' + search + '%')}`); }
     const countWhere = countConditions.join(' AND ');
 
     const [{ total }] = await sql.raw(`
       SELECT COUNT(*)::int as total FROM discovered_artists da
       JOIN artist_profiles ap ON ap.artist_id = da.id
       ${countWhere ? 'WHERE ' + countWhere : ''}
-    `, countParams.length > 0 ? countParams : []);
+    `, countParams);
 
     return NextResponse.json({ artists, total: total || 0, page, limit });
   } catch (e: any) {
