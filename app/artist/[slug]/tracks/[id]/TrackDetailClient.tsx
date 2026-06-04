@@ -63,7 +63,7 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
       <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/[0.06]">
         <div>
           <p className="text-xs text-muted-foreground">Your earnings (80%)</p>
-          <p className="text-2xl font-bold font-display text-emerald-400">
+          <p className="text-2xl font-bold text-emerald-400">
             ${earnings >= 1 ? earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : earnings.toFixed(2)}
           </p>
         </div>
@@ -409,7 +409,7 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
       >
         <div className="flex items-center justify-between">
           <div className="min-w-0 flex-1 mr-3">
-            <p className="text-xs font-semibold truncate font-display">{trackTitle}</p>
+            <p className="text-xs font-semibold truncate">{trackTitle}</p>
             <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
               <span className="text-emerald-400 font-medium">{cpmPer1M}</span>
               <span className="text-muted-foreground/30">·</span>
