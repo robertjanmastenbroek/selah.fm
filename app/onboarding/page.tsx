@@ -7,7 +7,11 @@ import { Music4, Clapperboard, ArrowRight, Check, ArrowLeft, Sparkles, Search, L
 
 const genreOptions = ['Pop','Hip-Hop','Electronic','Rock','Indie','R&B','Jazz','Classical','Country','Metal'];
 const platformOptions = ['TikTok','Instagram Reels','YouTube Shorts','Facebook'];
-const cpmPresets = [1, 2, 3, 5];
+const cpmTiers = [
+  { value: 0.5, label: 'Basic', cpmDisplay: '$0.50', per1M: '$500', desc: 'Good for testing' },
+  { value: 2, label: 'Popular', cpmDisplay: '$2', per1M: '$2K', desc: 'Attracts quality creators', recommended: true },
+  { value: 5, label: 'Premium', cpmDisplay: '$5', per1M: '$5K', desc: 'Top creators compete for your track' },
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -307,16 +311,24 @@ export default function OnboardingPage() {
           {step===4&&role==='creator'&&(
             <motion.div key="s4c" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
               <h2 className="text-2xl font-bold">Set your rate</h2>
-              <p className="text-muted-foreground text-sm">This is your preferred CPM — what you&apos;d like to earn per 1M views. Artists see this when they browse creators.</p>
-              <div className="grid grid-cols-4 gap-2">
-                {cpmPresets.map(b=>(
-                  <button key={b} onClick={()=>setCpm(b)} className={`p-3 rounded-xl border-2 text-center transition-all ${cpm===b?'border-primary bg-primary/[0.04]':'border-white/[0.06] bg-white/[0.02] hover:border-primary/20'}`}>
-                    <div className="text-lg font-bold">${b}</div><div className="text-[10px] text-muted-foreground">CPM</div>
-                  </button>
-                ))}
+              <p className="text-muted-foreground text-sm">This is your preferred CPM. Artists see this when they browse creators. You can change it anytime.</p>
+              <div className="grid grid-cols-3 gap-3">
+                {cpmTiers.map(t=>{
+                  const selected=cpm===t.value;
+                  return(
+                    <button key={t.value} onClick={()=>setCpm(t.value)}
+                      className={`relative p-4 rounded-xl border-2 text-center transition-all ${selected?'border-primary bg-primary/[0.04]':'border-white/[0.06] bg-white/[0.02] hover:border-primary/30'}`}>
+                      {t.recommended&&<span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-primary text-[9px] text-primary-foreground font-semibold">Popular</span>}
+                      <div className="text-xl font-bold mt-1">{t.cpmDisplay}</div>
+                      <div className="text-[10px] text-muted-foreground">CPM</div>
+                      <div className="text-[11px] text-muted-foreground/70 mt-1">{t.per1M}/1M</div>
+                      <div className="text-[9px] text-muted-foreground/50 mt-1">{t.desc}</div>
+                    </button>
+                  );
+                })}
               </div>
-              <div className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-4 text-sm text-muted-foreground">
-                At ${cpm} CPM, you&apos;d earn the full <span className="text-foreground font-semibold">$${(cpm * 1000).toFixed(0)}</span> per 1M views — nothing deducted.
+              <div className="rounded-xl bg-gradient-to-br from-indigo-500/[0.04] to-emerald-500/[0.02] border border-indigo-500/10 p-4 text-sm text-muted-foreground">
+                At <span className="text-foreground font-semibold">${cpm}</span> CPM, you&apos;d earn <span className="text-foreground font-semibold">${(cpm * 1000).toFixed(0)}</span> per 1M views — nothing deducted.
               </div>
               <button onClick={save} disabled={saving||!name} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
                 {saving?'Setting up...':"I'm ready to earn →"}
