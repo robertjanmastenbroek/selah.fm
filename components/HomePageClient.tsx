@@ -26,7 +26,7 @@ function formatMoney(cents: number): string {
 /* ─── INTERACTIVE CPM CALCULATOR ────────────────────────────── */
 function CalculatorSection() {
   const [views, setViews] = useState(10000);
-  const [cpmDollars] = useState(10); // Default $10 CPM
+  const [cpmDollars] = useState(1); // Default $1 CPM (realistic creator rate)
   const earnings = (views / 1000) * cpmDollars * 0.8;
   const grossEarnings = (views / 1000) * cpmDollars;
 
@@ -48,7 +48,7 @@ function CalculatorSection() {
         <ChartBar size={20} className="text-indigo-400" />
         <div>
           <p className="text-sm font-semibold text-white/90">Earnings calculator</p>
-          <p className="text-[10px] text-white/30">At $10.00 CPM (industry average)</p>
+          <p className="text-[10px] text-white/30">At $1.00 CPM (typical creator rate)</p>
         </div>
       </div>
 
