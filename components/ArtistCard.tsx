@@ -43,8 +43,8 @@ export default function ArtistCard({ artist }: Props) {
   })();
   const genre = genres[0] || '';
   const rawImage = artist.spotify_image_url || '';
-  // Only use real profile images (Spotify/i.scdn.co) — not track covers
-  const isRealImage = rawImage && (rawImage.includes('scdn.co/image/ab676161') || rawImage.includes('deezer'));
+  // Accept any real image URL. Exclude only the old 16px Bandcamp thumbnails.
+  const isRealImage = rawImage && !rawImage.includes('_16.jpg');
   const imageUrl = isRealImage ? rawImage : '';
   const slug = artist.slug || '';
   const trackCount = artist.track_count || 0;

@@ -59,7 +59,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
   })();
   const listeners = artist.monthly_listeners || 0;
   const rawImage = artist.spotify_image_url || '';
-  const isRealImage = rawImage && (rawImage.includes('scdn.co/image/ab676161') || rawImage.includes('deezer'));
+  // Accept any image URL; exclude only the old 16px Bandcamp thumbnails
+  const isRealImage = rawImage && !rawImage.includes('_16.jpg');
   const imageUrl = isRealImage ? rawImage : '';
   const bio = artist.bio || '';
   const trackCover = tracks?.[0]?.cover_art_url || artist.latest_track_cover_url || '';
