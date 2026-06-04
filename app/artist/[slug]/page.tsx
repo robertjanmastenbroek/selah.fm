@@ -61,35 +61,33 @@ async function getArtistData(slug: string) {
     ORDER BY at.sort_order ASC, at.created_at DESC
   `;
 
-  // Fetch donation totals + submission stats (across all campaigns, not just artist_tracks)
-  // Also includes lifetime deposits from wallet (not just individual donation records)
-  const [donationStats] = await sql`
-    SELECT
-      COALESCE(SUM(cd.amount_cents), 0)::int as total_cents,
-      COUNT(DISTINCT cd.id)::int as donation_count,
-      COUNT(DISTINCT cd.donor_id)::int as supporter_count
+  // ── Secondary queries each wrapped in try/catch ────────────
+  let donationStats = { total_cents: 0, donation_count: 0, supporter_count: 0 };
+  try { [donationStats] = await sql`
+    SELECT COALESCE(SUM(cd.amount_cents), 0)::int as total_cents,
+           COUNT(DISTINCT cd.id)::int as donation_count,
+           COUNT(DISTINCT cd.donor_id)::int as supporter_count
     FROM discovered_artists da
     LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
     LEFT JOIN campaigns c ON c.id IN (SELECT cc2.campaign_id FROM campaign_claims cc2 WHERE cc2.discovered_artist_id = da.id)
     LEFT JOIN campaign_claims cc ON cc.discovered_artist_id = da.id AND cc.campaign_id = c.id
     LEFT JOIN campaign_donations cd ON cd.campaign_id = c.id
     WHERE da.id = ${artistId}
-  `;
+  `; } catch (e: any) { console.error('[ARTIST] donation stats failed:', e.message); }
 
-  // Fetch ALL submissions count from campaign_claims (not just from artist_tracks)
-  const [submissionStats] = await sql`
-    SELECT
-      COALESCE(SUM(s.views_verified), 0)::int as total_views,
-      COUNT(s.id)::int as total_submissions,
-      COUNT(CASE WHEN s.review_status = 'approved' THEN 1 END)::int as approved_submissions
+  let submissionStats = { total_views: 0, total_submissions: 0, approved_submissions: 0 };
+  try { [submissionStats] = await sql`
+    SELECT COALESCE(SUM(s.views_verified), 0)::int as total_views,
+           COUNT(s.id)::int as total_submissions,
+           COUNT(CASE WHEN s.review_status = 'approved' THEN 1 END)::int as approved_submissions
     FROM submissions s
     JOIN campaigns c ON c.id = s.campaign_id
     JOIN campaign_claims cc ON cc.campaign_id = c.id
     WHERE cc.discovered_artist_id = ${artistId}
-  `;
+  `; } catch (e: any) { console.error('[ARTIST] submission stats failed:', e.message); }
 
-  // Fetch recent approved submissions
-  const recentSubmissions = await sql`
+  let recentSubmissions: any[] = [];
+  try { recentSubmissions = await sql`
     SELECT s.id, s.content_url, s.platform, s.views_verified, s.reactions_count,
            s.created_at, c.track_title
     FROM submissions s
@@ -98,11 +96,10 @@ async function getArtistData(slug: string) {
     WHERE cc.discovered_artist_id = ${artistId}
       AND s.review_status = 'approved'
     ORDER BY s.created_at DESC LIMIT 6
-  `;
+  `; } catch (e: any) { console.error('[ARTIST] recent submissions failed:', e.message); }
 
-
-  // Fetch active campaigns for this artist
-  const campaigns = await sql`
+  let campaigns: any[] = [];
+  try { campaigns = await sql`
     SELECT c.id, c.slug, c.track_title, c.cpm_rate_cents, c.total_budget_cents,
            c.status, c.created_at
     FROM campaigns c
@@ -110,10 +107,10 @@ async function getArtistData(slug: string) {
     WHERE cc.discovered_artist_id = ${artistId}
       AND c.status = 'active'
     ORDER BY c.created_at DESC LIMIT 5
-  `;
+  `; } catch (e: any) { console.error('[ARTIST] campaigns failed:', e.message); }
 
-  // Fetch related artists (same genre, different artist)
-  const relatedArtists = await sql`
+  let relatedArtists: any[] = [];
+  try { relatedArtists = await sql`
     SELECT da.id, da.artist_name, da.genres, da.monthly_listeners,
            ap.slug, ap.spotify_image_url
     FROM discovered_artists da
@@ -123,7 +120,7 @@ async function getArtistData(slug: string) {
       AND EXISTS (SELECT 1 FROM artist_tracks at WHERE at.artist_id = da.id AND at.enabled = true)
     ORDER BY da.monthly_listeners DESC NULLS LAST
     LIMIT 4
-  `;
+  `; } catch (e: any) { console.error('[ARTIST] related artists failed:', e.message); }
 
   return {
     artist: {
