@@ -552,6 +552,8 @@ LEFT JOIN public.submissions s ON s.creator_id = u.id
 WHERE u.is_creator = true
 GROUP BY u.id, u.display_name;
 
+ALTER VIEW public.creator_stats SET (security_invoker = true);
+
 -- ─── Functions & Triggers ────────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION public.update_budget_remaining()
