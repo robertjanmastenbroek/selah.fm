@@ -13,12 +13,13 @@ async function getArtistData(slug: string) {
     SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
            da.social_links, da.latest_track_name, da.latest_track_cover_url,
            da.instagram_handle, da.tiktok_handle, da.spotify_id,
-           da.comment_count,
+           da.comment_count, da.wikipedia_url, da.wikidata_id,
            ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
            ap.total_streams, ap.total_platforms,
-           ''::text as bio
+           COALESCE(aa.bio, '')::text as bio
     FROM discovered_artists da
     LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
+    LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     WHERE ap.slug = ${slug}
     LIMIT 1
   `;
@@ -31,12 +32,13 @@ async function getArtistData(slug: string) {
       SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
              da.social_links, da.latest_track_name, da.latest_track_cover_url,
              da.instagram_handle, da.tiktok_handle, da.spotify_id,
-             da.comment_count,
+             da.comment_count, da.wikipedia_url, da.wikidata_id,
              ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
              ap.total_streams, ap.total_platforms,
-             ''::text as bio
+             COALESCE(aa.bio, '')::text as bio
       FROM discovered_artists da
       LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
+      LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
       WHERE LOWER(da.artist_name) LIKE ${'%' + slugName.toLowerCase() + '%'}
       ORDER BY da.monthly_listeners DESC NULLS LAST
       LIMIT 1
@@ -171,7 +173,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : '';
 
   // Keyword-rich, unique meta description per artist
-  const desc = `Support ${name} on Selah.fm. ${trackLabel}${topTrack ? ` including "${topTrack}"` : ''}${listenerStr ? `. ${listenerStr}` : ''}${topCpm ? `. Earn $${(parseFloat(topCpm) * 1000).toFixed(0)} per 1M verified views` : ''}. ${genres.slice(0, 2).join(' / ')} artist. Donate, create content, and earn per verified view.`;
+  // Use bio excerpt when available for true uniqueness
+  const bio = artist.bio || '';
+  let desc: string;
+  if (bio.length > 80) {
+    // Extract first ~150 chars of the bio as a compelling intro
+    const bioExcerpt = bio
+      .replace(/<[^>]+>/g, '')
+      .replace(/^(?:Meet |Introducing |Get to know )/i, '')
+      .split(/[.?!]/)
+      .filter(Boolean)[0] || bio.slice(0, 140);
+    desc = `${bioExcerpt.slice(0, 120)}. Support ${name} on Selah.fm${topCpm ? ` — earn $${(parseFloat(topCpm) * 1000).toFixed(0)}/1M views` : ''}.`;
+  } else {
+    desc = `Support ${name} on Selah.fm. ${trackLabel}${topTrack ? ` including "${topTrack}"` : ''}${listenerStr ? `. ${listenerStr}` : ''}${topCpm ? `. Earn $${(parseFloat(topCpm) * 1000).toFixed(0)} per 1M verified views` : ''}. ${genres.slice(0, 2).join(' / ')} artist. Donate, create content, and earn per verified view.`;
+  }
 
   // Noindex artists with no tracks and no activity (thin content)
   const isThin = stats.total_tracks === 0 || (stats.total_donations_cents === 0 && (artist.comment_count || 0) === 0 && stats.total_submissions === 0);
