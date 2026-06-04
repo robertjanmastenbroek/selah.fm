@@ -27,10 +27,11 @@ type TabId = 'overview' | 'tracks' | 'profile' | 'earnings' | 'kanban';
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<DashboardErrorBoundary>
-    <div className="min-h-screen" style={{background:'#0F0F23'}}><Header /><main className="page-container"><Skeleton className="h-40 w-full" /></main></div>}>
+    <DashboardErrorBoundary>
+        <Suspense fallback={<div className="min-h-screen" style={{background:'#0F0F23'}}><Header /><main className="page-container"><Skeleton className="h-40 w-full" /></main></div>}>
       <DashboardContent />
     </Suspense>
+        </DashboardErrorBoundary>
   );
 }
 
