@@ -53,6 +53,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preload" as="image" href="/images/selah-nav-logo.png" fetchPriority="high" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0F0F23" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Selah.fm" />
+        <link rel="apple-touch-icon" href="/images/selah-nav-logo.png" />
+        {process.env.NODE_ENV === 'production' && (
+          <script dangerouslySetInnerHTML={{ __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                  if (reg.installing) console.log('SW installing');
+                  else if (reg.waiting) console.log('SW installed');
+                  else if (reg.active) console.log('SW active');
+                }).catch(function(err) { console.log('SW registration failed:', err); });
+              });
+            }
+          ` }} />
+        )}
         {/* Meta Pixel — only loads if META_PIXEL_ID is configured */}
         {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
           <script dangerouslySetInnerHTML={{ __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('track','PageView');` }} />

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import type { CookieOptionWithName } from '@/lib/supabase/types';
 import sql from '@/lib/db';
+import { rateLimit, getRateLimitKey } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,13 @@ export async function GET(request: Request) {
 
   if (!code) {
     return NextResponse.redirect(new URL('/login?error=no_code', origin));
+  }
+
+  // Rate limit: max 10 auth callbacks per minute per IP
+  const rl = await rateLimit(getRateLimitKey(request), { maxRequests: 10, windowMs: 60_000 });
+  if (!rl.allowed) {
+    console.warn('Rate limited auth callback from:', request.headers.get('x-forwarded-for') || 'unknown');
+    return NextResponse.redirect(new URL('/login?error=rate_limited', origin));
   }
 
   try {
