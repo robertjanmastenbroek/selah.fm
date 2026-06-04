@@ -573,7 +573,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
             {activeTab === 'comments' && (
               <div className="space-y-6">
                 <ReviewSection artistId={artist.id} currentUserId={currentUserId} />
-                <PageComments pageType="artist" pageId={artist.id} />
+                <PageComments pageType="artist" pageId={artist.id} currentUserId={currentUserId} />
               </div>
             )}
           </div>

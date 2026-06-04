@@ -12,6 +12,16 @@ interface Comment {
 interface Props {
   pageType: 'artist' | 'campaign';
   pageId: string;
+  currentUserId?: string;
+}
+
+function LoginPrompt() {
+  return (
+    <a href="/login"
+      className="block w-full py-4 text-center rounded-xl border border-dashed border-white/[0.08] text-xs text-muted-foreground hover:text-foreground hover:border-white/[0.12] transition-all">
+      Sign in to comment →
+    </a>
+  );
 }
 
 function timeAgo(dateStr: string): string {
@@ -251,7 +261,7 @@ function CommentItem({ comment, depth = 0, pageId }: { comment: Comment; depth?:
   );
 }
 
-export default function PageComments({ pageType, pageId }: Props) {
+export default function PageComments({ pageType, pageId, currentUserId }: Props) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<'newest' | 'most_liked'>('newest');
@@ -291,11 +301,11 @@ export default function PageComments({ pageType, pageId }: Props) {
         </div>
       </div>
 
-      <CommentForm
-        pageType={pageType}
-        pageId={pageId}
-        onSubmitted={loadComments}
-      />
+      {currentUserId ? (
+        <CommentForm pageType={pageType} pageId={pageId} onSubmitted={loadComments} />
+      ) : (
+        <LoginPrompt />
+      )}
 
       {loading ? (
         <div className="space-y-4">
