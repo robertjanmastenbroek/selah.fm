@@ -363,7 +363,7 @@ test.describe('UI: FAQ Accordion', () => {
   test('FAQ expands and shows answer', async ({ page }) => {
     await page.goto(BASE);
     await page.waitForTimeout(2000);
-    const faqSection = page.locator('text=Common questions');
+    const faqSection = page.locator('text=Common questions').first();
     if (await faqSection.isVisible()) {
       // Click first FAQ
       const firstFaq = page.locator('text=How do independent artists').first();
