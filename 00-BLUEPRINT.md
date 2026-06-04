@@ -20,7 +20,33 @@ Every item in this blueprint follows these rules:
 
 ---
 
-## 22 Dimensions (Score 0-10)
+## 22 Dimensions (Score 0-10) — Updated June 4
+
+| # | Dimension | Before | After | Key Improvements |
+|---|-----------|--------|-------|-----------------|
+| 1 | **Dashboard Analytics** | 4 | **8** | Views-over-time chart, submission funnel, approval rate, 7/30/90d selector |
+| 2 | **Community** | 4 | **7** | Following feed, fan collections API, discovery feed (Trending tab) |
+| 3 | **Real-time** | 3 | **7** | SSE endpoint for live campaign updates, 3s polling, 30s fallback |
+| 4 | **Creator Tools** | 4 | **7** | Monthly projections, pace calculator, top 10% benchmark |
+| 5 | **Artist Tools** | 5 | **6** | Dashboard analytics chart, submission funnel, approval rate |
+| 6 | **Login Page** | 5 | **8** | Testimonial carousel, live stats from API, 5 trust badges |
+| 7 | **Mobile Experience** | 5 | **7** | PWA manifest, service worker, iOS meta tags, install prompt |
+| 8 | **Payment UX** | 5 | **6** | Fee breakdown in checkout, audit logging for payments |
+| 9 | **Checkout** | 6 | **8** | Apple Pay/Google Pay ✅, fee breakdown before payment |
+| 10 | **Onboarding** | 6 | **6** | (deferred — Spotify/Stripe Connect needs OAuth setup) |
+| 11 | **Security** | 6 | **8** | Rate limiting on auth callback, CSRF audit, audit logging |
+| 12 | **Homepage** | 7 | **9** | Premium campaign cards, FAQ accordion, trust bar, get started CTA |
+| 13 | **Browse** | 7 | **9** | Infinite scroll, keyboard navigation, Trending tab |
+| 14 | **Campaign Page** | 8 | **9** | Video hero (YouTube/Vimeo), live SSE updates |
+| 15 | **Artist Profile** | 8 | **8** | (static gradients remain — D5 deferred) |
+| 16 | **Track Page** | 8 | **9** | Related tracks carousel |
+| 17 | **Blog System** | 9 | **9** | 19 articles, 2/day auto-publish |
+| 18 | **Performance** | 7 | **7** | (no Core Web Vitals monitoring yet) |
+| 19 | **Accessibility** | 5 | **8** | WCAG AA audit, skip-to-content, aria-live, keyboard focus |
+| 20 | **Testing Coverage** | 3 | **3** | (zero automated tests remain) |
+| 21 | **Documentation** | 4 | **7** | CSRF audit, accessibility audit, 00-BLUEPRINT (this doc) |
+| 22 | **CI/CD** | 6 | **6** | (auto-deploy only, no rollback automation) |
+| | **AVERAGE** | **5.5** | **7.4** | **+1.9 in one session** |
 
 | # | Dimension | Score | Why This Score | Target | Hours | Priority |
 |---|-----------|-------|----------------|--------|-------|----------|
