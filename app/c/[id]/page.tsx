@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const campaign = await getCampaign(params.id);
   if (!campaign) {
     return {
-      title: 'Campaign not found — Selah.fm',
+      title: 'Track not found — Selah.fm',
       openGraph: { images: [{ url: 'https://selah.fm/images/og-image.jpg' }] },
       twitter: { card: 'summary_large_image', images: ['https://selah.fm/images/og-image.jpg'] },
     };
@@ -167,10 +167,10 @@ export default async function CampaignPage({ params }: Props) {
     }
   } catch {}
 
-  // ── Server-rendered related campaigns for internal linking ──
-  let relatedCampaigns: any[] = [];
+  // ── Server-rendered related tracks for internal linking ──
+  let relatedTracks: any[] = [];
   try {
-    relatedCampaigns = await sql`
+    relatedTracks = await sql`
       SELECT c.slug, COALESCE(c.title, c.track_title) as title, c.track_title,
         COALESCE(da.artist_name, u.display_name) as artist_name,
         c.cover_art_url, c.cpm_rate_cents
@@ -189,7 +189,7 @@ export default async function CampaignPage({ params }: Props) {
     '@graph': [
       { '@type': 'MusicRecording', name: trackTitle, byArtist: { '@type': 'MusicGroup', name: artistName }, ...(imageUrl ? { image: imageUrl } : {}), url: canonicalUrl },
       { '@type': 'VideoObject', name: `Promote "${trackTitle}" by ${artistName}`, description: cpmDollars ? `Submit a video and earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M verified views promoting "${trackTitle}".` : `Join this campaign for "${trackTitle}" and earn per verified view.`, thumbnailUrl: imageUrl, contentUrl: canonicalUrl, uploadDate: createdAt },
-      { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Selah.fm', item: 'https://selah.fm' }, { '@type': 'ListItem', position: 2, name: 'Browse Campaigns', item: 'https://selah.fm/browse' }, { '@type': 'ListItem', position: 3, name: displayTitle, item: canonicalUrl }] },
+      { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Selah.fm', item: 'https://selah.fm' }, { '@type': 'ListItem', position: 2, name: 'Browse Tracks', item: 'https://selah.fm/browse' }, { '@type': 'ListItem', position: 3, name: displayTitle, item: canonicalUrl }] },
       ...(cpmDollars ? [{ '@type': 'Offer', name: `Earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M views promoting "${trackTitle}"`, price: cpmDollars, priceCurrency: 'USD', description: `Creators earn per verified view. Artists pay CPM + 20% platform fee.${budget ? ` Budget: $${budget}.` : ''}`, url: canonicalUrl }] : []),
       { '@type': 'FAQPage', mainEntity: [
         { '@type': 'Question', name: `How do I earn money promoting "${trackTitle}"?`, acceptedAnswer: { '@type': 'Answer', text: `Create a short video featuring "${trackTitle}" on TikTok, Instagram Reels, or YouTube Shorts. Submit your video to this campaign. The artist approves and you earn per verified view.` } },
@@ -211,8 +211,8 @@ export default async function CampaignPage({ params }: Props) {
 
       {/* Screen-reader SEO content — crawlable by Google even before JS loads */}
       <div className="sr-only" aria-hidden="true">
-        <h1>{displayTitle} — Music Promotion Campaign on Selah.fm</h1>
-        <p>{cpmPer1M ? `Join this campaign for "${trackTitle}" by ${artistName}. Create a short video and earn ${cpmPer1M} per 1M verified views on TikTok, Instagram Reels, or YouTube Shorts.` : `Join this campaign for "${trackTitle}" by ${artistName}. Create a short video and earn per verified view.`}</p>
+        <h1>{displayTitle} — Music Promotion Track on Selah.fm</h1>
+        <p>{cpmPer1M ? `Join this track for "${trackTitle}" by ${artistName}. Create a short video and earn ${cpmPer1M} per 1M verified views on TikTok, Instagram Reels, or YouTube Shorts.` : `Join this track for "${trackTitle}" by ${artistName}. Create a short video and earn per verified view.`}</p>
         <h2>How to participate:</h2>
         <ol>
           <li>Find the audio — search for &quot;{trackTitle}&quot; on TikTok, Instagram, or YouTube</li>
@@ -244,14 +244,14 @@ export default async function CampaignPage({ params }: Props) {
 
       <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} artistSlug={campaign?.artist_slug || null} submissions={submissions} />
 
-      {/* Server-rendered related campaigns — crawlable by Google, visible to users */}
-      {relatedCampaigns.length > 0 && (
+      {/* Server-rendered related tracks — crawlable by Google, visible to users */}
+      {relatedTracks.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 pb-16" aria-labelledby="more-heading">
           <h2 id="more-heading" className="font-bold text-base mb-5" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
-            More campaigns
+            More tracks
           </h2>
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {relatedCampaigns.map((rc: any) => (
+            {relatedTracks.map((rc: any) => (
               <a key={rc.slug} href={`/c/${rc.slug}`}
                 className="group rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-[#4338CA]/20 hover:bg-white/[0.05] transition-all">
                 <div className="aspect-square bg-white/[0.02] relative overflow-hidden">

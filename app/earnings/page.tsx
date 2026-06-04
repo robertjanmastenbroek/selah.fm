@@ -177,7 +177,7 @@ export default function EarningsPage() {
                 <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-5 text-left max-w-md mx-auto">
                   <h3 className="text-sm font-semibold mb-2">How to earn</h3>
                   <ol className="text-xs text-muted-foreground space-y-2">
-                    <li>1. Browse campaigns with active budgets</li>
+                    <li>1. Browse tracks with active budgets</li>
                     <li>2. Pick tracks you want to feature</li>
                     <li>3. Create short videos (TikTok, Reels, Shorts)</li>
                     <li>4. Submit for verification</li>
@@ -185,7 +185,7 @@ export default function EarningsPage() {
                   </ol>
                 </div>
                 <a href="/browse" className="inline-block px-6 py-3 rounded-xl bg-[#4338CA] text-white text-sm font-semibold hover:opacity-90 transition-opacity">
-                  Browse Campaigns →
+                  Browse Tracks →
                 </a>
               </div>
             )}
@@ -232,7 +232,7 @@ export default function EarningsPage() {
                     <div className="flex items-center gap-3 text-[10px] text-muted-foreground/60 mt-0.5">
                       {entry.artist_name && <span className="truncate">{entry.artist_name}</span>}
                       {entry.track_name && <span className="truncate">"{entry.track_name}"</span>}
-                      <span>{entry.campaign_count} campaign{entry.campaign_count !== 1 ? 's' : ''}</span>
+                      <span>{entry.campaign_count} track{entry.campaign_count !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
 
@@ -256,10 +256,10 @@ export default function EarningsPage() {
           <p className="text-[10px] text-muted-foreground/40">
             Leaderboard updates in real-time as video views are verified.
             <br />
-            Creators earn $0.10–$5.00 CPM depending on campaign budget.
+            Creators earn $0.10–$5.00 CPM depending on track budget.
           </p>
           <div className="flex items-center justify-center gap-4 mt-4">
-            <a href="/browse" className="text-xs text-primary hover:underline">Browse campaigns</a>
+            <a href="/browse" className="text-xs text-primary hover:underline">Browse tracks</a>
             <span className="text-[10px] text-muted-foreground/30">·</span>
             <a href="/tools/creator-earnings" className="text-xs text-primary hover:underline">Estimate your earnings</a>
             <span className="text-[10px] text-muted-foreground/30">·</span>
