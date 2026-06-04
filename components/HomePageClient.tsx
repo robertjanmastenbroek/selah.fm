@@ -382,45 +382,95 @@ export default function RootPage() {
             <p className="text-white/35 max-w-md mx-auto text-sm">Artists looking for creators right now.</p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {featuredCampaigns.slice(0, 6).map((campaign: any) => (
-              <Link key={campaign.id} href={`/c/${campaign.id}`}
-                className="group rounded-2xl border border-white/[0.04] p-5 backdrop-blur-sm
-                           transition-all duration-200 hover:border-white/[0.08] hover:bg-white/[0.01]
-                           bg-gradient-to-b from-white/[0.015] to-transparent">
-                {/* Cover art */}
-                {campaign.cover_art_url && (
-                  <div className="aspect-square rounded-lg overflow-hidden mb-4 bg-white/[0.02]">
-                    <img src={campaign.cover_art_url} alt={campaign.title}
-                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" />
+          {/* Sort by budget: highest first */}
+          {(() => {
+            const sorted = [...featuredCampaigns].sort((a, b) => (b.budget_cents || 0) - (a.budget_cents || 0));
+            const top3 = sorted.slice(0, 3);
+            const rest = sorted.slice(3, 9);
+
+            return (
+              <>
+                {/* Premium hero cards — top 3 */}
+                <div className="grid md:grid-cols-3 gap-4 mb-6">
+                  {top3.map((campaign: any, i: number) => (
+                    <Link key={campaign.id} href={`/c/${campaign.slug || campaign.id}`}
+                      className="group relative rounded-2xl overflow-hidden border border-white/[0.06] hover:border-primary/30 transition-all duration-300 hover:-translate-y-1">
+                      {/* Background image with gradient overlay */}
+                      {campaign.cover_art_url ? (
+                        <div className="aspect-[4/3] relative">
+                          <img src={campaign.cover_art_url} alt={campaign.title}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#080817] via-[#080817]/60 to-transparent" />
+                        </div>
+                      ) : (
+                        <div className="aspect-[4/3] bg-gradient-to-br from-indigo-900/30 to-purple-900/30 flex items-center justify-center">
+                          <span className="text-5xl font-bold text-white/5">{campaign.title?.[0]?.toUpperCase() || '?'}</span>
+                        </div>
+                      )}
+
+                      {/* Content overlay */}
+                      <div className="absolute bottom-0 inset-x-0 p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                          {campaign.cpm_rate_cents && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
+                              ${(campaign.cpm_rate_cents / 100).toFixed(2)} CPM
+                            </span>
+                          )}
+                          {campaign.approved_submissions > 0 && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">
+                              {campaign.approved_submissions} videos
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="font-bold text-sm text-white group-hover:text-primary transition-colors mb-1 line-clamp-1">
+                          {campaign.track_title || campaign.title || 'Untitled'}
+                        </h3>
+                        {campaign.artist_name && (
+                          <p className="text-[11px] text-white/40">{campaign.artist_name}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-2 text-[10px] text-white/30">
+                          {campaign.budget_cents > 0 && (
+                            <span className="font-semibold text-white/60">{formatMoney(campaign.budget_cents)} budget</span>
+                          )}
+                          {campaign.total_verified_views > 0 && (
+                            <span>{parseInt(campaign.total_verified_views).toLocaleString()} views</span>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Remaining in grid */}
+                {rest.length > 0 && (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {rest.map((campaign: any) => (
+                      <Link key={campaign.id} href={`/c/${campaign.slug || campaign.id}`}
+                        className="group rounded-2xl border border-white/[0.04] p-4 transition-all duration-200 hover:border-white/[0.08] bg-gradient-to-b from-white/[0.015] to-transparent">
+                        {campaign.cover_art_url && (
+                          <div className="aspect-video rounded-lg overflow-hidden mb-3 bg-white/[0.02]">
+                            <img src={campaign.cover_art_url} alt={campaign.title}
+                              className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" />
+                          </div>
+                        )}
+                        <h3 className="font-semibold text-sm text-white/80 group-hover:text-white transition-colors mb-1 line-clamp-1">
+                          {campaign.track_title || campaign.title || 'Untitled'}
+                        </h3>
+                        <div className="flex items-center gap-3 text-[10px] text-white/25">
+                          {campaign.budget_cents > 0 && (
+                            <span className="flex items-center gap-1"><DollarSign size={10} />{formatMoney(campaign.budget_cents)}</span>
+                          )}
+                          {campaign.approved_submissions > 0 && (
+                            <span className="flex items-center gap-1"><Check size={10} />{campaign.approved_submissions}</span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 )}
-
-                <h3 className="font-semibold text-sm text-white/80 group-hover:text-white transition-colors mb-1">
-                  {campaign.title || 'Untitled Campaign'}
-                </h3>
-                <p className="text-[11px] text-white/25 line-clamp-2 mb-3">
-                  {campaign.description || campaign.track_name || ''}
-                </p>
-
-                {/* Stats footer */}
-                <div className="flex items-center gap-4 text-[11px] text-white/25">
-                  {campaign.budget_cents > 0 && (
-                    <span className="flex items-center gap-1">
-                      <DollarSign size={10} />
-                      {formatMoney(campaign.budget_cents)}
-                    </span>
-                  )}
-                  {campaign.approved_submissions > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Check size={10} />
-                      {campaign.approved_submissions} videos
-                    </span>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
+              </>
+            );
+          })()}
 
           <motion.div className="text-center mt-10"
             initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3 }}>
