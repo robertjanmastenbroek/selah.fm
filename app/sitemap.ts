@@ -117,7 +117,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const GENRES = ['pop', 'rock', 'hip-hop', 'electronic', 'r&b', 'country', 'latin', 'jazz', 'classical', 'indie',
                   'folk', 'metal', 'punk', 'reggae', 'blues', 'soul', 'funk', 'world', 'alternative', 'dance'];
   const genrePages: MetadataRoute.Sitemap = GENRES.map(g => ({
-    url: `${baseUrl}/browse/genre/${g}`,
+    // XML-escape & to &amp; — Next.js sitemap generator does not auto-escape
+    url: `${baseUrl}/browse/genre/${encodeURIComponent(g)}`,
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
     priority: 0.7,
