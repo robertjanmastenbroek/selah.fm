@@ -28,7 +28,7 @@ export default function ArtistCard({ artist }: Props) {
       } catch {
         // PostgreSQL array format: {punk,rock}
         if (raw.startsWith('{') && raw.endsWith('}')) {
-          return raw.slice(1, -1).split(',').map((g: string) => g.trim()).filter(Boolean);
+          return raw.slice(1, -1).split(',').map((g: string) => g.trim().replace(/^"|"$/g, '')).filter(Boolean);
         }
         // Extract content within quotes: BLISTER["pop"] → ["pop"]
         const quoted = raw.match(/"([^"]+)"/g);
