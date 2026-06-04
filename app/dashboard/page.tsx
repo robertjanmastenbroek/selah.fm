@@ -18,7 +18,7 @@ import {
   Check, Sparkles, LoaderCircle, Save, Copy, Music2,
   ChartBar, SlidersHorizontal, Clock, Percent, Bug,
   Camera, Play, ArrowUpRight, BarChart3, Zap,
-  Wallet, Palette, Download, Film, X,
+  Wallet, Palette, Download, Film, X, Trophy, ChevronRight,
 } from 'lucide-react';
 import DisputeButton from '@/components/DisputeButton';
 import { useToast } from '@/components/Toast';
@@ -411,6 +411,27 @@ function DashboardContent() {
 
                   {/* Submissions inbox — artist only */}
                   {isArtist && <SubmissionsInbox artistSlug={artistSlug} />}
+
+                  {/* Leaderboard snippet */}
+                  {!isArtist && (
+                    <a href="/earnings" className="block rounded-2xl bg-gradient-to-br from-amber-500/[0.04] to-orange-500/[0.02] border border-amber-500/10 p-5 hover:border-amber-500/20 transition-all group">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold flex items-center gap-2">
+                          <Trophy size={14} className="text-amber-400" />
+                          Creator Leaderboard
+                        </h3>
+                        <ChevronRight size={14} className="text-muted-foreground/40 group-hover:text-amber-400 transition-colors" />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        See how you rank against other creators. Top earners, streaks, and achievements.
+                      </p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-amber-500/10 text-amber-400 font-medium">All Time</span>
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-white/[0.04] text-muted-foreground">This Month</span>
+                        <span className="text-[10px] px-2 py-1 rounded-full bg-white/[0.04] text-muted-foreground">This Week</span>
+                      </div>
+                    </a>
+                  )}
 
                   {/* Activity + Bug reports + Referral — 2-col on desktop */}
                   <div className="grid md:grid-cols-3 gap-4">
