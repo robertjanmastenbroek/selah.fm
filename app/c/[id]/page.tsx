@@ -152,6 +152,19 @@ export default async function CampaignPage({ params }: Props) {
   const cpmPer1M = cpmDollars ? `$${(parseFloat(cpmDollars) * 1000).toFixed(0)}` : null;
   const budget = campaign?.total_budget_cents ? (campaign.total_budget_cents / 100).toFixed(0) : null;
 
+  // ── Fetch approved submissions for gallery ──
+  let submissions: any[] = [];
+  try {
+    if (campaign?.id) {
+      submissions = await sql`
+        SELECT s.id, s.creator_name, s.platform, s.content_url, s.views_verified, s.payout_amount_cents, s.submitted_at
+        FROM submissions s
+        WHERE s.campaign_id = ${campaign.id}::uuid AND s.status = 'approved'
+        ORDER BY s.views_verified DESC LIMIT 6
+      `;
+    }
+  } catch {}
+
   // ── Server-rendered related campaigns for internal linking ──
   let relatedCampaigns: any[] = [];
   try {
@@ -227,7 +240,7 @@ export default async function CampaignPage({ params }: Props) {
         </div>
       )}
 
-      <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} artistSlug={campaign?.artist_slug || null} />
+      <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} artistSlug={campaign?.artist_slug || null} submissions={submissions} />
 
       {/* Server-rendered related campaigns — crawlable by Google, visible to users */}
       {relatedCampaigns.length > 0 && (
