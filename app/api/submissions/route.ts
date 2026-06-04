@@ -173,10 +173,22 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const campaignId = searchParams.get('campaignId');
     const artistId = searchParams.get('artistId');
+    const creatorId = searchParams.get("creator_id");
     const statusFilter = searchParams.get('status');
     let submissions;
 
-    // If artistId is provided, get submissions for all of that artist's campaigns
+    // If creatorId is provided, get submissions by that creator
+    if (creatorId) {
+      submissions = await sql`
+        SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
+          u.display_name as creator_name
+        FROM submissions s
+        JOIN campaigns c ON c.id = s.campaign_id
+        LEFT JOIN users u ON u.id = s.creator_id
+        WHERE s.creator_id = ${creatorId}
+        ORDER BY s.submitted_at DESC LIMIT 50
+      `;
+    } else if (artistId) {
     if (artistId) {
       const statusCondition = statusFilter ? `AND s.review_status = $2` : '';
       const query = `
