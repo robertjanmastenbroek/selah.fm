@@ -676,6 +676,53 @@ function CampaignSkeleton() {
 
 interface ListenLink { platform: string; url: string; icon: string; }
 
+// ---- ACTIVITY TIMELINE ---------------------------------
+function ActivityTimeline({ campaign }: { campaign: any }) {
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!campaign?.id) return;
+    fetch("/api/campaigns/" + campaign.id + "/submissions?status=approved&limit=5")
+      .then(r => r.json())
+      .then(d => {
+        const items = (d.submissions || []).map((s: any) => ({
+          id: s.id, type: "submission", title: "New submission approved",
+          detail: (s.views_verified || 0).toLocaleString() + " views",
+          time: s.created_at,
+        }));
+        setActivities(items);
+        setLoading(false);
+      }).catch(() => setLoading(false));
+  }, [campaign?.id]);
+
+  if (loading) return <div className="animate-pulse h-16 bg-white/[0.02] rounded-xl" />;
+  if (activities.length === 0) return null;
+
+  return (
+    <section className="mt-8">
+      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Recent Activity</h3>
+      <div className="space-y-3">
+        {activities.map((a: any, i: number) => (
+          <div key={a.id} className="flex items-start gap-3">
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center text-sm">{'\ud83d\udcf9'}</div>
+              {i < activities.length - 1 && <div className="w-px flex-1 bg-white/[0.04] mt-1" />}
+            </div>
+            <div className="flex-1 min-w-0 pt-1">
+              <p className="text-xs font-medium">{a.title}</p>
+              <p className="text-[10px] text-muted-foreground/50">
+                {a.detail}
+                {a.time && <span className="ml-2">{new Date(a.time).toLocaleDateString()}</span>}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function CampaignDetailClient({ id, initialCampaign, listenLinks = [], artistSlug = null, submissions = [] }: {
   id: string; initialCampaign: any; listenLinks?: ListenLink[]; artistSlug?: string | null; submissions?: any[];
 }) {
@@ -973,6 +1020,8 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 </div>
               )}
 
+              {/* Activity Timeline */}
+              <ActivityTimeline campaign={campaign} />
               {/* Trust bar */}
               <div className="mt-4 flex items-center justify-between">
                 <TrustBar />
