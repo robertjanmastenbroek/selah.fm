@@ -13,10 +13,21 @@ export async function GET(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const [profile] = await sql`
-    SELECT id, referral_code, referrer_earnings_cents, referred_by
-    FROM users WHERE id = ${user.id}
-  `;
+  // Try to get referral_code — handle missing column gracefully
+  let profile: any = null;
+  try {
+    const result = await sql`
+      SELECT id, referral_code, referrer_earnings_cents, referred_by
+      FROM users WHERE id = ${user.id}
+    `;
+    profile = result[0];
+  } catch {
+    // Migration may not have run — fall back to basic query
+    const result = await sql`
+      SELECT id FROM users WHERE id = ${user.id}
+    `;
+    profile = result[0] ? { ...result[0], referral_code: null, referrer_earnings_cents: 0, referred_by: null } : null;
+  }
   if (!profile) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
   // Get pending bonuses count
