@@ -9,6 +9,26 @@ interface Props { params: { slug: string; id: string } }
 
 async function getTrackData(slug: string, trackId: string) {
   try {
+    // First, check if the track exists at all
+    const directTracks = await sql`
+      SELECT at.id, at.artist_id, at.title FROM artist_tracks at WHERE at.id = ${trackId}
+    `;
+    if (directTracks.length === 0) {
+      console.error('Track not found in artist_tracks table:', trackId);
+    } else {
+      const at = directTracks[0];
+      // Check the profile link
+      const profileCheck = await sql`
+        SELECT ap.id, ap.slug, ap.artist_id, da.artist_name
+        FROM artist_profiles ap
+        JOIN discovered_artists da ON da.id = ap.artist_id
+        WHERE ap.id = ${at.artist_id} AND ap.slug = ${slug}
+      `;
+      if (profileCheck.length === 0) {
+        console.error('Profile mismatch:', { trackArtistId: at.artist_id, slug, trackTitle: at.title });
+      }
+    }
+
     const [track] = await sql`
       SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents,
              at.created_at, at.description,
@@ -22,7 +42,7 @@ async function getTrackData(slug: string, trackId: string) {
       LEFT JOIN campaigns c ON c.id IN (
         SELECT cc.campaign_id FROM campaign_claims cc WHERE cc.discovered_artist_id = da.id
       )
-      WHERE ap.slug = ${slug} AND at.id = ${trackId}::uuid
+      WHERE ap.slug = ${slug} AND at.id = ${trackId}
       LIMIT 1
     `;
     if (!track) return null;
