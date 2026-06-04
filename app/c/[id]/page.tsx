@@ -188,7 +188,7 @@ export default async function CampaignPage({ params }: Props) {
     '@context': 'https://schema.org',
     '@graph': [
       { '@type': 'MusicRecording', name: trackTitle, byArtist: { '@type': 'MusicGroup', name: artistName }, ...(imageUrl ? { image: imageUrl } : {}), url: canonicalUrl },
-      { '@type': 'VideoObject', name: `Promote "${trackTitle}" by ${artistName}`, description: cpmDollars ? `Submit a video and earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M verified views promoting "${trackTitle}".` : `Join this campaign for "${trackTitle}" and earn per verified view.`, thumbnailUrl: imageUrl, contentUrl: canonicalUrl, uploadDate: createdAt },
+      { '@type': 'VideoObject', name: `Promote "${trackTitle}" by ${artistName}`, description: cpmDollars ? `Submit a video and earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M verified views promoting "${trackTitle}".` : `Join this campaign for "${trackTitle}" and earn per verified view.`, thumbnailUrl: imageUrl, embedUrl: canonicalUrl, uploadDate: createdAt },
       { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Selah.fm', item: 'https://selah.fm' }, { '@type': 'ListItem', position: 2, name: 'Browse Tracks', item: 'https://selah.fm/browse' }, { '@type': 'ListItem', position: 3, name: displayTitle, item: canonicalUrl }] },
       ...(cpmDollars ? [{ '@type': 'Offer', name: `Earn $${(parseFloat(cpmDollars) * 1000).toFixed(0)} per 1M views promoting "${trackTitle}"`, price: cpmDollars, priceCurrency: 'USD', description: `Creators earn per verified view. Artists pay CPM + 20% platform fee.${budget ? ` Budget: $${budget}.` : ''}`, url: canonicalUrl }] : []),
       { '@type': 'FAQPage', mainEntity: [
