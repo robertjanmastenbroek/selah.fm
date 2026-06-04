@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Music, Film, Eye, Sparkles, ChevronRight, BarChart3, ExternalLink, Heart } from 'lucide-react';
+import { Music, Film, Eye, Sparkles, ChevronRight, BarChart3, ExternalLink, Heart, Bookmark, Check } from 'lucide-react';
 import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
 import EarnModal from '@/components/EarnModal';
@@ -86,6 +86,104 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// SAVE TO COLLECTION BUTTON
+// ════════════════════════════════════════════════════════════
+
+function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string; trackTitle: string; artistName: string }) {
+  const [collections, setCollections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showPicker, setShowPicker] = useState(false);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (showPicker) {
+      fetch('/api/collections', { credentials: 'include' })
+        .then(r => r.json())
+        .then(d => setCollections(d.collections || []))
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, [showPicker]);
+
+  const addToCollection = async (collectionId: string) => {
+    setSaving(collectionId);
+    try {
+      const res = await fetch(`/api/collections/${collectionId}/items`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trackId }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => { setSaved(false); setShowPicker(false); }, 1500);
+      }
+    } catch {}
+    setSaving(null);
+  };
+
+  const createAndAdd = async () => {
+    const name = prompt('Collection name:');
+    if (!name?.trim()) return;
+    try {
+      const res = await fetch('/api/collections', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), description: `Tracks featuring ${artistName}` }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        if (d.collection) addToCollection(d.collection.id);
+      }
+    } catch {}
+  };
+
+  return (
+    <div className="relative">
+      <button onClick={async () => {
+        try {
+          const auth = await fetch('/api/auth/me', { credentials: 'include' });
+          if (!auth.ok) { window.location.href = '/login'; return; }
+        } catch { window.location.href = '/login'; return; }
+        setShowPicker(!showPicker);
+      }}
+        className="flex items-center gap-2 w-full p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground">
+        {saved ? <Check size={14} className="text-emerald-400" /> : <Bookmark size={14} />}
+        {saved ? 'Saved to collection!' : 'Save to collection'}
+      </button>
+
+      {showPicker && (
+        <div className="absolute bottom-full mb-2 left-0 right-0 rounded-xl bg-[#1C1C3A] border border-white/[0.08] shadow-xl p-3 max-h-48 overflow-y-auto z-10">
+          {loading ? (
+            <p className="text-xs text-muted-foreground text-center py-2">Loading...</p>
+          ) : collections.length === 0 ? (
+            <div className="text-center py-2">
+              <p className="text-xs text-muted-foreground mb-2">No collections yet</p>
+              <button onClick={createAndAdd} className="text-xs text-primary hover:underline">Create one</button>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {collections.map((c: any) => (
+                <button key={c.id} onClick={() => addToCollection(c.id)} disabled={saving === c.id}
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-white hover:bg-white/[0.04] transition-colors disabled:opacity-50 flex items-center justify-between">
+                  <span className="truncate">{c.name}</span>
+                  <span className="shrink-0 text-[9px] text-muted-foreground/40 ml-2">{c.item_count || 0}</span>
+                </button>
+              ))}
+              <div className="border-t border-white/[0.06] pt-1 mt-1">
+                <button onClick={createAndAdd} className="w-full text-left px-3 py-2 rounded-lg text-xs text-primary hover:bg-white/[0.04] transition-colors">
+                  + New collection
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -225,6 +323,9 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
                 ))}
               </div>
             )}
+
+            {/* Save to collection */}
+            <SaveToCollection trackId={track.id} trackTitle={trackTitle} artistName={artistName} />
 
             {/* Back to artist */}
             <Link href={`/artist/${slug}`}

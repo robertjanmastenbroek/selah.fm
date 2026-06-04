@@ -12,7 +12,7 @@ export const maxDuration = 600;
 const WORKERS: Record<number, { path: string; params?: string }[]> = {
   0:  [{ path: '/api/cron/generate-artist-bios', params: 'limit=100' }, { path: '/api/cron/enrich-wikipedia' }],
   1:  [{ path: '/api/cron/archive-activity' }, { path: '/api/cron/scrape-bandcamp' }],
-  2:  [{ path: '/api/cron/blog-pipeline' }, { path: '/api/cron/reconcile' }],
+  2:  [{ path: '/api/cron/blog-pipeline' }, { path: '/api/cron/reconcile' }, { path: '/api/cron/extract-colors', params: 'limit=50' }],
   3:  [{ path: '/api/cron/email-outreach' }],
   4:  [{ path: '/api/cron/blog-syndicate' }],
   5:  [{ path: '/api/cron/creator-discovery' }],
