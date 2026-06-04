@@ -72,6 +72,13 @@ function DashboardContent() {
   useEffect(() => {
     const t = searchParams.get('tab') as TabId | null;
     if (t && ['overview', 'tracks', 'profile', 'earnings'].includes(t)) setTab(t);
+    // Handle Stripe Connect return — show success toast and reload profile
+    if (searchParams.get('stripe') === 'success') {
+      addToast('Payout setup complete!', 'success');
+      globalMutate('/api/auth/me');
+      // Clean URL by removing stripe param without full reload
+      router.replace('/dashboard?tab=earnings', { scroll: false });
+    }
   }, [searchParams]);
 
   const switchTab = (t: TabId) => {
@@ -414,27 +421,7 @@ function DashboardContent() {
 
                   {/* Payout setup — creators without Stripe Connect */}
                   {!isArtist && profile && !profile?.stripe_connect_id && (
-                    <div className="rounded-2xl bg-gradient-to-br from-emerald-500/[0.04] to-green-500/[0.02] border border-emerald-500/10 p-5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold flex items-center gap-2">
-                            <Wallet size={14} className="text-emerald-400" />
-                            Set up payouts
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">Connect your bank account to receive earnings from approved videos.</p>
-                        </div>
-                        <button onClick={async () => {
-                          try {
-                            const res = await fetch('/api/stripe/connect', { method: 'POST', credentials: 'include' });
-                            const d = await res.json();
-                            if (d.url) window.location.href = d.url;
-                          } catch {}
-                        }}
-                          className="text-[10px] px-3 py-2 rounded-lg bg-primary text-white font-semibold shrink-0 hover:opacity-90 transition-all">
-                          Set up payouts
-                        </button>
-                      </div>
-                    </div>
+                    <PayoutCardInline />
                   )}
 
                   {/* Leaderboard snippet */}
@@ -1245,6 +1232,53 @@ function SubmissionsInbox({ artistSlug }: { artistSlug: string }) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// ── PAYOUT CARD INLINE ─────────────────────────────────────────
+function PayoutCardInline() {
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutError, setPayoutError] = useState('');
+
+  const handlePayoutConnect = async () => {
+    setPayoutLoading(true);
+    setPayoutError('');
+    try {
+      const res = await fetch('/api/stripe/connect', { 
+        method: 'POST', 
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const d = await res.json();
+      if (d.url) {
+        window.location.href = d.url;
+      } else {
+        setPayoutError(d.error || 'Failed to create connection');
+        setPayoutLoading(false);
+      }
+    } catch {
+      setPayoutError('Network error — please try again');
+      setPayoutLoading(false);
+    }
+  };
+
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-emerald-500/[0.04] to-green-500/[0.02] border border-emerald-500/10 p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold flex items-center gap-2">
+            <Wallet size={14} className="text-emerald-400" />
+            Set up payouts
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">Connect your bank account via Stripe to receive earnings from approved videos.</p>
+        </div>
+        <button onClick={handlePayoutConnect} disabled={payoutLoading}
+          className="text-[10px] px-3 py-2 rounded-lg bg-primary text-white font-semibold shrink-0 hover:opacity-90 transition-all disabled:opacity-40 flex items-center gap-1.5 active:scale-95">
+          {payoutLoading ? <><LoaderCircle size={12} className="animate-spin" /> Connecting...</> : 'Set up payouts'}
+        </button>
+      </div>
+      {payoutError && <p className="text-[10px] text-red-400 mt-2">{payoutError}</p>}
+    </div>
   );
 }
 

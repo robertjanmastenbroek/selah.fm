@@ -36,9 +36,11 @@ export async function POST(request: Request) {
     }
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm';
-    // Determine if this came from onboarding or settings
-    const isOnboarding = request.headers.get('referer')?.includes('/onboarding');
-    const baseUrl = isOnboarding ? `${origin}/onboarding` : `${origin}/earnings`;
+    // Determine where to return after Stripe onboarding
+    const referer = request.headers.get('referer') || '';
+    const baseUrl = referer.includes('/onboarding') ? `${origin}/onboarding`
+      : referer.includes('/dashboard') ? `${origin}/dashboard?tab=earnings`
+      : `${origin}/earnings`;
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
       refresh_url: `${baseUrl}?stripe=refresh`,
