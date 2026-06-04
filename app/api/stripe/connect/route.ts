@@ -35,12 +35,14 @@ export async function POST(request: Request) {
       await sql`UPDATE users SET stripe_account_id = ${accountId} WHERE id = ${session.id}`;
     }
 
-    // Create onboarding link
     const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm';
+    // Determine if this came from onboarding or settings
+    const isOnboarding = request.headers.get('referer')?.includes('/onboarding');
+    const baseUrl = isOnboarding ? `${origin}/onboarding` : `${origin}/earnings`;
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${origin}/earnings?stripe=refresh`,
-      return_url: `${origin}/earnings?stripe=success`,
+      refresh_url: `${baseUrl}?stripe=refresh`,
+      return_url: `${baseUrl}?stripe=success`,
       type: 'account_onboarding',
     });
 

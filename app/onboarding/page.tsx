@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music4, Clapperboard, ArrowRight, Check, ArrowLeft, Sparkles } from 'lucide-react';
+import { Music4, Clapperboard, ArrowRight, Check, ArrowLeft, Sparkles, Search, Loader2 } from 'lucide-react';
 
 const genreOptions = ['Pop','Hip-Hop','Electronic','Rock','Indie','R&B','Jazz','Classical','Country','Metal'];
 const platformOptions = ['TikTok','Instagram Reels','YouTube Shorts','Facebook'];
@@ -28,6 +28,23 @@ export default function OnboardingPage() {
   const [cpm, setCpm] = useState(2);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  // Connect Spotify state
+  const [connectQuery, setConnectQuery] = useState('');
+  const [connectResults, setConnectResults] = useState<any[]>([]);
+  const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState('');
+  const [claiming, setClaiming] = useState<string|null>(null);
+  const [claimedId, setClaimedId] = useState<string|null>(null);
+  // Connect Stripe state
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeDone, setStripeDone] = useState(false);
+
+  // Check if returning from Stripe onboarding
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('stripe') === 'success') setStripeDone(true);
+  }, []);
 
   // Persist onboarding state to localStorage
   useEffect(() => {
@@ -52,12 +69,49 @@ export default function OnboardingPage() {
   }, [step, role, name, genres, platforms, cpm]);
 
   // Artist: 3 steps. Creator: 5 steps.
-  const artistSteps = 3;
-  const creatorSteps = 5;
+  const artistSteps = 4;
+  const creatorSteps = 6;
   const totalSteps = role === 'artist' ? artistSteps : creatorSteps;
 
   const nextStep = () => setStep(s => Math.min(s + 1, totalSteps - 1));
   const prevStep = () => setStep(s => Math.max(s - 1, 0));
+
+  const handleConnectSearch = async () => {
+    const q = connectQuery.trim();
+    if (!q || q.length < 2) { setConnectError('Type at least 2 characters'); return; }
+    setConnectError(''); setConnecting(true);
+    try {
+      const res = await fetch(`/api/artists?search=${encodeURIComponent(q)}&limit=10`);
+      const data = await res.json();
+      setConnectResults(data.artists || []);
+      if (!data.artists?.length) setConnectError('No artists found. Try a different search.');
+    } catch { setConnectError('Search failed'); }
+    setConnecting(false);
+  };
+
+  const handleClaim = async (artist: any) => {
+    setClaiming(artist.id); setConnectError('');
+    try {
+      const res = await fetch(`/api/artists/${artist.slug}/claim`, { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (data.error) setConnectError(data.error);
+      else setClaimedId(artist.id);
+    } catch { setConnectError('Failed to claim'); }
+    setClaiming(null);
+  };
+
+  const skipConnect = () => { setStep(s => Math.min(s + 1, 3)); };
+
+  const handleStripeConnect = async () => {
+    setStripeLoading(true);
+    try {
+      const res = await fetch('/api/stripe/connect', { method: 'POST', credentials: 'include' });
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else if (data.error) setConnectError(data.error);
+    } catch { setConnectError('Failed to connect Stripe'); }
+    setStripeLoading(false);
+  };
 
   const save = async () => {
     setSaving(true);
@@ -207,6 +261,48 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
+          {/* ── ARTIST STEP 3: Connect Spotify ──────────────── */}
+          {step===3&&role==='artist'&&(
+            <motion.div key="s3a" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
+              <h2 className="text-2xl font-bold">Connect your artist profile</h2>
+              <p className="text-muted-foreground text-sm">Search for your artist profile and claim it to link your music to your account.</p>
+              <input
+                value={connectQuery} onChange={e=>setConnectQuery(e.target.value)}
+                onKeyDown={e=>e.key==='Enter'&&handleConnectSearch()}
+                placeholder="Search your artist name..."
+                className="w-full rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"
+              />
+              <button onClick={handleConnectSearch} disabled={connecting||!connectQuery.trim()}
+                className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                {connecting?<><Loader2 size={16} className="animate-spin"/> Searching...</>:<>Search <Search size={16}/></>}
+              </button>
+              {connectError&&<p className="text-xs text-red-400">{connectError}</p>}
+              {connectResults.length>0&&(
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {connectResults.map((r:any)=>(
+                    <button key={r.id} onClick={()=>handleClaim(r)} disabled={claiming===r.id}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
+                        claimedId===r.id?'bg-emerald-500/10 border border-emerald-500/20':'bg-white/[0.03] border border-white/[0.06] hover:border-primary/30 hover:bg-white/[0.05]'
+                      }`}>
+                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/[0.04] shrink-0">
+                        {r.spotify_image_url?<img src={r.spotify_image_url} alt="" className="w-full h-full object-cover"/>:<Music4 size={18} className="m-auto text-white/20"/>}
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-sm font-semibold truncate">{r.artist_name}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{r.genres?.slice(0,2).join(', ')||'Artist'}</p>
+                      </div>
+                      {claiming===r.id?<Loader2 size={16} className="animate-spin shrink-0"/>:claimedId===r.id?<Check size={16} className="text-emerald-400 shrink-0"/>:<ArrowRight size={16} className="text-muted-foreground/30 shrink-0"/>}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button onClick={skipConnect} className="flex-1 py-3 bg-white/[0.04] text-muted-foreground rounded-xl text-sm font-medium hover:bg-white/[0.06] transition-all">Skip</button>
+                {claimedId&&<button onClick={nextStep} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">Continue →</button>}
+              </div>
+            </motion.div>
+          )}
+
           {/* ── CREATOR STEP 4: CPM ──────────────────────────── */}
           {step===4&&role==='creator'&&(
             <motion.div key="s4c" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
@@ -226,6 +322,43 @@ export default function OnboardingPage() {
                 {saving?'Setting up...':"I'm ready to earn →"}
               </button>
               <p className="text-xs text-muted-foreground text-center">You can change this anytime in Settings.</p>
+            </motion.div>
+          )}
+
+          {/* ── CREATOR STEP 5: Connect Stripe ──────────────── */}
+          {step===5&&role==='creator'&&(
+            <motion.div key="s5c" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
+              <h2 className="text-2xl font-bold">Set up your payouts</h2>
+              <p className="text-muted-foreground text-sm">
+                Connect Stripe to receive payments. You&apos;ll be redirected to Stripe to complete the setup.
+              </p>
+
+              <div className="rounded-2xl bg-gradient-to-br from-indigo-500/[0.04] to-emerald-500/[0.02] border border-indigo-500/10 p-5 text-center space-y-4">
+                {stripeDone ? (
+                  <>
+                    <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto"><Check size={24} className="text-emerald-400" /></div>
+                    <p className="font-semibold text-sm">Stripe connected!</p>
+                    <button onClick={nextStep} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">
+                      Continue →
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-14 h-14 rounded-full bg-indigo-500/10 flex items-center justify-center mx-auto">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
+                    </div>
+                    <p className="font-semibold text-sm mb-1">Get paid for your content</p>
+                    <p className="text-xs text-muted-foreground">Stripe handles your payout info securely.</p>
+                    <button onClick={handleStripeConnect} disabled={stripeLoading}
+                      className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                      {stripeLoading ? <><Loader2 size={16} className="animate-spin"/> Opening Stripe...</> : 'Connect Stripe →'}
+                    </button>
+                    <button onClick={nextStep} className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                      Skip for now
+                    </button>
+                  </>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
