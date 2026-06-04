@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import sql from '@/lib/db';
 import Link from 'next/link';
+import TrackDetailClient from './TrackDetailClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,6 @@ async function getTrackData(slug: string, trackId: string) {
     `;
     if (!track) return null;
 
-    // Get stats
     const [stats] = await sql`
       SELECT COALESCE(SUM(s.views_verified), 0)::int as total_views,
              COUNT(s.id)::int as submission_count
@@ -71,12 +71,11 @@ export default async function TrackPage({ params }: Props) {
   const artistName = track.artist_name;
   const trackTitle = track.title;
   const cpmPer1M = track.cpm_rate_cents ? `$${((track.cpm_rate_cents / 100) * 1000).toFixed(0)}` : null;
-  const campaignActive = track.campaign_status === 'active';
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'MusicRecording', name: trackTitle, byArtist: { '@type': 'MusicGroup', name: artistName }, image: track.cover_art_url || track.spotify_image_url, url: `https://selah.fm/artist/${params.slug}/tracks/${params.id}${track.spotify_url ? `, ${track.spotify_url}` : ''}`, datePublished: track.created_at ? new Date(track.created_at).toISOString().split('T')[0] : undefined },
+      { '@type': 'MusicRecording', name: trackTitle, byArtist: { '@type': 'MusicGroup', name: artistName }, image: track.cover_art_url || track.spotify_image_url, url: `https://selah.fm/artist/${params.slug}/tracks/${params.id}`, datePublished: track.created_at ? new Date(track.created_at).toISOString().split('T')[0] : undefined },
       { '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Selah.fm', item: 'https://selah.fm' },
         { '@type': 'ListItem', position: 2, name: artistName, item: `https://selah.fm/artist/${params.slug}` },
@@ -89,86 +88,23 @@ export default async function TrackPage({ params }: Props) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      {/* Screen-reader SEO content */}
+      {/* Screen-reader SEO content — crawlable by Google even before JS loads */}
       <div className="sr-only" aria-hidden="true">
         <h1>{trackTitle} by {artistName}</h1>
         <p>{cpmPer1M ? `Promote "${trackTitle}" by ${artistName} and earn ${cpmPer1M} per 1M verified views. Available on Selah.fm.` : `Listen to "${trackTitle}" by ${artistName} and learn how to earn promoting it on Selah.fm.`}</p>
       </div>
 
-      <div className="min-h-screen" style={{ background: '#0F0F23' }}>
-        <main className="max-w-4xl mx-auto px-4 py-12">
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="text-[11px] text-muted-foreground/40 mb-6">
-            <ol className="flex items-center gap-1.5">
-              <li><a href="/" className="hover:text-muted-foreground">Selah.fm</a><span className="ml-1.5">/</span></li>
-              <li><a href={`/artist/${params.slug}`} className="hover:text-muted-foreground">{artistName}</a><span className="ml-1.5">/</span></li>
-              <li className="text-muted-foreground/60 truncate max-w-[200px]">{trackTitle}</li>
-            </ol>
-          </nav>
+      {/* Breadcrumb — server-rendered for SEO */}
+      <nav aria-label="Breadcrumb" className="text-[11px] text-muted-foreground/40 max-w-4xl mx-auto px-4 pt-12 pb-0">
+        <ol className="flex items-center gap-1.5">
+          <li><a href="/" className="hover:text-muted-foreground">Selah.fm</a><span className="ml-1.5">/</span></li>
+          <li><a href={`/artist/${params.slug}`} className="hover:text-muted-foreground">{artistName}</a><span className="ml-1.5">/</span></li>
+          <li className="text-muted-foreground/60 truncate max-w-[200px]">{trackTitle}</li>
+        </ol>
+      </nav>
 
-          {/* Track header */}
-          <div className="flex items-start gap-6 mb-8">
-            <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl overflow-hidden bg-white/[0.04] shrink-0">
-              {track.cover_art_url ? (
-                <img src={track.cover_art_url} alt={`${trackTitle} cover`} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white/10">
-                  {trackTitle[0]?.toUpperCase() || '?'}
-                </div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
-                {trackTitle}
-              </h1>
-              <Link href={`/artist/${params.slug}`} className="text-primary hover:underline text-sm">
-                {artistName}
-              </Link>
-              {campaignActive && <span className="ml-3 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active campaign</span>}
-            </div>
-          </div>
-
-          {/* Stats grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            {[
-              { label: 'CPM', value: cpmPer1M ? `${cpmPer1M}/1M views` : '—' },
-              { label: 'Views', value: track.total_views?.toLocaleString() || '0' },
-              { label: 'Submissions', value: String(track.submission_count || 0) },
-              { label: 'Status', value: campaignActive ? 'Active' : track.campaign_status || 'Draft' },
-            ].map(s => (
-              <div key={s.label} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
-                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider mb-1">{s.label}</p>
-                <p className="text-lg font-bold">{s.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* CTAs */}
-          <div className="flex flex-wrap gap-3 mb-12">
-            {track.campaign_slug && (
-              <a href={`/c/${track.campaign_slug}`} className="px-6 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:opacity-90 transition-all">
-                {cpmPer1M ? `Earn ${cpmPer1M}/1M views →` : 'Join campaign →'}
-              </a>
-            )}
-            {track.spotify_url && (
-              <a href={track.spotify_url} target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-xl bg-[#1DB954]/10 text-[#1DB954] font-semibold text-sm border border-[#1DB954]/20 hover:bg-[#1DB954]/20 transition-all">
-                Listen on Spotify
-              </a>
-            )}
-            <a href={`/artist/${params.slug}`} className="px-6 py-3 rounded-xl bg-white/[0.04] text-muted-foreground font-medium text-sm hover:bg-white/[0.06] transition-all">
-              View all tracks →
-            </a>
-          </div>
-
-          {/* SEO content */}
-          <section className="text-sm text-muted-foreground/60 leading-relaxed space-y-4 max-w-2xl">
-            <h2 className="text-base font-semibold text-foreground">About this track</h2>
-            <p>"{trackTitle}" is a track by {artistName} available on Selah.fm. Creators can make short-form videos featuring this track and earn per verified view.</p>
-            {cpmPer1M && <p>At the current CPM rate of {track.cpm_rate_cents ? `$${(track.cpm_rate_cents / 100).toFixed(2)}` : '—'} per 1,000 views, creators can earn {cpmPer1M} for every 1 million verified views their video receives.</p>}
-            {track.submission_count > 0 && <p>{track.submission_count} creator{track.submission_count !== 1 ? 's have' : ' has'} already submitted videos for this track, generating {track.total_views?.toLocaleString() || '0'} verified views.</p>}
-          </section>
-        </main>
-      </div>
+      {/* Client component — earnings calculator, CTA, sticky bar, streaming links */}
+      <TrackDetailClient track={track} slug={params.slug} />
     </>
   );
 }
