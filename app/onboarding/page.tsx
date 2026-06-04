@@ -32,16 +32,14 @@ export default function OnboardingPage() {
   const [cpm, setCpm] = useState(2);
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
-  // Connect Spotify state
-  const [connectQuery, setConnectQuery] = useState('');
-  const [connectResults, setConnectResults] = useState<any[]>([]);
-  const [connecting, setConnecting] = useState(false);
-  const [connectError, setConnectError] = useState('');
-  const [claiming, setClaiming] = useState<string|null>(null);
-  const [claimedId, setClaimedId] = useState<string|null>(null);
+  // Onboarding budget & CPM
+  const [onboardBudget, setOnboardBudget] = useState(100);
+  const [onboardCpm, setOnboardCpm] = useState(2);
+  const [onboardImportLink, setOnboardImportLink] = useState('');
   // Connect Stripe state
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeDone, setStripeDone] = useState(false);
+  const [stripeError, setStripeError] = useState("");
 
   // Check if returning from Stripe onboarding
   useEffect(() => {
@@ -73,38 +71,12 @@ export default function OnboardingPage() {
   }, [step, role, name, genres, platforms, cpm]);
 
   // Artist: 3 steps. Creator: 5 steps.
-  const artistSteps = 4;
+  const artistSteps = 5;
   const creatorSteps = 6;
   const totalSteps = role === 'artist' ? artistSteps : creatorSteps;
 
   const nextStep = () => setStep(s => Math.min(s + 1, totalSteps - 1));
   const prevStep = () => setStep(s => Math.max(s - 1, 0));
-
-  const handleConnectSearch = async () => {
-    const q = connectQuery.trim();
-    if (!q || q.length < 2) { setConnectError('Type at least 2 characters'); return; }
-    setConnectError(''); setConnecting(true);
-    try {
-      const res = await fetch(`/api/artists?search=${encodeURIComponent(q)}&limit=10`);
-      const data = await res.json();
-      setConnectResults(data.artists || []);
-      if (!data.artists?.length) setConnectError('No artists found. Try a different search.');
-    } catch { setConnectError('Search failed'); }
-    setConnecting(false);
-  };
-
-  const handleClaim = async (artist: any) => {
-    setClaiming(artist.id); setConnectError('');
-    try {
-      const res = await fetch(`/api/artists/${artist.slug}/claim`, { method: 'POST', credentials: 'include' });
-      const data = await res.json();
-      if (data.error) setConnectError(data.error);
-      else setClaimedId(artist.id);
-    } catch { setConnectError('Failed to claim'); }
-    setClaiming(null);
-  };
-
-  const skipConnect = () => { setStep(s => Math.min(s + 1, 3)); };
 
   const handleStripeConnect = async () => {
     setStripeLoading(true);
@@ -112,8 +84,8 @@ export default function OnboardingPage() {
       const res = await fetch('/api/stripe/connect', { method: 'POST', credentials: 'include' });
       const data = await res.json();
       if (data.url) { window.location.href = data.url; }
-      else if (data.error) setConnectError(data.error);
-    } catch { setConnectError('Failed to connect Stripe'); }
+      else if (data.error) setStripeError(data.error);
+    } catch { setStripeError('Failed to connect Stripe'); }
     setStripeLoading(false);
   };
 
@@ -127,6 +99,8 @@ export default function OnboardingPage() {
         body: JSON.stringify({
           name,
           user_type: role,
+          budget_cents: onboardBudget * 100,
+          cpm_rate_cents: onboardCpm * 100,
           genres: genres.join(', '),
           tiktok_handle: platforms.includes('TikTok') ? '@pending' : null,
           instagram_handle: platforms.includes('Instagram Reels') ? '@pending' : null,
@@ -265,45 +239,95 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* ── ARTIST STEP 3: Connect Spotify ──────────────── */}
+          {/* ── ARTIST STEP 3: Budget + CPM ──────────────────── */}
           {step===3&&role==='artist'&&(
             <motion.div key="s3a" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
-              <h2 className="text-2xl font-bold">Connect your artist profile</h2>
-              <p className="text-muted-foreground text-sm">Search for your artist profile and claim it to link your music to your account.</p>
-              <input
-                value={connectQuery} onChange={e=>setConnectQuery(e.target.value)}
-                onKeyDown={e=>e.key==='Enter'&&handleConnectSearch()}
-                placeholder="Search your artist name..."
-                className="w-full rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"
-              />
-              <button onClick={handleConnectSearch} disabled={connecting||!connectQuery.trim()}
-                className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                {connecting?<><LoaderCircle size={16} className="animate-spin"/> Searching...</>:<>Search <Search size={16}/></>}
-              </button>
-              {connectError&&<p className="text-xs text-red-400">{connectError}</p>}
-              {connectResults.length>0&&(
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {connectResults.map((r:any)=>(
-                    <button key={r.id} onClick={()=>handleClaim(r)} disabled={claiming===r.id}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-                        claimedId===r.id?'bg-emerald-500/10 border border-emerald-500/20':'bg-white/[0.03] border border-white/[0.06] hover:border-primary/30 hover:bg-white/[0.05]'
-                      }`}>
-                      <div className="w-10 h-10 rounded-lg overflow-hidden bg-white/[0.04] shrink-0">
-                        {r.spotify_image_url?<img src={r.spotify_image_url} alt="" className="w-full h-full object-cover"/>:<Music4 size={18} className="m-auto text-white/20"/>}
-                      </div>
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="text-sm font-semibold truncate">{r.artist_name}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{r.genres?.slice(0,2).join(', ')||'Artist'}</p>
-                      </div>
-                      {claiming===r.id?<LoaderCircle size={16} className="animate-spin shrink-0"/>:claimedId===r.id?<Check size={16} className="text-emerald-400 shrink-0"/>:<ArrowRight size={16} className="text-muted-foreground/30 shrink-0"/>}
-                    </button>
-                  ))}
+              <h2 className="text-2xl font-bold">Set your first campaign budget</h2>
+              <p className="text-muted-foreground text-sm">How much do you want to spend? Creators earn per 1,000 verified views.</p>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Budget</span>
+                    <span className="font-bold text-primary">$${onboardBudget}</span>
+                  </div>
+                  <input type="range" min={50} max={500} step={50} value={onboardBudget} onChange={e => setOnboardBudget(parseInt(e.target.value))}
+                    className="w-full h-2 rounded-full appearance-none bg-white/[0.08] cursor-pointer accent-primary"
+                    style={{background: `linear-gradient(to right, #4338CA ${onboardBudget/5}%, rgba(255,255,255,0.08) ${onboardBudget/5}%)`}} />
+                  <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                    <span>$50</span><span>$100</span><span>$250</span><span>$500</span>
+                  </div>
                 </div>
-              )}
-              <div className="flex gap-2">
-                <button onClick={skipConnect} className="flex-1 py-3 bg-white/[0.04] text-muted-foreground rounded-xl text-sm font-medium hover:bg-white/[0.06] transition-all">Skip</button>
-                {claimedId&&<button onClick={nextStep} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity">Continue →</button>}
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Rate (CPM)</span>
+                    <span className="font-bold text-emerald-400">$${cpmTiers.find((t:any)=>t.value===onboardCpm)?.cpmDisplay || `$${onboardCpm}`}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {cpmTiers.map((t:any) => {
+                      const selected = onboardCpm === t.value;
+                      return (
+                        <button key={t.value} onClick={() => setOnboardCpm(t.value)}
+                          className={`relative p-3 rounded-xl border text-center transition-all ${
+                            selected ? 'border-primary bg-primary/[0.04]' : 'border-white/[0.06] bg-white/[0.02] hover:border-primary/30'
+                          }`}>
+                          {t.recommended && <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-primary text-[8px] text-primary-foreground font-semibold whitespace-nowrap">Popular</span>}
+                          <div className="text-base font-bold mt-1">{t.cpmDisplay}</div>
+                          <div className="text-[9px] text-muted-foreground/70">{t.per1M}/1M views</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground/50">
+                    At $${onboardCpm}/CPM, ${Math.floor(onboardBudget * 1000 / (onboardCpm * 100))}+ verified views covered
+                  </p>
+                </div>
               </div>
+              <button onClick={nextStep} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                Continue <ArrowRight size={16}/>
+              </button>
+            </motion.div>
+          )}
+
+          {/* ── ARTIST STEP 4: Import music ──────────────────── */}
+          {step===4&&role==='artist'&&(
+            <motion.div key="s4a" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
+              <h2 className="text-2xl font-bold">Import your music</h2>
+              <p className="text-muted-foreground text-sm">Paste your Spotify artist link to auto-import tracks with cover art.</p>
+              
+              <input value={onboardImportLink} onChange={e => setOnboardImportLink(e.target.value)}
+                placeholder="https://open.spotify.com/artist/..."
+                className="w-full rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"
+                onKeyDown={e => e.key === 'Enter' && nextStep()}
+              />
+              <div className="flex gap-2">
+                <button onClick={nextStep} className="flex-1 py-3 bg-white/[0.04] text-muted-foreground rounded-xl text-sm font-medium hover:bg-white/[0.06] transition-all">
+                  Skip
+                </button>
+                <button onClick={nextStep} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                  Continue <ArrowRight size={16}/>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── ARTIST STEP 5: Done ──────────────────────────── */}
+          {step===5&&role==='artist'&&(
+            <motion.div key="s5a" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
+              <h2 className="text-2xl font-bold">You're ready to go!</h2>
+              <div className="space-y-3">
+                {[
+                  {icon:Check,text:`$${onboardBudget} budget set at $${onboardCpm} CPM`},
+                  {icon:Check,text:'Artist profile created'},
+                  {icon:Sparkles,text:'Next: Import your tracks from the dashboard'},
+                ].map((item,i)=>{const I=item.icon;return(
+                  <div key={i} className="flex items-center gap-3 text-sm"><I size={16} className="text-emerald-400 shrink-0"/><span>{item.text}</span></div>
+                );})}
+              </div>
+              <button onClick={save} disabled={saving} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                {saving ? 'Setting up...' : 'Go to dashboard →'}
+              </button>
             </motion.div>
           )}
 
