@@ -74,11 +74,8 @@ async function getTrackData(slug: string, trackId: string) {
       SELECT COALESCE(SUM(s.views_verified), 0)::int as total_views,
              COUNT(s.id)::int as submission_count
       FROM submissions s
-      LEFT JOIN campaigns c ON c.id = s.campaign_id
-      LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
-      LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-      LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
-      WHERE ap.slug = ${slug}
+      JOIN campaigns c ON c.id = s.campaign_id
+      WHERE c.id = ${track.id}
         AND s.review_status = 'approved'
     `;
     stats = result[0] || stats;
