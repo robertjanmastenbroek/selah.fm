@@ -118,6 +118,7 @@ export async function GET(request: Request) {
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
           COALESCE(da.artist_name, u.display_name) as artist_name,
+          ap.slug as artist_slug,
           COALESCE(ap.spotify_image_url, da.latest_track_cover_url, u.profile_image_url) as artist_avatar
         FROM campaigns c
         LEFT JOIN campaign_stats v ON v.id = c.id
@@ -139,6 +140,7 @@ export async function GET(request: Request) {
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
           COALESCE(da.artist_name, u.display_name) as artist_name,
+          ap.slug as artist_slug,
           c.artist_id,
           u.is_creator as artist_is_creator,
           COALESCE(ap.spotify_image_url, da.latest_track_cover_url, u.profile_image_url) as artist_avatar,

@@ -46,8 +46,9 @@ const tabConfig: { id: Tab; label: string; icon: any }[] = [
 // ── REUSABLE CARD COMPONENTS ────────────────────────────────────
 
 function TrendingCard({ item, index, focused }: { item: any; index: number; focused: boolean }) {
-  // Link to campaign page (submissions belong to campaigns, track_id may not exist)
-  const href = item.campaign_slug ? `/c/${item.campaign_slug}` : item.artist_slug ? `/artist/${item.artist_slug}` : `#`;
+  // Link to track page (SEO-friendly URL)
+  const trackSlug = (item.track_title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || item.id;
+  const href = item.artist_slug ? `/artist/${item.artist_slug}/tracks/${trackSlug}` : `/c/${item.campaign_slug || item.id}`;
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -115,6 +116,9 @@ function TrackCard({ track, index, focused }: { track: any; index: number; focus
   const subs = parseInt(track.approved_submissions || '0');
   const views = parseInt(track.total_verified_views || '0');
   const budgetUsed = track.total_budget_cents > 0 ? Math.min(100, Math.round((((track.total_budget_cents || 0) - (track.budget_remaining_cents || 0)) / track.total_budget_cents) * 100)) : 0;
+  // Build SEO-friendly track page URL
+  const trackTitleSlug = (track.track_title || track.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || track.id;
+  const trackUrl = track.artist_slug ? `/artist/${track.artist_slug}/tracks/${trackTitleSlug}` : `/c/${track.slug || track.id}`;
 
   return (
     <motion.div
@@ -124,7 +128,7 @@ function TrackCard({ track, index, focused }: { track: any; index: number; focus
       whileHover={{ y: -3, scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
     >
-      <Link href={`/c/${track.slug || track.id}`} data-browse-card
+      <Link href={trackUrl} data-browse-card
         className={`group relative block rounded-2xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border overflow-hidden transition-all hover:border-primary/30 ${
           focused ? 'border-primary/40 ring-1 ring-primary/30' : 'border-white/[0.06]'
         }`}
@@ -360,7 +364,7 @@ export default function BrowseClient() {
           const item = items[focusedIndex];
           const href = tab === 'trending'
             ? (item.campaign_slug ? `/c/${item.campaign_slug}` : `/artist/${item.artist_slug || item.slug}`)
-            : tab === 'artists' ? `/artist/${item.slug}` : `/c/${item.slug || item.id}`;
+            : tab === 'artists' ? `/artist/${item.slug}` : `/artist/${item.artist_slug}/tracks/${((item.track_title || item.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || item.slug || item.id)}`;
           window.location.href = href;
         }
         return;

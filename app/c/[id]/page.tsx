@@ -75,8 +75,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const trackTitle = campaign.track_title;
   const cpm = campaign.cpm_rate_cents ? (campaign.cpm_rate_cents / 100).toFixed(2) : null;
   const imageUrl = absoluteUrl(campaign.cover_art_url);
-  const canonicalSlug = campaign.slug || params.id;
-  const canonicalUrl = `https://selah.fm/c/${canonicalSlug}`;
+
+  // Canonical: prefer track page URL (more SEO-friendly)
+  // Campaign pages are secondary — noindex with canonical to track page
+  const trackSlug = (trackTitle || 'track').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+  const artistSlug = campaign.artist_slug;
+  const hasTrackUrl = artistSlug && trackTitle;
+  const canonicalUrl = hasTrackUrl
+    ? `https://selah.fm/artist/${artistSlug}/tracks/${trackSlug}`
+    : `https://selah.fm/c/${campaign.slug || params.id}`;
 
   const cpmPer1M = cpm ? `$${(parseFloat(cpm) * 1000).toFixed(0)}` : null;
   const title = cpmPer1M
@@ -91,6 +98,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description: desc.slice(0, 160),
     alternates: { canonical: canonicalUrl },
+    robots: hasTrackUrl ? { index: false, follow: true } : { index: true, follow: true },
     keywords: [
       artistName, trackTitle,
       `promote ${trackTitle}`, `earn promoting ${artistName}`,
@@ -103,7 +111,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ...(process.env.FACEBOOK_APP_ID ? { 'fb:app_id': process.env.FACEBOOK_APP_ID } : {}),
     } as any,
     twitter: { card: 'summary_large_image', title, description: desc, images: [imageUrl] },
-    robots: { index: true, follow: true },
   };
 }
 

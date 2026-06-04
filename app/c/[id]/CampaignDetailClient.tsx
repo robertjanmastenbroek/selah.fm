@@ -14,7 +14,7 @@ import EarnModal from '@/components/EarnModal';
 import {
   Heart, X, Play, Copy, Check, Music2, ChartBar,
   ChevronRight, Sparkles, Share2, TrendingUp, DollarSign,
-  Film, ChevronDown, Shield, Eye, Bookmark
+  Film, ChevronDown, Shield, Eye, Bookmark, ExternalLink
 } from 'lucide-react';
 
 // ════════════════════════════════════════════════════════════════
@@ -1052,6 +1052,20 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                   </button>
                 </div>
               </div>
+
+              {/* View track page link */}
+              {artistSlug && trackTitle && (
+                <div className="mt-3">
+                  <Link
+                    href={`/artist/${artistSlug}/tracks/${trackTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60)}`}
+                    className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <ExternalLink size={12} className="text-muted-foreground/50" />
+                    View track page
+                    <ChevronRight size={12} className="ml-auto" />
+                  </Link>
+                </div>
+              )}
 
               {/* Artist link */}
               {artistSlug && (

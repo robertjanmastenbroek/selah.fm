@@ -45,16 +45,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch (e: any) { console.error('Unhandled error in sitemap.ts:', e); }
 
-  // Campaign pages
+  // Track pages (preferred over campaign pages for SEO)
   let campaignPages: MetadataRoute.Sitemap = [];
   try {
-    const campaigns = await sql`
-      SELECT id, slug, updated_at FROM campaigns WHERE status IN ('active', 'draft')
-      ORDER BY updated_at DESC LIMIT 3000
+    const tracks = await sql`
+      SELECT c.track_title, ap.slug as artist_slug
+      FROM campaigns c
+      JOIN campaign_claims cc ON cc.campaign_id = c.id
+      JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+      JOIN artist_profiles ap ON ap.artist_id = da.id
+      WHERE c.status IN ('active', 'draft') AND c.track_title IS NOT NULL AND ap.slug IS NOT NULL
+      ORDER BY c.updated_at DESC LIMIT 3000
     `;
-    campaignPages = campaigns.map((c: any) => ({
-      url: `${baseUrl}/c/${c.slug || c.id}`,
-      lastModified: new Date(c.updated_at),
+    campaignPages = tracks.map((t: any) => ({
+      url: `${baseUrl}/artist/${t.artist_slug}/tracks/${(t.track_title || 'track').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60)}`,
+      lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.9,
     }));
