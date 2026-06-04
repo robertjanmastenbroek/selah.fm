@@ -22,6 +22,7 @@ import DisputeButton from '@/components/DisputeButton';
 import DashboardChart from '@/components/DashboardChart';
 import { useToast } from '@/components/Toast';
 import DashboardErrorBoundary from '@/components/DashboardErrorBoundary';
+import DashboardErrorBoundary from '@/components/DashboardErrorBoundary';
 
 type TabId = 'overview' | 'tracks' | 'profile' | 'earnings' | 'kanban';
 
@@ -765,6 +766,7 @@ function DashboardContent() {
         <CampaignWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onCreated={() => reloadCampaigns()} />
       </main>
     </div>
+    </DashboardErrorBoundary>
   );
 }
 
