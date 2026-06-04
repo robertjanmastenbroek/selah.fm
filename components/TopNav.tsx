@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef , Sparkles} from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
