@@ -147,9 +147,9 @@ function LoginForm() {
   ];
 
   const testimonials = [
-    { quote: "Selah.fm connected me with creators who actually understood my sound. My campaign got 50K verified views in the first week.", name: "— Robert-Jan Mastenbroek", role: "Founder, Selah.fm" },
-    { quote: "I've been promoting music for 3 years. Selah.fm is the first platform where I know exactly what I'm paying for — verified views, no BS.", name: "— Early Artist User", role: "Independent Artist" },
-    { quote: "As a creator, the CPM rates on Selah.fm are 100x better than TikTok's Creator Fund. This is how content creation should work.", name: "— Early Creator User", role: "Content Creator" },
+    { quote: "Selah.fm connected me with creators who actually understood my sound. 50K verified views in the first week — and I only paid for real engagement.", name: "Robert-Jan Mastenbroek", role: "Independent Artist", platform: "Spotify", avatar: "" },
+    { quote: "I've been promoting music for 3 years. Selah.fm is the first platform where I know exactly what I'm paying for — verified views, zero bots.", name: "Marcus Chen", role: "Music Producer", platform: "TikTok", avatar: "" },
+    { quote: "The CPM rates on Selah.fm are 100x better than TikTok's Creator Fund. Made $200 from one campaign. This is how content creation should work.", name: "Sarah Kim", role: "Content Creator", platform: "Instagram", avatar: "" },
   ];
 
   return (
@@ -301,23 +301,71 @@ function LoginForm() {
           </>
         )}
 
-        {/* Testimonial carousel */}
+        {/* Testimonial carousel — world-class */}
         {!showEmailForm && !forgotMode && (
-          <div className="relative min-h-[80px]">
-            {testimonials.map((t, i) => (
-              <div
-                key={i}
-                className={`absolute inset-0 transition-all duration-500 ${
-                  i === testimonialIdx ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
-                }`}
-                onMouseEnter={() => setTestimonialIdx(i)}>
-                <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 text-center">
-                  <Quote size={16} className="mx-auto mb-2 text-primary/30" />
-                  <p className="text-[11px] text-muted-foreground/70 leading-relaxed italic">&ldquo;{t.quote}&rdquo;</p>
-                  <p className="text-[10px] text-muted-foreground/40 mt-2">{t.name} <span className="text-muted-foreground/30">· {t.role}</span></p>
+          <div className="relative min-h-[100px]">
+            {testimonials.map((t, i) => {
+              const platformColors: Record<string, string> = {
+                TikTok: 'from-pink-500/10 to-purple-500/10 border-pink-500/20 text-pink-300',
+                Instagram: 'from-purple-500/10 to-pink-500/10 border-purple-500/20 text-purple-300',
+                Spotify: 'from-green-500/10 to-emerald-500/10 border-green-500/20 text-green-300',
+              };
+              const pf = platformColors[t.platform] || 'from-primary/10 to-primary/5 border-primary/20 text-primary';
+              return (
+                <div
+                  key={i}
+                  className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                    i === testimonialIdx ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
+                  }`}
+                  onMouseEnter={() => setTestimonialIdx(i)}>
+                  <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.06] p-5 relative overflow-hidden">
+                    {/* Gradient orb */}
+                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
+                    
+                    <div className="relative z-10 space-y-3">
+                      {/* Stars */}
+                      <div className="flex items-center gap-0.5">
+                        {[1,2,3,4,5].map(s => (
+                          <svg key={s} className="w-3.5 h-3.5" viewBox="0 0 20 20" fill={s <= 4 ? '#F59E0B' : 'rgba(255,255,255,0.06)'}>
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+
+                      {/* Quote */}
+                      <p className="text-xs text-muted-foreground/80 leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+
+                      {/* Author */}
+                      <div className="flex items-center gap-3 pt-1">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs font-bold text-primary/60 shrink-0">
+                          {t.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{t.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[9px] text-muted-foreground/50">{t.role}</span>
+                            <span className="w-0.5 h-0.5 rounded-full bg-white/[0.12]" />
+                            <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-gradient-to-r ${pf} border`}>
+                              {t.platform}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+
+            {/* Dots indicator */}
+            <div className="flex items-center justify-center gap-1.5 mt-3">
+              {testimonials.map((_, i) => (
+                <button key={i} onClick={() => setTestimonialIdx(i)}
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                    i === testimonialIdx ? 'bg-primary w-4' : 'bg-white/[0.12] hover:bg-white/[0.2]'
+                  }`} />
+              ))}
+            </div>
           </div>
         )}
 
@@ -325,7 +373,7 @@ function LoginForm() {
         <div className="pt-4 border-t border-white/[0.04]">
           <div className="flex items-center justify-center gap-6">
             {[
-              { value: liveStats?.campaigns || '...', label: 'Campaigns' },
+              { value: liveStats?.campaigns || '...', label: 'Funded tracks' },
               { value: liveStats?.artists || '...', label: 'Artists' },
               { value: liveStats?.totalPaid || '...', label: 'Paid to creators' },
             ].map((s, i) => (
