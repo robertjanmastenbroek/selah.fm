@@ -127,11 +127,6 @@ async function getArtistData(slug: string) {
     LIMIT 4
   `;
 
-  // Fetch balance
-  const [balanceRow] = await sql`
-    SELECT balance_cents FROM artist_profiles WHERE artist_id = ${artistId}
-  `;
-
   return {
     artist: {
       ...artist,
@@ -154,7 +149,7 @@ async function getArtistData(slug: string) {
       total_views: submissionStats.total_views,
       total_submissions: submissionStats.total_submissions,
     },
-    balance_cents: balanceRow?.balance_cents || 0,
+    balance_cents: 0,
     recent_submissions: recentSubmissions,
     related_artists: relatedArtists,
     campaigns,
