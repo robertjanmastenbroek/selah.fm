@@ -9,26 +9,43 @@ export async function GET(request: Request) {
   const step = searchParams.get('step') || 'all';
 
   try {
-    if (step === '1' || step === 'all') {
-      const [artist] = await sql`
-        SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
-               da.social_links, da.latest_track_name, da.latest_track_cover_url,
-               da.instagram_handle, da.tiktok_handle, da.spotify_id,
-               da.comment_count,
-               ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
-               ap.total_streams, ap.total_platforms,
-               ''::text as bio
+    const [artist] = await sql`
+      SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
+             da.social_links, da.latest_track_name, da.latest_track_cover_url,
+             da.instagram_handle, da.tiktok_handle, da.spotify_id,
+             da.comment_count,
+             ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
+             ap.total_streams, ap.total_platforms,
+             ''::text as bio
+      FROM discovered_artists da
+      LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
+      WHERE ap.slug = ${slug}
+      LIMIT 1
+    `;
+    if (!artist) return NextResponse.json({ step: 'query1', result: 'no artist found' });
+
+    const artistId = artist.id;
+    const results: any[] = [];
+
+    // Step 2: Donation stats
+    try {
+      const [donationStats] = await sql`
+        SELECT COALESCE(SUM(cd.amount_cents), 0)::int as total_cents,
+               COUNT(DISTINCT cd.id)::int as donation_count
         FROM discovered_artists da
         LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
-        WHERE ap.slug = ${slug}
-        LIMIT 1
+        LEFT JOIN campaigns c ON c.id IN (SELECT cc2.campaign_id FROM campaign_claims cc2 WHERE cc2.discovered_artist_id = da.id)
+        LEFT JOIN campaign_claims cc ON cc.discovered_artist_id = da.id AND cc.campaign_id = c.id
+        LEFT JOIN campaign_donations cd ON cd.campaign_id = c.id
+        WHERE da.id = ${artistId}
       `;
-      if (!artist) return NextResponse.json({ step: 'query1', result: 'no artist found' });
-      if (step === '1') return NextResponse.json({ step: 'query1', artist: artist.artist_name, ok: true });
+      results.push({ step: 'donation_stats', ok: true, data: donationStats });
+    } catch (e: any) {
+      results.push({ step: 'donation_stats', ok: false, error: e.message });
+    }
 
-      const artistId = artist.id;
-
-      // Step 2: Submission stats
+    // Step 3: Submission stats
+    try {
       const [subStats] = await sql`
         SELECT COALESCE(SUM(s.views_verified), 0)::int as total_views,
                COUNT(s.id)::int as total_submissions
@@ -37,31 +54,45 @@ export async function GET(request: Request) {
         JOIN campaign_claims cc ON cc.campaign_id = c.id
         WHERE cc.discovered_artist_id = ${artistId}
       `;
-      if (step === '2') return NextResponse.json({ step: 'query2', ok: true, stats: subStats });
+      results.push({ step: 'submission_stats', ok: true, data: subStats });
+    } catch (e: any) {
+      results.push({ step: 'submission_stats', ok: false, error: e.message });
+    }
 
-      // Step 3: Campaigns
+    // Step 4: Campaigns
+    try {
       const campaigns = await sql`
-        SELECT c.id FROM campaigns c
+        SELECT c.id, c.slug, c.track_title, c.cpm_rate_cents, c.total_budget_cents,
+               c.status, c.created_at
+        FROM campaigns c
         JOIN campaign_claims cc ON cc.campaign_id = c.id
-        WHERE cc.discovered_artist_id = ${artistId} AND c.status = 'active'
-        LIMIT 5
+        WHERE cc.discovered_artist_id = ${artistId}
+          AND c.status = 'active'
+        ORDER BY c.created_at DESC LIMIT 5
       `;
-      if (step === '3') return NextResponse.json({ step: 'query3', ok: true, count: campaigns.length });
+      results.push({ step: 'campaigns', ok: true, count: campaigns.length });
+    } catch (e: any) {
+      results.push({ step: 'campaigns', ok: false, error: e.message });
+    }
 
-      // Step 4: Related artists
+    // Step 5: Related artists
+    try {
       const related = await sql`
         SELECT da.id FROM discovered_artists da
         JOIN artist_profiles ap ON ap.artist_id = da.id
         WHERE da.id != ${artistId}
-        LIMIT 1
+          AND da.genres::text ILIKE '%' || COALESCE(NULLIF(da.genres::text, ''), '')
+          AND EXISTS (SELECT 1 FROM artist_tracks at WHERE at.artist_id = da.id AND at.enabled = true)
+        ORDER BY da.monthly_listeners DESC NULLS LAST
+        LIMIT 4
       `;
-      if (step === '4') return NextResponse.json({ step: 'query4', ok: true, related: related.length });
-
-      return NextResponse.json({ ok: true, message: 'All queries pass', artist: artist.artist_name });
+      results.push({ step: 'related_artists', ok: true, count: related.length });
+    } catch (e: any) {
+      results.push({ step: 'related_artists', ok: false, error: e.message });
     }
 
-    return NextResponse.json({ error: 'Invalid step' }, { status: 400 });
+    return NextResponse.json({ artist: artist.artist_name, results });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message, stack: e.stack?.slice(0, 500) }, { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
