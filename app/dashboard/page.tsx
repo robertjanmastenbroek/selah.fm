@@ -21,6 +21,7 @@ import {
 import DisputeButton from '@/components/DisputeButton';
 import DashboardChart from '@/components/DashboardChart';
 import { useToast } from '@/components/Toast';
+import DashboardErrorBoundary from '@/components/DashboardErrorBoundary';
 
 type TabId = 'overview' | 'tracks' | 'profile' | 'earnings' | 'kanban';
 
@@ -204,6 +205,7 @@ function DashboardContent() {
   { id: 'kanban', label: 'Board', icon: <ChartBar size={14} /> },  ];
 
   return (
+    <DashboardErrorBoundary>
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-6">
@@ -923,5 +925,6 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
         </p>
       </CardContent>
     </Card>
+    </DashboardErrorBoundary>
   );
 }
