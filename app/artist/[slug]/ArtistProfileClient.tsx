@@ -341,8 +341,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                       <span className="text-emerald-400 font-medium">${((c.cpm_rate_cents || 0) / 100 * 1000).toFixed(0)}/1M views</span>
                       <span className="mx-1.5 text-muted-foreground/30">·</span>
                       ${((c.total_budget_cents || 0) / 100).toFixed(0)} budget
-                      {stats.total_submissions > 0 && (
-                        <><span className="mx-1.5 text-muted-foreground/30">·</span>{' '}{stats.total_submissions} submission{stats.total_submissions !== 1 ? 's' : ''}</>
+                      {c.submissions_count > 0 && (
+                        <><span className="mx-1.5 text-muted-foreground/30">·</span>{' '}{c.submissions_count} submission{c.submissions_count !== 1 ? 's' : ''}</>
                       )}
                     </p>
                   </div>

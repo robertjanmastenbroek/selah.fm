@@ -101,7 +101,9 @@ async function getArtistData(slug: string) {
   let campaigns: any[] = [];
   try { campaigns = await sql`
     SELECT c.id, c.slug, c.track_title, c.cpm_rate_cents, c.total_budget_cents,
-           c.status, c.created_at
+           c.status, c.created_at,
+           (SELECT COUNT(*)::int FROM submissions s WHERE s.campaign_id = c.id) as submissions_count,
+           (SELECT COALESCE(SUM(s.views_verified), 0)::int FROM submissions s WHERE s.campaign_id = c.id AND s.review_status = 'approved') as total_views
     FROM campaigns c
     JOIN campaign_claims cc ON cc.campaign_id = c.id
     WHERE cc.discovered_artist_id = ${artistId}
