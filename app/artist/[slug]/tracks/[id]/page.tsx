@@ -57,7 +57,22 @@ async function getTrackData(slug: string, trackId: string) {
         AND s.review_status = 'approved'
     `;
 
-    return { ...track, total_views: stats?.total_views || 0, submission_count: stats?.submission_count || 0 };
+    // Related tracks from same artist
+    const relatedTracks = await sql`
+      SELECT id, title, cover_art_url, cpm_rate_cents
+      FROM artist_tracks
+      WHERE artist_id = (SELECT id FROM artist_profiles WHERE slug = ${slug})
+        AND id != ${trackId}
+      ORDER BY created_at DESC
+      LIMIT 10
+    `;
+
+    return {
+      ...track,
+      total_views: stats?.total_views || 0,
+      submission_count: stats?.submission_count || 0,
+      relatedTracks: relatedTracks || [],
+    };
   } catch (e: any) {
     console.error('Track data error:', e);
     return null;

@@ -717,15 +717,16 @@ function DashboardContent() {
               ) : (
                 <div className="space-y-4">
                   <h3 className="font-semibold text-sm">Your earnings</h3>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
                     {[
                       { label: 'Total earned', value: formatDollars(earningsData?.totalEarned || 0) },
                       { label: 'Paid out', value: formatDollars(earningsData?.totalPaid || 0) },
                       { label: 'Pending', value: formatDollars(earningsData?.totalPending || 0) },
+                      { label: 'Monthly projection', value: (() => { const m = earningsData?.totalEarned || 0; return formatDollars(m > 0 ? Math.round(m * 2) : 0); })() },
                     ].map(s => (
-                      <div key={s.label} className="text-center">
+                      <div key={s.label} className="text-center p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                         <p className="text-lg font-bold">{s.value}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase">{s.label}</p>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
                       </div>
                     ))}
                   </div>

@@ -242,6 +242,35 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
           {cpmPer1M && <p>At the current CPM rate of ${cpm.toFixed(2)} per 1,000 views, creators can earn {cpmPer1M} for every 1 million verified views their video receives.</p>}
           {submissions > 0 && <p>{submissions} creator{submissions !== 1 ? 's have' : ' has'} already submitted videos for this track, generating {views?.toLocaleString() || '0'} verified views.</p>}
         </section>
+
+        {/* Related tracks carousel */}
+        {track.relatedTracks?.length > 0 && (
+          <section className="mt-16">
+            <h2 className="text-lg font-semibold mb-4">More from {artistName}</h2>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
+              {track.relatedTracks.map((rt: any) => (
+                <Link
+                  key={rt.id}
+                  href={`/artist/${slug}/tracks/${rt.id}`}
+                  className="snap-start shrink-0 w-36 group">
+                  <div className="aspect-square rounded-xl overflow-hidden bg-white/[0.04] mb-2">
+                    {rt.cover_art_url ? (
+                      <img src={rt.cover_art_url} alt={rt.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xl font-bold text-white/10">
+                        {rt.title?.[0]?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs font-medium truncate text-muted-foreground group-hover:text-foreground transition-colors">{rt.title}</p>
+                  {rt.cpm_rate_cents && (
+                    <p className="text-[10px] text-emerald-400/70">${(rt.cpm_rate_cents / 100).toFixed(2)} CPM</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* ════════════════════════════════════════════════ */}
