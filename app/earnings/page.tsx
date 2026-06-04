@@ -28,6 +28,8 @@ export default function EarningsPage() {
   const [period, setPeriod] = useState<Period>('all');
   const [myRank, setMyRank] = useState<any>(null);
   const [me, setMe] = useState<any>(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState('');
   const [stats, setStats] = useState({ total_paid_cents: 0, total_views: 0, unique_creators: 0 });
 
   // Auth
@@ -143,6 +145,28 @@ export default function EarningsPage() {
                   Podium
                 </div>
               )}
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                {me?.stripe_connect_id ? '✅ Payouts set up' : 'Set up payouts to receive earnings'}
+              </p>
+              {!me?.stripe_connect_id && (
+                <button onClick={async () => {
+                  setStripeLoading(true); setStripeError('');
+                  try {
+                    const res = await fetch('/api/stripe/connect', { method: 'POST', credentials: 'include' });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                    else setStripeError(data.error || 'Failed');
+                  } catch { setStripeError('Network error'); }
+                  setStripeLoading(false);
+                }}
+                  className="text-[10px] px-3 py-1.5 rounded-lg bg-primary text-white font-semibold hover:opacity-90 transition-all disabled:opacity-40"
+                  disabled={stripeLoading}>
+                  {stripeLoading ? 'Connecting...' : 'Set up payouts'}
+                </button>
+              )}
+              {stripeError && <p className="text-[10px] text-red-400">{stripeError}</p>}
             </div>
           </motion.div>
         )}

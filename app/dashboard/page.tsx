@@ -412,6 +412,31 @@ function DashboardContent() {
                   {/* Submissions inbox — artist only */}
                   {isArtist && <SubmissionsInbox artistSlug={artistSlug} />}
 
+                  {/* Payout setup — creators without Stripe Connect */}
+                  {!isArtist && profile && !profile?.stripe_connect_id && (
+                    <div className="rounded-2xl bg-gradient-to-br from-emerald-500/[0.04] to-green-500/[0.02] border border-emerald-500/10 p-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold flex items-center gap-2">
+                            <Wallet size={14} className="text-emerald-400" />
+                            Set up payouts
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">Connect your bank account to receive earnings from approved videos.</p>
+                        </div>
+                        <button onClick={async () => {
+                          try {
+                            const res = await fetch('/api/stripe/connect', { method: 'POST', credentials: 'include' });
+                            const d = await res.json();
+                            if (d.url) window.location.href = d.url;
+                          } catch {}
+                        }}
+                          className="text-[10px] px-3 py-2 rounded-lg bg-primary text-white font-semibold shrink-0 hover:opacity-90 transition-all">
+                          Set up payouts
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Leaderboard snippet */}
                   {!isArtist && (
                     <a href="/earnings" className="block rounded-2xl bg-gradient-to-br from-amber-500/[0.04] to-orange-500/[0.02] border border-amber-500/10 p-5 hover:border-amber-500/20 transition-all group">
