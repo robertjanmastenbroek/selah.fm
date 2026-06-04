@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { generateInterviewQuestions, generateArticle, generateFounderAnswers, generateDirectAnswer, findVoiceExamples, getFallbackQuestions, sourceQuestionsFromReddit } from '@/lib/blog-engine';
 import { fetchBlogImage, attachImageToPost } from '@/lib/blog-images';
+import { scoreBlogPost } from '@/lib/blog-scorer';
+import { getVocabStats, decayVocabulary } from '@/lib/blog-vocabulary';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600;
@@ -338,6 +340,42 @@ export async function GET(request: Request) {
           await sql`INSERT INTO voice_chunks (interview_id, chunk_text) VALUES (${iv.id}, ${chunk})`;
         }
 
+        // ── Quality score & vocabulary logging ──────────────────
+        try {
+          const blogScore = scoreBlogPost(article.title, article.content_html, article.excerpt, article.faq_schema);
+          const plainText = article.content_html.replace(/<[^>]*>/g, ' ');
+          const wordCount = plainText.split(/\s+/).filter(w => w.length > 0).length;
+          
+          await sql`
+            INSERT INTO blog_quality_scores (blog_post_id, score, word_count,
+              sentence_variety_score, paragraph_variety_score,
+              banned_word_penalty, generic_phrase_penalty,
+              personal_voice_count, contraction_ratio,
+              emotional_shifts, has_faq, has_key_takeaways)
+            VALUES (${post.id}, ${blogScore.score}, ${wordCount},
+              ${blogScore.checks[1]?.points || 0},
+              ${blogScore.checks[6]?.points || 0},
+              ${15 - (blogScore.checks[2]?.points || 15)},
+              ${10 - (blogScore.checks[3]?.points || 10)},
+              ${blogScore.checks[4]?.points || 0},
+              ${(blogScore.checks[5]?.detail?.match(/\(([\d.]+) per/)?.[1] || '0')},
+              ${blogScore.checks[12]?.points || 0},
+              ${!!article.faq_schema?.length},
+              ${article.content_html.includes('Key Takeaways')}
+            )
+            ON CONFLICT (blog_post_id) DO UPDATE SET
+              score = EXCLUDED.score, checked_at = NOW()
+          `;
+
+          if (blogScore.passed) {
+            log.push(`  📊 Score: ${blogScore.score}/100 [PASS]`);
+          } else {
+            log.push(`  ⚠️ Score: ${blogScore.score}/100 [FLAGGED] — ${blogScore.checks.filter(c => !c.passed).map(c => c.name).join(', ')}`);
+          }
+        } catch (e: any) {
+          log.push(`  📊 Score: error — ${e.message.slice(0, 100)}`);
+        }
+
         results.posts++;
         log.push(`  ✅ Post: ${article.title?.slice(0, 60)}`);
       } catch (e: any) {
@@ -442,6 +480,18 @@ export async function GET(request: Request) {
           }
         }
       } catch (e: any) { log.push(`Link err: ${e.message}`); }
+    }
+
+    // ── Periodic vocabulary decay ──────────────────────────────
+    // Every ~50 posts, decay the vocabulary to create a sliding window
+    if (results.posts > 0) {
+      try {
+        const stats = await getVocabStats();
+        if (stats.totalWords > 500) {
+          const removed = await decayVocabulary();
+          log.push(`  🧹 Decayed vocabulary: ${removed} stale entries removed (${stats.totalWords} → ${stats.totalWords - removed} words)`);
+        }
+      } catch { /* non-blocking */ }
     }
 
     log.push(`Done: ${results.questions}Q ${results.interviews}I ${results.answered}A ${results.posts}P ${results.scheduled}S`);

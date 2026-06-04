@@ -5,6 +5,9 @@
  * Requires DEEPSEEK_API_KEY in environment.
  */
 
+import { getBannedWordsList, recordBlogPost } from '@/lib/blog-vocabulary';
+import { scoreBlogPost, formatScoreSummary } from '@/lib/blog-scorer';
+
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_BASE = 'https://api.deepseek.com/v1';
 
@@ -309,6 +312,7 @@ export async function generateArticle(
   faq_schema?: { question: string; answer: string }[];
   word_count_estimate?: number;
   image_suggestions: { type: string; description: string }[];
+  score?: { score: number; passed: boolean; summary: string };
 }> {
   const voiceContext = voiceExamples.length > 0
     ? `\n\nVOICE EXAMPLES (write in this style):\n${voiceExamples.map((ex, i) => `Example ${i + 1}:\n${ex}`).join('\n\n')}`
@@ -325,7 +329,17 @@ export async function generateArticle(
     ? `\n\n🔑 PRIMARY KEYWORD (non-negotiable): "${keyword}"\n- The TITLE must include this keyword naturally (or a very close variant)\n- The SLUG must be built from this keyword\n- The keyword MUST appear in the first 100 words of the post\n- One H2 heading must include the keyword or a close variant\n- The meta description must include the keyword\n- At least one bulleted list item should mention the keyword\n- The post should ANSWER the question implied by the keyword\n- Frame the entire post as answering someone who typed "${keyword}" into Google`
     : '';
 
-  const prompt = `${ARTICLE_PROMPT}\n\nFOUNDER: ${founderName}${voiceContext}${founderContext}${keywordDirective}\n\nINTERVIEW TRANSCRIPT:\n${interviewTranscript}`;
+  // ── Self-learning banned words from blog vocabulary tracker ──
+  // Every published post feeds back into what the AI avoids in future posts
+  let bannedWordsContext = '';
+  try {
+    const bannedList = await getBannedWordsList();
+    if (bannedList) {
+      bannedWordsContext = `\n\n📛 SELF-LEARNING BANNED WORDS (from previous blog posts — these patterns are becoming detectable over time):\n${bannedList}\nThese are words and phrases our blog has been overusing. If any appear in your writing, replace them with fresh alternatives. This is critical — repeating vocabulary patterns is how AI detectors catch us.`;
+    }
+  } catch { /* non-blocking — static banned list in ARTICLE_PROMPT still applies */ }
+
+  const prompt = `${ARTICLE_PROMPT}\n\nFOUNDER: ${founderName}${voiceContext}${founderContext}${keywordDirective}${bannedWordsContext}\n\nINTERVIEW TRANSCRIPT:\n${interviewTranscript}`;
 
   const response = await chat([
     { role: 'system', content: prompt },
@@ -381,7 +395,19 @@ Original JSON: ${JSON.stringify(raw).slice(0, 8000)}`;
       } catch {
         // Self-critique is optional — fall through to original
       }
-      
+
+      // ── Record vocabulary & score ────────────────────────────
+      // Non-blocking: don't fail the post if recording fails
+      try {
+        await recordBlogPost(raw.content_html, raw.title, raw.excerpt);
+      } catch { /* non-blocking */ }
+
+      try {
+        const blogScore = scoreBlogPost(raw.title, raw.content_html, raw.excerpt, raw.faq_schema);
+        raw.score = blogScore as any;
+        raw.score.summary = formatScoreSummary(blogScore);
+      } catch { /* non-blocking */ }
+
       return raw;
     }
     throw new Error('No JSON found in response');
