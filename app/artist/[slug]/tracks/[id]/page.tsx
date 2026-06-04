@@ -52,6 +52,26 @@ async function getTrackData(slug: string, trackId: string) {
     track = result[0] || null;
   } catch (e: any) { console.error('[TRACK] main query failed:', e.message); }
 
+  // Fallback: try artist_tracks if campaign lookup failed
+  if (!track && isUuid) {
+    try {
+      const fallbackResult = await sql`
+        SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents,
+               at.created_at,
+               da.artist_name, da.genres, da.monthly_listeners,
+               ap.slug as profile_slug, ap.spotify_image_url,
+               NULL as campaign_slug, NULL as campaign_status,
+               NULL as total_budget_cents, NULL as budget_remaining_cents
+        FROM artist_tracks at
+        JOIN discovered_artists da ON da.id = at.artist_id
+        JOIN artist_profiles ap ON ap.artist_id = da.id
+        WHERE ap.slug = ${slug} AND at.id = ${trackId}
+        LIMIT 1
+      `;
+      track = fallbackResult[0] || null;
+    } catch (e2: any) { console.error('[TRACK] fallback query failed:', e2.message); }
+  }
+
   if (!track) return null;
 
   // Stats
