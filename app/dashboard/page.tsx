@@ -25,7 +25,7 @@ import DisputeButton from '@/components/DisputeButton';
 import DashboardChart from '@/components/DashboardChart';
 import { useToast } from '@/components/Toast';
 
-type TabId = 'overview' | 'campaigns' | 'profile' | 'earnings';
+type TabId = 'overview' | 'campaigns' | 'profile' | 'earnings' | 'kanban';
 
 export default function DashboardPage() {
   return (
@@ -204,7 +204,7 @@ function DashboardContent() {
     { id: 'campaigns', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone },
     { id: 'profile', label: 'Profile', icon: UserCircle },
     { id: 'earnings', label: 'Earnings', icon: DollarSign },
-  ];
+  { id: 'kanban', label: 'Board', icon: <BarChart3 size={14} /> },  ];
 
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
@@ -476,7 +476,33 @@ function DashboardContent() {
         )}
 
         {/* ─── TAB: Profile ───────────────────────────────── */}
-        {tab === 'profile' && (
+        {tab === 'kanban' && (() => {
+  const cols = ['active', 'draft', 'completed'];
+  const labels = ['Live', 'Drafts', 'Completed'];
+  const colors = ['emerald', 'gray', 'blue'];
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold text-sm">Campaign Board</h3>
+      <div className="grid grid-cols-3 gap-3 min-h-[200px]">
+        {cols.map((status, i) => (
+          <div key={status} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
+            <p className="text-xs font-semibold mb-3">{labels[i]}</p>
+            {rawCampaigns.filter((c: any) => (c.status || 'draft') === status).map((c: any) => (
+              <div key={c.id} className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3 mb-2">
+                <p className="text-xs font-medium truncate">{c.track_title || c.title}</p>
+                <p className="text-[9px] text-muted-foreground/50 mt-1">${((c.cpm_rate_cents || 0) / 100).toFixed(2)} CPM</p>
+              </div>
+            ))}
+            {rawCampaigns.filter((c: any) => (c.status || 'draft') === status).length === 0 && (
+              <p className="text-[10px] text-muted-foreground/40 text-center py-6">None</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+})()}
+{tab === 'profile' && (
           <div className="max-w-2xl space-y-6">
             {isArtist ? (
               artistProfile ? (
