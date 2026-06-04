@@ -14,9 +14,15 @@ export const maxDuration = 300;
  * - With ?list=true: lists all migration files
  */
 export async function GET(request: Request) {
-  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-
   const { searchParams } = new URL(request.url);
+  
+  // Auth: admin session OR CRON_SECRET
+  const secret = searchParams.get('secret') || request.headers.get('X-Cron-Secret') || '';
+  const cronSecret = process.env.CRON_SECRET;
+  if (!(await isAdminRequest(request)) && !(cronSecret && secret === cronSecret)) {
+    return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  }
+
   const fileFilter = searchParams.get('file') || '';
   const listOnly = searchParams.get('list') === 'true';
 
