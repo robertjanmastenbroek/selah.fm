@@ -51,6 +51,14 @@
 | `OUTREACH.md` | 267 | Outreach strategy | ✅ ALL BUILT |
 | `MARKETING.md` | 188 | Marketing strategy | ✅ ALL BUILT |
 
+### 🟢 New Research (June 4, 2026)
+
+| Document | Lines | Topic | Key Insight |
+|----------|-------|-------|-------------|
+| `00-BLUEPRINT.md` | 72 | 0.0001% standard & execution | Scorecard (Track=3/10, Campaign=7/10), 3-sprint plan, protocol |
+| `COMMUNITY_BLUEPRINT.md` | 162 | Community & social features | Research from Letterboxd, RYM, Bandcamp, Spotify social, Discord. Selah needs fan collections, track diary, discovery feed, listening parties. Four user types: Artists, Creators, Fans, Curators. |
+| `LAUNCH_CHECKLIST.md` | 136 | Curated launch plan | Outreach scripts, artist/creator trackers, 14-day sprint |
+
 ### 🟢 Current Research (Still Relevant for Current Work)
 
 | Document | Lines | Topic | Key Insight |
