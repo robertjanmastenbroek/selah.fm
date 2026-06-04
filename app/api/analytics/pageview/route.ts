@@ -73,61 +73,77 @@ export async function POST(request: Request) {
 /**
  * GET /api/analytics/pageview
  * 
- * Admin dashboard: returns aggregated stats.
- * Protected in production — add auth check before deploying.
+ * Admin dashboard: returns aggregated stats from analytics_events (page_view events).
+ * Reads from the real tracking table — the frontend writes to analytics_events,
+ * not page_views (which was a legacy table never called from the client).
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  // Sanitize via parseInt — safe for direct interpolation into INTERVAL and LIMIT
   const days = parseInt(searchParams.get('days') || '7') || 7;
   const limit = parseInt(searchParams.get('limit') || '20') || 20;
-  const daysStr = String(Math.max(1, Math.min(365, days)));    // clamp 1-365
-  const limitStr = String(Math.max(1, Math.min(100, limit)));    // clamp 1-100
+  const clampedDays = Math.max(1, Math.min(365, days));
+  const clampedLimit = Math.max(1, Math.min(100, limit));
 
   try {
-    // Top pages (last N days)
-    const topPages = await sql.raw(
-      `SELECT path, COUNT(*)::int as views FROM page_views WHERE created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY path ORDER BY views DESC LIMIT ${limitStr}`
-    );
+    // Top pages (last N days) — only page_view events
+    const topPages = await sql`
+      SELECT path, COUNT(*)::int as views FROM analytics_events
+      WHERE event = 'page_view' AND created_at > NOW() - (${clampedDays}::int * INTERVAL '1 day')
+      GROUP BY path ORDER BY views DESC LIMIT ${clampedLimit}
+    `;
 
-    // Blog posts only (top N)
-    const topBlogs = await sql.raw(
-      `SELECT path, COUNT(*)::int as views FROM page_views WHERE path LIKE '/blog/%' AND created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY path ORDER BY views DESC LIMIT ${limitStr}`
-    );
+    // Blog posts only
+    const topBlogs = await sql`
+      SELECT path, COUNT(*)::int as views FROM analytics_events
+      WHERE event = 'page_view' AND path LIKE '/blog/%' AND created_at > NOW() - (${clampedDays}::int * INTERVAL '1 day')
+      GROUP BY path ORDER BY views DESC LIMIT ${clampedLimit}
+    `;
 
     // Traffic by UTM source
-    const utmSources = await sql.raw(
-      `SELECT COALESCE(utm_source, '(direct/none)') as source, COUNT(*)::int as views FROM page_views WHERE created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY COALESCE(utm_source, '(direct/none)') ORDER BY views DESC LIMIT 10`
-    );
+    const utmSources = await sql`
+      SELECT COALESCE(utm_source, '(direct/none)') as source, COUNT(*)::int as views
+      FROM analytics_events
+      WHERE event = 'page_view' AND created_at > NOW() - (${clampedDays}::int * INTERVAL '1 day')
+      GROUP BY COALESCE(utm_source, '(direct/none)') ORDER BY views DESC LIMIT 10
+    `;
 
     // Traffic by UTM medium
-    const utmMediums = await sql.raw(
-      `SELECT COALESCE(utm_medium, '(direct/none)') as medium, COUNT(*)::int as views FROM page_views WHERE created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY COALESCE(utm_medium, '(direct/none)') ORDER BY views DESC LIMIT 10`
-    );
+    const utmMediums = await sql`
+      SELECT COALESCE(utm_medium, '(direct/none)') as medium, COUNT(*)::int as views
+      FROM analytics_events
+      WHERE event = 'page_view' AND created_at > NOW() - (${clampedDays}::int * INTERVAL '1 day')
+      GROUP BY COALESCE(utm_medium, '(direct/none)') ORDER BY views DESC LIMIT 10
+    `;
 
     // Traffic by UTM campaign
-    const utmCampaigns = await sql.raw(
-      `SELECT utm_campaign, COUNT(*)::int as views FROM page_views WHERE utm_campaign IS NOT NULL AND created_at > NOW() - INTERVAL '${daysStr} days' GROUP BY utm_campaign ORDER BY views DESC LIMIT 10`
-    );
+    const utmCampaigns = await sql`
+      SELECT utm_campaign, COUNT(*)::int as views FROM analytics_events
+      WHERE event = 'page_view' AND utm_campaign IS NOT NULL AND created_at > NOW() - (${clampedDays}::int * INTERVAL '1 day')
+      GROUP BY utm_campaign ORDER BY views DESC LIMIT 10
+    `;
 
     // Hourly breakdown (last 48 hours)
-    const hourlyRaw = await sql.raw(
-      `SELECT DATE_TRUNC('hour', created_at) as hour, COUNT(*)::int as views FROM page_views WHERE created_at > NOW() - INTERVAL '48 hours' GROUP BY hour ORDER BY hour DESC LIMIT 48`
-    );
+    const hourlyRaw = await sql`
+      SELECT DATE_TRUNC('hour', created_at) as hour, COUNT(*)::int as views
+      FROM analytics_events
+      WHERE event = 'page_view' AND created_at > NOW() - INTERVAL '48 hours'
+      GROUP BY hour ORDER BY hour DESC LIMIT 48
+    `;
     const hourly = hourlyRaw.map((r: any) => ({
       ...r,
       hour: r.hour instanceof Date ? r.hour.toISOString() : r.hour,
     }));
 
     // Total views in period
-    const totalRows = await sql.raw(
-      `SELECT COUNT(*)::int as total FROM page_views WHERE created_at > NOW() - INTERVAL '${daysStr} days'`
-    );
-    const total = totalRows[0]?.total || 0;
+    const [totalRow] = await sql`
+      SELECT COUNT(*)::int as total FROM analytics_events
+      WHERE event = 'page_view' AND created_at > NOW() - (${clampedDays}::int * INTERVAL '1 day')
+    `;
+    const total = totalRow?.total || 0;
 
     return NextResponse.json({
       total,
-      days,
+      days: clampedDays,
       top_pages: topPages,
       top_blogs: topBlogs,
       utm_sources: utmSources,
