@@ -28,7 +28,7 @@ import type { TabDef } from '@/components/DashboardSidebar';
 import AnimatedKPICard from '@/components/AnimatedKPICard';
 import ViewsChart from '@/components/ViewsChart';
 
-type TabId = 'overview' | 'tracks' | 'profile' | 'earnings' | 'kanban';
+type TabId = 'overview' | 'tracks' | 'submissions' | 'profile' | 'earnings' | 'kanban';
 
 export default function DashboardPage() {
   return (
@@ -247,10 +247,10 @@ function DashboardContent() {
   // ─── Tabs ────────────────────────────────────────────────────
   const tabs: TabDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'tracks', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone, badge: activeCount > 0 ? activeCount : undefined },
+    { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone, badge: activeCount > 0 ? activeCount : undefined },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'earnings', label: 'Earnings', icon: DollarSign },
-    { id: 'kanban', label: 'Board', icon: ChartBar },
+    ...(isArtist ? [{ id: 'kanban' as const, label: 'Board' as const, icon: ChartBar }] : []),
   ];
 
   // Sparkline data for KPIs (weekly breakdown)
@@ -454,7 +454,7 @@ function DashboardContent() {
                 </div>
               )}
 
-              {tab === 'tracks' && (
+              {(tab === 'tracks' || tab === 'submissions') && (
                 <TracksTab
                   isArtist={isArtist}
                   campaigns={rawCampaigns}
