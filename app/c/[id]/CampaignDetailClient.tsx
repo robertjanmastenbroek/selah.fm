@@ -700,12 +700,36 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
     }
   }, [id, initialCampaign]);
 
-  // Poll for fresh stats every 30s
+  // Live updates via SSE + 30s polling fallback
   useEffect(() => {
+    // SSE connection
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource(`/api/c/${id}/stream`);
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'donation' || data.type === 'submission') {
+            // Refresh campaign data on live event
+            fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => { if (!d.error) setCampaign(d); }).catch(() => {});
+          }
+        } catch {}
+      };
+      eventSource.onerror = () => {
+        eventSource?.close();
+        // Fallback to polling
+      };
+    } catch {}
+
+    // 30s polling fallback
     const poll = setInterval(() => {
       fetch(`/api/campaigns/${id}`).then(r => r.json()).then(d => { if (!d.error) setCampaign(d); }).catch(() => {});
     }, 30000);
-    return () => clearInterval(poll);
+
+    return () => {
+      eventSource?.close();
+      clearInterval(poll);
+    };
   }, [id]);
 
   if (loading) return <CampaignSkeleton />;
