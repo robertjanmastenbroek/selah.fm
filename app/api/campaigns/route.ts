@@ -118,12 +118,13 @@ export async function GET(request: Request) {
           COALESCE(v.pending_submissions, '0') as pending_submissions,
           COALESCE(v.total_verified_views, '0') as total_verified_views,
           COALESCE(da.artist_name, u.display_name) as artist_name,
-          u.profile_image_url as artist_avatar
+          COALESCE(ap.spotify_image_url, da.latest_track_cover_url, u.profile_image_url) as artist_avatar
         FROM campaigns c
         LEFT JOIN campaign_stats v ON v.id = c.id
         LEFT JOIN users u ON u.id = c.artist_id
         LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
         LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+        LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
         ${whereClause}
         ORDER BY ${orderClause(isOwnerView)}
         LIMIT $${limitIdx}
@@ -140,7 +141,7 @@ export async function GET(request: Request) {
           COALESCE(da.artist_name, u.display_name) as artist_name,
           c.artist_id,
           u.is_creator as artist_is_creator,
-          u.profile_image_url as artist_avatar,
+          COALESCE(ap.spotify_image_url, da.latest_track_cover_url, u.profile_image_url) as artist_avatar,
           COALESCE(donations.total_cents, 0) as donation_total_cents,
           COALESCE(donations.donation_count, 0) as donation_count
         FROM campaigns c
@@ -148,6 +149,7 @@ export async function GET(request: Request) {
         LEFT JOIN users u ON u.id = c.artist_id
         LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
         LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+        LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
         LEFT JOIN (
           SELECT campaign_id, COALESCE(SUM(amount_cents), 0) as total_cents, COUNT(*) as donation_count
           FROM campaign_donations GROUP BY campaign_id
