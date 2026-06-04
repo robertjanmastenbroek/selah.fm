@@ -100,6 +100,8 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [savedCollectionId, setSavedCollectionId] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (showPicker) {
@@ -113,6 +115,7 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
 
   const addToCollection = async (collectionId: string) => {
     setSaving(collectionId);
+    setError('');
     try {
       const res = await fetch(`/api/collections/${collectionId}/items`, {
         method: 'POST', credentials: 'include',
@@ -121,15 +124,20 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
       });
       if (res.ok) {
         setSaved(true);
-        setTimeout(() => { setSaved(false); setShowPicker(false); }, 1500);
+        setSavedCollectionId(collectionId);
+        setShowPicker(false);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setError(err.error || 'Failed to save');
       }
-    } catch {}
+    } catch { setError('Network error'); }
     setSaving(null);
   };
 
   const createAndAdd = async () => {
     const name = prompt('Collection name:');
     if (!name?.trim()) return;
+    setShowPicker(false);
     try {
       const res = await fetch('/api/collections', {
         method: 'POST', credentials: 'include',
@@ -138,7 +146,13 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
       });
       if (res.ok) {
         const d = await res.json();
-        if (d.collection) addToCollection(d.collection.id);
+        if (d.collection) {
+          await addToCollection(d.collection.id);
+          // Reload collections list so new collection appears if picker reopens
+          fetch('/api/collections', { credentials: 'include' })
+            .then(r2 => r2.json())
+            .then(d2 => setCollections(d2.collections || []));
+        }
       }
     } catch {}
   };
@@ -154,8 +168,14 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
       }}
         className="flex items-center gap-2 w-full p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground">
         {saved ? <Check size={14} className="text-emerald-400" /> : <Bookmark size={14} />}
-        {saved ? 'Saved to collection!' : 'Save to collection'}
+        {saved ? 'Saved!' : 'Save to collection'}
       </button>
+      {saved && savedCollectionId && (
+        <a href={`/collection/${savedCollectionId}`} className="block text-[10px] text-primary hover:underline mt-1 text-center">
+          View collection →
+        </a>
+      )}
+      {error && <p className="text-[10px] text-red-400 mt-1">{error}</p>}
 
       {showPicker && (
         <div className="absolute bottom-full mb-2 left-0 right-0 rounded-xl bg-[#1C1C3A] border border-white/[0.08] shadow-xl p-3 max-h-48 overflow-y-auto z-10">
