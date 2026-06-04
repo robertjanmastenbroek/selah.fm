@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import sql from '@/lib/db';
 import ArtistProfileClient from './ArtistProfileClient';
@@ -204,7 +203,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArtistPage({ params }: Props) {
   const data = await getArtistData(params.slug);
-  if (!data) notFound();
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0F0F23' }}>
+        <div className="text-center max-w-sm space-y-4">
+          <h1 className="text-4xl mb-2">🎵</h1>
+          <h2 className="text-lg font-semibold">Artist not found</h2>
+          <p className="text-sm text-muted-foreground">
+            This artist doesn't exist or has been removed from Selah.fm.
+          </p>
+          <a href="/browse" className="inline-block px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:opacity-90 transition-opacity">
+            Browse artists
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   const { artist, tracks, stats, recent_submissions, related_artists, campaigns } = data;
 

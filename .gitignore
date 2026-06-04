@@ -47,3 +47,9 @@ public/images/u*.png
 .railway/
 tsconfig.tsbuildinfo
 mpt-service/
+node_modules/
+.next/
+e2e-report/
+test-results/
+lighthouse-report/
+playwright-report/
