@@ -132,6 +132,31 @@ export async function PATCH(req: Request) {
         )
       `;
 
+      // If creator hasn't set up Stripe, also send a payout reminder
+      try {
+        const [creatorCheck] = await sql`
+          SELECT stripe_connect_id, stripe_onboarding_complete FROM users WHERE id = ${sub.creator_id}
+        `;
+        const needsStripe = !creatorCheck?.stripe_connect_id && !creatorCheck?.stripe_onboarding_complete;
+        if (needsStripe) {
+          const [recentReminder] = await sql`
+            SELECT id FROM notifications
+            WHERE user_id = ${sub.creator_id} AND type = 'payout_reminder'
+            AND created_at > NOW() - INTERVAL '7 days' LIMIT 1
+          `;
+          if (!recentReminder) {
+            await sql`
+              INSERT INTO notifications (user_id, type, title, message, link)
+              VALUES (${sub.creator_id}, 'payout_reminder',
+                'Complete your payout setup',
+                'Your submission was approved! Connect Stripe to receive your earnings.',
+                '/dashboard?tab=payout'
+              )
+            `;
+          }
+        }
+      } catch {} // Non-blocking
+
       return NextResponse.json({ ok: true, payout_cents: payoutCents, views, feedback });
     } else {
       // Reject
