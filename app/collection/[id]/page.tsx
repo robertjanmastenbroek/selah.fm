@@ -49,5 +49,5 @@ export default async function CollectionPage({ params }: Props) {
   const data = await getCollection(params.id);
   if (!data) return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">Collection not found</p></div>;
 
-  return <CollectionDetailClient collection={data} />;
+  return <CollectionDetailClient id={params.id} />;
 }

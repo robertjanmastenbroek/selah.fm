@@ -81,11 +81,21 @@ test.describe('Campaign Page', () => {
 
 // ─── ARTIST PAGE ─────────────────────────────────────────────
 test.describe('Artist Page', () => {
-  test('existing artist loads', async ({ page }) => {
-    await page.goto(`${BASE}/artist/rony-rex-dcb016`);
-    await page.waitForTimeout(3000);
-    const body = page.locator('body');
-    await expect(body).not.toBeEmpty();
+  test('existing artist loads with content', async ({ page }) => {
+    // Get a real artist slug from the API
+    const res = await page.request.get(`${BASE}/api/artists?limit=1`);
+    const body = await res.json();
+    const artist = body.artists?.[0];
+    test.skip(!artist?.slug, 'No artists available');
+
+    await page.goto(`${BASE}/artist/${artist.slug}`);
+    await page.waitForTimeout(5000);
+
+    // Check the page actually rendered artist content, not an error
+    const pageText = await page.locator('body').innerText();
+    expect(pageText.toLowerCase()).not.toContain('something went sideways');
+    expect(pageText.toLowerCase()).not.toContain('page not found');
+    expect(pageText.toLowerCase()).toContain(artist.artist_name.toLowerCase());
   });
 });
 

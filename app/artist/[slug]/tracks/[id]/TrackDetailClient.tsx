@@ -306,6 +306,7 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
                 </span>
               ))}
             </div>
+
           </div>
 
           <div className="md:col-span-2 space-y-3">
