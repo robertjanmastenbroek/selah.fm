@@ -550,7 +550,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                       <Users size={14} className="text-muted-foreground" />
                       About {name}
                     </h2>
-                    <p className="text-sm text-muted-foreground/70 leading-relaxed">{bio}</p>
+                    <div className="text-sm text-muted-foreground/70 leading-relaxed prose prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: bio }} />
                   </section>
                 )}
                 {!bio && (

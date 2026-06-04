@@ -31,15 +31,24 @@ async function chat(messages: { role: string; content: string }[], options: { te
 }
 
 const BIO_PROMPT_BASE = `You are writing SEO content for Selah.fm, a CPM marketplace for music promotion.
-Write a short, informative bio for an independent musician. Include their genre, notable facts, and what makes them unique.
+Write an HTML-formatted bio for an independent musician targeting top 0.0001% quality.
+
+Structure:
+<h1>About [Artist Name]</h1>
+<p>Compelling opening paragraph about their music and style</p>
+<h2>Musical Style</h2>  
+<p>Details about their sound, genre, influences</p>
+<h2>Achievements</h2>
+<p>Notable milestones, audience stats</p>
+<h2>Support on Selah.fm</h2>
+<p>How fans can donate and creators can earn per verified view making videos</p>
 
 Rules:
-- 80-150 words maximum
-- Natural, factual tone — no hype or marketing language
-- Mention genre and style
-- Include notable achievements or characteristics
-- End with a sentence about how fans can support them on Selah.fm
-- No markdown, no JSON wrapping — just plain text
+- 120-200 words total
+- Natural founder-voice tone — no AI giveaways
+- <strong>Bold</strong> key terms
+- Never use: "Furthermore", "Moreover", "In conclusion", "testament", "delve", "myriad"
+- Return ONLY valid HTML — no markdown, no code fences
 - Never invent details. Only use the facts provided below.`;
 
 /**
