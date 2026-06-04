@@ -137,7 +137,7 @@ export default function Header() {
                   </div>
 
                   <div className="border-t border-white/[0.05] py-1">
-                    <NavItem href="/feed" icon={TrendingUp} label="Feed" onClick={() => setOpen(false)} />
+
                     <NavItem href="/browse" icon={Search} label="Browse tracks" onClick={() => setOpen(false)} />
                     <a href="https://github.com/robertjanmastenbroek/selah.fm" target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}
                       className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors">
