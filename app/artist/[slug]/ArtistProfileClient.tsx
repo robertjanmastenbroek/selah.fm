@@ -27,6 +27,10 @@ interface ArtistProps {
   balanceCents?: number;
 }
 
+function trackSlug(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'track';
+}
+
 export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [], campaigns = [], balanceCents = 0 }: ArtistProps) {
   const name = artist.artist_name || 'Unknown Artist';
   const genres = (() => {
@@ -433,7 +437,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                           <div key={track.id}
                             className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-primary/15 transition-all group">
                             {/* Track cover art — links to track page */}
-                            <Link href={`/artist/${slug}/tracks/${track.id}`}
+                            <Link href={`/artist/${slug}/tracks/${trackSlug(track.track_title || track.title || '')}`}
                               className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0 relative group/thumb">
                               {track.cover_art_url ? (
                                 <img src={track.cover_art_url} alt={track.track_title} className="w-full h-full object-cover" />
@@ -446,7 +450,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                             </Link>
                             <div className="flex-1 min-w-0">
                               {/* Track title — links to track page */}
-                              <Link href={`/artist/${slug}/tracks/${track.id}`}
+                              <Link href={`/artist/${slug}/tracks/${trackSlug(track.track_title || track.title || '')}`}
                                 className="text-sm font-semibold truncate hover:text-primary transition-colors block">
                                 {track.track_title}
                                 {hasActiveCampaign && (
@@ -463,7 +467,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               {/* Track page link */}
-                              <Link href={`/artist/${slug}/tracks/${track.id}`}
+                              <Link href={`/artist/${slug}/tracks/${trackSlug(track.track_title || track.title || '')}`}
                                 className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-[9px] text-muted-foreground/50 hover:text-primary hover:border-primary/20 hover:bg-primary/[0.04] transition-all"
                                 title="View track details">
                                 <ExternalLink size={12} />

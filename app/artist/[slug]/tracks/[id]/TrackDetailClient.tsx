@@ -197,6 +197,10 @@ interface TrackDetailProps {
   slug: string;
 }
 
+function trackSlug(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'track';
+}
+
 export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
   const [joinOpen, setJoinOpen] = useState(false);
 
@@ -353,7 +357,7 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
               {track.relatedTracks.map((rt: any) => (
                 <Link
                   key={rt.id}
-                  href={`/artist/${slug}/tracks/${rt.id}`}
+                  href={`/artist/${slug}/tracks/${trackSlug(rt.title || '')}`}
                   className="snap-start shrink-0 w-36 group">
                   <div className="aspect-square rounded-xl overflow-hidden bg-white/[0.04] mb-2">
                     {rt.cover_art_url ? (
