@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 interface Props { params: { slug: string } }
 
 async function getArtistData(slug: string) {
+  try {
   // Find artist by slug (with name-based fallback)
   let [artist] = await sql`
     SELECT da.id, da.artist_name, da.genres, da.monthly_listeners, da.followers,
@@ -162,6 +163,10 @@ async function getArtistData(slug: string) {
     related_artists: relatedArtists,
     campaigns,
   };
+  } catch (e: any) {
+    console.error('[ARTIST DATA] Error in getArtistData:', e.message);
+    return null;
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
