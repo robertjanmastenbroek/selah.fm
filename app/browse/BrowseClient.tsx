@@ -376,7 +376,7 @@ export default function BrowseClient() {
     if (cards?.[newIndex]) cards[newIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   };
 
-  useEffect(() => { if (tab === 'trending') { loadTrending(); return; } loadArtists(); }, [selectedGenre, selectedSort]);
+  useEffect(() => { if (tab === 'trending') { loadTrending(); } else { loadArtists(); } }, [tab, selectedGenre, selectedSort]);
   useEffect(() => { if (tab === 'trending') return; loadTracks(); }, [selectedGenre, selectedSort, tab]);
 
   const loading = tab === 'trending' ? loadingTrending : tab === 'artists' ? loadingArtists : loadingTracks;
