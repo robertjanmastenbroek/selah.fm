@@ -46,7 +46,7 @@ Rules:
  * Build the BIO_PROMPT, dynamically including overused words to avoid.
  */
 export async function buildBioPrompt(): Promise<string> {
-  const overusedWarning = await getOverusedWordsPrompt();
+  const overusedWarning = await getOverusedWords();
   if (overusedWarning) {
     return BIO_PROMPT_BASE + `
 
@@ -85,6 +85,7 @@ export async function generateArtistBio(
     existingBio ? `Existing bio: ${existingBio.slice(0, 200)}` : '',
   ].filter(Boolean).join('\n');
 
+  const bioPrompt = await buildBioPrompt();
   const [bio, faqRaw] = await Promise.all([
     chat([
       { role: 'system', content: bioPrompt },
