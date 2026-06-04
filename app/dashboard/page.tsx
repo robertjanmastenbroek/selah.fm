@@ -204,7 +204,7 @@ function DashboardContent() {
     { id: 'tracks', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'earnings', label: 'Earnings', icon: DollarSign },
-  { id: 'kanban', label: 'Board', icon: <ChartBar size={14} /> },  ];
+  { id: 'kanban', label: 'Board', icon: ChartBar },  ];
 
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
@@ -538,7 +538,7 @@ function DashboardContent() {
                         </label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">@</span>
-                            <input placeholder="handle" className="pl-7 text-sm" />
+                          <input value={editInstagram} onChange={e => { setEditInstagram(e.target.value); setBioChanged(true); }} placeholder="handle" className="pl-7 text-sm w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30" />
                         </div>
                       </div>
                       <div>
@@ -547,7 +547,7 @@ function DashboardContent() {
                         </label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">@</span>
-                            <input placeholder="handle" className="pl-7 text-sm" />
+                          <input value={editTiktok} onChange={e => { setEditTiktok(e.target.value); setBioChanged(true); }} placeholder="handle" className="pl-7 text-sm w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/30" />
                         </div>
                       </div>
                     </div>
