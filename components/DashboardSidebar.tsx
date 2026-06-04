@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   LayoutDashboard, Megaphone, User, DollarSign, ChartBar,
   PanelLeftClose, PanelLeft, Music
@@ -37,10 +37,10 @@ export default function DashboardSidebar({
           collapsed ? 'w-16' : 'w-56'
         }`}
       >
-        {/* Logo area */}
-        <div className={`flex items-center h-14 border-b border-white/[0.06] ${collapsed ? 'justify-center px-0' : 'px-4'}`}>
+        {/* Logo area — click to browse */}
+        <Link href="/browse" className={`flex items-center h-14 border-b border-white/[0.06] transition-colors hover:bg-white/[0.02] ${collapsed ? 'justify-center px-0' : 'px-4'}`}>
           {collapsed ? (
-            <Music size={20} className="text-primary" />
+            <Music size={20} className="text-primary shrink-0" />
           ) : (
             <div className="flex items-center gap-2">
               <Music size={18} className="text-primary" />
@@ -49,7 +49,7 @@ export default function DashboardSidebar({
               </span>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Nav items */}
         <nav className="flex-1 py-3 space-y-1 px-2">
