@@ -106,7 +106,7 @@ async function getArtistData(slug: string) {
     JOIN campaign_claims cc ON cc.campaign_id = c.id
     WHERE cc.discovered_artist_id = ${artistId}
       AND c.status = 'active'
-    ORDER BY c.created_at DESC LIMIT 5
+    ORDER BY c.created_at DESC
   `; } catch (e: any) { console.error('[ARTIST] campaigns failed:', e.message); }
 
   let relatedArtists: any[] = [];
