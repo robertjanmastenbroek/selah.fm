@@ -1,7 +1,8 @@
 # Selah.fm — Strategic Roadmap
-**Version:** 4.0 · **Updated:** 2026-06-03 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · **Roadmap: 34/36 complete**
+**Version:** 4.1 · **Updated:** 2026-06-04 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · **Roadmap: 35/36 complete**
 
-> Full 10-field audit completed June 3, 2026. **Core finding: the codebase is ~95% feature-complete for v1.** The bottleneck has shifted from development to acquisition. 38/38 blueprint files are built. Every social feature (comments, reactions, activity feed, embed), artist-first pivot, genre pages, multi-track pipeline, and checkout flow is live and committed.
+> Full 10-field audit completed June 3, 2026. **Core finding: the codebase is ~95% feature-complete for v1.** The bottleneck has shifted from development to acquisition. 38/38 blueprint files are built. Every social feature (comments, reactions, activity feed, embed), artist-first pivot, genre pages, multi-track pipeline, checkout flow, bio engine (8 slot libraries, ~37B combos), data enrichment (Wikipedia/YouTube/Bandcamp), track pages, reviews, public API, and share component are all live and committed.
+
 >
 > **Single highest-leverage action:** Curated launch (5 artists + 20 creators with real budgets). Everything else amplifies what happens after.
 >
@@ -41,12 +42,12 @@
 
 **Fix:** When Artists tab returns 0, auto-switch to Campaigns tab with message: "No artists match your filters — try browsing campaigns instead."
 
-### D. 🟡 LLMO Bios — module built, runs overnight at 00:00 UTC
+### D. ✅ LLMO Bios — module built (8 slot libraries, ~37B combos), cron at 00:00 UTC
 **Field:** SEO / AI
 **Effort:** 1 day
-**Issue:** `lib/artist-content.ts` doesn't exist. Current artist pages have ~140 chars of SEO description. 2,000+ artist pages have near-zero AI-generated body content. No FAQ or about text for artists without scraped bios.
+**Status:** `lib/artist-content.ts` + 8 bio slot libraries built (~96KB total). Composable multi-slot generation picks openings, angles, journeys, descriptors, closings, and tone per artist for unique bios that pass LLMO detection. Cron runs 100/night at 00:00 UTC. Manual trigger available at `app/api/artist/bio/manual/route.ts`.
 
-**Fix:** Add batch cron that calls DeepSeek to generate 500-char SEO bios for all artists. ~$140 one-time. Unlocks 2,000+ unique indexable pages.
+**Remaining:** 20 days to process all 2,000 artists at current 100/night cadence. Can accelerate with manual bulk trigger (~$140 DeepSeek cost).
 
 ### E. ✅ Internal Linking Engine — wired into artist pages
 **Field:** SEO
@@ -92,17 +93,14 @@
 
 ---
 
-## 🚨 Phase 0.5: Blog Pipeline Fix (IMMEDIATE)
+## ✅ Phase 0.5: Blog Pipeline Fix (DONE)
 
-### A. 🐛 Fix blog-pipeline post generation — no timeout, errors silently swallowed
-- **Files:** `lib/blog-engine.ts` (line ~72: add `AbortSignal.timeout(120000)`), `app/api/cron/blog-pipeline/route.ts` (add better error logging)
-- **Effort:** 30 min code + deploy
-- **Acceptance:** Pipeline generates 2+ posts from existing answered interviews when run with `?force=true`
+### A. ✅ Fix blog-pipeline post generation — no timeout, errors silently swallowed
+- **Files:** `lib/blog-engine.ts` (added `AbortSignal.timeout(120000)`), `app/api/cron/blog-pipeline/route.ts` (improved error logging to 200 chars with stack traces)
+- **Result:** Pipeline generates 2 posts/day scheduled at 09:00 + 15:00 UTC, runs 4×/day
 
-### B. 🔵 Force-generate posts from pending interviews
-- **Files:** No code change needed — run pipeline with `?force=true` after fix deployed
-- **What it generates:** 5 answered interviews (June 1-2) → up to 2 blog posts per run → 2-3 days to clear backlog
-- **Acceptance:** Blog posts appear in `blog_posts` table with `status = 'scheduled'`
+### B. ✅ Force-generate posts from pending interviews
+- **Result:** Blog posts went from 21 → 28 (+7 auto-generated after fix). Scheduled posts: 5 → 11 (full 2/day cadence through June 12)
 
 ---
 
@@ -127,12 +125,13 @@
 - **This is the single most important thing.** Nothing else matters until real users with real budgets create real activity.
 - **Process:** Find 5 artists, 20 creators, set up 5 campaigns with $20-100 budgets, coordinate a 2-week sprint, document everything for blog posts and social proof.
 
-### 11. 🟡 LLMO bios — module built (lib/artist-content.ts), cron at 00:00 UTC
+### 11. ✅ LLMO bios — module built, cron at 00:00 UTC, 100/night
 - **Field:** SEO
 - **Effort:** 1 day
-- **Files to create:** `lib/artist-content.ts`
-- **Files to modify:** `app/api/cron/dispatcher/route.ts` (add new worker)
-- **Cost:** ~$140 one-time DeepSeek API (2,000 artists × 500 chars)
+- **Status:** `lib/artist-content.ts` built + 8 bio slot libraries (bio-angles, bio-closings, bio-descriptors, bio-journeys, bio-openings, bio-scorer, bio-tone, bio-vocabulary) for ~37B+ unique combos
+- **Cron:** `app/api/cron/generate-artist-bios/route.ts` at 00:00 UTC, 100/night
+- **Manual trigger:** `app/api/artist/bio/manual/route.ts`
+- **Cost:** ~$140 one-time DeepSeek API if accelerating via manual trigger
 - **Impact:** Unlocks 2,000+ unique indexable pages with rich LLM-optimized content
 
 ### 12. ✅ Internal linking engine — wired into artist profile pages
@@ -164,7 +163,7 @@
 
 ---
 
-## 🟡 Phase 2.5: Quick Wins (this week)
+## ✅ Phase 2.5: Quick Wins (complete)
 
 ### 22. ✅ Anonymous reaction sign-in prompt — modal with auth gate
 - **Field:** UX/CRO
@@ -237,4 +236,4 @@
 - **After every Railway deploy:** Verify homepage loads, blog loads, campaign page loads, and run blog pipeline manually with `?force=true&secret=CRON_SECRET` to verify post generation
 - **Database migrations:** Always add `IF NOT EXISTS` and use the auto-enable RLS trigger
 - **The curated launch (item #10) is the most important task.** Everything else amplifies what happens after you have proof the marketplace works.
-- **June 3 audit conclusion:** Codebase is feature-complete for v1. Freeze feature work. Next 30 days are pure growth.
+- **June 4 audit conclusion:** Codebase is feature-complete for v1. Bio engine, data enrichment, track pages, reviews, public API all built. Only remaining work is the curated launch. Freeze feature work. Next 30 days are pure growth.
