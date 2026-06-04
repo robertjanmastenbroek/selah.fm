@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, X, Check, Pencil, Trash2 } from 'lucide-react';
+import { Search, X, Check, Pencil, Trash2, ExternalLink } from 'lucide-react';
 
 const REVIEW_STATUSES = ['pending', 'approved', 'rejected'];
 const PAYOUT_STATUSES = ['pending', 'processing', 'paid', 'failed'];
@@ -60,10 +60,10 @@ export default function AdminSubmissionsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-white/[0.06] text-muted-foreground text-xs">
-              <th className="text-left py-3 px-4 font-medium">Track</th><th className="text-left py-3 px-4 font-medium">Creator</th><th className="text-left py-3 px-4 font-medium">Platform</th><th className="text-left py-3 px-4 font-medium">Views</th><th className="text-left py-3 px-4 font-medium">Review</th><th className="text-left py-3 px-4 font-medium">Payout</th><th className="text-left py-3 px-4 font-medium">Amount</th><th className="text-right py-3 px-4 font-medium w-32">Actions</th>
+              <th className="text-left py-3 px-4 font-medium">Track</th><th className="text-left py-3 px-4 font-medium">Creator</th><th className="text-left py-3 px-4 font-medium">Platform</th><th className="text-left py-3 px-4 font-medium">Video</th><th className="text-left py-3 px-4 font-medium">Views</th><th className="text-left py-3 px-4 font-medium">Review</th><th className="text-left py-3 px-4 font-medium">Payout</th><th className="text-left py-3 px-4 font-medium">Amount</th><th className="text-right py-3 px-4 font-medium w-32">Actions</th>
             </tr></thead>
             <tbody>
-              {subs.length === 0 ? <tr><td colSpan={8} className="py-16 text-center text-muted-foreground">No submissions found</td></tr> : subs.map(s => {
+              {subs.length === 0 ? <tr><td colSpan={9} className="py-16 text-center text-muted-foreground">No submissions found</td></tr> : subs.map(s => {
                 const isEditing = editing?.id === s.id;
                 const e = isEditing ? editing!.values : {};
                 return (
@@ -71,6 +71,12 @@ export default function AdminSubmissionsPage() {
                     <td className="py-3 px-4 font-medium">{s.track_title}</td>
                     <td className="py-3 px-4 text-xs">{s.creator_name || s.creator_email || '—'}</td>
                     <td className="py-3 px-4"><span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04]">{s.platform}</span></td>
+                    <td className="py-3 px-4">
+                      {s.content_url ? (
+                        <a href={s.content_url} target="_blank" rel="noopener noreferrer"
+                          className="text-[10px] text-primary hover:underline flex items-center gap-1">Watch <ExternalLink size={10} /></a>
+                      ) : <span className="text-[10px] text-muted-foreground/40">—</span>}
+                    </td>
                     <td className="py-3 px-4">{isEditing ? <input type="number" value={e.views_verified ?? s.views_verified ?? ''} onChange={ev => setEditing({ id: s.id, values: { ...e, views_verified: ev.target.value } })} className="w-20 rounded bg-white/[0.06] border border-white/[0.08] px-2 py-1 text-sm" /> : (s.views_verified || 0).toLocaleString()}</td>
                     <td className="py-3 px-4">{isEditing ? <select value={e.review_status ?? s.review_status} onChange={ev => setEditing({ id: s.id, values: { ...e, review_status: ev.target.value } })} className="rounded bg-white/[0.06] border border-white/[0.08] px-2 py-1 text-sm">{REVIEW_STATUSES.map(st => <option key={st} value={st}>{st}</option>)}</select> : <span className={`text-[10px] px-2 py-0.5 rounded-full ${s.review_status === 'approved' ? 'bg-success/10 text-success' : s.review_status === 'rejected' ? 'bg-destructive/10 text-destructive' : 'bg-amber-500/10 text-amber-400'}`}>{s.review_status}</span>}</td>
                     <td className="py-3 px-4">{isEditing ? <select value={e.payout_status ?? s.payout_status} onChange={ev => setEditing({ id: s.id, values: { ...e, payout_status: ev.target.value } })} className="rounded bg-white/[0.06] border border-white/[0.08] px-2 py-1 text-sm">{PAYOUT_STATUSES.map(st => <option key={st} value={st}>{st}</option>)}</select> : <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04]">{s.payout_status}</span>}</td>
