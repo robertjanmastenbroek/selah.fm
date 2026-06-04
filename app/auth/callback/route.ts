@@ -74,9 +74,11 @@ export async function GET(request: Request) {
     const user = data?.user;
     if (user) {
       try {
-        const rows = await sql`SELECT onboarded_at, profile_image_url FROM users WHERE id = ${user.id}`;
+        const rows = await sql`SELECT onboarded_at, profile_image_url, display_name, created_at FROM users WHERE id = ${user.id}`;
         const existing = rows[0];
-        const isNewUser = !existing || !existing.onboarded_at;
+        // User is new ONLY if they don't exist in DB OR they have no display_name
+        // (onboarded_at may not be set for early adopters — don't re-onboard them)
+        const isNewUser = !existing || !existing.display_name;
         
         // Save Google avatar if user doesn't have a profile image yet
         const googleAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
