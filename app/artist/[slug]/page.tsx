@@ -15,6 +15,7 @@ async function getArtistData(slug: string) {
            da.instagram_handle, da.tiktok_handle, da.spotify_id,
            da.comment_count,            ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
            ap.total_streams, ap.total_platforms,
+           ap.balance_cents, ap.lifetime_deposits_cents,
            aa.bio
     FROM discovered_artists da
     LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
@@ -33,6 +34,7 @@ async function getArtistData(slug: string) {
              da.instagram_handle, da.tiktok_handle, da.spotify_id,
              da.comment_count,              ap.slug as profile_slug, ap.spotify_image_url, ap.total_followers,
              ap.total_streams, ap.total_platforms,
+             ap.balance_cents, ap.lifetime_deposits_cents,
              aa.bio
       FROM discovered_artists da
       LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
@@ -124,9 +126,10 @@ async function getArtistData(slug: string) {
     LIMIT 4
   `; } catch (e: any) { console.error('[ARTIST] related artists failed:', e.message); }
 
-  // Sum campaign budgets for display — legacy campaigns may have budget without donation records
-  const totalCampaignBudgetCents = campaigns.reduce((s, c) => s + (Number(c.total_budget_cents) || 0), 0);
-  const displayRaisedCents = Math.max(donationStats.total_cents, totalCampaignBudgetCents);
+  // Use artist_profiles as single source of truth for financial data
+  // balance_cents = current available, lifetime_deposits_cents = all-time total
+  const profileBalanceCents = Number(artist.balance_cents) || 0;
+  const profileDepositedCents = Number(artist.lifetime_deposits_cents) || 0;
 
   return {
     artist: {
@@ -144,13 +147,14 @@ async function getArtistData(slug: string) {
     tracks,
     stats: {
       total_tracks: tracks.length,
-      total_donations_cents: displayRaisedCents,
+      // Single source of truth: lifetime_deposits_cents from artist_profiles
+      total_donations_cents: profileDepositedCents,
       donation_count: donationStats.donation_count,
       supporter_count: donationStats.supporter_count,
       total_views: submissionStats.total_views,
       total_submissions: submissionStats.total_submissions,
     },
-    balance_cents: totalCampaignBudgetCents,
+    balance_cents: profileBalanceCents,
     recent_submissions: recentSubmissions,
     related_artists: relatedArtists,
     campaigns,
