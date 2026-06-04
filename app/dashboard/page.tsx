@@ -247,7 +247,7 @@ function DashboardContent() {
   // ─── Tabs ────────────────────────────────────────────────────
   const tabs: TabDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone, badge: activeCount > 0 ? activeCount : undefined },
+    { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone, badge: isArtist && activeCount > 0 ? activeCount : undefined },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'earnings', label: 'Earnings', icon: DollarSign },
     ...(isArtist ? [{ id: 'kanban' as const, label: 'Board' as const, icon: ChartBar }] : []),
