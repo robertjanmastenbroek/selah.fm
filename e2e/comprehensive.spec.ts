@@ -183,7 +183,7 @@ test.describe('UI: Browse', () => {
     await page.waitForTimeout(1000);
     
     // Check Campaigns tab
-    await page.locator('text=Promotions').first().click();
+    await page.locator('text=Tracks').first().click();
     await page.waitForTimeout(1000);
     
     // Check Artists tab
@@ -302,7 +302,7 @@ test.describe('UI: Login Page', () => {
     // Trust badges / benefits
     await expect(page.locator('text=Real creators only').first()).toBeVisible();
     // Live stats (should load or show fallback)
-    await expect(page.locator('text=Promotions').or(page.locator('text=Artists')).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Tracks').or(page.locator('text=Artists')).first()).toBeVisible({ timeout: 5000 });
   });
 });
 

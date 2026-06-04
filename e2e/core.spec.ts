@@ -31,7 +31,7 @@ test.describe('Browse', () => {
   test('loads with tabs and artists', async ({ page }) => {
     await page.goto(`${BASE}/browse`);
     await expect(page.locator('text=Artists').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=Promotions').first()).toBeVisible();
+    await expect(page.locator('text=Tracks').first()).toBeVisible();
     await expect(page.locator('text=Trending').first()).toBeVisible();
   });
 
@@ -65,15 +65,10 @@ test.describe('Login', () => {
 
 // ─── CAMPAIGN PAGE ───────────────────────────────────────────
 test.describe('Campaign Page', () => {
-  test('existing campaign loads', async ({ page }) => {
-    // Find first campaign from homepage
-    await page.goto(BASE);
-    await page.waitForSelector('text=Featured campaigns', { timeout: 10000 });
-    // Click the first campaign card
-    const firstCampaign = page.locator('text=View campaign, Browse all, or featured campaign card').first();
-    // Just check we can navigate to a campaign
+  test('campaign redirect or page loads', async ({ page }) => {
+    // Campaign URLs should either redirect to track page or show not found
     await page.goto(`${BASE}/c/robert-jan-mastenbroek-merhav-yah-b3a3`);
-    // Should either show campaign or "not found"
+    await page.waitForTimeout(3000);
     const body = page.locator('body');
     await expect(body).not.toBeEmpty();
   });
