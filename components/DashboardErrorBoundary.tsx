@@ -17,7 +17,7 @@ export default class DashboardErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0F0F23' }}>
           <div className="text-center max-w-md space-y-4">
-            <p className="text-2xl">&#9888;&#65039;</p>
+            <p className="text-2xl">⚠️</p>
             <h2 className="text-lg font-semibold text-red-400">Dashboard Error</h2>
             <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-left">
               <p className="text-xs font-mono text-red-300 break-all">{this.state.error.message}</p>
