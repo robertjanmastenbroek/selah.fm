@@ -108,7 +108,8 @@ export default function RootPage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [stats, setStats] = useState({
     artists: 0, creators: 0, activeCampaigns: 0,
-    totalPaidCents: 0, totalDepositedCents: 0, approvedSubmissions: 0
+    totalPaidCents: 0, totalDepositedCents: 0, approvedSubmissions: 0,
+    totalViews: 0
   });
   const [featuredCampaigns, setFeaturedCampaigns] = useState<any[]>([]);
   const [user, setUser] = useState<{ email?: string; avatar?: string; name?: string } | null>(null);
