@@ -64,32 +64,29 @@ export async function GET(request: Request) {
     }
   }
 
-  // Default: run essential inline migrations (legacy tables)
+  // Default: run all migration files in order
   const results: string[] = [];
-
-  // ── Core platform tables (idempotent, IF NOT EXISTS) ──
-  const coreMigrations = [
-    `ALTER TABLE users ADD COLUMN IF NOT EXISTS facebook_handle TEXT`,
-    `CREATE TABLE IF NOT EXISTS notifications (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL REFERENCES users(id), type TEXT NOT NULL CHECK (type IN ('submission','approval','rejection','earning','payout','system')), message TEXT NOT NULL, read BOOLEAN NOT NULL DEFAULT false, link TEXT, metadata JSONB DEFAULT '{}', created_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
-    `CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id) WHERE read = false`,
-    `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS required_hashtags TEXT`,
-    `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS paused_at TIMESTAMPTZ`,
-    `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS gallery_images JSONB DEFAULT '[]'`,
-    `ALTER TABLE submissions ADD COLUMN IF NOT EXISTS rejection_feedback TEXT`,
-    `CREATE TABLE IF NOT EXISTS bugs (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID REFERENCES users(id) ON DELETE SET NULL, description TEXT NOT NULL, steps_to_reproduce TEXT, severity VARCHAR(20) NOT NULL DEFAULT 'medium' CHECK (severity IN ('low','medium','high','critical')), status VARCHAR(20) NOT NULL DEFAULT 'new' CHECK (status IN ('new','in_progress','fixed','closed')), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
-    `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS is_unclaimed BOOLEAN DEFAULT false`,
-    `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS claimed_by_user_id UUID REFERENCES users(id)`,
-    `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`,
-    `ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS balance_cents INTEGER DEFAULT 0`,
-    `CREATE TABLE IF NOT EXISTS campaign_interests (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL REFERENCES users(id), campaign_id UUID NOT NULL REFERENCES campaigns(id), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(user_id, campaign_id))`,
-    `CREATE INDEX IF NOT EXISTS idx_campaign_interests_user ON campaign_interests(user_id)`,
-    `CREATE INDEX IF NOT EXISTS idx_campaign_interests_campaign ON campaign_interests(campaign_id)`,
-  ];
-
-  for (const sql_stmt of coreMigrations) {
-    try { await sql.raw(sql_stmt); results.push(`✅ ${sql_stmt.slice(0, 50)}...`); }
-    catch (e: any) { results.push(`❌ ${sql_stmt.slice(0, 50)}...: ${e.message}`); }
+  
+  try {
+    const files = readdirSync(migrationsDir).filter((f: string) => f.endsWith('.sql')).sort();
+    for (const file of files) {
+      try {
+        const sqlContent = readFileSync(path.join(migrationsDir, file), 'utf-8');
+        const statements = sqlContent.split(';').map((s: string) => s.trim()).filter((s: string) => s.length > 0 && !s.startsWith('--'));
+        let executed = 0;
+        for (const stmt of statements) {
+          try { await sql.raw(stmt); executed++; }
+          catch (e: any) { results.push(`  ${file}: ${e.message.slice(0, 80)}`); }
+        }
+        if (executed > 0) results.push(`${file}: ${executed} statements`);
+      } catch (e: any) {
+        results.push(`  ${file}: ${e.message.slice(0, 80)}`);
+      }
+    }
+  } catch (e: any) {
+    results.push(`Migration dir error: ${e.message}`);
   }
 
-  return NextResponse.json({ migrated: true, results });
+  // ── Core platform tables (idempotent, IF NOT EXISTS) ──
+    return NextResponse.json({ migrated: true, results });
 }
