@@ -365,7 +365,7 @@ export async function GET(request: Request) {
       const DAY_SLOTS = [9, 15]; // 09:00 UTC and 15:00 UTC — 2 posts per day
       
       for (const draft of drafts) {
-        // Find next available date+slot
+        // Find next available date+slot (must be in the future)
         let scheduleDay = new Date();
         let found = false;
         
@@ -375,6 +375,8 @@ export async function GET(request: Request) {
             if (!takenSlots.has(slotKey)) {
               const publishAt = new Date(scheduleDay);
               publishAt.setUTCHours(hour, 0, 0, 0);
+              // Skip past slots — don't schedule at 09:00 when it's already 10:00
+              if (publishAt <= new Date()) continue;
               await sql`UPDATE blog_posts SET status = 'scheduled', publish_at = ${publishAt.toISOString()} WHERE id = ${draft.id}`;
               takenSlots.add(slotKey);
               results.scheduled++;
