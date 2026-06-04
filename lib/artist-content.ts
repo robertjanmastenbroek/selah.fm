@@ -5,6 +5,7 @@
  */
 
 import sql from '@/lib/db';
+import { getOverusedWords } from '@/lib/bio-vocabulary';
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_BASE = 'https://api.deepseek.com/v1';
@@ -29,7 +30,7 @@ async function chat(messages: { role: string; content: string }[], options: { te
   } finally { clearTimeout(timeout); }
 }
 
-const BIO_PROMPT = `You are writing SEO content for Selah.fm, a CPM marketplace for music promotion.
+const BIO_PROMPT_BASE = `You are writing SEO content for Selah.fm, a CPM marketplace for music promotion.
 Write a short, informative bio for an independent musician. Include their genre, notable facts, and what makes them unique.
 
 Rules:
@@ -40,6 +41,19 @@ Rules:
 - End with a sentence about how fans can support them on Selah.fm
 - No markdown, no JSON wrapping — just plain text
 - Never invent details. Only use the facts provided below.`;
+
+/**
+ * Build the BIO_PROMPT, dynamically including overused words to avoid.
+ */
+export async function buildBioPrompt(): Promise<string> {
+  const overusedWarning = await getOverusedWordsPrompt();
+  if (overusedWarning) {
+    return BIO_PROMPT_BASE + `
+
+${overusedWarning}`;
+  }
+  return BIO_PROMPT_BASE;
+}
 
 const FAQ_PROMPT = `Generate 3 FAQ entries for this artist's Selah.fm profile page.
 Each FAQ must be a real question someone searching for this artist would ask.
@@ -73,7 +87,7 @@ export async function generateArtistBio(
 
   const [bio, faqRaw] = await Promise.all([
     chat([
-      { role: 'system', content: BIO_PROMPT },
+      { role: 'system', content: bioPrompt },
       { role: 'user', content: `Write a bio for this artist:\n\n${facts}` },
     ], { max_tokens: 500, temperature: 0.7 }),
 
