@@ -151,7 +151,7 @@ export default async function GenrePage({ params }: Props) {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight mb-2" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
-            {genreDisplay} Music Promotion Campaigns
+            {genreDisplay} Tracks
           </h1>
           <p className="text-muted-foreground text-sm max-w-2xl">
             Discover {genreDisplay.toLowerCase()} tracks from independent artists. 
@@ -160,7 +160,7 @@ export default async function GenrePage({ params }: Props) {
           </p>
         </div>
 
-        {/* Campaign grid — same design as browse */}
+        {/* Track grid — same design as browse */}
         <div className="grid gap-4 sm:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
           {campaigns.map((c: any) => {
             const cpm = (c.cpm_rate_cents || 0) / 100;

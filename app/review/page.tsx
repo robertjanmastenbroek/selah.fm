@@ -32,7 +32,7 @@ function platformColor(platform: string) {
 }
 
 export default function ReviewPage() {
-  const [selectedCampaign, setSelectedCampaign] = useState('all');
+  const [selectedTrack, setSelectedTrack] = useState('all');
   const [statusFilter, setStatusFilter] = useState('pending');
   const [artistId, setArtistId] = useState<string | null>(null);
   const [profileName, setProfileName] = useState('');
@@ -65,9 +65,9 @@ export default function ReviewPage() {
   }, [profileData?.user?.display_name]);
 
   // Build the API URL: artistId takes priority over campaignId
-  const apiUrl = selectedCampaign === '__artist__' && artistId
+  const apiUrl = selectedTrack === '__artist__' && artistId
     ? `/api/submissions?artistId=${artistId}&status=${statusFilter}`
-    : `/api/submissions?campaignId=${selectedCampaign === 'all' ? 'all' : selectedCampaign}&status=${statusFilter}`;
+    : `/api/submissions?campaignId=${selectedTrack === 'all' ? 'all' : selectedTrack}&status=${statusFilter}`;
   const { data: submissions, error, isLoading, mutate } = useSWR(apiUrl, fetcher, swrConfig);
 
   const subs: Submission[] = submissions ? (Array.isArray(submissions) ? submissions : []) : [];
@@ -194,11 +194,11 @@ export default function ReviewPage() {
               ))}
             </div>
             <select
-              value={selectedCampaign}
-              onChange={e => setSelectedCampaign(e.target.value)}
+              value={selectedTrack}
+              onChange={e => setSelectedTrack(e.target.value)}
               className="border rounded-md px-3 py-2 text-sm bg-background"
             >
-              <option value="all">All campaigns</option>
+              <option value="all">All tracks</option>
               {artistId && <option value="__artist__">🎵 {profileName || 'My artist profile'}</option>}
               {campaigns.map((c: { id: string; track_title: string }) => (
                 <option key={c.id} value={c.id}>{c.track_title}</option>
@@ -381,7 +381,7 @@ export default function ReviewPage() {
           if (maxPayout > 0 && gross > maxPayout) gross = maxPayout;
           const charCount = modalFeedback.length;
           const charColor = charCount >= 280 ? 'text-red-400' : charCount >= 250 ? 'text-amber-400' : 'text-muted-foreground/60';
-          const quickReasons = ['Audio quality issues', "Doesn't fit campaign brief", 'Low production value', 'Inappropriate content'];
+          const quickReasons = ['Audio quality issues', "Doesn't fit track brief", 'Low production value', 'Inappropriate content'];
 
           return (
             <motion.div

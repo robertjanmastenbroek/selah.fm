@@ -13,7 +13,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
     items: [
       {
         q: 'What is Selah.fm?',
-        a: 'Selah.fm is an open-source CPM marketplace for music promotion. Artists create campaigns with budgets, set CPM (cost per 1,000 views) rates, and deposit funds via Stripe. Creators browse campaigns, make TikToks, Reels, or YouTube Shorts, and submit their videos. Artists review and approve submissions — creators get paid only for verified views.',
+        a: 'Selah.fm is an open-source CPM marketplace for music promotion. Artists add tracks with budgets, set CPM (cost per 1,000 views) rates, and deposit funds via Stripe. Creators browse campaigns, make TikToks, Reels, or YouTube Shorts, and submit their videos. Artists review and approve submissions — creators get paid only for verified views.',
         section: 'About Selah.fm',
       },
       {
@@ -37,8 +37,8 @@ const faqs: { section: string; items: FAQItem[] }[] = [
     section: 'For Artists',
     items: [
       {
-        q: 'How do I create a campaign?',
-        a: 'Go to your Dashboard, click "New", upload your track, set your CPM rate and budget, and launch. Creators will find your campaign on the Browse page and start submitting content. It takes about 3 minutes.',
+        q: 'How do I add a track?',
+        a: 'Go to your Dashboard, click "New", upload your track, set your CPM rate and budget, and launch. Creators will find your track on the Browse page and start submitting content. It takes about 3 minutes.',
         section: 'For Artists',
       },
       {
@@ -57,18 +57,18 @@ const faqs: { section: string; items: FAQItem[] }[] = [
         section: 'For Artists',
       },
       {
-        q: 'Can I change my CPM rate after launching a campaign?',
-        a: 'Once a campaign receives any submissions, the CPM rate is locked. This protects creators — they submitted at a specific rate expecting that payout. To change your rate, create a new campaign with the updated CPM. Campaigns with zero submissions can still have their CPM adjusted.',
+        q: 'Can I change my CPM rate after adding a track?',
+        a: 'Once a track receives any submissions, the CPM rate is locked. This protects creators — they submitted at a specific rate expecting that payout. To change your rate, create a new track with the updated CPM. Tracks with zero submissions can still have their CPM adjusted.',
         section: 'For Artists',
       },
       {
-        q: 'Can I pause or cancel my campaign?',
-        a: 'Campaigns automatically stop accepting submissions when the budget is exhausted. To end a campaign early, simply stop funding it. Any remaining budget stays in your account for future campaigns.',
+        q: 'Can I pause or cancel my track?',
+        a: 'Tracks automatically stop accepting submissions when the budget is exhausted. To end a track early, simply stop funding it. Any remaining budget stays in your account for future tracks.',
         section: 'For Artists',
       },
       {
-        q: 'Can fans support my campaign?',
-        a: 'Yes. Every campaign page has a crowdfunding section where fans can donate to your promotion budget. Share your campaign link and let your fans help you get discovered.',
+        q: 'Can fans support my track?',
+        a: 'Yes. Every track page has a crowdfunding section where fans can donate to your promotion budget. Share your track link and let your fans help you get discovered.',
         section: 'For Artists',
       },
     ],
@@ -78,7 +78,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
     items: [
       {
         q: 'How do I start earning?',
-        a: 'Browse campaigns at selah.fm/browse, find a track you like, create a TikTok/Reel/Short using that track, paste the video link, and submit. Once the artist approves it, you earn based on verified views.',
+        a: 'Browse tracks at selah.fm/browse, find a track you like, create a TikTok/Reel/Short using that track, paste the video link, and submit. Once the artist approves it, you earn based on verified views.',
         section: 'For Creators',
       },
       {

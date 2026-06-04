@@ -24,7 +24,7 @@ const SORT_CAMPAIGNS = [
   { value: 'most_funded', label: 'Most Funded' },
 ];
 
-type Tab = 'trending' | 'artists' | 'campaigns';
+type Tab = 'trending' | 'artists' | 'tracks';
 
 export default function BrowseClient() {
   const [tab, setTab] = useState<Tab>('artists');
@@ -35,9 +35,9 @@ export default function BrowseClient() {
   const [loadingArtists, setLoadingArtists] = useState(true);
 
   // Campaign state
-  const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [totalCampaigns, setTotalCampaigns] = useState(0);
-  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+  const [tracks, setTracks] = useState<any[]>([]);
+  const [totalTracks, setTotalTracks] = useState(0);
+  const [loadingTracks, setLoadingTracks] = useState(true);
 
   // Trending state
   const [trending, setTrending] = useState<any[]>([]);
@@ -118,7 +118,7 @@ export default function BrowseClient() {
         if (newItems.length === 0) { setHasMore(false); }
         else {
           if (tab === 'artists') setArtists(prev => [...prev, ...newItems]);
-          else setCampaigns(prev => [...prev, ...newItems]);
+          else setTracks(prev => [...prev, ...newItems]);
           setPage(prev => prev + 1);
         }
       }
@@ -139,7 +139,7 @@ export default function BrowseClient() {
 
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const items = tab === 'trending' ? trending : tab === 'artists' ? artists : campaigns;
+    const items = tab === 'trending' ? trending : tab === 'artists' ? artists : tracks;
     const count = items.length;
     if (count === 0) return;
 
@@ -179,8 +179,8 @@ export default function BrowseClient() {
   };
 
   // Load campaigns
-  const loadCampaigns = async () => {
-    setLoadingCampaigns(true);
+  const loadTracks = async () => {
+    setLoadingTracks(true);
     try {
       const p = new URLSearchParams();
       if (selectedGenre) p.set('genre', selectedGenre);
@@ -190,25 +190,25 @@ export default function BrowseClient() {
       const res = await fetch(`/api/campaigns?${p.toString()}`, { credentials: 'omit' });
       if (res.ok) {
         const d = await res.json();
-        setCampaigns(d.campaigns || []);
-        setTotalCampaigns(d.total || 0);
+        setTracks(d.campaigns || []);
+        setTotalTracks(d.total || 0);
       }
-    } catch {} finally { setLoadingCampaigns(false); }
+    } catch {} finally { setLoadingTracks(false); }
   };
 
   // Reload on filter change
   useEffect(() => { if (tab === 'trending') { loadTrending(); return; } loadArtists(); }, [selectedGenre, selectedSort]);
-  useEffect(() => { if (tab === 'trending') return; loadCampaigns(); }, [selectedGenre, selectedSort, tab]);
+  useEffect(() => { if (tab === 'trending') return; loadTracks(); }, [selectedGenre, selectedSort, tab]);
 
   const handleSearch = (q: string) => {
     setSearchQuery(q);
     if (tab === 'artists') loadArtists(q);
-    else loadCampaigns();
+    else loadTracks();
   };
 
-  const loading = tab === 'trending' ? loadingTrending : tab === 'artists' ? loadingArtists : loadingCampaigns;
-  const items = tab === 'trending' ? trending : tab === 'artists' ? artists : campaigns;
-  const total = tab === 'trending' ? trending.length : tab === 'artists' ? totalArtists : totalCampaigns;
+  const loading = tab === 'trending' ? loadingTrending : tab === 'artists' ? loadingArtists : loadingTracks;
+  const items = tab === 'trending' ? trending : tab === 'artists' ? artists : tracks;
+  const total = tab === 'trending' ? trending.length : tab === 'artists' ? totalArtists : totalTracks;
   const sortOptions = tab === 'artists' ? SORT_ARTISTS : SORT_CAMPAIGNS;
 
   return (
@@ -253,12 +253,12 @@ export default function BrowseClient() {
             <Users2 size={14} />
             Artists
           </button>
-          <button onClick={() => { setTab('campaigns'); setSelectedSort('popular'); setPage(1); setHasMore(true); }}
+          <button onClick={() => { setTab('tracks'); setSelectedSort('popular'); setPage(1); setHasMore(true); }}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-              tab === 'campaigns' ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground'
+              tab === 'tracks' ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground'
             }`}>
             <Film size={14} />
-            Campaigns
+            Tracks
           </button>
         </div>
 
@@ -271,7 +271,7 @@ export default function BrowseClient() {
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-sm mb-1">Welcome to Selah! Start earning in 3 steps</h3>
               <ol className="text-xs text-muted-foreground space-y-1">
-                <li>1. Find an artist or campaign you like</li>
+                <li>1. Find an artist or track you like</li>
                 <li>2. Pick a track and create a TikTok, Reel, or Short</li>
                 <li>3. Submit it — earn per verified view</li>
               </ol>
@@ -337,7 +337,7 @@ export default function BrowseClient() {
                   ? 'Try different filters or browse all genres.'
                   : tab === 'artists'
                   ? 'Artists are added daily.'
-                  : 'Campaigns are created by artists. Browse artists to find active campaigns.'
+                  : 'Tracks are added by artists. Browse artists to find active tracks.'
               } />
           </div>
         ) : tab === 'trending' ? (

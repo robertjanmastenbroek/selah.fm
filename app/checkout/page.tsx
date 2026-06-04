@@ -313,7 +313,7 @@ export default function CheckoutPage() {
       <div className="flex-1 w-full max-w-lg mx-auto px-4 py-8">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
 
-          {/* ── Campaign Preview Card ── */}
+          {/* ── Track Preview Card ── */}
           <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] overflow-hidden">
             {coverArt && (
               <div className="aspect-[2/1] bg-white/[0.02] overflow-hidden">
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
                   <CircleProgress pct={progress} size={56} />
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-white/30 uppercase tracking-wider mb-0.5">
-                      {type === 'donation' ? "You're supporting" : 'Your campaign'}
+                      {type === 'donation' ? "You're supporting" : 'Your track'}
                     </p>
                     <h1 className="text-lg font-bold truncate">{campaign.title || campaign.track_title}</h1>
                   </div>
@@ -337,7 +337,7 @@ export default function CheckoutPage() {
                   {coverArt && (
                     <>
                       <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">
-                        {type === 'donation' ? "You're supporting" : 'Your campaign'}
+                        {type === 'donation' ? "You're supporting" : 'Your track'}
                       </p>
                       <h1 className="text-xl font-bold">{displayTitle}</h1>
                     </>

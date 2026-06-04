@@ -15,35 +15,33 @@ async function getCampaign(id: string) {
           SELECT c.*, COALESCE(c.title, c.track_title) as title,
             COALESCE(da.artist_name, u.display_name) as artist_name,
             da.social_links, da.artist_name as da_artist_name,
-            aa.youtube_video_url as audit_youtube_url,
-            aa.spotify_embed_url,
+            NULL as audit_youtube_url,
+            NULL as spotify_embed_url,
             ap.slug as artist_slug,
             c.video_url
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-          LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
           LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
           WHERE c.id = ${id}::uuid
-          ORDER BY aa.audited_at DESC LIMIT 1
+          LIMIT 1
         `
       : await sql`
           SELECT c.*, COALESCE(c.title, c.track_title) as title,
             COALESCE(da.artist_name, u.display_name) as artist_name,
             da.social_links, da.artist_name as da_artist_name,
-            aa.youtube_video_url as audit_youtube_url,
-            aa.spotify_embed_url,
+            NULL as audit_youtube_url,
+            NULL as spotify_embed_url,
             ap.slug as artist_slug,
             c.video_url
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-          LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
           LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
           WHERE c.slug = ${id}
-          ORDER BY aa.audited_at DESC LIMIT 1
+          LIMIT 1
         `;
     return campaigns[0] || null;
   } catch {
@@ -169,8 +167,9 @@ export default async function CampaignPage({ params }: Props) {
 
   // ── Server-rendered related tracks for internal linking ──
   let relatedCampaigns: any[] = [];
+  let relatedTracks: any[] = [];
   try {
-    relatedCampaigns = await sql`
+    relatedTracks = await sql`
       SELECT c.slug, COALESCE(c.title, c.track_title) as title, c.track_title,
         COALESCE(da.artist_name, u.display_name) as artist_name,
         c.cover_art_url, c.cpm_rate_cents
@@ -244,14 +243,14 @@ export default async function CampaignPage({ params }: Props) {
 
       <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} artistSlug={campaign?.artist_slug || null} submissions={submissions} />
 
-      {/* Server-rendered related campaigns — crawlable by Google, visible to users */}
-      {relatedCampaigns.length > 0 && (
+      {/* Server-rendered related tracks — crawlable by Google, visible to users */}
+      {relatedTracks.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 pb-16" aria-labelledby="more-heading">
           <h2 id="more-heading" className="font-bold text-base mb-5" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
             More tracks
           </h2>
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {relatedCampaigns.map((rc: any) => (
+            {relatedTracks.map((rc: any) => (
               <a key={rc.slug} href={`/c/${rc.slug}`}
                 className="group rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-[#4338CA]/20 hover:bg-white/[0.05] transition-all">
                 <div className="aspect-square bg-white/[0.02] relative overflow-hidden">

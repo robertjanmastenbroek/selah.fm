@@ -16,7 +16,7 @@ export default function ContentGuidelinesPage() {
           ← Back
         </Link>
         <h1 className="text-3xl font-bold mb-4">Creator Content Guidelines</h1>
-        <p className="text-muted-foreground text-sm mb-10">These guidelines apply to all content created for Selah.fm campaigns. Following them ensures your submissions get approved and you get paid.</p>
+        <p className="text-muted-foreground text-sm mb-10">These guidelines apply to all content created for Selah.fm tracks. Following them ensures your submissions get approved and you get paid.</p>
 
         <div className="text-sm space-y-8 text-muted-foreground">
 
@@ -56,13 +56,13 @@ export default function ContentGuidelinesPage() {
             <p className="mt-2">Violations will result in rejected submissions, forfeited earnings, and permanent account bans.</p>
           </section>
 
-          {/* 5. Follow Campaign Requirements */}
+          {/* 5. Follow Track Requirements */}
           <section>
-            <h2 className="text-foreground font-semibold text-base mb-3">5. Follow Campaign Requirements</h2>
-            <p>Each campaign has specific requirements set by the artist. Read them carefully before creating content:</p>
+            <h2 className="text-foreground font-semibold text-base mb-3">5. Follow Track Requirements</h2>
+            <p>Each track has specific requirements set by the artist. Read them carefully before creating content:</p>
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li><strong>Minimum video length</strong> — if specified, your video must meet or exceed this duration</li>
-              <li><strong>Required hashtags</strong> — include all hashtags listed in the campaign</li>
+              <li><strong>Required hashtags</strong> — include all hashtags listed in the track</li>
               <li><strong>Content style</strong> — follow the artist&apos;s creative direction</li>
               <li><strong>Platform tags</strong> — tag the artist&apos;s social accounts if required</li>
               <li><strong>Caption requirements</strong> — use the specified caption text if provided</li>
@@ -99,7 +99,7 @@ export default function ContentGuidelinesPage() {
           <section>
             <h2 className="text-foreground font-semibold text-base mb-3">8. View Requirements & Payout</h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li>Each campaign may have a <strong>minimum view threshold</strong> — your video must reach this many views to qualify for payout.</li>
+              <li>Each track may have a <strong>minimum view threshold</strong> — your video must reach this many views to qualify for payout.</li>
               <li>Each submission has a <strong>maximum payout cap</strong> — you won&apos;t earn more than this amount per video, regardless of views.</li>
               <li>The artist reviews every submission and has final approval. Only approved content counts toward your earnings.</li>
               <li>Views are verified through platform APIs where available (YouTube). For TikTok and Instagram, views are verified during the artist&apos;s review.</li>

@@ -19,7 +19,6 @@ async function getArtistData(slug: string) {
            COALESCE(aa.bio, '')::text as bio
     FROM discovered_artists da
     LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
-    LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     WHERE ap.slug = ${slug}
     LIMIT 1
   `;
@@ -38,8 +37,7 @@ async function getArtistData(slug: string) {
              COALESCE(aa.bio, '')::text as bio
       FROM discovered_artists da
       LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
-      LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
-      WHERE LOWER(da.artist_name) LIKE ${'%' + slugName.toLowerCase() + '%'}
+        WHERE LOWER(da.artist_name) LIKE ${'%' + slugName.toLowerCase() + '%'}
       ORDER BY da.monthly_listeners DESC NULLS LAST
       LIMIT 1
     `;
