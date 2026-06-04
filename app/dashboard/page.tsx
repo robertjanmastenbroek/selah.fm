@@ -759,7 +759,7 @@ function DashboardContent() {
         )}
 
         {/* ─── Track Wizard Modal ──────────────────────── */}
-        <CampaignWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onCreated={() => reloadCampaigns()} />
+        {wizardOpen && <CampaignWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onCreated={() => reloadCampaigns()} />}
       </main>
     </div>
   );
