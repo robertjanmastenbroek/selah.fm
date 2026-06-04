@@ -877,6 +877,21 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
           </div>
         </div>
 
+        {/* Milestone progress bar */}
+        <div>
+          <div className="flex justify-between text-[10px] text-muted-foreground/50 mb-1">
+            <span>Referral progress</span>
+            <span>{referredUsers} / 10</span>
+          </div>
+          <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all" style={{width: Math.min(100, (referredUsers / 10) * 100) + '%'}} />
+          </div>
+          <div className="flex justify-between text-[9px] text-muted-foreground/30 mt-1">
+            <span>1 referral</span>
+            <span>{10 - Math.min(10, referredUsers)} to next bonus</span>
+          </div>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 text-center">
           <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.04]">
