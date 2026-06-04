@@ -8,7 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TikTok, Instagram, YouTube, Facebook } from '@/components/SocialIcons';
-import { DollarSign, FileText, CheckCircle, Music4, ExternalLink, Camera } from 'lucide-react';
+import { DollarSign, FileText, CircleCheck, Music4, ExternalLink, Camera } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -239,7 +239,7 @@ export default async function CreatorProfilePage({ params }: Props) {
               label: 'Submissions',
             },
             {
-              icon: <CheckCircle size={18} strokeWidth={1.5} />,
+              icon: <CircleCheck size={18} strokeWidth={1.5} />,
               value: String(approvedCount),
               label: 'Approved',
             },

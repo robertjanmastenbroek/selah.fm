@@ -33,7 +33,7 @@ function platformColor(platform: string) {
 
 export default function ReviewPage() {
   const [selectedTrack, setSelectedTrack] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('pending');
+  const [statusListFilter, setStatusListFilter] = useState('pending');
   const [artistId, setArtistId] = useState<string | null>(null);
   const [profileName, setProfileName] = useState('');
   const { addToast } = useToast();
@@ -66,8 +66,8 @@ export default function ReviewPage() {
 
   // Build the API URL: artistId takes priority over campaignId
   const apiUrl = selectedTrack === '__artist__' && artistId
-    ? `/api/submissions?artistId=${artistId}&status=${statusFilter}`
-    : `/api/submissions?campaignId=${selectedTrack === 'all' ? 'all' : selectedTrack}&status=${statusFilter}`;
+    ? `/api/submissions?artistId=${artistId}&status=${statusListFilter}`
+    : `/api/submissions?campaignId=${selectedTrack === 'all' ? 'all' : selectedTrack}&status=${statusListFilter}`;
   const { data: submissions, error, isLoading, mutate } = useSWR(apiUrl, fetcher, swrConfig);
 
   const subs: Submission[] = submissions ? (Array.isArray(submissions) ? submissions : []) : [];
@@ -174,7 +174,7 @@ export default function ReviewPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight mb-1">Review</h1>
             <p className="text-muted-foreground text-sm">
-              {isLoading ? 'Loading...' : `${subs.length} ${statusFilter} submission${subs.length !== 1 ? 's' : ''}`}
+              {isLoading ? 'Loading...' : `${subs.length} ${statusListFilter} submission${subs.length !== 1 ? 's' : ''}`}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -182,9 +182,9 @@ export default function ReviewPage() {
               {['pending', 'approved', 'rejected'].map(tab => (
                 <button
                   key={tab}
-                  onClick={() => setStatusFilter(tab)}
+                  onClick={() => setStatusListFilter(tab)}
                   className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    statusFilter === tab 
+                    statusListFilter === tab 
                       ? 'bg-white text-black shadow-sm' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
@@ -351,7 +351,7 @@ export default function ReviewPage() {
                           )}
                         </div>
 
-                        {statusFilter === 'approved' && (
+                        {statusListFilter === 'approved' && (
                           <RatingPrompt
                             submissionId={s.id}
                             role="artist"

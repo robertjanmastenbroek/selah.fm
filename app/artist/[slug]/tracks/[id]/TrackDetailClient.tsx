@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Music, Film, Eye, Sparkles, ChevronRight, BarChart3, ExternalLink, Heart, Bookmark, Check } from 'lucide-react';
+import { Music, Film, Eye, Sparkles, ChevronRight, ChartBar, ExternalLink, Heart, Bookmark, Check } from 'lucide-react';
 import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
 import EarnModal from '@/components/EarnModal';
@@ -32,7 +32,7 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
   return (
     <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-indigo-500/[0.03] border border-white/[0.06] p-5">
       <div className="flex items-center gap-2 mb-4">
-        <BarChart3 size={16} className="text-indigo-400" />
+        <ChartBar size={16} className="text-indigo-400" />
         <h3 className="font-semibold text-sm">How much you could earn</h3>
       </div>
 
@@ -258,7 +258,7 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
         {/* Stats grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           {[
-            { label: 'CPM', value: cpmPer1M ? `${cpmPer1M}/1M views` : '—', icon: <BarChart3 size={14} className="text-indigo-400" /> },
+            { label: 'CPM', value: cpmPer1M ? `${cpmPer1M}/1M views` : '—', icon: <ChartBar size={14} className="text-indigo-400" /> },
             { label: 'Views', value: views?.toLocaleString() || '0', icon: <Eye size={14} className="text-emerald-400" /> },
             { label: 'Submissions', value: String(submissions || 0), icon: <Film size={14} className="text-amber-400" /> },
             { label: 'Status', value: campaignActive ? 'Active' : track.campaign_status || 'Draft', icon: <Sparkles size={14} className={campaignActive ? 'text-emerald-400' : 'text-muted-foreground'} /> },

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, AlertCircle, Sparkles, X } from 'lucide-react';
+import { Check, CircleAlert, Sparkles, X } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 
 export interface Toast {
@@ -19,7 +19,7 @@ const colors: Record<Toast['type'], string> = {
 
 const icons: Record<Toast['type'], React.ReactNode> = {
   success: <Check size={14} />,
-  error: <AlertCircle size={14} />,
+  error: <CircleAlert size={14} />,
   info: <Sparkles size={14} />,
 };
 

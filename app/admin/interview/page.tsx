@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Mic, MicOff, Send, Plus, Clock, Check, Sparkles, Loader2, X } from 'lucide-react';
+import { Mic, MicOff, Send, Plus, Clock, Check, Sparkles, LoaderCircle, X } from 'lucide-react';
 
 interface Question {
   id: string;
@@ -328,7 +328,7 @@ export default function InterviewStudio() {
               </div>
 
               <button onClick={generateQuestions} disabled={!topic||generating} className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-2">
-                {generating?<><Loader2 className="w-5 h-5 animate-spin"/>Generating questions...</>:<><Sparkles className="w-5 h-5"/>Start Interview</>}
+                {generating?<><LoaderCircle className="w-5 h-5 animate-spin"/>Generating questions...</>:<><Sparkles className="w-5 h-5"/>Start Interview</>}
               </button>
 
               {sessions.length > 0 && (
@@ -426,7 +426,7 @@ export default function InterviewStudio() {
                   <div className="flex items-center gap-3">
                     <button onClick={()=>goToQuestion(Math.max(0,currentQ-1))} disabled={currentQ===0} className="px-3 py-2 text-sm text-gray-500 hover:text-white disabled:opacity-30">← Prev</button>
                     <button onClick={captureAnswer} disabled={saving || !currentAnswer.trim()} className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg text-sm font-semibold transition-all">
-                      {saving?<><Loader2 size={14} className="animate-spin"/> Saving...</>:<><Send size={14}/> Capture & Next</>}
+                      {saving?<><LoaderCircle size={14} className="animate-spin"/> Saving...</>:<><Send size={14}/> Capture & Next</>}
                     </button>
                   </div>
                 </div>

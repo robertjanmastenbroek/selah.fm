@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bug, AlertTriangle } from 'lucide-react';
+import { Bug, TriangleAlert } from 'lucide-react';
 
 const severityOptions = [
   { value: 'low', label: 'Low — cosmetic or minor', color: 'text-blue-400' },
@@ -111,7 +111,7 @@ export default function BugReportForm() {
       {/* Status messages */}
       {status === 'error' && (
         <div className="flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-          <AlertTriangle size={14} />
+          <TriangleAlert size={14} />
           {errorMsg}
         </div>
       )}

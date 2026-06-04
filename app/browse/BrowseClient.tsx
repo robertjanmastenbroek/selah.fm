@@ -7,7 +7,7 @@ import Header from '@/components/TopNav';
 import OnboardingBanner from '@/components/OnboardingBanner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/States';
-import { Search, Users2, Sparkles, X, Film, DollarSign, Eye } from 'lucide-react';
+import { Search, Users, Sparkles, X, Film, DollarSign, Eye } from 'lucide-react';
 import ArtistCard from '@/components/ArtistCard';
 
 const GENRES = ['pop', 'rock', 'hip-hop', 'electronic', 'r&b', 'country', 'latin', 'jazz', 'classical', 'indie', 'folk', 'metal', 'punk', 'reggae', 'blues', 'soul', 'funk', 'world', 'alternative', 'dance'];
@@ -250,7 +250,7 @@ export default function BrowseClient() {
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
               tab === 'artists' ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground'
             }`}>
-            <Users2 size={14} />
+            <Users size={14} />
             Artists
           </button>
           <button onClick={() => { setTab('tracks'); setSelectedSort('popular'); setPage(1); setHasMore(true); }}
@@ -283,7 +283,7 @@ export default function BrowseClient() {
           </div>
         )}
 
-        {/* Filters */}
+        {/* ListFilters */}
         <div className="mb-6 space-y-3">
           <div className="flex flex-wrap gap-2">
             <button onClick={() => { setSelectedGenre(''); }}

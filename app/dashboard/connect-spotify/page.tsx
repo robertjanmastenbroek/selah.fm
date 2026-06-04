@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
-import { Search, Music4, UserCheck, Check, Loader2, AlertCircle, ArrowRight, ExternalLink } from 'lucide-react';
+import { Search, Music4, UserCheck, Check, LoaderCircle, CircleAlert, ArrowRight, ExternalLink } from 'lucide-react';
 
 interface SearchResult {
   id: string;
@@ -64,7 +64,7 @@ export default function ConnectArtistPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#080817]">
-        <Loader2 size={24} className="animate-spin text-white/30" />
+        <LoaderCircle size={24} className="animate-spin text-white/30" />
       </div>
     );
   }
@@ -112,7 +112,7 @@ export default function ConnectArtistPage() {
                 className="px-5 py-4 rounded-xl font-bold text-sm transition-all
                            bg-gradient-to-r from-primary to-[#3730A3]
                            disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]">
-                {searching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
+                {searching ? <LoaderCircle size={18} className="animate-spin" /> : <Search size={18} />}
               </button>
             </div>
             <p className="text-[10px] text-muted-foreground/40">
@@ -125,7 +125,7 @@ export default function ConnectArtistPage() {
             {error && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 className="rounded-xl bg-red-500/5 border border-red-500/10 p-4 text-xs text-red-400 flex items-start gap-2">
-                <AlertCircle size={14} className="shrink-0 mt-0.5" />{error}
+                <CircleAlert size={14} className="shrink-0 mt-0.5" />{error}
               </motion.div>
             )}
           </AnimatePresence>
@@ -136,7 +136,7 @@ export default function ConnectArtistPage() {
               <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
                 {results.length === 0 ? (
                   <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-8 text-center space-y-3">
-                    <AlertCircle size={24} className="mx-auto text-muted-foreground/30" />
+                    <CircleAlert size={24} className="mx-auto text-muted-foreground/30" />
                     <h3 className="font-semibold text-sm">No artists found</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed max-w-xs mx-auto">
                       {query.length >= 2
@@ -189,7 +189,7 @@ export default function ConnectArtistPage() {
                               disabled={claiming === artist.id}
                               className="px-4 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-semibold transition-all disabled:opacity-40 flex items-center gap-1.5">
                               {claiming === artist.id ? (
-                                <Loader2 size={14} className="animate-spin" />
+                                <LoaderCircle size={14} className="animate-spin" />
                               ) : (
                                 <><UserCheck size={14} /> Claim</>
                               )}

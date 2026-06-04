@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { BarChart3, TrendingUp, Calendar } from 'lucide-react';
+import { ChartBar, TrendingUp, Calendar } from 'lucide-react';
 
 interface ViewsChartProps {
   campaigns: any[];
@@ -53,7 +53,7 @@ export default function DashboardChart({
     return weeks;
   }, [campaigns]);
 
-  // Filter by selected range
+  // ListFilter by selected range
   const visibleWeeks = useMemo(() => {
     const count = range === 7 ? 4 : range === 30 ? 8 : 12;
     return weeklyData.slice(-count);
@@ -71,7 +71,7 @@ export default function DashboardChart({
       <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold flex items-center gap-2">
-            <BarChart3 size={14} className="text-primary" />
+            <ChartBar size={14} className="text-primary" />
             Views over time
           </h3>
           <div className="flex gap-1">

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, Save, CheckCircle, Circle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, CircleCheck, Circle, CircleAlert } from 'lucide-react';
 
 export default function InterviewEditorPage() {
   const params = useParams();
@@ -168,7 +168,7 @@ export default function InterviewEditorPage() {
             {saving ? (
               <><div className="w-2.5 h-2.5 border border-amber-400/30 border-t-amber-400 rounded-full animate-spin" /> Saving...</>
             ) : saved ? (
-              <><CheckCircle size={12} /> Saved</>
+              <><CircleCheck size={12} /> Saved</>
             ) : null}
           </span>
 
@@ -219,7 +219,7 @@ export default function InterviewEditorPage() {
         {/* LEFT: Source question */}
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <AlertCircle size={14} className="text-primary/60" />
+            <CircleAlert size={14} className="text-primary/60" />
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Source Question</h2>
           </div>
           <p className="text-sm leading-relaxed">{sourceQuestion}</p>
@@ -238,7 +238,7 @@ export default function InterviewEditorPage() {
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CheckCircle size={14} className="text-primary/60" />
+              <CircleCheck size={14} className="text-primary/60" />
               <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Answers</h2>
             </div>
             <button
@@ -312,7 +312,7 @@ export default function InterviewEditorPage() {
               onClick={handleSave}
               className="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm hover:opacity-90 transition-opacity flex items-center gap-2"
             >
-              <CheckCircle size={14} /> Complete & Save
+              <CircleCheck size={14} /> Complete & Save
             </button>
           )}
         </div>

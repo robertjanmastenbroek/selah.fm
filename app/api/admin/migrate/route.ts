@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
-  const fileFilter = searchParams.get('file') || '';
+  const fileListFilter = searchParams.get('file') || '';
   const listOnly = searchParams.get('list') === 'true';
 
   const migrationsDir = path.join(process.cwd(), 'supabase', 'migrations');
@@ -39,11 +39,11 @@ export async function GET(request: Request) {
   }
 
   // Run a specific file-based migration
-  if (fileFilter) {
+  if (fileListFilter) {
     try {
       const files = readdirSync(migrationsDir).filter(f => f.endsWith('.sql')).sort();
-      const match = files.find(f => f.includes(fileFilter));
-      if (!match) return NextResponse.json({ error: `Migration "${fileFilter}" not found` }, { status: 404 });
+      const match = files.find(f => f.includes(fileListFilter));
+      if (!match) return NextResponse.json({ error: `Migration "${fileListFilter}" not found` }, { status: 404 });
 
       const sqlContent = readFileSync(path.join(migrationsDir, match), 'utf-8');
       const statements = sqlContent

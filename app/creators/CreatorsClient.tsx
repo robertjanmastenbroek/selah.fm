@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TikTok, Instagram, YouTube } from '@/components/SocialIcons';
-import { DollarSign, Eye, CheckCircle, ArrowRight, Users, Search } from 'lucide-react';
+import { DollarSign, Eye, CircleCheck, ArrowRight, Users, Search } from 'lucide-react';
 
 interface Creator { id: string; display_name: string; bio: string; genres: string; preferred_cpm_cents: number; tiktok_handle: string; instagram_handle: string; youtube_handle: string; profile_image_url: string; acceptance_rate: number; total_earned_cents: number; total_verified_views: number; total_submissions: number; }
 
@@ -81,7 +81,7 @@ export default function CreatorsClient({ initialCreators }: { initialCreators: C
                     {[
                       {value:`$${earned.toFixed(0)}`,label:'Earned',icon:DollarSign},
                       {value:views>=1000?`${(views/1000).toFixed(1)}K`:views,label:'Views',icon:Eye},
-                      {value:`${acceptance}%`,label:'Accepted',icon:CheckCircle},
+                      {value:`${acceptance}%`,label:'Accepted',icon:CircleCheck},
                     ].map(s=>{const I=s.icon;return(
                       <div key={s.label} className="text-center"><I size={12} className="mx-auto mb-1 text-primary/40"/><div className="text-sm font-bold">{s.value}</div><div className="text-[10px] text-muted-foreground">{s.label}</div></div>
                     )})}

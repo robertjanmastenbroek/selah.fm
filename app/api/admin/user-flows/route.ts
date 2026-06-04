@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
-    const sessionFilter = searchParams.get('session') || '';
+    const sessionListFilter = searchParams.get('session') || '';
 
     // Get recent sessions with their events
     const sessions = await sql`
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
         MAX(ae.user_id) as user_id
       FROM analytics_events ae
       WHERE ae.session_id IS NOT NULL
-        ${sessionFilter ? sql`AND ae.session_id = ${sessionFilter}` : sql``}
+        ${sessionListFilter ? sql`AND ae.session_id = ${sessionListFilter}` : sql``}
       GROUP BY ae.session_id
       ORDER BY session_start DESC
       LIMIT ${limit}

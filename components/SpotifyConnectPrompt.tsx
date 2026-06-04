@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Music4, ArrowRight, Loader2 } from 'lucide-react';
+import { Music4, ArrowRight, LoaderCircle } from 'lucide-react';
 
 interface Props {
   displayName: string | null;

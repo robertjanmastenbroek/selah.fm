@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Music, Heart, Video, ExternalLink, Plus, Trash2, ChevronUp, ChevronDown, Check, X, Loader2 } from 'lucide-react';
+import { Music, Heart, Video, ExternalLink, Plus, Trash2, ChevronUp, ChevronDown, Check, X, LoaderCircle } from 'lucide-react';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import { Card, CardContent } from '@/components/ui/card';

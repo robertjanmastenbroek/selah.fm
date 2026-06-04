@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music4, Clapperboard, ArrowRight, Check, ArrowLeft, Sparkles, Search, Loader2 } from 'lucide-react';
+import { Music4, Clapperboard, ArrowRight, Check, ArrowLeft, Sparkles, Search, LoaderCircle } from 'lucide-react';
 
 const genreOptions = ['Pop','Hip-Hop','Electronic','Rock','Indie','R&B','Jazz','Classical','Country','Metal'];
 const platformOptions = ['TikTok','Instagram Reels','YouTube Shorts','Facebook'];
@@ -278,7 +278,7 @@ export default function OnboardingPage() {
               />
               <button onClick={handleConnectSearch} disabled={connecting||!connectQuery.trim()}
                 className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                {connecting?<><Loader2 size={16} className="animate-spin"/> Searching...</>:<>Search <Search size={16}/></>}
+                {connecting?<><LoaderCircle size={16} className="animate-spin"/> Searching...</>:<>Search <Search size={16}/></>}
               </button>
               {connectError&&<p className="text-xs text-red-400">{connectError}</p>}
               {connectResults.length>0&&(
@@ -295,7 +295,7 @@ export default function OnboardingPage() {
                         <p className="text-sm font-semibold truncate">{r.artist_name}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{r.genres?.slice(0,2).join(', ')||'Artist'}</p>
                       </div>
-                      {claiming===r.id?<Loader2 size={16} className="animate-spin shrink-0"/>:claimedId===r.id?<Check size={16} className="text-emerald-400 shrink-0"/>:<ArrowRight size={16} className="text-muted-foreground/30 shrink-0"/>}
+                      {claiming===r.id?<LoaderCircle size={16} className="animate-spin shrink-0"/>:claimedId===r.id?<Check size={16} className="text-emerald-400 shrink-0"/>:<ArrowRight size={16} className="text-muted-foreground/30 shrink-0"/>}
                     </button>
                   ))}
                 </div>
@@ -363,7 +363,7 @@ export default function OnboardingPage() {
                     <p className="text-xs text-muted-foreground">Stripe handles your payout info securely.</p>
                     <button onClick={handleStripeConnect} disabled={stripeLoading}
                       className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                      {stripeLoading ? <><Loader2 size={16} className="animate-spin"/> Opening Stripe...</> : 'Connect Stripe →'}
+                      {stripeLoading ? <><LoaderCircle size={16} className="animate-spin"/> Opening Stripe...</> : 'Connect Stripe →'}
                     </button>
                     <button onClick={nextStep} className="text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors">
                       Skip for now

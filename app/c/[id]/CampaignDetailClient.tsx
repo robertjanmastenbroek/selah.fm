@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 import EarnModal from '@/components/EarnModal';
 import {
-  Heart, X, Play, Copy, Check, Music2, BarChart3,
+  Heart, X, Play, Copy, Check, Music2, ChartBar,
   ChevronRight, Sparkles, Share2, TrendingUp, DollarSign,
   Film, ChevronDown, Shield, Eye, Bookmark
 } from 'lucide-react';
@@ -98,7 +98,7 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
   return (
     <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-indigo-500/[0.03] border border-white/[0.06] p-5">
       <div className="flex items-center gap-2 mb-4">
-        <BarChart3 size={16} className="text-indigo-400" />
+        <ChartBar size={16} className="text-indigo-400" />
         <h3 className="font-semibold text-sm">How much you could earn</h3>
       </div>
 

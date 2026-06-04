@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import {
-  Heart, ArrowLeft, Shield, Lock, AlertCircle, Check, Zap, Wallet,
+  Heart, ArrowLeft, Shield, Lock, CircleAlert, Check, Zap, Wallet,
   DollarSign, Sparkles, Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -433,7 +433,7 @@ export default function CheckoutPage() {
           <div>
             {!PUBLISHABLE_KEY ? (
               <div className="rounded-2xl bg-yellow-500/5 border border-yellow-500/10 p-6 text-center space-y-3">
-                <AlertCircle size={32} className="mx-auto text-yellow-400/60" />
+                <CircleAlert size={32} className="mx-auto text-yellow-400/60" />
                 <h3 className="font-semibold text-white/80">Payment not configured</h3>
                 <p className="text-xs text-white/40">Stripe keys need to be set for payments to work.</p>
               </div>
@@ -450,7 +450,7 @@ export default function CheckoutPage() {
               </div>
             ) : paymentError ? (
               <div className="rounded-2xl bg-red-500/5 border border-red-500/10 p-4 text-xs text-red-400 flex items-start gap-2">
-                <AlertCircle size={14} className="shrink-0 mt-0.5" />{paymentError}
+                <CircleAlert size={14} className="shrink-0 mt-0.5" />{paymentError}
               </div>
             ) : clientSecret ? (
               <Elements stripe={stripePromise} options={{

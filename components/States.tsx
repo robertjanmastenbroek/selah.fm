@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Inbox, AlertTriangle } from 'lucide-react';
+import { Inbox, TriangleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -83,7 +83,7 @@ export function ErrorState({ title = "Something went wrong", message = "We could
         transition={{ delay: 0.1, type: 'spring', stiffness: 300 }}
         className="mx-auto mb-5 text-red-400/20"
       >
-        <AlertTriangle size={48} strokeWidth={1} />
+        <TriangleAlert size={48} strokeWidth={1} />
       </motion.div>
       <motion.h3
         initial={{ opacity: 0 }}

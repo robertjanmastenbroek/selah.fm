@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Video, Music, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
+import { X, Video, Music, ExternalLink, LoaderCircle, CircleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -188,7 +188,7 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
                   {/* Error */}
                   {error && (
                     <div className="rounded-xl bg-red-500/5 border border-red-500/10 p-3 text-xs text-red-400 flex items-start gap-2">
-                      <AlertCircle size={12} className="shrink-0 mt-0.5" />{error}
+                      <CircleAlert size={12} className="shrink-0 mt-0.5" />{error}
                     </div>
                   )}
 
@@ -200,7 +200,7 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
                                hover:shadow-[0_0_40px_rgba(34,197,94,0.3)]
                                disabled:opacity-50 transition-all active:scale-[0.98]">
                     {sending ? (
-                      <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Submitting...</span>
+                      <span className="flex items-center gap-2"><LoaderCircle size={16} className="animate-spin" /> Submitting...</span>
                     ) : (
                       <span className="flex items-center gap-2"><Video size={18} /> Submit video</span>
                     )}

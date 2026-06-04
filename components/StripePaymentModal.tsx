@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Button } from '@/components/ui/button';
-import { Shield, Lock, DollarSign, Heart, AlertCircle, X, Check } from 'lucide-react';
+import { Shield, Lock, DollarSign, Heart, CircleAlert, X, Check } from 'lucide-react';
 
 const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = PUBLISHABLE_KEY ? loadStripe(PUBLISHABLE_KEY) : null;
@@ -102,7 +102,7 @@ function CheckoutForm({ onSuccess, onClose, amount, mode }: {
 
       {error && (
         <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400 flex items-start gap-2">
-          <AlertCircle size={14} className="shrink-0 mt-0.5" />
+          <CircleAlert size={14} className="shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
       )}
@@ -157,7 +157,7 @@ export default function StripePaymentModal({
             className="relative z-10 w-full max-w-sm rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl overflow-hidden"
           >
             <div className="p-8 text-center space-y-4">
-              <AlertCircle size={40} className="mx-auto text-yellow-400/60" />
+              <CircleAlert size={40} className="mx-auto text-yellow-400/60" />
               <h3 className="font-semibold text-lg">Payment system not configured</h3>
               <p className="text-sm text-muted-foreground">
                 Stripe is not connected yet. Add <code className="text-xs bg-white/[0.04] px-1.5 py-0.5 rounded">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</code> to your environment.

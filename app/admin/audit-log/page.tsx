@@ -6,7 +6,7 @@ export default function AuditLogPage() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('');
+  const [filter, setListFilter] = useState('');
 
   useEffect(() => {
     fetch(`/api/admin/audit-log?limit=100${filter ? `&action=${filter}` : ''}`)
@@ -23,7 +23,7 @@ export default function AuditLogPage() {
 
       <div className="flex gap-2 mb-4">
         {actions.map(a => (
-          <button key={a} onClick={() => setFilter(a)}
+          <button key={a} onClick={() => setListFilter(a)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === a ? 'bg-primary/20 text-primary' : 'bg-white/[0.03] text-muted-foreground hover:bg-white/[0.06]'}`}>
             {a || 'All'}
           </button>

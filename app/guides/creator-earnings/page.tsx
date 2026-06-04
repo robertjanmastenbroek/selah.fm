@@ -158,7 +158,7 @@ export default async function CreatorEarningsGuide() {
               <p>Ready to earn from your content? Here's how to start:</p>
               <ol className="list-decimal pl-5 space-y-2">
                 <li>Sign up for free at <Link href="/login" className="text-primary hover:underline">selah.fm/login</Link> — no follower minimums, no approval process.</li>
-                <li>Browse open campaigns. Filter by CPM rate, genre, and budget to find tracks you actually like.</li>
+                <li>Browse open campaigns. ListFilter by CPM rate, genre, and budget to find tracks you actually like.</li>
                 <li>Create content. Make TikToks, Reels, or Shorts featuring the track. Be creative — artists approve every submission.</li>
                 <li>Submit your video link. Paste the public URL and wait for artist approval.</li>
                 <li>Get paid per view. Once approved, your video starts earning. Track views and earnings in real time from your dashboard.</li>

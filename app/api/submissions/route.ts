@@ -174,7 +174,7 @@ export async function GET(request: Request) {
     const campaignId = searchParams.get('campaignId');
     const artistId = searchParams.get('artistId');
     const creatorId = searchParams.get("creator_id");
-    const statusFilter = searchParams.get('status');
+    const statusListFilter = searchParams.get('status');
     let submissions;
 
     // If creatorId is provided, get submissions by that creator
@@ -189,7 +189,7 @@ export async function GET(request: Request) {
         ORDER BY s.submitted_at DESC LIMIT 50
       `;
     } else if (artistId) {
-      const statusCondition = statusFilter ? `AND s.review_status = $2` : '';
+      const statusCondition = statusListFilter ? `AND s.review_status = $2` : '';
       const query = `
         SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
           u.display_name as creator_name
@@ -200,17 +200,17 @@ export async function GET(request: Request) {
         WHERE cc.discovered_artist_id = $1 ${statusCondition}
         ORDER BY s.submitted_at DESC
       `;
-      const params = statusFilter ? [artistId, statusFilter] : [artistId];
+      const params = statusListFilter ? [artistId, statusListFilter] : [artistId];
       submissions = await sql.raw(query, params);
     } else if (campaignId && campaignId !== 'all') {
-      if (statusFilter) {
+      if (statusListFilter) {
         submissions = await sql`
           SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
             u.display_name as creator_name
           FROM submissions s
           JOIN campaigns c ON c.id = s.campaign_id
           LEFT JOIN users u ON u.id = s.creator_id
-          WHERE s.campaign_id = ${campaignId} AND s.review_status = ${statusFilter}
+          WHERE s.campaign_id = ${campaignId} AND s.review_status = ${statusListFilter}
           ORDER BY s.submitted_at DESC
         `;
       } else {
@@ -225,14 +225,14 @@ export async function GET(request: Request) {
         `;
       }
     } else {
-      if (statusFilter) {
+      if (statusListFilter) {
         submissions = await sql`
           SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
             u.display_name as creator_name
           FROM submissions s
           JOIN campaigns c ON c.id = s.campaign_id
           LEFT JOIN users u ON u.id = s.creator_id
-          WHERE s.review_status = ${statusFilter}
+          WHERE s.review_status = ${statusListFilter}
           ORDER BY s.submitted_at DESC
         `;
       } else {

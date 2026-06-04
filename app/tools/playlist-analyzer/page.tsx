@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, AlertTriangle, Check, ExternalLink, Music, Users, BarChart3 } from 'lucide-react';
+import { Search, TriangleAlert, Check, ExternalLink, Music, Users, ChartBar } from 'lucide-react';
 import Header from '@/components/TopNav';
 
 export default function PlaylistAnalyzerPage() {
@@ -76,7 +76,7 @@ export default function PlaylistAnalyzerPage() {
 
         {error && (
           <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-4 text-sm text-amber-400/80 flex items-start gap-2">
-            <AlertTriangle size={16} className="shrink-0 mt-0.5" /> {error}
+            <TriangleAlert size={16} className="shrink-0 mt-0.5" /> {error}
           </div>
         )}
 
@@ -139,7 +139,7 @@ export default function PlaylistAnalyzerPage() {
             {/* Metrics */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: 'Bot Score', value: `${result.botScore || 0}/100`, icon: BarChart3 },
+                { label: 'Bot Score', value: `${result.botScore || 0}/100`, icon: ChartBar },
                 { label: 'Tracks', value: result.trackCount || '0', icon: Music },
                 { label: 'Followers', value: result.followers?.toLocaleString() || '0', icon: Users },
               ].map(m => (
@@ -158,7 +158,7 @@ export default function PlaylistAnalyzerPage() {
                 <div className="space-y-2">
                   {result.flags.map((f: string, i: number) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <AlertTriangle size={12} className="shrink-0 mt-0.5 text-amber-400" />
+                      <TriangleAlert size={12} className="shrink-0 mt-0.5 text-amber-400" />
                       {f}
                     </div>
                   ))}

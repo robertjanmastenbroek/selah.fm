@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Sparkles, Loader2, FileText, ExternalLink, Check, Mic, BookOpen, Database } from 'lucide-react';
+import { ArrowLeft, Sparkles, LoaderCircle, FileText, ExternalLink, Check, Mic, BookOpen, Database } from 'lucide-react';
 
 function GeneratorContent() {
   const searchParams = useSearchParams();
@@ -89,7 +89,7 @@ function GeneratorContent() {
             className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-600 text-white font-semibold text-sm hover:bg-amber-500 disabled:bg-gray-700 disabled:text-gray-500 transition-all"
           >
             {generating ? (
-              <><Loader2 size={14} className="animate-spin" /> Generating...</>
+              <><LoaderCircle size={14} className="animate-spin" /> Generating...</>
             ) : stats.chunks === 0 ? (
               'Do interviews first →'
             ) : (
@@ -116,7 +116,7 @@ function GeneratorContent() {
       {/* Generating state */}
       {generating && (
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-12 text-center space-y-4">
-          <Loader2 size={32} className="animate-spin mx-auto text-primary" />
+          <LoaderCircle size={32} className="animate-spin mx-auto text-primary" />
           <div>
             <p className="text-sm font-medium">Generating blog post...</p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -193,7 +193,7 @@ export default function BlogGeneratorPage() {
   return (
     <Suspense fallback={
       <div className="p-12 text-center">
-        <Loader2 size={24} className="animate-spin mx-auto mb-3 text-primary" />
+        <LoaderCircle size={24} className="animate-spin mx-auto mb-3 text-primary" />
         <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     }>

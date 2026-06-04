@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Bug, RefreshCw, CheckCircle, Clock, AlertTriangle, Trash2 } from 'lucide-react';
+import { Bug, RefreshCw, CircleCheck, Clock, TriangleAlert, Trash2 } from 'lucide-react';
 
 export default function BugsPage() {
   return <BugsContent />;
@@ -14,7 +14,7 @@ function BugsContent() {
   const [bugs, setBugs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [statusFilter, setStatusFilter] = useState('new');
+  const [statusListFilter, setStatusListFilter] = useState('new');
   const [toast, setToast] = useState('');
 
   const loadBugs = async () => {
@@ -60,8 +60,8 @@ function BugsContent() {
 
   const severityIcon = (s: string) => {
     switch (s) {
-      case 'critical': return <AlertTriangle size={14} className="text-red-400" />;
-      case 'high': return <AlertTriangle size={14} className="text-orange-400" />;
+      case 'critical': return <TriangleAlert size={14} className="text-red-400" />;
+      case 'high': return <TriangleAlert size={14} className="text-orange-400" />;
       case 'medium': return <Bug size={14} className="text-yellow-400" />;
       default: return <Bug size={14} className="text-muted-foreground" />;
     }
@@ -77,7 +77,7 @@ function BugsContent() {
     }
   };
 
-  const filtered = statusFilter === 'all' ? bugs : bugs.filter(b => b.status === statusFilter);
+  const filtered = statusListFilter === 'all' ? bugs : bugs.filter(b => b.status === statusListFilter);
   const newCount = bugs.filter(b => b.status === 'new').length;
 
   return (
@@ -108,9 +108,9 @@ function BugsContent() {
         {['all', 'new', 'in_progress', 'fixed', 'closed'].map(tab => (
           <button
             key={tab}
-            onClick={() => setStatusFilter(tab)}
+            onClick={() => setStatusListFilter(tab)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              statusFilter === tab
+              statusListFilter === tab
                 ? 'bg-white/[0.06] text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -135,10 +135,10 @@ function BugsContent() {
       ) : filtered.length === 0 ? (
         <Card className="text-center py-16">
           <CardContent>
-            <CheckCircle size={40} className="mx-auto mb-4 text-emerald-400/30" />
+            <CircleCheck size={40} className="mx-auto mb-4 text-emerald-400/30" />
             <h2 className="text-lg font-medium mb-1">All clear</h2>
             <p className="text-muted-foreground text-sm">
-              {statusFilter === 'all' ? 'No bugs reported yet.' : `No ${statusFilter} bugs.`}
+              {statusListFilter === 'all' ? 'No bugs reported yet.' : `No ${statusListFilter} bugs.`}
             </p>
           </CardContent>
         </Card>
@@ -178,7 +178,7 @@ function BugsContent() {
                       onClick={() => updateBug(bug.id, 'fixed')}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
                     >
-                      <CheckCircle size={12} /> Fixed
+                      <CircleCheck size={12} /> Fixed
                     </button>
                   )}
                   {bug.status === 'new' && (

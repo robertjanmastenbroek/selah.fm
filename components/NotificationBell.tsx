@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Bell, CheckCircle, XCircle, Banknote, Info, Send, DollarSign, Sparkles, MessageCircle, Heart } from 'lucide-react';
+import { Bell, CircleCheck, CircleX, Banknote, Info, Send, DollarSign, Sparkles, MessageCircle, Heart } from 'lucide-react';
 
 const typeIcons: Record<string, React.ElementType> = {
   submission: Send,
-  approval: CheckCircle,
-  rejection: XCircle,
+  approval: CircleCheck,
+  rejection: CircleX,
   earning: Banknote,
   payout: DollarSign,
   system: Info,

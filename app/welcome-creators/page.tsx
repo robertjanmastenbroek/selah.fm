@@ -54,7 +54,7 @@ export default function WelcomeCreatorsPage() {
         </motion.div>
         <div className="max-w-4xl mx-auto px-6 grid md:grid-cols-3 gap-8">
           {[
-            { step: '01', icon: Search, title: 'Browse & Pick', desc: 'Find tracks you actually like from 1,200+ campaigns. Filter by genre, CPM rate, and budget.' },
+            { step: '01', icon: Search, title: 'Browse & Pick', desc: 'Find tracks you actually like from 1,200+ campaigns. ListFilter by genre, CPM rate, and budget.' },
             { step: '02', icon: Camera, title: 'Make & Post', desc: 'Create a TikTok, Reel, or Short with the track. 15-60 seconds. Vertical. Public account. That\'s it.' },
             { step: '03', icon: DollarSign, title: 'Earn Per View', desc: 'Artist approves your video. You earn per 1,000 verified views. Paid weekly via Stripe.' }
           ].map((s, i) => {

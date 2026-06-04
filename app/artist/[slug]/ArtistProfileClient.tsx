@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Heart, Video, Music, ExternalLink, MessageCircle, Users, DollarSign, Sparkles, Check, ChevronDown, BarChart3 } from 'lucide-react';
+import { Heart, Video, Music, ExternalLink, MessageCircle, Users, DollarSign, Sparkles, Check, ChevronDown, ChartBar } from 'lucide-react';
 import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
 import ActivityFeed from '@/components/ActivityFeed';
@@ -363,7 +363,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
             <div className="flex border-b border-white/[0.06] mb-6 overflow-x-auto">
               {[
                 { id: 'tracks', label: 'Tracks', icon: <Music size={13} /> },
-                { id: 'activity', label: 'Activity', icon: <BarChart3 size={13} /> },
+                { id: 'activity', label: 'Activity', icon: <ChartBar size={13} /> },
                 { id: 'about', label: 'About', icon: <Users size={13} /> },
                 { id: 'comments', label: 'Reviews & Comments', icon: <MessageCircle size={13} /> },
               ].map(tab => (

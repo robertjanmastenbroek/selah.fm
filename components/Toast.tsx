@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, AlertTriangle, Undo } from 'lucide-react';
+import { Check, X, TriangleAlert, Undo } from 'lucide-react';
 
 interface Toast {
   id: string;
@@ -32,7 +32,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const iconMap = {
     success: <Check size={14} />,
-    error: <AlertTriangle size={14} />,
+    error: <TriangleAlert size={14} />,
     info: null,
     undo: null,
   };

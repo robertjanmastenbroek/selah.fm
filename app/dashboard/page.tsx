@@ -13,10 +13,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  LayoutDashboard, Megaphone, UserCircle, DollarSign, Plus,
+  LayoutDashboard, Megaphone, User, DollarSign, Plus,
   ExternalLink, Music, Video, TrendingUp, Heart,
-  Check, Sparkles, Loader2, Save, Copy, Music2,
-  BarChart3, Filter, Clock, Percent, Bug
+  Check, Sparkles, LoaderCircle, Save, Copy, Music2,
+  ChartBar, SlidersHorizontal, Clock, Percent, Bug
 } from 'lucide-react';
 import DisputeButton from '@/components/DisputeButton';
 import DashboardChart from '@/components/DashboardChart';
@@ -199,9 +199,9 @@ function DashboardContent() {
   const tabs: { id: TabId; label: string; icon: any }[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: 'tracks', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone },
-    { id: 'profile', label: 'Profile', icon: UserCircle },
+    { id: 'profile', label: 'Profile', icon: User },
     { id: 'earnings', label: 'Earnings', icon: DollarSign },
-  { id: 'kanban', label: 'Board', icon: <BarChart3 size={14} /> },  ];
+  { id: 'kanban', label: 'Board', icon: <ChartBar size={14} /> },  ];
 
   return (
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
@@ -267,7 +267,7 @@ function DashboardContent() {
                 { label: 'Submissions', value: String(earningsData?.submissions?.length || 0), icon: Video },
                 { label: 'Total earned', value: formatDollars(earningsData?.totalEarned || 0), icon: DollarSign },
                 { label: 'Paid out', value: formatDollars(earningsData?.totalPaid || 0), icon: Check },
-                { label: 'Pending', value: formatDollars(earningsData?.totalPending || 0), icon: Loader2 },
+                { label: 'Pending', value: formatDollars(earningsData?.totalPending || 0), icon: LoaderCircle },
               ]).map((s, i) => {
                 const Icon = s.icon;
                 return (
@@ -573,7 +573,7 @@ function DashboardContent() {
                     {/* Save */}
                     <div className="flex items-center gap-3 pt-2">
                       <Button onClick={saveProfile} disabled={saving || !bioChanged} className="flex items-center gap-2">
-                        {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                        {saving ? <LoaderCircle size={14} className="animate-spin" /> : <Save size={14} />}
                         {saving ? 'Saving...' : 'Save changes'}
                       </Button>
                       {!bioChanged && <span className="text-xs text-muted-foreground/50">No unsaved changes</span>}
@@ -597,7 +597,7 @@ function DashboardContent() {
                           onKeyDown={e => e.key === 'Enter' && handleImport()} />
                         <button onClick={handleImport} disabled={importing || !importUrl.trim()}
                           className="px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-semibold disabled:opacity-40 hover:opacity-90 transition-all flex items-center gap-1.5 shrink-0">
-                          {importing ? <><Loader2 size={14} className="animate-spin" /> Scanning</> : 'Import'}
+                          {importing ? <><LoaderCircle size={14} className="animate-spin" /> Scanning</> : 'Import'}
                         </button>
                       </div>
                       {importResult && (
@@ -638,7 +638,7 @@ function DashboardContent() {
                 </>
               ) : (
                 <Card><CardContent className="p-8 text-center">
-                  <UserCircle size={32} className="mx-auto mb-3 text-muted-foreground/20" />
+                  <User size={32} className="mx-auto mb-3 text-muted-foreground/20" />
                   <p className="text-sm font-medium mb-1">No artist profile yet</p>
                   <p className="text-xs text-muted-foreground mb-4">Create your artist profile to start managing your music.</p>
                   <a href="/onboarding?role=artist"><Button size="sm">Create artist profile</Button></a>
@@ -912,7 +912,7 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
           {pendingBonuses > 0 && (
             <button onClick={withdraw} disabled={withdrawing}
               className="shrink-0 px-3 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-medium transition-colors flex items-center gap-1 disabled:opacity-40">
-              {withdrawing ? <Loader2 size={12} className="animate-spin" /> : <DollarSign size={12} />}
+              {withdrawing ? <LoaderCircle size={12} className="animate-spin" /> : <DollarSign size={12} />}
               Withdraw ${(totalPendingCents / 100).toFixed(2)}
             </button>
           )}

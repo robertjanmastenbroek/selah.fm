@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, CheckCircle, Circle, Clock, Send, FileText, Eye } from 'lucide-react';
+import { ArrowLeft, MessageSquare, CircleCheck, Circle, Clock, Send, FileText, Eye } from 'lucide-react';
 
 export default function BatchDetailPage() {
   const params = useParams();
@@ -198,7 +198,7 @@ export default function BatchDetailPage() {
               >
                 <div className="shrink-0">
                   {isAnswered ? (
-                    <CheckCircle size={18} className="text-emerald-400" />
+                    <CircleCheck size={18} className="text-emerald-400" />
                   ) : interview.status === 'in_progress' ? (
                     <Clock size={18} className="text-amber-400" />
                   ) : (

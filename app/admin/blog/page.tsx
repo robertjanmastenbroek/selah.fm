@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Play, CheckCircle, Clock, FileText, RefreshCw, Send, Edit3, ArrowRight } from 'lucide-react';
+import { BookOpen, Play, CircleCheck, Clock, FileText, RefreshCw, Send, Pen, ArrowRight } from 'lucide-react';
 
 export default function AdminBlogPage() {
   const [overview, setOverview] = useState<any>(null);
@@ -61,7 +61,7 @@ export default function AdminBlogPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: 'Published', value: overview.publishedPosts, icon: FileText },
-            { label: 'Drafts', value: draftPosts.length, icon: Edit3 },
+            { label: 'Drafts', value: draftPosts.length, icon: Pen },
             { label: 'Scheduled', value: overview.scheduledPosts, icon: Clock },
             { label: 'Voice Chunks', value: overview.voiceLibrarySize, icon: BookOpen },
             { label: 'Next Post', value: overview.nextPost ? new Date(overview.nextPost.publish_at).toLocaleDateString() : '—', icon: Send },
@@ -110,7 +110,7 @@ export default function AdminBlogPage() {
         {/* Drafts */}
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
           <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-            <Edit3 size={14} className="text-amber-400" /> Drafts ({draftPosts.length})
+            <Pen size={14} className="text-amber-400" /> Drafts ({draftPosts.length})
           </h2>
           {draftPosts.length === 0 ? (
             <p className="text-xs text-muted-foreground py-4 text-center">No drafts. Generate previews from the batch editor.</p>
@@ -150,7 +150,7 @@ export default function AdminBlogPage() {
         {/* Published */}
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
           <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-            <CheckCircle size={14} className="text-emerald-400" /> Published ({publishedPosts.length})
+            <CircleCheck size={14} className="text-emerald-400" /> Published ({publishedPosts.length})
           </h2>
           {publishedPosts.length === 0 ? (
             <p className="text-xs text-muted-foreground py-4 text-center">No published posts yet.</p>

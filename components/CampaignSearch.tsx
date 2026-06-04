@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 
-export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) => void }) {
+export default function CampaignSearch({ onListFilter }: { onListFilter: (filters: any) => void }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [platform, setPlatform] = useState('');
@@ -16,16 +16,16 @@ export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) 
     if (!mountedRef.current) { mountedRef.current = true; return; }
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      onFilter({ search, platform, minCpm: minCpm ? parseFloat(minCpm) : undefined });
+      onListFilter({ search, platform, minCpm: minCpm ? parseFloat(minCpm) : undefined });
     }, 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [search]);
 
   // Apply platform/minCpm immediately
-  const applyFilters = (p?: string, c?: string) => {
+  const applyListFilters = (p?: string, c?: string) => {
     const plat = p ?? platform;
     const cpm = c ?? minCpm;
-    onFilter({ search, platform: plat, minCpm: cpm ? parseFloat(cpm) : undefined });
+    onListFilter({ search, platform: plat, minCpm: cpm ? parseFloat(cpm) : undefined });
   };
 
   return (
@@ -46,7 +46,7 @@ export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) 
           />
           <select
             value={platform}
-            onChange={e => { setPlatform(e.target.value); applyFilters(e.target.value, minCpm); }}
+            onChange={e => { setPlatform(e.target.value); applyListFilters(e.target.value, minCpm); }}
             className="w-full border rounded-md px-3 py-2 text-sm bg-background"
           >
             <option value="">All platforms</option>
@@ -56,14 +56,14 @@ export default function CampaignSearch({ onFilter }: { onFilter: (filters: any) 
           </select>
           <Input
             value={minCpm}
-            onChange={e => { setMinCpm(e.target.value); applyFilters(platform, e.target.value); }}
+            onChange={e => { setMinCpm(e.target.value); applyListFilters(platform, e.target.value); }}
             placeholder="Min CPM ($)"
             type="number"
           />
           <button
             onClick={() => {
               setSearch(''); setPlatform(''); setMinCpm('');
-              onFilter({}); setOpen(false);
+              onListFilter({}); setOpen(false);
             }}
             className="w-full text-xs text-muted-foreground hover:text-foreground py-1.5 transition-colors"
           >

@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   Music4, Clapperboard, ArrowRight, Shield,
   BadgeCheck, Eye, Upload, DollarSign, Heart, Star, Check,
-  BarChart3, ChevronDown
+  ChartBar, ChevronDown
 } from 'lucide-react';
 
 function formatCount(n: number): string {
@@ -45,7 +45,7 @@ function CalculatorSection() {
   return (
     <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-indigo-500/[0.03] border border-indigo-500/10 p-6">
       <div className="flex items-center gap-3 mb-5">
-        <BarChart3 size={20} className="text-indigo-400" />
+        <ChartBar size={20} className="text-indigo-400" />
         <div>
           <p className="text-sm font-semibold text-white/90">Earnings calculator</p>
           <p className="text-[10px] text-white/30">At $10.00 CPM (industry average)</p>

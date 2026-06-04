@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ExternalLink, MessageCircle, AtSign, Sparkles, Loader2, ChevronRight, CheckSquare, Square, Wand2, XCircle } from 'lucide-react';
+import { Search, ExternalLink, MessageCircle, AtSign, Sparkles, LoaderCircle, ChevronRight, SquareCheck, Square, Wand, CircleX } from 'lucide-react';
 
 interface Question {
   question: string;
@@ -118,7 +118,7 @@ export default function SourceQuestionsPage() {
   if (loading) {
     return (
       <div className="p-12 text-center">
-        <Loader2 size={24} className="animate-spin mx-auto mb-3 text-primary" />
+        <LoaderCircle size={24} className="animate-spin mx-auto mb-3 text-primary" />
         <p className="text-sm text-muted-foreground">Fetching real questions from Reddit...</p>
       </div>
     );
@@ -147,7 +147,7 @@ export default function SourceQuestionsPage() {
         <button onClick={selectAll}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border border-white/[0.06] hover:bg-white/[0.04] transition-colors">
           {selected.size >= filtered.length && filtered.length > 0 ? (
-            <><CheckSquare size={12} /> Deselect all</>
+            <><SquareCheck size={12} /> Deselect all</>
           ) : (
             <><Square size={12} /> Select all</>
           )}
@@ -159,9 +159,9 @@ export default function SourceQuestionsPage() {
             <button onClick={batchGenerate} disabled={batchGenerating}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50 transition-colors">
               {batchGenerating ? (
-                <><Loader2 size={12} className="animate-spin" /> Generating...</>
+                <><LoaderCircle size={12} className="animate-spin" /> Generating...</>
               ) : (
-                <><Wand2 size={12} /> Generate {selected.size} posts</>
+                <><Wand size={12} /> Generate {selected.size} posts</>
               )}
             </button>
           </>
@@ -172,7 +172,7 @@ export default function SourceQuestionsPage() {
       <div className="relative">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Filter questions..." className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none" />
+          placeholder="ListFilter questions..." className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none" />
       </div>
 
       {/* Batch result */}
@@ -232,7 +232,7 @@ export default function SourceQuestionsPage() {
                       {/* Checkbox */}
                       <button onClick={() => toggleSelect(q.question)}
                         className="mt-0.5 shrink-0 text-muted-foreground hover:text-primary transition-colors">
-                        {isSelected ? <CheckSquare size={14} className="text-purple-400" /> : <Square size={14} />}
+                        {isSelected ? <SquareCheck size={14} className="text-purple-400" /> : <Square size={14} />}
                       </button>
 
                       {/* Question + click to generate */}
@@ -253,7 +253,7 @@ export default function SourceQuestionsPage() {
                         <button onClick={(e) => skipQuestion(q.question, e)}
                           className="text-muted-foreground hover:text-red-400 transition-colors p-1 -m-1"
                           title="Skip — mark as irrelevant">
-                          <XCircle size={12} />
+                          <CircleX size={12} />
                         </button>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-muted-foreground flex items-center gap-1">
                           <PlatformIcon size={10} /> {q.platform}
@@ -287,7 +287,7 @@ export default function SourceQuestionsPage() {
                   }`}>
                   <button onClick={() => toggleSelect(q.question)}
                     className="mt-0.5 shrink-0 text-muted-foreground hover:text-primary transition-colors">
-                    {isSelected ? <CheckSquare size={14} className="text-purple-400" /> : <Square size={14} />}
+                    {isSelected ? <SquareCheck size={14} className="text-purple-400" /> : <Square size={14} />}
                   </button>
                   <button onClick={() => goToGenerator(q.question)} className="flex-1 text-left min-w-0">
                     <p className="text-sm text-white group-hover:text-primary transition-colors leading-relaxed">{q.question}</p>
@@ -295,7 +295,7 @@ export default function SourceQuestionsPage() {
                   <div className="flex items-center gap-2 shrink-0">
                     <button onClick={(e) => skipQuestion(q.question, e)}
                       className="text-muted-foreground hover:text-red-400 transition-colors p-1 -m-1" title="Skip">
-                      <XCircle size={12} />
+                      <CircleX size={12} />
                     </button>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] text-muted-foreground flex items-center gap-1">
                       <PlatformIcon size={10} /> {q.platform}

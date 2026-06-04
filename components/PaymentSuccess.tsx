@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, DollarSign, Share2, Copy, CheckCircle, ArrowRight, X } from 'lucide-react';
+import { Heart, DollarSign, Share2, Copy, CircleCheck, ArrowRight, X } from 'lucide-react';
 import Link from 'next/link';
 
 interface PaymentSuccessProps {
@@ -125,7 +125,7 @@ export default function PaymentSuccess({
       action: handleCopy,
       color: copied ? '#81C784' : '#4338CA',
       bg: copied ? 'bg-emerald-500/10' : 'bg-primary/10',
-      icon: copied ? <CheckCircle size={18} /> : <Copy size={16} />,
+      icon: copied ? <CircleCheck size={18} /> : <Copy size={16} />,
     },
   ];
 
@@ -186,7 +186,7 @@ export default function PaymentSuccess({
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4, type: 'spring', stiffness: 400 }}
                 >
-                  <CheckCircle size={40} className="text-emerald-400" strokeWidth={1.5} />
+                  <CircleCheck size={40} className="text-emerald-400" strokeWidth={1.5} />
                 </motion.div>
               </motion.div>
 

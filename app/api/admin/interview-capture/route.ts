@@ -168,7 +168,7 @@ async function generateQuestions(topic: string, count: number) {
     }).filter(Boolean)
   );
 
-  // Filter out previously answered questions from fallbacks
+  // ListFilter out previously answered questions from fallbacks
   const freshFallbacks = fallbacks
     ? fallbacks.filter(q => !prevQuestions.has(q.toLowerCase().trim()))
     : null;

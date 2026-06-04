@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music4, DollarSign, FileText, Sparkles, ArrowRight, ArrowLeft, Check, Loader2, Plus, Search, X } from 'lucide-react';
+import { Music4, DollarSign, FileText, Sparkles, ArrowRight, ArrowLeft, Check, LoaderCircle, Plus, Search, X } from 'lucide-react';
 
 const cpmTiers = [
   { value: 0.5, label: 'Basic', cpmDisplay: '$0.50', per1M: '$500', desc: 'Good for testing' },
@@ -214,7 +214,7 @@ export default function CreateCampaignPage() {
 
               <button onClick={handleCreate} disabled={saving}
                 className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                {saving ? <><Loader2 size={16} className="animate-spin" /> Launching...</> : <><Sparkles size={16} /> Launch campaign</>}
+                {saving ? <><LoaderCircle size={16} className="animate-spin" /> Launching...</> : <><Sparkles size={16} /> Launch campaign</>}
               </button>
             </motion.div>
           )}

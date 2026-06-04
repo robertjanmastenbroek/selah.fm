@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Mic, BookOpen, Database, ArrowRight, Sparkles, FileText, CheckCircle, Clock, Layers } from 'lucide-react';
+import { Mic, BookOpen, Database, ArrowRight, Sparkles, FileText, CircleCheck, Clock, Layers } from 'lucide-react';
 
 export default function ContentHub() {
   const [data, setData] = useState<any>(null);

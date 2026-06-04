@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertCircle, Loader2, Check, MessageCircle } from 'lucide-react';
+import { CircleAlert, LoaderCircle, Check, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/Toast';
 
@@ -71,7 +71,7 @@ export default function DisputeButton({ submissionId, onDisputeFiled }: DisputeB
       {open && !result?.ok && (
         <div className="mt-2 space-y-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
           <div className="flex items-start gap-2">
-            <AlertCircle size={14} className="text-amber-400 shrink-0 mt-0.5" />
+            <CircleAlert size={14} className="text-amber-400 shrink-0 mt-0.5" />
             <div>
               <p className="text-xs font-medium text-amber-300">Dispute this rejection</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -103,7 +103,7 @@ export default function DisputeButton({ submissionId, onDisputeFiled }: DisputeB
                 className="text-[11px] h-7"
               >
                 {submitting ? (
-                  <><Loader2 size={10} className="animate-spin mr-1" /> Submitting</>
+                  <><LoaderCircle size={10} className="animate-spin mr-1" /> Submitting</>
                 ) : (
                   'Submit dispute'
                 )}

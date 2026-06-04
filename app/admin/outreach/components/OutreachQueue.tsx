@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Music2, Loader2, Check } from 'lucide-react';
+import { Send, Music2, LoaderCircle, Check } from 'lucide-react';
 import type { Toast } from './ToastBar';
 
 interface QueueArtist {
@@ -124,7 +124,7 @@ export default function OutreachQueue({ count, actionLoading, setActionLoading, 
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {isBusy && actionLoading !== `log-${artist.id}` ? (
-                    <Loader2 size={14} className="animate-spin text-[#22C55E]" />
+                    <LoaderCircle size={14} className="animate-spin text-[#22C55E]" />
                   ) : (
                     <>
                       <motion.button
@@ -149,7 +149,7 @@ export default function OutreachQueue({ count, actionLoading, setActionLoading, 
                           hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20
                           transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
                       >
-                        {actionLoading === `log-${artist.id}` ? <Loader2 size={11} className="animate-spin" /> : <Check size={12} />}
+                        {actionLoading === `log-${artist.id}` ? <LoaderCircle size={11} className="animate-spin" /> : <Check size={12} />}
                       </motion.button>
                     </>
                   )}

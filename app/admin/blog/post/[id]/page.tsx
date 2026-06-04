@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Eye, Save, Send, Calendar, Edit3, Tag, Clock } from 'lucide-react';
+import { ArrowLeft, Eye, Save, Send, Calendar, Pen, Tag, Clock } from 'lucide-react';
 
 export default function BlogPostEditor() {
   const params = useParams();
@@ -185,7 +185,7 @@ export default function BlogPostEditor() {
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold flex items-center gap-2"><Eye size={14} className="text-primary" /> SEO Preview</h2>
           <button onClick={() => setEditingMeta(!editingMeta)} className="text-xs text-primary hover:underline flex items-center gap-1">
-            <Edit3 size={12} /> {editingMeta ? 'Done editing' : 'Edit metadata'}
+            <Pen size={12} /> {editingMeta ? 'Done editing' : 'Edit metadata'}
           </button>
         </div>
 
@@ -240,7 +240,7 @@ export default function BlogPostEditor() {
       {/* Content Editor */}
       <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold flex items-center gap-2"><Edit3 size={14} className="text-primary" /> Content ({wordCount} words)</h2>
+          <h2 className="text-sm font-semibold flex items-center gap-2"><Pen size={14} className="text-primary" /> Content ({wordCount} words)</h2>
           {post.tags && post.tags.length > 0 && (
             <div className="flex items-center gap-1">
               <Tag size={12} className="text-muted-foreground" />
