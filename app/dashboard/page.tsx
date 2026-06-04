@@ -18,7 +18,7 @@ import {
   Check, Sparkles, LoaderCircle, Save, Copy, Music2,
   ChartBar, SlidersHorizontal, Clock, Percent, Bug,
   Camera, Play, ArrowUpRight, BarChart3, Zap,
-  Wallet, Palette,
+  Wallet, Palette, Download,
 } from 'lucide-react';
 import DisputeButton from '@/components/DisputeButton';
 import { useToast } from '@/components/Toast';
@@ -46,8 +46,18 @@ function DashboardContent() {
   const { addToast } = useToast();
   const { mutate: globalMutate } = useSWRConfig();
 
-  // Sidebar state
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Sidebar state — persisted to localStorage
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('selah-dashboard-sidebar');
+      return saved === 'true';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('selah-dashboard-sidebar', String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
 
   // Auth
   const { data: profileData } = useSWR('/api/auth/me', fetcher, swrConfig);
@@ -110,6 +120,25 @@ function DashboardContent() {
   const saveProfile = async () => {
     if (!artistSlug) return;
     setSaving(true);
+    setBioChanged(false); // Optimistic: clear immediately
+
+    // Optimistic: update the cached artist data immediately
+    globalMutate(
+      `/api/artist/me`,
+      (prev: any) => prev ? {
+        ...prev,
+        artist: {
+          ...prev.artist,
+          bio: editBio,
+          instagram_handle: editInstagram || null,
+          tiktok_handle: editTiktok || null,
+          genres: editGenres,
+        },
+        bio: editBio,
+      } : prev,
+      false // don't revalidate yet
+    );
+
     try {
       const res = await fetch(`/api/artists/${artistSlug}`, {
         method: 'PATCH', credentials: 'include',
@@ -119,9 +148,20 @@ function DashboardContent() {
           tiktok_handle: editTiktok || null, genres: editGenres,
         }),
       });
-      if (res.ok) { addToast('Profile updated', 'success'); setBioChanged(false); reloadArtist(); }
-      else { const err = await res.json(); addToast(err.error || 'Failed to save', 'error'); }
-    } catch { addToast('Network error', 'error'); }
+      if (res.ok) { addToast('Profile updated', 'success'); reloadArtist(); }
+      else {
+        // Revert optimistic update on failure
+        globalMutate(`/api/artist/me`);
+        const err = await res.json();
+        addToast(err.error || 'Failed to save', 'error');
+        // Re-enable save button by reverting bioChanged
+        setBioChanged(true);
+      }
+    } catch {
+      globalMutate(`/api/artist/me`);
+      addToast('Network error', 'error');
+      setBioChanged(true);
+    }
     setSaving(false);
   };
 
@@ -165,6 +205,27 @@ function DashboardContent() {
   const formatViews = (v: number) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v);
   const formatDollars = (c: number) => `$${(c / 100).toFixed(0)}`;
 
+  // ─── CSV Export ──────────────────────────────────────────────
+  const exportCSV = useCallback((data: any[], filename: string, columns: string[]) => {
+    if (!data.length) { addToast('No data to export', 'info'); return; }
+    const header = columns.join(',');
+    const rows = data.map(row =>
+      columns.map(col => {
+        const val = row[col] !== undefined ? row[col] : '';
+        return typeof val === 'string' && (val.includes(',') || val.includes('"'))
+          ? `"${val.replace(/"/g, '""')}"`
+          : val;
+      }).join(',')
+    );
+    const csv = [header, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${filename}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    addToast(`Exported ${data.length} rows`, 'success');
+  }, [addToast]);
+
   // ─── Tabs ────────────────────────────────────────────────────
   const tabs: TabDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -198,15 +259,15 @@ function DashboardContent() {
       />
 
       <main className={`transition-all duration-300 pb-20 md:pb-0 ${sidebarCollapsed ? 'md:ml-16' : 'md:ml-56'}`}>
-        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 md:py-6">
+        <div className="max-w-6xl mx-auto px-3 md:px-6 py-3 md:py-6 overflow-x-hidden">
           {/* Welcome header */}
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between mb-6"
+            className="flex items-start md:items-center justify-between mb-6 gap-3"
           >
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
                 {displayName ? `Welcome back, ${displayName.split(' ')[0]}` : 'Dashboard'}
               </h1>
               <div className="flex items-center gap-2 mt-1">
@@ -383,6 +444,7 @@ function DashboardContent() {
                   totalSpent={totalSpent}
                   onSwitchTab={switchTab}
                   router={router}
+                  exportCSV={exportCSV}
                 />
               )}
 
@@ -430,6 +492,7 @@ function DashboardContent() {
                   rawCampaigns={rawCampaigns}
                   totalSpent={totalSpent}
                   earningsData={earningsData}
+                  exportCSV={exportCSV}
                 />
               )}
             </motion.div>
@@ -447,10 +510,40 @@ function DashboardContent() {
 function TracksTab({
   isArtist, campaigns, campaignsLoading, campaignsErr, reloadCampaigns,
   earningsData, formatViews, formatDollars, activeCount, totalViews,
-  totalSubmissions, totalSpent, onSwitchTab, router,
+  totalSubmissions, totalSpent, onSwitchTab, router, exportCSV,
 }: any) {
   return (
     <div className="space-y-4">
+      {/* Onboarding progress for new users */}
+      {isArtist && campaigns.length === 0 && (
+        <div className="rounded-2xl bg-gradient-to-br from-primary/[0.04] to-transparent border border-primary/10 p-5 space-y-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Sparkles size={14} className="text-primary" />
+            Get started in 2 steps
+          </h3>
+          <div className="space-y-2">
+            {[
+              { label: 'Import your music', desc: 'Connect Spotify or add tracks manually', done: false },
+              { label: 'Set your first budget', desc: 'Fund your campaign and set CPM', done: false },
+            ].map((step, i) => (
+              <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.02]">
+                <div className="w-6 h-6 rounded-full bg-primary/[0.08] flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                  {i + 1}
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-medium">{step.label}</p>
+                  <p className="text-[9px] text-muted-foreground/50">{step.desc}</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => onSwitchTab('profile')}
+                  className="text-[10px] h-7 px-3">
+                  {i === 0 ? 'Import' : 'Add funds'}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {isArtist ? (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -463,6 +556,29 @@ function TracksTab({
               <AnimatedKPICard key={i} icon={s.icon} label={s.label} value={String(s.value)} color={s.color} />
             ))}
           </div>
+
+          {/* Export controls */}
+          {campaigns.length > 0 && (
+            <div className="flex justify-end">
+              <button onClick={() => exportCSV(
+                campaigns.map((c: any) => ({
+                  track: c.track_title,
+                  status: c.status,
+                  cpm: `$${((c.cpm_rate_cents || 0) / 100).toFixed(2)}`,
+                  budget: `$${((c.total_budget_cents || 0) / 100).toFixed(0)}`,
+                  spent: formatDollars((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0)),
+                  submissions: c.approved_submissions || 0,
+                  views: c.total_verified_views || 0,
+                })),
+                `selah-tracks-${new Date().toISOString().slice(0, 10)}`,
+                ['track', 'status', 'cpm', 'budget', 'spent', 'submissions', 'views']
+              )}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/[0.04] transition-all active:scale-95"
+              >
+                <Download size={12} /> Export CSV
+              </button>
+            </div>
+          )}
 
           {campaignsLoading ? (
             <div className="grid md:grid-cols-2 gap-4">{[1, 2].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}</div>
@@ -774,14 +890,32 @@ function ProfileTab({
   );
 }
 
-function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampaigns, totalSpent, earningsData }: any) {
+function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampaigns, totalSpent, earningsData, exportCSV }: any) {
   return (
     <div className="max-w-2xl space-y-6">
       <Card>
         <CardContent className="p-6">
           {isArtist ? (
             <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Balance</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">Balance</h3>
+                {artistData?.transactions?.length > 0 && (
+                  <button onClick={() => exportCSV(
+                    (artistData.transactions || []).map((t: any) => ({
+                      date: new Date(t.created_at || t.date).toLocaleDateString(),
+                      type: t.type,
+                      description: t.description || '',
+                      amount: `$${(Math.abs(t.amount_cents) / 100).toFixed(2)}`,
+                    })),
+                    `selah-transactions-${new Date().toISOString().slice(0, 10)}`,
+                    ['date', 'type', 'description', 'amount']
+                  )}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/[0.04] transition-all active:scale-95"
+                  >
+                    <Download size={12} /> CSV
+                  </button>
+                )}
+              </div>
               <div className="rounded-2xl bg-gradient-to-br from-primary/[0.04] to-emerald-500/[0.02] border border-primary/10 p-6 text-center relative overflow-hidden">
                 <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/[0.04] rounded-full blur-3xl pointer-events-none" />
                 <p className="text-4xl font-bold relative z-10">{formatDollars(artistData?.balance_cents || 0)}</p>
