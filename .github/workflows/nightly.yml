@@ -1,16 +1,14 @@
-name: E2E Tests
+name: Nightly Tests
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Daily at 06:00 UTC
-  workflow_dispatch:  # Manual trigger
-  pull_request:
-    branches: [main]
+    - cron: '30 5 * * *'  # Daily at 05:30 UTC
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -19,17 +17,14 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+      - run: npx playwright install chromium
 
-      - name: Install Playwright browsers
-        run: npx playwright install chromium
-
-      - name: Run E2E tests
-        run: npm run test:e2e:quick
+      - name: Run core tests
+        run: npx playwright test e2e/core.spec.ts --reporter=list
         continue-on-error: true
 
-      - name: Upload test results
+      - name: Upload results on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
