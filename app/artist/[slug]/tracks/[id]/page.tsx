@@ -27,9 +27,9 @@ async function getTrackData(slug: string, trackId: string) {
                c.slug as campaign_slug, c.status as campaign_status,
                c.total_budget_cents, c.budget_remaining_cents
         FROM campaigns c
-        JOIN campaign_claims cc ON cc.campaign_id = c.id
-        JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-        JOIN artist_profiles ap ON ap.artist_id = da.id
+        LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+        LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+        LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
         WHERE ap.slug = ${slug} AND c.id = ${trackId}
         LIMIT 1
       `;
@@ -42,9 +42,9 @@ async function getTrackData(slug: string, trackId: string) {
                c.slug as campaign_slug, c.status as campaign_status,
                c.total_budget_cents, c.budget_remaining_cents
         FROM campaigns c
-        JOIN campaign_claims cc ON cc.campaign_id = c.id
-        JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-        JOIN artist_profiles ap ON ap.artist_id = da.id
+        LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+        LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+        LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
         WHERE ap.slug = ${slug} AND LOWER(c.track_title) = ${trackId.replace(/-/g, ' ').toLowerCase()}
         LIMIT 1
       `;
@@ -60,10 +60,10 @@ async function getTrackData(slug: string, trackId: string) {
       SELECT COALESCE(SUM(s.views_verified), 0)::int as total_views,
              COUNT(s.id)::int as submission_count
       FROM submissions s
-      JOIN campaigns c ON c.id = s.campaign_id
-      JOIN campaign_claims cc ON cc.campaign_id = c.id
-      JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-      JOIN artist_profiles ap ON ap.artist_id = da.id
+      LEFT JOIN campaigns c ON c.id = s.campaign_id
+      LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
+      LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+      LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
       WHERE ap.slug = ${slug}
         AND s.review_status = 'approved'
     `;
