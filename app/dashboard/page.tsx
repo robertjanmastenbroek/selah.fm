@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import DashboardErrorBoundary from '@/components/DashboardErrorBoundary';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import useSWR, { useSWRConfig } from 'swr';
@@ -28,7 +27,8 @@ type TabId = 'overview' | 'tracks' | 'profile' | 'earnings' | 'kanban';
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen" style={{background:'#0F0F23'}}><Header /><main className="page-container"><Skeleton className="h-40 w-full" /></main></div>}>
+    <Suspense fallback={<DashboardErrorBoundary>
+    <div className="min-h-screen" style={{background:'#0F0F23'}}><Header /><main className="page-container"><Skeleton className="h-40 w-full" /></main></div>}>
       <DashboardContent />
     </Suspense>
   );
@@ -206,8 +206,6 @@ function DashboardContent() {
   { id: 'kanban', label: 'Board', icon: <ChartBar size={14} /> },  ];
 
   return (
-    <DashboardErrorBoundary>
-    <DashboardErrorBoundary>
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
       <Header />
       <main className="max-w-6xl mx-auto px-4 py-6">
@@ -927,7 +925,5 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
         </p>
       </CardContent>
     </Card>
-    </DashboardErrorBoundary>
-    </DashboardErrorBoundary>
   );
 }
