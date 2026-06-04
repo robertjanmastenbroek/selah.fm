@@ -37,11 +37,11 @@ export function renderWelcomeEmail1(name: string, role: 'artist' | 'creator'): {
         '',
         `<strong>Here's how to get started in 2 minutes:</strong>`,
         '',
-        `1. <strong>Claim your campaign</strong> — we may have already built one for you. Check your email for a claim link, or create one from your dashboard.`,
-        `2. <strong>Set your budget</strong> — you decide what you're willing to pay per 1M verified views. We add 20% on top.`,
-        `3. <strong>Share with your fans</strong> — they can chip in to fund your promotion, or make videos themselves and earn.`,
+        `1. <strong>Import your music</strong> — paste your Spotify, Bandcamp, or Apple Music link and we'll auto-import your tracks with cover art.`,
+        `2. <strong>Set a budget & CPM</strong> — decide what you'll pay per 1,000 verified views. Even $50 gets creators excited.`,
+        `3. <strong>Review submissions</strong> — creators will send you videos. Approve the ones you like, and you only pay for verified views.`,
         '',
-        `No upfront costs. You only pay when videos get real, verified views.`,
+        `No upfront costs. You only pay when videos get verified views.`,
         '',
         `— Robert-Jan<br>Founder, Selah.fm`,
       ].join('<br>')
@@ -81,15 +81,15 @@ export function renderWelcomeEmail2(name: string, role: 'artist' | 'creator'): {
     ? [
         `Hey ${name},`,
         '',
-        `Quick follow-up — I wanted to share what's working for other artists on Selah.fm.`,
+        `Quick follow-up — wanted to share what's working for other artists on Selah.fm.`,
         '',
-        `<strong>The artists getting the most traction do three things:</strong>`,
+        `<strong>Artists getting the most traction do three things:</strong>`,
         '',
-        `1. <strong>They share their campaign link</strong> with their existing fans on social media. A simple story post: "Help me promote my new track — make a video and earn"`,
-        `2. <strong>They set a realistic budget.</strong> Even $50 gets creators excited. You only pay for verified views.`,
-        `3. <strong>They approve videos fast.</strong> Creators move on if submissions sit pending.`,
+        `1. <strong>They respond to submissions fast.</strong> Creators submit videos and expect a decision within 24 hours. Quick approvals keep creators engaged with your tracks.`,
+        `2. <strong>They set competitive CPM rates.</strong> $1.00 CPM ($1,000/1M views) attracts the best creators. You can always adjust later.`,
+        `3. <strong>They share their artist page</strong> with fans and on social media. Fans can donate to fund your promotion or make videos themselves.`,
         '',
-        `Your campaign page is already live. Just claim it and share.`,
+        `Your dashboard is where you manage everything.`,
         '',
         `— Robert-Jan`,
       ].join('<br>')
@@ -213,8 +213,8 @@ export async function sendWelcomeEmail(userId: string, email: string, name: stri
         WHERE id = ${userId}
       `;
       
-      // Schedule next welcome email (day 2 for index 0, day 5 for index 1)
-      const nextDelays = ['2 days', '5 days', null];
+      // Schedule next welcome email (day 1 for index 0, day 3 for index 1)
+      const nextDelays = ['1 day', '3 days', null];
       const nextDelay = nextDelays[index];
       if (nextDelay) {
         await sql.raw(
