@@ -7,6 +7,7 @@ import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
 import ActivityFeed from '@/components/ActivityFeed';
 import PageComments from '@/components/PageComments';
+import ReviewSection from '@/components/ReviewSection';
 import ArtistEmbed from '@/components/ArtistEmbed';
 import SubmissionReactions from '@/components/SubmissionReactions';
 import SubmitVideoModal from '@/components/SubmitVideoModal';
@@ -73,7 +74,15 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
   const topCpm = tracks[0]?.cpm_rate_cents ? (tracks[0].cpm_rate_cents / 100).toFixed(2) : null;
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [activeTab, setActiveTab] = useState('tracks');
+  const [currentUserId, setCurrentUserId] = useState('');
   const [streamingStats, setStreamingStats] = useState<any>(null);
+
+  // Fetch auth state
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.json()).then(d => { if (d.user) setCurrentUserId(d.user.id); })
+      .catch(e => console.error('Auth error:', e));
+  }, []);
 
   // Fetch streaming stats on mount
   useEffect(() => {
@@ -534,7 +543,10 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
 
             {/* ── TAB: Comments ── */}
             {activeTab === 'comments' && (
-              <PageComments pageType="artist" pageId={artist.id} />
+              <div className="space-y-6">
+                <ReviewSection artistId={artist.id} currentUserId={currentUserId} />
+                <PageComments pageType="artist" pageId={artist.id} />
+              </div>
             )}
           </div>
 
