@@ -8,7 +8,8 @@
 import sql from '@/lib/db';
 
 // Threshold: words appearing this many times are flagged as overused
-const OVERUSE_THRESHOLD = 2;
+// With ~1,700 bios, threshold of 50 = ~3% of bios containing the word
+const OVERUSE_THRESHOLD = 50;
 
 const STOP_WORDS = new Set([
   'this', 'that', 'with', 'from', 'they', 'them', 'their', 'have', 'been',
@@ -23,6 +24,7 @@ const STOP_WORDS = new Set([
   'selah', 'music', 'artist', 'track', 'song', 'make', 'made',
   'create', 'sound', 'work', 'way', 'know', 'like', 'feel', 'one',
   'first', 'new', 'also', 'get', 'got', 'see', 'come', 'time',
+  'feels', 'something', 'single', 'kind', 'makes', 'here', 'artists',
 ]);
 
 function extractWords(text: string): string[] {
