@@ -404,8 +404,8 @@ function DashboardContent() {
                     campaigns={rawCampaigns}
                     isArtist={isArtist}
                     totalViews={totalViews}
-                    totalSubmissions={totalSubmissions}
-                    totalApproved={rawCampaigns.reduce((s: number, c: any) => s + parseInt(c.approved_submissions || '0'), 0)}
+                    totalSubmissions={submissionCounts.total || totalSubmissions}
+                    totalApproved={submissionCounts.approved || rawCampaigns.reduce((s: number, c: any) => s + parseInt(c.approved_submissions || '0'), 0)}
                     totalSpent={totalSpent}
                   />
 
