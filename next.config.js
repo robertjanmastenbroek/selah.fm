@@ -12,14 +12,7 @@ const nextConfig = {
   },
   // Compress responses
   compress: true,
-  // Reduce JS chunks for faster initial load
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.optimization.splitChunks.minSize = 50000;
-      config.optimization.splitChunks.maxSize = 200000;
-    }
-    return config;
-  },
+
   // Allow larger body for image uploads (base64 data URLs)
   experimental: {
     serverComponentsExternalPackages: ['pg', 'puppeteer-core', 'puppeteer', '@sparticuz/chromium'],
