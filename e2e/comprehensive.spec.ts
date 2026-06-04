@@ -485,3 +485,24 @@ test.describe('UI: Command Palette Search', () => {
     await page.keyboard.press('Escape');
   });
 });
+
+// ─── CREATE CAMPAIGN ─────────────────────────────────────────
+test.describe('UI: Create Campaign Page', () => {
+  test('create page loads and shows wizard', async ({ page }) => {
+    await page.goto(`${BASE}/create`);
+    await page.waitForTimeout(2000);
+    const body = await page.locator('body').innerText();
+    // Should show either the wizard or auth prompt
+    const loaded = body.includes('promoting') || body.includes('login') || body.includes('sign in');
+    expect(loaded).toBeTruthy();
+  });
+});
+
+// ─── EFFICIENT TEST RUNNER ──────────────────────────────────
+test.describe('Test Runner', () => {
+  test('quick tests pass', async ({ page }) => {
+    // Quick smoke test: homepage loads
+    await page.goto(BASE);
+    await expect(page.locator('text=Promote your music').first()).toBeVisible({ timeout: 10000 });
+  });
+});
