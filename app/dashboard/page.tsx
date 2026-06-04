@@ -18,7 +18,7 @@ import {
   Check, Sparkles, LoaderCircle, Save, Copy, Music2,
   ChartBar, SlidersHorizontal, Clock, Percent, Bug,
   Camera, Play, ArrowUpRight, BarChart3, Zap,
-  Wallet, Palette, Download,
+  Wallet, Palette, Download, Film,
 } from 'lucide-react';
 import DisputeButton from '@/components/DisputeButton';
 import { useToast } from '@/components/Toast';
@@ -385,6 +385,9 @@ function DashboardContent() {
                     totalApproved={rawCampaigns.reduce((s: number, c: any) => s + parseInt(c.approved_submissions || '0'), 0)}
                     totalSpent={totalSpent}
                   />
+
+                  {/* Submissions inbox — artist only */}
+                  {isArtist && <SubmissionsInbox artistSlug={artistSlug} />}
 
                   {/* Activity + Bug reports + Referral — 2-col on desktop */}
                   <div className="grid md:grid-cols-3 gap-4">
@@ -993,6 +996,80 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// ── SUBMISSIONS INBOX ────────────────────────────────────────────
+function SubmissionsInbox({ artistSlug }: { artistSlug: string }) {
+  const [subs, setSubs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/artist/submissions', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d.submissions)) setSubs(d.submissions); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const pendingSubs = subs.filter(s => s.review_status === 'pending');
+  const recentSubs = subs.slice(0, 5);
+
+  if (loading) return null;
+  if (subs.length === 0) return null;
+
+  return (
+    <Card className={pendingSubs.length > 0 ? 'border-amber-500/20' : ''}>
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Film size={14} className={pendingSubs.length > 0 ? 'text-amber-400' : 'text-primary'} />
+            Submissions
+            {pendingSubs.length > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold">
+                {pendingSubs.length} new
+              </span>
+            )}
+          </h3>
+          <a href={`/artist/${artistSlug}`} className="text-[10px] text-primary hover:underline">Review all</a>
+        </div>
+        <div className="space-y-2">
+          {recentSubs.map((s: any) => (
+            <div key={s.id} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-medium truncate">{s.track_title || 'Track'}</p>
+                  {s.review_status === 'pending' && (
+                    <span className="text-[9px] px-1 py-0.5 rounded-full bg-amber-500/10 text-amber-400 shrink-0">New</span>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {s.creator_name || 'Creator'} · {s.platform}
+                  {s.views_verified > 0 && ` · ${parseInt(s.views_verified).toLocaleString()} views`}
+                </p>
+              </div>
+              <div className="text-right shrink-0 ml-2">
+                <p className="text-xs font-bold">{s.payout_amount_cents ? `$${(s.payout_amount_cents/100).toFixed(2)}` : '—'}</p>
+                <span className={`text-[9px] font-medium ${
+                  s.review_status === 'approved' ? 'text-emerald-400' :
+                  s.review_status === 'rejected' ? 'text-rose-400' :
+                  s.review_status === 'pending' ? 'text-amber-400' : 'text-muted-foreground'
+                }`}>
+                  {s.review_status === 'approved' ? 'Approved' :
+                   s.review_status === 'rejected' ? 'Rejected' :
+                   s.review_status === 'pending' ? 'Pending' : s.review_status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+        {subs.length > 5 && (
+          <p className="text-[10px] text-center text-muted-foreground/40 pt-2">
+            +{subs.length - 5} more submission{subs.length - 5 !== 1 ? 's' : ''}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
