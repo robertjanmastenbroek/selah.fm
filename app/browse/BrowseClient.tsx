@@ -46,7 +46,8 @@ const tabConfig: { id: Tab; label: string; icon: any }[] = [
 // ── REUSABLE CARD COMPONENTS ────────────────────────────────────
 
 function TrendingCard({ item, index, focused }: { item: any; index: number; focused: boolean }) {
-  const href = item.artist_slug ? `/artist/${item.artist_slug}/tracks/${item.track_id || item.id}` : `/c/${item.campaign_slug || item.id}`;
+  // Link to campaign page (submissions belong to campaigns, track_id may not exist)
+  const href = item.campaign_slug ? `/c/${item.campaign_slug}` : item.artist_slug ? `/artist/${item.artist_slug}` : `#`;
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -358,7 +359,7 @@ export default function BrowseClient() {
         if (focusedIndex >= 0 && focusedIndex < count) {
           const item = items[focusedIndex];
           const href = tab === 'trending'
-            ? `/artist/${item.artist_slug || item.slug}/tracks/${item.track_id || item.id}`
+            ? (item.campaign_slug ? `/c/${item.campaign_slug}` : `/artist/${item.artist_slug || item.slug}`)
             : tab === 'artists' ? `/artist/${item.slug}` : `/c/${item.slug || item.id}`;
           window.location.href = href;
         }

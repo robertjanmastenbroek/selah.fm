@@ -18,17 +18,18 @@ export async function GET(request: Request) {
         s.views_verified,
         s.platform,
         s.created_at,
-        at.title as track_title,
-        at.cover_art_url,
-        da.artist_name,
+        c.track_title,
+        c.cover_art_url,
+        COALESCE(da.artist_name, u.display_name) as artist_name,
         ap.slug as artist_slug,
-        at.id as track_id
+        c.slug as campaign_slug,
+        c.id as campaign_id
       FROM submissions s
       JOIN campaigns c ON c.id = s.campaign_id
+      LEFT JOIN users u ON u.id = c.artist_id
       JOIN campaign_claims cc ON cc.campaign_id = c.id
       JOIN discovered_artists da ON da.id = cc.discovered_artist_id
       JOIN artist_profiles ap ON ap.artist_id = da.id
-      LEFT JOIN artist_tracks at ON at.id = s.track_id
       WHERE s.review_status = 'approved'
         AND s.created_at > NOW() - INTERVAL '30 days'
       ORDER BY s.views_verified DESC NULLS LAST
