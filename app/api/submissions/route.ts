@@ -189,7 +189,6 @@ export async function GET(request: Request) {
         ORDER BY s.submitted_at DESC LIMIT 50
       `;
     } else if (artistId) {
-    if (artistId) {
       const statusCondition = statusFilter ? `AND s.review_status = $2` : '';
       const query = `
         SELECT s.*, c.track_title, c.cpm_rate_cents, c.max_payout_per_submission_cents,
