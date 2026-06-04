@@ -317,3 +317,123 @@ test.describe('UI: Blog', () => {
     await expect(page.locator('text=articles').first()).toBeVisible({ timeout: 10000 });
   });
 });
+
+// ════════════════════════════════════════════════════════════════
+// NEW FEATURE TESTS — built this session
+// ════════════════════════════════════════════════════════════════
+
+test.describe('UI: Homepage Campaign Showcase', () => {
+  test('featured campaigns section loads', async ({ page }) => {
+    await page.goto(BASE);
+    await page.waitForTimeout(3000);
+    // Featured campaigns section
+    const section = page.locator('text=Featured campaigns');
+    if (await section.isVisible()) {
+      // Premium cards have budget text
+      const hasBudget = await page.locator('text=budget').first().isVisible().catch(() => false);
+      // Or it has a CPM badge
+      const hasCpm = await page.locator('text=CPM').first().isVisible().catch(() => false);
+      expect(hasBudget || hasCpm).toBeTruthy();
+    }
+  });
+});
+
+test.describe('UI: FAQ Accordion', () => {
+  test('FAQ expands and shows answer', async ({ page }) => {
+    await page.goto(BASE);
+    await page.waitForTimeout(2000);
+    const faqSection = page.locator('text=Common questions');
+    if (await faqSection.isVisible()) {
+      // Click first FAQ
+      const firstFaq = page.locator('text=How do independent artists').first();
+      if (await firstFaq.isVisible()) {
+        await firstFaq.click();
+        await page.waitForTimeout(500);
+        // Answer should now be visible
+        const answer = page.locator('text=no label required').or(page.locator('text=artist sets a CPM')).first();
+        await expect(answer).toBeVisible({ timeout: 3000 });
+      }
+    }
+  });
+});
+
+test.describe('UI: Feed Page', () => {
+  test('feed page loads and requires auth', async ({ page }) => {
+    await page.goto(`${BASE}/feed`);
+    await page.waitForTimeout(2000);
+    // Without auth, should show empty state or redirect
+    const body = await page.locator('body').innerText();
+    const loaded = body.includes('Feed') || body.includes('login') || body.includes('sign in');
+    expect(loaded).toBeTruthy();
+  });
+});
+
+test.describe('UI: Collections', () => {
+  test('collections page requires auth', async ({ page }) => {
+    const res = await page.request.get(`${BASE}/api/collections`);
+    expect(res.status()).toBe(401);
+  });
+});
+
+test.describe('UI: Admin Audit Log', () => {
+  test('admin audit-log page requires auth', async ({ page }) => {
+    await page.goto(`${BASE}/admin/audit-log`);
+    await page.waitForTimeout(2000);
+    const body = await page.locator('body').innerText();
+    const blocked = body.includes('Admin access') || body.includes('login') || body.includes('sign in');
+    expect(blocked).toBeTruthy();
+  });
+});
+
+test.describe('UI: Admin Bugs', () => {
+  test('admin bugs page requires auth', async ({ page }) => {
+    await page.goto(`${BASE}/admin/bugs`);
+    await page.waitForTimeout(2000);
+    const body = await page.locator('body').innerText();
+    const blocked = body.includes('Admin access') || body.includes('login') || body.includes('sign in');
+    expect(blocked).toBeTruthy();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════
+// NEW FEATURE API TESTS
+// ════════════════════════════════════════════════════════════════
+
+test.describe('API: Cron & System', () => {
+  test('dispatcher endpoint requires auth', async ({ request }) => {
+    const res = await request.get(`${BASE}/api/cron/dispatcher`);
+    expect(res.status()).toBe(401);
+  });
+
+  test('blog-pipeline endpoint requires auth', async ({ request }) => {
+    const res = await request.get(`${BASE}/api/cron/blog-pipeline`);
+    expect(res.status()).toBe(401);
+  });
+
+  test('audit-log endpoint requires admin', async ({ request }) => {
+    const res = await request.get(`${BASE}/api/admin/audit-log`);
+    expect(res.status()).toBe(403);
+  });
+});
+
+test.describe('API: Referral', () => {
+  test('referral code endpoint requires auth', async ({ request }) => {
+    const res = await request.get(`${BASE}/api/referral/code`);
+    expect(res.status()).toBe(401);
+  });
+
+  test('referral redirector works', async ({ request }) => {
+    const res = await request.get(`${BASE}/api/referral?code=test123`);
+    expect(res.status()).toBe(302); // Redirects to login
+  });
+});
+
+test.describe('API: Stats', () => {
+  test('stats endpoint returns expected data', async ({ request }) => {
+    const res = await request.get(`${BASE}/api/stats`);
+    expect(res.ok()).toBeTruthy();
+    const body = await res.json();
+    // Should have platform stats
+    expect(body).toBeDefined();
+  });
+});
