@@ -113,9 +113,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch (e: any) { console.error('Track sitemap error:', e); }
 
-  // Genre landing pages
-  const GENRES = ['electronic', 'hip-hop', 'pop', 'rock', 'indie', 'rb', 'jazz', 'metal',
-                   'folk', 'country', 'ambient', 'punk', 'alternative', 'experimental', 'latin'];
+  // Genre landing pages — must match browse page's GENRES list
+  const GENRES = ['pop', 'rock', 'hip-hop', 'electronic', 'r&b', 'country', 'latin', 'jazz', 'classical', 'indie',
+                  'folk', 'metal', 'punk', 'reggae', 'blues', 'soul', 'funk', 'world', 'alternative', 'dance'];
   const genrePages: MetadataRoute.Sitemap = GENRES.map(g => ({
     url: `${baseUrl}/browse/genre/${g}`,
     lastModified: new Date(),
