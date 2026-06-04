@@ -747,10 +747,39 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       <div ref={heroRef}>
         <div className="md:flex md:flex-row md:min-h-[65vh]">
 
-          {/* LEFT: Cover Art */}
+          {/* LEFT: Cover Art or Video */}
           <div className="relative md:w-[60%] overflow-hidden">
             <div className="relative w-full h-[50vh] md:h-full">
-              {campaign.cover_art_url ? (
+              {campaign.video_url ? (
+                /* Video embed — YouTube or Vimeo */
+                (() => {
+                  const embedUrl = (() => {
+                    const yt = campaign.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+                    if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=0&rel=0`;
+                    const vm = campaign.video_url.match(/vimeo\.com\/(\d+)/);
+                    if (vm) return `https://player.vimeo.com/video/${vm[1]}?autoplay=0`;
+                    return null;
+                  })();
+
+                  return embedUrl ? (
+                    <iframe
+                      src={embedUrl}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      loading="lazy"
+                      style={{ border: 0 }}
+                      title={`Video for ${trackTitle}`}
+                    />
+                  ) : (
+                    /* Invalid URL — fall back to cover art */
+                    campaign.cover_art_url && (
+                      <img src={campaign.cover_art_url} alt={`Cover art for ${trackTitle}`}
+                        className="w-full h-full object-cover" />
+                    )
+                  );
+                })()
+              ) : campaign.cover_art_url ? (
                 <>
                   <img src={campaign.cover_art_url} alt={`Cover art for ${trackTitle}`}
                     className="w-full h-full object-cover" />
