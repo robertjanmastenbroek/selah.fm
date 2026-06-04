@@ -355,7 +355,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                 { id: 'tracks', label: 'Tracks', icon: <Music size={13} /> },
                 { id: 'activity', label: 'Activity', icon: <BarChart3 size={13} /> },
                 { id: 'about', label: 'About', icon: <Users size={13} /> },
-                { id: 'comments', label: 'Comments', icon: <MessageCircle size={13} /> },
+                { id: 'comments', label: 'Reviews & Comments', icon: <MessageCircle size={13} /> },
               ].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium transition-colors relative whitespace-nowrap ${
