@@ -557,15 +557,22 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
       <div className="pt-6">
         {activeTab === 0 && (
           <div className="space-y-4">
-            {campaign.description ? (
-              <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {campaign.description}
-              </div>
-            ) : (
-              <div className="text-sm text-muted-foreground/50 italic">
-                No description provided. {campaign.track_title && `Create a video featuring "${campaign.track_title}" and submit it to this campaign.`}
-              </div>
-            )}
+            {/* About this track — story section */}
+              {campaign.description && campaign.description.length > 50 && (
+                <section className="mb-6">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                    <Music2 size={14} className="text-primary/60" />
+                    About this track
+                  </h3>
+                  <div className="rounded-2xl bg-gradient-to-br from-white/[0.02] to-white/[0.01] border border-white/[0.06] p-5">
+                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                      {campaign.description}
+                    </p>
+                  </div>
+                </section>
+              )}
+
+              
 
             {/* Listen links */}
             {listenLinks.length > 0 && (
