@@ -74,6 +74,7 @@ export async function GET(request: Request) {
     `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS is_unclaimed BOOLEAN DEFAULT false`,
     `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS claimed_by_user_id UUID REFERENCES users(id)`,
     `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`,
+    `ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS balance_cents INTEGER DEFAULT 0`,
   ];
 
   for (const sql_stmt of coreMigrations) {
