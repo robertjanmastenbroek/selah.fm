@@ -8,7 +8,7 @@ import { LayoutDashboard, Users, Megaphone, FileCheck, Banknote, Mail, Bug, Mess
 const nav = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/campaigns', label: 'Campaigns', icon: Megaphone },
+  { href: '/admin/campaigns', label: 'Tracks', icon: Megaphone },
   { href: '/admin/submissions', label: 'Submissions', icon: FileCheck },
   { href: '/admin/payouts', label: 'Payouts', icon: Banknote },
   { href: '/admin/emails', label: 'Emails', icon: Mail },

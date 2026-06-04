@@ -8,6 +8,8 @@ const STATUSES = ['active', 'paused', 'completed', 'cancelled'];
 
 export default function AdminCampaignsPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  // Note: The database table is still called campaigns, but we display "tracks"
+  // in the UI. The admin/manage API endpoint uses 'type=campaigns'.
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, any>>({});
@@ -51,14 +53,14 @@ export default function AdminCampaignsPage() {
       method: 'PATCH', credentials: 'include',
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     });
-    if (res.ok) { setEditingId(null); fetchCampaigns(search); showToast('Campaign updated'); }
+    if (res.ok) { setEditingId(null); fetchCampaigns(search); showToast('Track updated'); }
     else { const e = await res.json(); showToast(e.error || 'Failed', 'error'); }
   };
 
   const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Delete campaign "${title}"?`)) return;
+    if (!confirm(`Delete track "${title}"?`)) return;
     const res = await fetch(`/api/admin/manage?type=campaigns&id=${id}`, { method: 'DELETE', credentials: 'include' });
-    if (res.ok) { fetchCampaigns(search); showToast('Campaign deleted', 'info'); }
+    if (res.ok) { fetchCampaigns(search); showToast('Track deleted', 'info'); }
     else { const e = await res.json(); showToast(e.error || 'Failed', 'error'); }
   };
 
@@ -68,7 +70,7 @@ export default function AdminCampaignsPage() {
       method: 'PATCH', credentials: 'include',
       headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: next }),
     });
-    if (res.ok) { fetchCampaigns(search); showToast(`Campaign ${next}`); }
+    if (res.ok) { fetchCampaigns(search); showToast(`Track ${next}`); }
     else { const e = await res.json(); showToast(e.error || 'Failed', 'error'); }
   };
 
@@ -84,7 +86,7 @@ export default function AdminCampaignsPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div><h1 className="text-2xl font-bold mb-1">Campaigns</h1><p className="text-muted-foreground text-sm">{campaigns.length} campaigns</p></div>
+        <div><h1 className="text-2xl font-bold mb-1">Tracks</h1><p className="text-muted-foreground text-sm">{campaigns.length} tracks</p></div>
         <form onSubmit={e => { e.preventDefault(); fetchCampaigns(search); }} className="flex gap-2">
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..." className="w-48 rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none" />
           <button type="submit" className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm hover:bg-primary/20 transition-colors active:scale-[0.97]"><Search size={14} /></button>
@@ -111,7 +113,7 @@ export default function AdminCampaignsPage() {
             </tr></thead>
             <tbody>
               {campaigns.length === 0 ? (
-                <tr><td colSpan={6} className="py-16 text-center text-muted-foreground">No campaigns found</td></tr>
+                <tr><td colSpan={6} className="py-16 text-center text-muted-foreground">No tracks found</td></tr>
               ) : campaigns.map(c => {
                 const isEditing = editingId === c.id;
                 return (

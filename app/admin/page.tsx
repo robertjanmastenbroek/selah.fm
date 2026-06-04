@@ -65,14 +65,14 @@ export default function AdminOverviewPage() {
   // Top row: key counts
   const counts = [
     { label: 'Total Users', value: data.users || 0, icon: Users, color: 'text-blue-400' },
-    { label: 'Active Campaigns', value: data.activeCampaigns || 0, icon: Megaphone, color: 'text-purple-400' },
+    { label: 'Active Tracks', value: data.activeCampaigns || 0, icon: Megaphone, color: 'text-purple-400' },
     { label: 'Total Submissions', value: data.submissions || 0, icon: FileCheck, color: 'text-amber-400' },
     { label: 'New Bugs', value: bugs, icon: Bug, color: 'text-red-400', href: '/admin/bugs' },
   ];
 
   // Money row: deposits and payouts
   const moneyStats = [
-    { label: 'Total Deposited', value: `$${totalDeposited.toFixed(0)}`, sub: `${data.campaigns || 0} campaigns`, icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/10' },
+    { label: 'Total Deposited', value: `$${totalDeposited.toFixed(0)}`, sub: `${data.campaigns || 0} tracks`, icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/5', border: 'border-emerald-500/10' },
     { label: 'Pending Payouts', value: `$${processingPayoutsAmount.toFixed(2)}`, sub: `${data.processingPayouts || 0} in transit`, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/5', border: 'border-amber-500/10' },
     { label: 'Completed Payouts', value: `$${paidPayoutsAmount.toFixed(2)}`, sub: `${data.paidPayouts || 0} paid`, icon: Banknote, color: 'text-blue-400', bg: 'bg-blue-500/5', border: 'border-blue-500/10' },
     { label: 'Platform Revenue', value: `$${platformRev.toFixed(2)}`, sub: '20% on artist CPM', icon: DollarSign, color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/10' },
@@ -191,7 +191,7 @@ export default function AdminOverviewPage() {
             </h3>
             <a href="/admin/submissions" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">View Submissions →</a>
             <a href="/admin/payouts" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Manage Payouts →</a>
-            <a href="/admin/campaigns" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">View Campaigns →</a>
+            <a href="/admin/campaigns" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">View All Tracks →</a>
             <a href="/admin/users" className="block w-full py-2 px-4 rounded-lg bg-white/[0.04] hover:bg-white/[0.06] text-sm transition-colors">Manage Users →</a>
           </div>
         </div>
