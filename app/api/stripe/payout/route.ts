@@ -14,9 +14,9 @@ export async function POST(request: Request) {
     const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' as any });
     const { default: sql } = await import('@/lib/db');
 
-    // Get submission + creator info
+    // Get submission + creator + campaign artist info
     const subs = await sql`
-      SELECT s.id, s.creator_id, s.payout_amount_cents, s.payout_status,
+      SELECT s.id, s.creator_id, s.payout_amount_cents, s.payout_status, s.campaign_id,
              u.stripe_account_id, u.stripe_onboarding_complete, u.email
       FROM submissions s
       JOIN users u ON u.id = s.creator_id
@@ -49,6 +49,17 @@ export async function POST(request: Request) {
       UPDATE submissions SET payout_status = 'processing', stripe_transfer_id = ${transfer.id}
       WHERE id = ${submissionId}
     `;
+
+    // Deduct from campaign's artist balance
+    try {
+      await sql`
+        UPDATE artist_profiles ap
+        SET balance_cents = GREATEST(0, balance_cents - ${sub.payout_amount_cents})
+        FROM campaign_claims cc
+        WHERE cc.campaign_id = ${sub.campaign_id}
+          AND ap.artist_id = cc.discovered_artist_id
+      `;
+    } catch (e: any) { console.error('[PAYOUT] balance deduction:', e.message); }
 
     return NextResponse.json({
       success: true,
