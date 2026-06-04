@@ -19,7 +19,7 @@ BEGIN
   WHERE bwc.count >= threshold
   ORDER BY bwc.count DESC;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = 'public';
 
 -- Decay function: halve all counts to give recent bios more weight
 -- Run periodically (e.g., every 500 bios) to create a sliding window effect
@@ -35,4 +35,4 @@ BEGIN
   GET DIAGNOSTICS removed = ROW_COUNT;
   RETURN removed;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = 'public';

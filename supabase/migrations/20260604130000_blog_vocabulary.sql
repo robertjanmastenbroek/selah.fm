@@ -28,7 +28,7 @@ BEGIN
   WHERE bwc.count >= threshold
   ORDER BY bwc.count DESC;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = 'public';
 
 -- Query helper: phrase patterns appearing more than N times
 CREATE OR REPLACE FUNCTION get_overused_blog_phrases(threshold INT DEFAULT 5)
@@ -40,7 +40,7 @@ BEGIN
   WHERE bpc.count >= threshold
   ORDER BY bpc.count DESC;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = 'public';
 
 -- Track blog quality scores over time
 CREATE TABLE IF NOT EXISTS blog_quality_scores (
@@ -76,4 +76,4 @@ BEGIN
   GET DIAGNOSTICS removed = ROW_COUNT;
   RETURN removed;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = 'public';
