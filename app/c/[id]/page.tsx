@@ -19,6 +19,7 @@ async function getCampaign(id: string) {
             NULL as spotify_embed_url,
             ap.slug as artist_slug,
           FROM campaigns c
+          LEFT JOIN campaign_stats v ON v.id = c.id
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
@@ -34,6 +35,7 @@ async function getCampaign(id: string) {
             NULL as spotify_embed_url,
             ap.slug as artist_slug,
           FROM campaigns c
+          LEFT JOIN campaign_stats v ON v.id = c.id
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
@@ -42,7 +44,8 @@ async function getCampaign(id: string) {
           LIMIT 1
         `;
     return campaigns[0] || null;
-  } catch {
+  } catch (e: any) {
+    console.error('[CAMPAIGN] getCampaign error:', e?.message || e);
     return null;
   }
 }
