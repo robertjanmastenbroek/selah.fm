@@ -535,7 +535,7 @@ function DashboardContent() {
                         </label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">@</span>
-                            placeholder="handle" className="pl-7 text-sm" />
+                            <input placeholder="handle" className="pl-7 text-sm" />
                         </div>
                       </div>
                       <div>
@@ -544,7 +544,7 @@ function DashboardContent() {
                         </label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">@</span>
-                            placeholder="handle" className="pl-7 text-sm" />
+                            <input placeholder="handle" className="pl-7 text-sm" />
                         </div>
                       </div>
                     </div>

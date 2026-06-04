@@ -155,7 +155,7 @@ CONTEXT about the artist:
 ${wordContext}
 
 TONE: ${tone.voice}
-${bannedWords ? `\nVOCABULARY RULES:\n${bannedWords}` : ''}
+${bannedWords ? `\nVOCABULARY: ${bannedWords}` : ''}
 
 STRUCTURE:
 You are given 4 pre-written sections below. INTEGRATE them naturally into a coherent profile. Do NOT paste them verbatim — weave them into your own prose.
@@ -170,13 +170,13 @@ Closing: ${closingText}
 
 WRITING RULES:
 1. Write transition sentences between the sections so the bio reads as ONE cohesive article, not 4 separate paragraphs.
-2. Open with a hook that draws the reader in. End with a natural conclusion.
-3. Vary sentence length. Use short sentences for emphasis. Use longer sentences for flow.
-4. Do NOT use any of these words: landscape, realm, tapestry, testament, prolific, burgeoning, ever-evolving, journey, sonic, auditory, musical journey.
-5. Do NOT include invented quotes from the artist.
-6. Do NOT include lists, bullet points, or numbered sections.
+2. Open with a hook that draws the reader in. End with a conclusion that lands.
+3. Vary sentence length. Short sentences for emphasis. Longer sentences for flow.
+4. Use specific, concrete language. Instead of generic music-writing words (landscape, realm, tapestry, testament), use words specific to this artist's actual sound and story. Instead of "journey," say "path," "arc," or "development." Instead of "sonic" or "auditory," say "sound," "music," or name the actual instruments.
+5. Do not include invented quotes from the artist.
+6. Do not include lists, bullet points, or numbered sections.
 7. Mention "${artist.name}" and "Selah.fm" naturally within the text.
-8. Never diminish the artist. No "only," "despite," "although" used to qualify their achievements.
+8. Never diminish the artist. No "only," "despite," or "although" used to qualify their achievements.
 9. If the data shows low numbers, focus on quality and potential instead.
 10. Write 400-700 words total across 3-5 paragraphs.`;
 
