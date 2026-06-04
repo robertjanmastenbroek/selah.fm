@@ -67,15 +67,14 @@ async function getArtistData(slug: string) {
   // Also includes lifetime deposits from wallet (not just individual donation records)
   const [donationStats] = await sql`
     SELECT
-      (COALESCE(SUM(cd.amount_cents), 0) + COALESCE(SUM(ad2.amount_cents), 0) + COALESCE(MAX(ap.lifetime_deposits_cents), 0))::int as total_cents,
-      (COUNT(DISTINCT cd.id) + COUNT(DISTINCT ad2.id))::int as donation_count,
-      COUNT(DISTINCT COALESCE(cd.donor_id, ad2.donor_id))::int as supporter_count
+      COALESCE(SUM(cd.amount_cents), 0)::int as total_cents,
+      COUNT(DISTINCT cd.id)::int as donation_count,
+      COUNT(DISTINCT cd.donor_id)::int as supporter_count
     FROM discovered_artists da
     LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
     LEFT JOIN campaigns c ON c.id IN (SELECT cc2.campaign_id FROM campaign_claims cc2 WHERE cc2.discovered_artist_id = da.id)
     LEFT JOIN campaign_claims cc ON cc.discovered_artist_id = da.id AND cc.campaign_id = c.id
     LEFT JOIN campaign_donations cd ON cd.campaign_id = c.id
-    LEFT JOIN artist_donations ad2 ON ad2.artist_id = da.id AND ad2.status = 'completed'
     WHERE da.id = ${artistId}
   `;
 
