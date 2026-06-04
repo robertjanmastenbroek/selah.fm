@@ -8,46 +8,59 @@ export const dynamic = 'force-dynamic';
 interface Props { params: { slug: string; id: string } }
 
 async function getTrackData(slug: string, trackId: string) {
+  let track: any = null;
+  let stats: any = { total_views: 0, submission_count: 0 };
+  let relatedTracks: any[] = [];
+
+  // Detect if trackId is UUID or title-slug
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trackId);
+
+  // Main track query
   try {
-    // First, check if the track exists at all
-    const directTracks = await sql`
-      SELECT at.id, at.artist_id, at.title FROM artist_tracks at WHERE at.id = ${trackId}
-    `;
-    if (directTracks.length === 0) {
-      console.error('Track not found in artist_tracks table:', trackId);
-    } else {
-      const at = directTracks[0];
-      // Check the profile link
-      const profileCheck = await sql`
-        SELECT ap.id, ap.slug, ap.artist_id, da.artist_name
-        FROM artist_profiles ap
+    let result;
+    if (isUuid) {
+      result = await sql`
+        SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents,
+               at.created_at, at.description,
+               da.artist_name, da.genres, da.monthly_listeners,
+               ap.slug as profile_slug, ap.spotify_image_url,
+               c.slug as campaign_slug, c.status as campaign_status,
+               c.total_budget_cents, c.budget_remaining_cents
+        FROM artist_tracks at
+        JOIN artist_profiles ap ON ap.id = at.artist_id
         JOIN discovered_artists da ON da.id = ap.artist_id
-        WHERE ap.id = ${at.artist_id} AND ap.slug = ${slug}
+        LEFT JOIN campaigns c ON c.id IN (
+          SELECT cc.campaign_id FROM campaign_claims cc WHERE cc.discovered_artist_id = da.id
+        )
+        WHERE ap.slug = ${slug} AND at.id = ${trackId}
+        LIMIT 1
       `;
-      if (profileCheck.length === 0) {
-        console.error('Profile mismatch:', { trackArtistId: at.artist_id, slug, trackTitle: at.title });
-      }
+    } else {
+      result = await sql`
+        SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents,
+               at.created_at, at.description,
+               da.artist_name, da.genres, da.monthly_listeners,
+               ap.slug as profile_slug, ap.spotify_image_url,
+               c.slug as campaign_slug, c.status as campaign_status,
+               c.total_budget_cents, c.budget_remaining_cents
+        FROM artist_tracks at
+        JOIN artist_profiles ap ON ap.id = at.artist_id
+        JOIN discovered_artists da ON da.id = ap.artist_id
+        LEFT JOIN campaigns c ON c.id IN (
+          SELECT cc.campaign_id FROM campaign_claims cc WHERE cc.discovered_artist_id = da.id
+        )
+        WHERE ap.slug = ${slug} AND LOWER(at.title) = ${trackId.replace(/-/g, ' ').toLowerCase()}
+        LIMIT 1
+      `;
     }
+    track = result[0] || null;
+  } catch (e: any) { console.error('[TRACK] main query failed:', e.message); }
 
-    const [track] = await sql`
-      SELECT at.id, at.title, at.spotify_url, at.cover_art_url, at.cpm_rate_cents,
-             at.created_at, at.description,
-             da.artist_name, da.genres, da.monthly_listeners,
-             ap.slug as profile_slug, ap.spotify_image_url,
-             c.slug as campaign_slug, c.status as campaign_status,
-             c.total_budget_cents, c.budget_remaining_cents
-      FROM artist_tracks at
-      JOIN artist_profiles ap ON ap.id = at.artist_id
-      JOIN discovered_artists da ON da.id = ap.artist_id
-      LEFT JOIN campaigns c ON c.id IN (
-        SELECT cc.campaign_id FROM campaign_claims cc WHERE cc.discovered_artist_id = da.id
-      )
-      WHERE ap.slug = ${slug} AND at.id = ${trackId}
-      LIMIT 1
-    `;
-    if (!track) return null;
+  if (!track) return null;
 
-    const [stats] = await sql`
+  // Stats
+  try {
+    const result = await sql`
       SELECT COALESCE(SUM(s.views_verified), 0)::int as total_views,
              COUNT(s.id)::int as submission_count
       FROM submissions s
@@ -56,27 +69,31 @@ async function getTrackData(slug: string, trackId: string) {
       WHERE cc.discovered_artist_id = (SELECT artist_id FROM artist_profiles WHERE slug = ${slug})
         AND s.review_status = 'approved'
     `;
+    stats = result[0] || stats;
+  } catch (e: any) { console.error('[TRACK] stats query failed:', e.message); }
 
-    // Related tracks from same artist
-    const relatedTracks = await sql`
+  // Resolve track ID for related tracks query
+  const resolvedTrackId = isUuid ? trackId : track.id;
+
+  // Related tracks
+  try {
+    relatedTracks = await sql`
       SELECT id, title, cover_art_url, cpm_rate_cents
       FROM artist_tracks
       WHERE artist_id = (SELECT id FROM artist_profiles WHERE slug = ${slug})
-        AND id != ${trackId}
+        AND id != ${resolvedTrackId}
       ORDER BY created_at DESC
       LIMIT 10
     `;
+  } catch (e: any) { console.error('[TRACK] related query failed:', e.message); }
 
-    return {
-      ...track,
-      total_views: stats?.total_views || 0,
-      submission_count: stats?.submission_count || 0,
-      relatedTracks: relatedTracks || [],
-    };
-  } catch (e: any) {
-    console.error('Track data error:', e);
-    return null;
-  }
+  return {
+    ...track,
+    total_views: stats?.total_views || 0,
+    submission_count: stats?.submission_count || 0,
+    relatedTracks: relatedTracks || [],
+    track_slug: track.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
+  };
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -95,7 +112,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `Promote this track on Selah.fm and earn per verified view.`,
       images: track.cover_art_url ? [{ url: track.cover_art_url }] : [],
     },
-    alternates: { canonical: `https://selah.fm/artist/${params.slug}/tracks/${params.id}` },
+    alternates: { canonical: `https://selah.fm/artist/${params.slug}/tracks/${track.track_slug || params.id}` },
   };
 }
 
@@ -106,11 +123,12 @@ export default async function TrackPage({ params }: Props) {
   const artistName = track.artist_name;
   const trackTitle = track.title;
   const cpmPer1M = track.cpm_rate_cents ? `$${((track.cpm_rate_cents / 100) * 1000).toFixed(0)}` : null;
+  const seoSlug = track.track_slug || params.id;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'MusicRecording', name: trackTitle, byArtist: { '@type': 'MusicGroup', name: artistName }, image: track.cover_art_url || track.spotify_image_url, url: `https://selah.fm/artist/${params.slug}/tracks/${params.id}`, datePublished: track.created_at ? new Date(track.created_at).toISOString().split('T')[0] : undefined },
+      { '@type': 'MusicRecording', name: trackTitle, byArtist: { '@type': 'MusicGroup', name: artistName }, image: track.cover_art_url || track.spotify_image_url, url: `https://selah.fm/artist/${params.slug}/tracks/${seoSlug}`, datePublished: track.created_at ? new Date(track.created_at).toISOString().split('T')[0] : undefined },
       { '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Selah.fm', item: 'https://selah.fm' },
         { '@type': 'ListItem', position: 2, name: artistName, item: `https://selah.fm/artist/${params.slug}` },
