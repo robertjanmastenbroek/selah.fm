@@ -81,6 +81,9 @@ export async function GET(request: Request) {
     `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS claimed_by_user_id UUID REFERENCES users(id)`,
     `ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ`,
     `ALTER TABLE artist_profiles ADD COLUMN IF NOT EXISTS balance_cents INTEGER DEFAULT 0`,
+    `CREATE TABLE IF NOT EXISTS campaign_interests (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), user_id UUID NOT NULL REFERENCES users(id), campaign_id UUID NOT NULL REFERENCES campaigns(id), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(user_id, campaign_id))`,
+    `CREATE INDEX IF NOT EXISTS idx_campaign_interests_user ON campaign_interests(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_campaign_interests_campaign ON campaign_interests(campaign_id)`,
   ];
 
   for (const sql_stmt of coreMigrations) {

@@ -14,7 +14,7 @@ import EarnModal from '@/components/EarnModal';
 import {
   Heart, X, Play, Copy, Check, Music2, BarChart3,
   ChevronRight, Sparkles, Share2, TrendingUp, DollarSign,
-  Film, ChevronDown, Shield, Eye
+  Film, ChevronDown, Shield, Eye, Bookmark
 } from 'lucide-react';
 
 // ════════════════════════════════════════════════════════════════
@@ -679,7 +679,15 @@ interface ListenLink { platform: string; url: string; icon: string; }
 export default function CampaignDetailClient({ id, initialCampaign, listenLinks = [], artistSlug = null, submissions = [] }: {
   id: string; initialCampaign: any; listenLinks?: ListenLink[]; artistSlug?: string | null; submissions?: any[];
 }) {
-  const [campaign, setCampaign] = useState<any>(initialCampaign);
+    const [campaign, setCampaign] = useState<any>(initialCampaign);
+  const [saved, setSaved] = useState(false);
+
+  // Fetch saved status
+  useEffect(() => {
+    if (!campaign?.id) return;
+    fetch(`/api/campaigns/${campaign.id}/interest`, { credentials: 'include' })
+      .then(r => r.json()).then(d => setSaved(d.saved)).catch(() => {});
+  }, [campaign?.id]);
   const [loading, setLoading] = useState(!initialCampaign);
   const { addToast } = useToast();
   const router = useRouter();
@@ -971,6 +979,23 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 <button onClick={() => setShareOpen(true)}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors shrink-0">
                   <Share2 size={14} /> Share
+
+              {/* Save button */}
+              <button onClick={async () => {
+                try {
+                  const auth = await fetch('/api/auth/me', { credentials: 'include' });
+                  if (!auth.ok) { window.location.href = '/login'; return; }
+                  const res = await fetch(`/api/campaigns/${campaign.id}/interest`, {
+                    method: 'POST', credentials: 'include'
+                  });
+                  const d = await res.json();
+                  setSaved(d.saved);
+                } catch {}
+              }}
+                className="flex items-center gap-1.5 text-xs transition-colors shrink-0">
+                <Bookmark size={14} className={saved ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground hover:text-white'} />
+                <span className={campaign.saved ? 'text-amber-400' : 'text-muted-foreground hover:text-white'}>{saved ? 'Saved' : 'Save'}</span>
+              </button>
                 </button>
               </div>
 

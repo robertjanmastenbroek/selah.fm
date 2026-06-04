@@ -464,3 +464,11 @@ test.describe('API: Stats', () => {
     expect(body).toBeDefined();
   });
 });
+
+// ─── SAVE / INTEREST ──────────────────────────────────────────
+test.describe('API: Save Campaign', () => {
+  test('save endpoint requires auth', async ({ request }) => {
+    const res = await request.get(`${BASE}/api/campaigns/test-id/interest`);
+    expect(res.ok()).toBeTruthy();
+  });
+});
