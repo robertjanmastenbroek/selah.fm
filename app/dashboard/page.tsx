@@ -226,7 +226,7 @@ function DashboardContent() {
             <div className="flex items-center gap-3">
               {artistData?.balance_cents > 0 && (
                 <span className="text-xs text-muted-foreground/60">
-                  Balance: <span className="text-emerald-400 font-semibold">{formatDollars(artistData.balance_cents)}</span>
+                  Balance: <span className="text-emerald-400 font-semibold">{formatDollars(artistData?.balance_cents || 0)}</span>
                 </span>
               )}
               <Button onClick={() => setWizardOpen(true)} size="sm">
