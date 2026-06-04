@@ -80,6 +80,7 @@ function DashboardContent() {
   };
 
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [submissionCounts, setSubmissionCounts] = useState({ total: 0, pending: 0, approved: 0 });
 
   // ─── Data ────────────────────────────────────────────────────
   const { data: campaignsData, error: campaignsErr, isLoading: campaignsLoading, mutate: reloadCampaigns } = useSWR('/api/campaigns', fetcher, swrConfig);
@@ -99,6 +100,23 @@ function DashboardContent() {
     fetcher,
     swrConfig
   );
+
+  // ─── Fetch artist submission counts ──────────────────────────
+  useEffect(() => {
+    if (!isArtist) return;
+    fetch('/api/artist/submissions', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d.submissions)) {
+          setSubmissionCounts({
+            total: d.submissions.length,
+            pending: d.submissions.filter((s: any) => s.review_status === 'pending').length,
+            approved: d.submissions.filter((s: any) => s.review_status === 'approved').length,
+          });
+        }
+      })
+      .catch(() => {});
+  }, [isArtist]);
 
   // ─── Profile edit state ──────────────────────────────────────
   const [editBio, setEditBio] = useState('');
@@ -283,8 +301,8 @@ function DashboardContent() {
             </div>
             {isArtist && (
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button onClick={() => setWizardOpen(true)} size="sm" className="shadow-lg shadow-primary/20">
-                  <Plus size={16} className="mr-1" /> New track
+                <Button onClick={() => switchTab('profile')} size="sm" className="shadow-lg shadow-primary/20">
+                  <Plus size={16} className="mr-1" /> Import track
                 </Button>
               </motion.div>
             )}
@@ -313,8 +331,13 @@ function DashboardContent() {
                           onClick={() => switchTab('tracks')}
                         />
                         <AnimatedKPICard
-                          icon={Video} label="Submissions" value={String(totalSubmissions)}
-                          color="amber" sparkline={subSparklines}
+                          icon={Video} label="Submissions" value={String(submissionCounts.total || totalSubmissions)}
+                          color="amber"
+                          sublabel={submissionCounts.approved > 0 ? `${submissionCounts.approved} approved` : submissionCounts.pending > 0 ? `${submissionCounts.pending} pending` : undefined}
+                          trend={submissionCounts.pending > 0 ? `${submissionCounts.pending} to review` : undefined}
+                          trendDirection={submissionCounts.pending > 0 ? 'up' : 'neutral'}
+                          sparkline={subSparklines}
+                          onClick={() => switchTab('tracks')}
                         />
                         <AnimatedKPICard
                           icon={TrendingUp} label="Views" value={formatViews(totalViews)}
@@ -1085,6 +1108,12 @@ function SubmissionsInbox({ artistSlug }: { artistSlug: string }) {
                   <p className="text-[10px] text-muted-foreground mt-0.5">
                     by <span className="text-foreground/60">{s.creator_name || 'Creator'}</span>
                     {s.platform ? ` · ${s.platform}` : ''}
+                    {s.content_url && (
+                      <a href={s.content_url} target="_blank" rel="noopener noreferrer"
+                        className="ml-1.5 text-primary/60 hover:text-primary underline underline-offset-2 transition-colors">
+                        View video →
+                      </a>
+                    )}
                   </p>
                   {s.review_feedback && (
                     <div className="mt-1 text-[9px] text-muted-foreground/50 italic bg-white/[0.02] px-2 py-1 rounded">
