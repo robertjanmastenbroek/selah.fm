@@ -30,6 +30,13 @@ export async function GET(request: Request) {
   }
   if (!profile) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
+  // Auto-generate referral code if missing
+  if (!profile.referral_code) {
+    const newCode = user.id.slice(0, 8) + Math.random().toString(36).slice(2, 8);
+    await sql`UPDATE users SET referral_code = ${newCode} WHERE id = ${user.id}`;
+    profile.referral_code = newCode;
+  }
+
   // Get pending bonuses count
   const [bonusStats] = await sql`
     SELECT COALESCE(COUNT(*), 0)::int as pending_bonuses,
