@@ -31,7 +31,7 @@ test.describe('Browse', () => {
   test('loads with tabs and artists', async ({ page }) => {
     await page.goto(`${BASE}/browse`);
     await expect(page.locator('text=Artists').first()).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=Campaigns').first()).toBeVisible();
+    await expect(page.locator('text=Promotions').first()).toBeVisible();
     await expect(page.locator('text=Trending').first()).toBeVisible();
   });
 
