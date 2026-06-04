@@ -106,13 +106,20 @@ export async function PATCH(req: Request) {
         WHERE id = ${submissionId}
       `;
 
-      // Deduct from budget
+      // Deduct from campaign budget and artist balance
       await sql`
         UPDATE campaigns SET
           budget_remaining_cents = budget_remaining_cents - ${payoutCents},
           total_verified_views = total_verified_views + ${views},
           approved_submissions = approved_submissions + 1
         WHERE id = ${sub.campaign_id}
+      `;
+      await sql`
+        UPDATE artist_profiles ap
+        SET balance_cents = GREATEST(0, balance_cents - ${payoutCents})
+        FROM campaign_claims cc
+        WHERE cc.campaign_id = ${sub.campaign_id}
+          AND ap.artist_id = cc.discovered_artist_id
       `;
 
       // Add a notification for the creator
