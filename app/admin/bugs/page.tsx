@@ -34,6 +34,7 @@ function BugsContent() {
     try {
       const res = await fetch('/api/bugs', {
         method: 'PATCH',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status }),
       });
@@ -48,7 +49,7 @@ function BugsContent() {
   const deleteBug = async (id: string) => {
     if (!confirm('Delete this bug report?')) return;
     try {
-      const res = await fetch(`/api/bugs?id=${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/bugs?id=${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) {
         setBugs(prev => prev.filter(b => b.id !== id));
         setToast('Deleted');
@@ -157,6 +158,12 @@ function BugsContent() {
                       </span>
                     </div>
                     <p className="text-sm font-medium mb-2">{bug.description}</p>
+                    {bug.user_email && (
+                      <p className="text-[10px] text-muted-foreground/50 mb-1">
+                        Report by: <span className="text-primary/70">{bug.user_email}</span>
+                        {bug.user_id && <span className="ml-1 font-mono">({bug.user_id.slice(0, 8)}…)</span>}
+                      </p>
+                    )}
                     {bug.steps_to_reproduce && bug.steps_to_reproduce !== 'No conversation history' && (
                       <details className="text-xs text-muted-foreground">
                         <summary className="cursor-pointer hover:text-foreground mb-1">Conversation context</summary>

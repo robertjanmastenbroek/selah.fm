@@ -37,14 +37,21 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  // Allow users to see their own bug reports
+  const session = await getSession(request);
+  const isAdmin = await isAdminRequest(request);
+  
+  if (!isAdmin && !session?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
     const bugs = await sql`
-      SELECT b.id, b.description, b.steps_to_reproduce, b.severity, b.status, b.created_at,
+      SELECT b.id, b.user_id, b.description, b.steps_to_reproduce, b.severity, b.status, b.created_at,
              COALESCE(u.email, 'anonymous') as user_email
       FROM bugs b
       LEFT JOIN users u ON u.id = b.user_id
+      ${isAdmin || !session?.id ? sql`` : sql`WHERE b.user_id = ${session.id}`}
       ORDER BY b.created_at DESC
       LIMIT 100
     `;

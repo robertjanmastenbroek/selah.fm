@@ -19,7 +19,7 @@ import {
   LayoutDashboard, Megaphone, UserCircle, DollarSign, Plus,
   ExternalLink, Music, Video, TrendingUp, Heart,
   Check, Sparkles, Loader2, Save, Copy, Music2,
-  BarChart3, Filter, Clock, Percent
+  BarChart3, Filter, Clock, Percent, Bug
 } from 'lucide-react';
 import DisputeButton from '@/components/DisputeButton';
 import DashboardChart from '@/components/DashboardChart';
@@ -352,6 +352,9 @@ function DashboardContent() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Bug reports section */}
+            <BugReportsSection />
 
             {/* Referral section */}
             {profile && <ReferralSection userId={profile.id} email={profile.email || ''} />}
@@ -743,6 +746,53 @@ function DashboardContent() {
         <CampaignWizard open={wizardOpen} onClose={() => setWizardOpen(false)} onCreated={() => reloadCampaigns()} />
       </main>
     </div>
+  );
+}
+
+/* ─── BUG REPORTS SECTION ───────────────────────────────────── */
+function BugReportsSection() {
+  const [bugs, setBugs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/bugs', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setBugs(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || bugs.length === 0) return null;
+
+  return (
+    <Card>
+      <CardContent className="p-5">
+        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <Bug size={14} className="text-primary" />
+          Bug reports
+        </h3>
+        <div className="space-y-2">
+          {bugs.slice(0, 5).map((bug: any) => (
+            <div key={bug.id} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-white/[0.02]">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="truncate text-muted-foreground">{bug.description.slice(0, 60)}{bug.description.length > 60 ? '...' : ''}</span>
+              </div>
+              <span className={`shrink-0 ml-2 px-2 py-0.5 rounded-full text-[9px] font-medium ${
+                bug.status === 'new' ? 'bg-red-500/10 text-red-400' :
+                bug.status === 'in_progress' ? 'bg-yellow-500/10 text-yellow-400' :
+                bug.status === 'fixed' ? 'bg-emerald-500/10 text-emerald-400' :
+                'bg-white/[0.04] text-muted-foreground'
+              }`}>
+                {bug.status === 'in_progress' ? 'in progress' : bug.status}
+              </span>
+            </div>
+          ))}
+          {bugs.length > 5 && (
+            <p className="text-[10px] text-muted-foreground/50 text-center pt-1">+{bugs.length - 5} more</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
