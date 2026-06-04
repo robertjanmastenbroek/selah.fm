@@ -59,8 +59,8 @@ export default function EarningsPage() {
   const formatDollars = (cents: number) => {
     const dollars = cents / 100;
     if (dollars >= 1000000) return `$${(dollars / 1000000).toFixed(1)}M`;
-    if (dollars >= 1000) return `$${(dollars / 1000).toFixed(1)}K`;
-    return `$${dollars.toFixed(0)}`;
+    if (dollars >= 10000) return `$${(dollars / 1000).toFixed(1)}K`;
+    return `$${dollars.toFixed(2)}`;
   };
 
   const formatViews = (v: number) => {
