@@ -403,6 +403,25 @@ export default function BrowseClient() {
                       <span className="truncate">{c.artist_name || 'Artist'}</span>
                       {budget && <><span className="text-muted-foreground/30">·</span><span>${budget} budget</span></>}
                     </div>
+
+                    {/* Progress bar */}
+                    {c.total_budget_cents > 0 && (() => {
+                      const used = c.total_budget_cents - (c.budget_remaining_cents || 0);
+                      const pct = Math.min(100, Math.round((used / c.total_budget_cents) * 100));
+                      return (
+                        <div className="mt-2">
+                          <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all" style={{width:`${pct}%`}} />
+                          </div>
+                          <div className="flex justify-between text-[9px] text-muted-foreground/40 mt-0.5">
+                            <span>{pct}% used</span>
+                            {pct > 80 && <span className="text-amber-400">⚠️ Nearly full</span>}
+                            {c.approved_submissions > 0 && <span>{c.approved_submissions} submission{c.approved_submissions !== 1 ? 's' : ''}</span>}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {(subs > 0 || views > 0) && (
                       <div className="flex items-center gap-3 text-[9px] text-muted-foreground/50 pt-1 border-t border-white/[0.04]">
                         {subs > 0 && <span className="flex items-center gap-1"><Film size={10} />{subs} submission{subs !== 1 ? 's' : ''}</span>}
