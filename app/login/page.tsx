@@ -82,7 +82,7 @@ function LoginForm() {
         setTimeout(() => { window.location.href = redirect || '/browse'; }, 300);
       } else {
         fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'signup_start', path: window.location.pathname, session_id: sessionStorage.getItem('selah_session_id') || '', metadata: { method: 'email' } }) }).catch(e => console.error('Async error in login/page.tsx:', e));
-        const { error: authError } = await supabase.auth.signUp({
+        const { error: authError, data: signUpData } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -97,7 +97,12 @@ function LoginForm() {
         });
         if (authError) { setError(authError.message); setLoading(false); return; }
         fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'signup_complete', path: window.location.pathname, metadata: { method: 'email' } }) }).catch(e => console.error('Async error in login/page.tsx:', e));
-        setSuccess('Account created! Check your email to verify. You can close this tab.');
+        // If auto-confirmed (session returned), redirect immediately
+        if (signUpData?.session) {
+          window.location.href = redirect || (role === 'fan' ? '/browse?welcome=fan' : '/onboarding');
+        } else {
+          window.location.href = `/verify?email=${encodeURIComponent(email)}`;
+        }
         setLoading(false);
       }
     } catch (e: any) {
