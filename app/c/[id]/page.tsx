@@ -15,35 +15,33 @@ async function getCampaign(id: string) {
           SELECT c.*, COALESCE(c.title, c.track_title) as title,
             COALESCE(da.artist_name, u.display_name) as artist_name,
             da.social_links, da.artist_name as da_artist_name,
-            aa.youtube_video_url as audit_youtube_url,
-            aa.spotify_embed_url,
+            NULL as audit_youtube_url,
+            NULL as spotify_embed_url,
             ap.slug as artist_slug,
             c.video_url
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-          LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
           LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
           WHERE c.id = ${id}::uuid
-          ORDER BY aa.audited_at DESC LIMIT 1
+          LIMIT 1
         `
       : await sql`
           SELECT c.*, COALESCE(c.title, c.track_title) as title,
             COALESCE(da.artist_name, u.display_name) as artist_name,
             da.social_links, da.artist_name as da_artist_name,
-            aa.youtube_video_url as audit_youtube_url,
-            aa.spotify_embed_url,
+            NULL as audit_youtube_url,
+            NULL as spotify_embed_url,
             ap.slug as artist_slug,
             c.video_url
           FROM campaigns c
           LEFT JOIN users u ON u.id = c.artist_id
           LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
           LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
-          LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
           LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
           WHERE c.slug = ${id}
-          ORDER BY aa.audited_at DESC LIMIT 1
+          LIMIT 1
         `;
     return campaigns[0] || null;
   } catch {

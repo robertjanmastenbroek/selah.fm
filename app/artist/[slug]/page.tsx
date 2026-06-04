@@ -122,6 +122,10 @@ async function getArtistData(slug: string) {
     LIMIT 4
   `; } catch (e: any) { console.error('[ARTIST] related artists failed:', e.message); }
 
+  // Sum campaign budgets for display — legacy campaigns may have budget without donation records
+  const totalCampaignBudgetCents = campaigns.reduce((s, c) => s + (Number(c.total_budget_cents) || 0), 0);
+  const displayRaisedCents = Math.max(donationStats.total_cents, totalCampaignBudgetCents);
+
   return {
     artist: {
       ...artist,
@@ -138,13 +142,13 @@ async function getArtistData(slug: string) {
     tracks,
     stats: {
       total_tracks: tracks.length,
-      total_donations_cents: donationStats.total_cents,
+      total_donations_cents: displayRaisedCents,
       donation_count: donationStats.donation_count,
       supporter_count: donationStats.supporter_count,
       total_views: submissionStats.total_views,
       total_submissions: submissionStats.total_submissions,
     },
-    balance_cents: 0,
+    balance_cents: totalCampaignBudgetCents,
     recent_submissions: recentSubmissions,
     related_artists: relatedArtists,
     campaigns,
