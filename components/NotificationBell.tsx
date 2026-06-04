@@ -171,13 +171,15 @@ export default function NotificationBell() {
                       isUnread ? 'bg-indigo-500/[0.04]' : ''
                     }`}
                   >
-                    <span
-                      className={`mt-0.5 shrink-0 ${
-                        isUnread ? 'text-primary' : 'text-muted-foreground'
-                      }`}
-                    >
-                      <TypeIcon size={15} strokeWidth={1.5} />
-                    </span>
+                    {n.sender_avatar ? (
+                      <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-1 ring-white/[0.06] mt-0.5">
+                        <img src={n.sender_avatar} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <span className={`mt-0.5 shrink-0 ${isUnread ? 'text-primary' : 'text-muted-foreground'}`}>
+                        <TypeIcon size={15} strokeWidth={1.5} />
+                      </span>
+                    )}
                     <div className="min-w-0 flex-1">
                       <p
                         className={`text-[12px] leading-relaxed line-clamp-2 ${
