@@ -81,15 +81,9 @@ export async function GET(request: Request) {
   const results = { questions: 0, interviews: 0, answered: 0, posts: 0, scheduled: 0 };
 
   try {
-    // Rate limit: 6-hour cooldown — allows 4 pipeline runs/day
-    const force = searchParams.get('force') === 'true';
-    if (!force) {
-      const [recentPost] = await sql`SELECT id FROM blog_posts WHERE created_at > NOW() - INTERVAL '6 hours' ORDER BY created_at DESC LIMIT 1`;
-      if (recentPost) {
-        console.log('Blog pipeline: cooldown active, skipping');
-        return;
-      }
-    }
+    // Rate limit: delegated to dispatcher (only fires at hours 2, 8, 14, 20 UTC).
+    // No additional cooldown needed — dispatcher scheduling prevents run drift.
+    // Use ?force=true for manual backfills (skips all checks).
 
     // Find or create batch
     let [batch] = await sql`SELECT id, status FROM batches WHERE status NOT IN ('archived', 'completed', 'generated') ORDER BY created_at DESC LIMIT 1`;

@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
+
 /**
- * Daily cron: publishes one scheduled blog post per day at 09:00 UTC.
- * Called by external scheduler (Railway cron, Vercel cron, or health check ping).
- * Protects against duplicate publishes.
+ * Blog publish cron — publishes scheduled posts when they're due.
+ * Called by dispatcher at 09:00, 10:00, and 15:00 UTC.
+ * Publishes up to 2 posts per run to clear backlog quickly.
  */
 export async function GET(request: Request) {
-  // Auth via X-Cron-Secret header or Authorization: Bearer
-  const secret = request.headers.get('X-Cron-Secret') || request.headers.get('authorization')?.replace('Bearer ', '') || '';
+  const { searchParams } = new URL(request.url);
+  // Auth: accept query param (dispatcher style) or headers
+  const secret = searchParams.get('secret') || request.headers.get('X-Cron-Secret') || request.headers.get('authorization')?.replace('Bearer ', '') || '';
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret && secret !== cronSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

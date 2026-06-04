@@ -9,7 +9,8 @@ export const maxDuration = 120;
  * Moves from activity_events → activity_events_archive.
  */
 export async function GET(request: Request) {
-  const secret = request.headers.get('X-Cron-Secret') || '';
+  const { searchParams } = new URL(request.url);
+  const secret = searchParams.get('secret') || request.headers.get('X-Cron-Secret') || '';
   if (secret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
