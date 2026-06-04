@@ -61,13 +61,7 @@
 | `GROWTH_BLUEPRINT.md` | 248 | Homepage · Analytics · Referral | ⬜ Not started |
 | `LAUNCH_CHECKLIST.md` | 136 | Curated launch plan | 🔴 ACTIVE (manual outreach in progress, user confirmed)
 
-| Document | Lines | Topic | Key Insight |
-|----------|-------|-------|-------------|
-| `00-BLUEPRINT.md` | 72 | 0.0001% standard & execution | Scorecard (Track=3/10, Campaign=7/10), 3-sprint plan, protocol |
-| `COMMUNITY_BLUEPRINT.md` | 162 | Community & social features | Research from Letterboxd, RYM, Bandcamp, Spotify social, Discord. Selah needs fan collections, track diary, discovery feed, listening parties. Four user types: Artists, Creators, Fans, Curators. |
-| `FINANCIAL_BLUEPRINT.md` | 239 | Financial flow (deposit → payout) | Stripe Connect reliability (3/10), escrow (2/10), reconciliation (1/10), dispute handling (1/10). 6 critical issues found. 3-sprint fix plan. |
-| `GROWTH_BLUEPRINT.md` | 248 | Homepage · Analytics · Referral | Homepage 5/10 (needs real product UI, interactive demo). Analytics 4/10 (needs submission funnel, views chart). Referral: 10% of deposits model (zero upfront cost, revenue-share only, Revolut-inspired). |
-| `LAUNCH_CHECKLIST.md` | 136 | Curated launch plan | Outreach scripts, artist/creator trackers, 14-day sprint |
+
 
 ### 🟢 Current Research (Still Relevant for Current Work)
 
@@ -95,9 +89,9 @@
 
 ## Current Research Gaps (Topics Not Yet Covered)
 
-| Topic | Why Needed | Priority |
-|-------|-----------|----------|
-| Stripe Connect onboarding flow optimization | Critical for creator payout conversion | 🔴 High |
+| Topic | Why Needed | Priority | Status |
+|-------|-----------|----------|--------|
+| Stripe Connect onboarding flow optimization | Critical for creator payout conversion | 🔴 High | ⬜
 | Apple Pay / Google Pay integration patterns | Required for top-0.0001% checkout | 🟡 Medium |
 | Dynamic color extraction from cover art (Spotify-style) | Artist page immersion upgrade | 🟡 Medium |
 | Keyboard shortcut systems (Cmd+K palette) | Power user efficiency | 🟢 Low |

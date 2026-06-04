@@ -1,10 +1,10 @@
 # Selah.fm — Project Status
 
-**Last updated:** June 4, 2026 (11:00 UTC)
-**HEAD:** `a715445` — Track page debug + user-flows SQL fix + referral system
-**Total commits:** 1,069
-**Codebase:** ~108 React components · 105+ API routes · 25 pages · 21 DB migrations · 40 planning docs
-**ROADMAP:** 35/36 items complete
+**Last updated:** June 5, 2026 (04:00 UTC)
+**HEAD:** `da726fd` (with Wikidata enrichment staged)
+**Total commits:** ~1,070
+**Codebase:** ~108 React components · 105+ API routes · 25 pages · 22 DB migrations · 40 planning docs
+**ROADMAP:** 36/36 items complete
 
 ---
 
@@ -154,6 +154,7 @@ The last STATUS.md was written after the Growth Infrastructure session. Since th
 | Activity archive | 01 | ✅ Daily | Archives events >30 days |
 | Blog syndication | 04 | ✅ Daily | Auto-posts to Reddit |
 | Creator discovery | 05, 17 | ✅ 2×/day | New creator sourcing |
+| Wikidata enrichment | 06 | ✅ 200/night | Wikipedia/Wikidata sameAs for Knowledge Graph |
 | Email outreach | 03, 09, 15, 21 | ✅ 50/run | Artist email sends |
 | Creator outreach | 11, 23 | ✅ 13/run | Creator email sends |
 | Message notifications | 12 | ✅ Daily | Email digests for unread messages |

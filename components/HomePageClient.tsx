@@ -197,7 +197,7 @@ export default function RootPage() {
           ) : (
             <Link href="/login"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] text-[13px] font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-200">
-              Sign in <ArrowRight size={12} />
+              Get started <ArrowRight size={12} />
             </Link>
           )}
         </motion.div>
@@ -357,15 +357,16 @@ export default function RootPage() {
         <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-16"
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.5 }}>
           {[
-            { icon: BadgeCheck, label: 'Verified views' },
-            { icon: Shield, label: 'You own everything' },
-            { icon: Heart, label: 'Built by musicians' },
-            { icon: DollarSign, label: 'Pay per view' },
+            { icon: DollarSign, label: 'Free to start', sub: 'No upfront cost. No hidden fees.' },
+            { icon: Shield, label: 'You keep 80%', sub: 'Artists keep 100% of unspent budget.' },
+            { icon: BadgeCheck, label: 'Verified views', sub: 'Third-party view verification.' },
+            { icon: Heart, label: 'You stay in control', sub: 'Approve every video before it\'s live.' },
           ].map((item, i) => (
             <div key={i} className="rounded-xl border border-white/[0.03] p-4 text-center backdrop-blur-sm"
               style={{ background: 'rgba(255,255,255,0.01)' }}>
-              <item.icon size={16} className="mx-auto mb-2 text-white/15" />
-              <p className="text-[10px] text-white/25 font-medium">{item.label}</p>
+              <item.icon size={18} className="mx-auto mb-2 text-emerald-400/60" />
+              <p className="text-[12px] text-white/30 font-semibold mb-1">{item.label}</p>
+              <p className="text-[10px] text-white/15">{item.sub}</p>
             </div>
           ))}
         </motion.div>
@@ -466,6 +467,77 @@ export default function RootPage() {
             </Link>
           </p>
         </motion.div>
+      </section>
+
+      {/* ═══════════════ FAQ SECTION ═══════════════ */}
+      <section className="relative z-10 px-4 py-28 max-w-4xl mx-auto">
+        <motion.div className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-5">FAQ</p>
+          <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">Common questions</h2>
+          <p className="text-white/35 max-w-md mx-auto text-sm">Everything you need to know about music promotion on Selah.fm.</p>
+        </motion.div>
+
+        <div className="space-y-3">
+          {[
+            {
+              q: 'How do independent artists promote music without a label?',
+              a: 'Independent artists promote music by working directly with content creators on TikTok, Instagram Reels, and YouTube Shorts. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views — no label required. You approve every video before it goes live.',
+            },
+            {
+              q: "What's the most cost-effective way to promote a new single?",
+              a: 'Creator-driven promotion on short-form video platforms is currently the most cost-effective approach. Instead of paying for ads that people scroll past, you pay creators to make engaging content featuring your music. You set the budget and only pay for verified views — so every dollar goes to actual exposure, not algorithm guesses.',
+            },
+            {
+              q: 'How much do content creators earn promoting music?',
+              a: "On Selah.fm, creators earn whatever CPM the artist sets — typically $5–30 per 1,000 verified views. That's 100–1,000x more than traditional platform funds (TikTok Creator Fund pays $0.02–0.04 per 1,000 views). Creators keep 80% of the CPM; the platform takes 20% for payment processing, verification, and fraud detection.",
+            },
+            {
+              q: 'Is CPM-based promotion better than playlist placements?',
+              a: 'Yes, for most artists. Playlist placements put your song in a list where you hope people listen. Creator promotion puts your song in videos that people actively watch because the content is entertaining. 80% of new music discovery now happens through short-form video. Creators help you build real fans, not just passive streams.',
+            },
+            {
+              q: 'Do I need a big following to earn as a content creator?',
+              a: 'No. CPM-based promotion pays per view, not per follower. A creator with 2,000 followers who consistently gets 10,000 views per video can earn more than someone with 100,000 followers making low-engagement content. Quality and consistency matter more than follower count. Submit your best work and let the views speak.',
+            },
+            {
+              q: 'How do I get paid for my videos?',
+              a: 'When a creator submits a video and the artist approves it, every verified view earns you money based on the CPM rate the artist set. Earnings accumulate in your dashboard. Once you reach the payout threshold, you can withdraw via Stripe. The platform tracks every view using third-party verification to ensure accuracy.',
+            },
+          ].map((faq, i) => (
+            <motion.details key={i}
+              className="group rounded-xl border border-white/[0.04] overflow-hidden transition-all duration-200 open:border-primary/20 open:bg-primary/[0.02]"
+              initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05, duration: 0.3 }}>
+              <summary className="flex items-center justify-between px-5 py-4 cursor-pointer text-sm font-medium text-white/70 hover:text-white transition-colors list-none">
+                <span className="pr-4">{faq.q}</span>
+                <span className="text-primary/50 group-open:rotate-180 transition-transform shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                </span>
+              </summary>
+              <div className="px-5 pb-4 text-xs text-muted-foreground/60 leading-relaxed">
+                {faq.a}
+              </div>
+            </motion.details>
+          ))}
+        </div>
+
+        {/* FAQPage structured data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'FAQPage',
+              mainEntity: [
+                { '@type': 'Question', name: 'How do independent artists promote music without a label?', acceptedAnswer: { '@type': 'Answer', text: 'Independent artists promote music by working directly with content creators on TikTok, Instagram Reels, and YouTube Shorts. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views.' } },
+                { '@type': 'Question', name: "What's the most cost-effective way to promote a new single?", acceptedAnswer: { '@type': 'Answer', text: 'Creator-driven promotion on short-form video platforms is currently the most cost-effective approach. Artists set the budget and only pay for verified views.' } },
+                { '@type': 'Question', name: 'How much do content creators earn promoting music?', acceptedAnswer: { '@type': 'Answer', text: 'On Selah.fm, creators earn $5-30 CPM per 1,000 verified views. That is 100-1,000x more than platform funds like the TikTok Creator Fund.' } },
+                { '@type': 'Question', name: 'Do I need a big following to earn as a content creator?', acceptedAnswer: { '@type': 'Answer', text: 'No. CPM-based promotion pays per view, not per follower. Quality and consistency matter more than follower count.' } },
+                { '@type': 'Question', name: 'How do I get paid for my videos?', acceptedAnswer: { '@type': 'Answer', text: 'Every verified view earns money based on the CPM rate. Earnings accumulate in your dashboard and you can withdraw via Stripe once you reach the payout threshold.' } },
+              ],
+            }),
+          }}
+        />
       </section>
 
       {/* ═══════════════ FOOTER ═══════════════ */}

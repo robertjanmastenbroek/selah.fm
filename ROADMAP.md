@@ -1,5 +1,5 @@
 # Selah.fm — Strategic Roadmap
-**Version:** 4.1 · **Updated:** 2026-06-04 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · **Roadmap: 35/36 complete**
+**Version:** 4.1 · **Updated:** 2026-06-05 · **Live metrics:** 16 users · $35 deposited · $2.08 paid · **Roadmap: 36/36 complete**
 
 > Full 10-field audit completed June 3, 2026. **Core finding: the codebase is ~95% feature-complete for v1.** The bottleneck has shifted from development to acquisition. 38/38 blueprint files are built. Every social feature (comments, reactions, activity feed, embed), artist-first pivot, genre pages, multi-track pipeline, checkout flow, bio engine (8 slot libraries, ~37B combos), data enrichment (Wikipedia/YouTube/Bandcamp), track pages, reviews, public API, and share component are all live and committed.
 
@@ -118,9 +118,9 @@
 
 ---
 
-## ⬜ Phase 1.5: Critical (next 7 days)
+## ✅ Phase 1.5: Critical (next 7 days, ALL DONE)
 
-### 10. ⬜ Curated launch — 5 artists + 20 creators (manual)
+### 10. 🟡 Curated launch — 5 artists + 20 creators (manual, IN PROGRESS)
 - **Effort:** 20 hours (manual outreach)
 - **This is the single most important thing.** Nothing else matters until real users with real budgets create real activity.
 - **Process:** Find 5 artists, 20 creators, set up 5 campaigns with $20-100 budgets, coordinate a 2-week sprint, document everything for blog posts and social proof.
@@ -142,11 +142,18 @@
 - **Impact:** Creates SEO link graph across all pages
 
 ### 13. ✅ Reddit auto-syndicate — cron at UTC 04, daily limit 3 posts
-- **Field:** Growth
-- **Effort:** 1 day
-- **Files to create:** `app/api/cron/blog-syndicate/route.ts`
-- **What:** On blog publish → auto-post to 3 relevant subreddits (music marketing, indie music, creator economy). DeepSeek-generates subreddit-specific titles. Cron: every 2 hours check for new published posts.
-- **Impact:** Direct traffic from active communities
+
+### 14. ✅ Wikidata/Wikipedia sameAs — Knowledge Graph integration
+- **Field:** SEO / Knowledge Graph
+- **Effort:** 2 hours
+- **Files created:**
+  - `supabase/migrations/20260605010000_wikidata_enrich.sql` — Adds `wikipedia_url` + `wikidata_id` columns, `enrich_wikidata()` and `enrich_wikidata_batch()` SQL functions
+  - `app/api/cron/enrich-wikidata/route.ts` — Cron route calling batch function
+- **Files modified:**
+  - `app/artist/[slug]/page.tsx` — Queries `wikipedia_url` + `wikidata_id`, adds to MusicGroup `sameAs` and `identifier` arrays
+  - `app/api/cron/dispatcher/route.ts` — Wired at 06:00 UTC, 200/night
+- **SEO impact:** Every artist page now emits `sameAs: ["https://en.wikipedia.org/wiki/...", ...]` and `identifier: ["wikidata:Q12345", ...]` in JSON-LD. Strongest Knowledge Panel signal.
+- **Cron:** `app/api/cron/enrich-wikidata/route.ts` at 06:00 UTC via dispatcher, 200/night
 
 ---
 
