@@ -396,7 +396,10 @@ export default function BrowseClient() {
                 Discover music
               </h1>
               <p className="text-sm text-muted-foreground max-w-lg">
-                Browse artists and tracks, create content, and earn per verified view. <span className="text-emerald-400 font-medium">{totalArtists + totalTracks}+</span> tracks available.
+                Browse artists and tracks, create content, and earn per verified view.
+                {(totalArtists > 0 || totalTracks > 0) && (
+                  <span className="text-emerald-400 font-medium"> <span>{totalArtists + totalTracks}+</span> tracks available.</span>
+                )}
               </p>
             </div>
 
@@ -513,7 +516,7 @@ export default function BrowseClient() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-muted-foreground/40 font-medium">
-                {total} {tab}{total !== 1 ? 's' : ''}
+                {loading ? 'Loading...' : `${total} ${tab}${total !== 1 ? 's' : ''}`}
                 {selectedGenre && <span className="text-primary"> · {selectedGenre}</span>}
                 {searchQuery && <span className="text-primary"> · &quot;{searchQuery}&quot;</span>}
               </span>

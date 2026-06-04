@@ -28,9 +28,9 @@ export async function GET(request: Request) {
       JOIN campaign_claims cc ON cc.campaign_id = c.id
       JOIN discovered_artists da ON da.id = cc.discovered_artist_id
       JOIN artist_profiles ap ON ap.artist_id = da.id
-      LEFT JOIN artist_tracks at ON at.artist_id = ap.id
+      LEFT JOIN artist_tracks at ON at.id = s.track_id
       WHERE s.review_status = 'approved'
-        AND s.created_at > NOW() - INTERVAL '7 days'
+        AND s.created_at > NOW() - INTERVAL '30 days'
       ORDER BY s.views_verified DESC NULLS LAST
       LIMIT ${limit}
     `;
