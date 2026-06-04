@@ -53,3 +53,10 @@ e2e-report/
 test-results/
 lighthouse-report/
 playwright-report/
+scripts/
+
+# Temp/scratch scripts with hardcoded secrets — never commit these
+scripts/*.mjs
+scripts/*.cjs
+!scripts/migrations/
+!scripts/start-mpt.sh
