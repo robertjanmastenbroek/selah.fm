@@ -1357,7 +1357,12 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
         </div>
 
         <div className="flex items-center gap-2">
-          {loaded ? (
+          {!loaded ? (
+            <div className="flex-1 flex items-center gap-2">
+              <div className="flex-1 h-8 rounded-lg bg-white/[0.04] animate-pulse" />
+              <div className="w-16 h-8 rounded-lg bg-white/[0.04] animate-pulse" />
+            </div>
+          ) : referralCode ? (
             <>
               <code className="flex-1 text-[10px] bg-white/[0.04] px-3 py-2 rounded-lg font-mono truncate">{shareLink}</code>
               <button onClick={copy}
@@ -1367,10 +1372,7 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
               </button>
             </>
           ) : (
-            <div className="flex-1 flex items-center gap-2">
-              <div className="flex-1 h-8 rounded-lg bg-white/[0.04] animate-pulse" />
-              <div className="w-16 h-8 rounded-lg bg-white/[0.04] animate-pulse" />
-            </div>
+            <p className="text-[10px] text-muted-foreground/50 text-center">No referral code yet — submit a video to get one</p>
           )}
         </div>
       </CardContent>
