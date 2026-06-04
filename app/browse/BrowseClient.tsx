@@ -372,7 +372,7 @@ export default function BrowseClient() {
             {items.map((a: any, i: number) => (<div key={a.id} data-browse-card className={focusedIndex === i ? 'ring-1 ring-primary/30 rounded-2xl' : ''}><ArtistCard artist={a} /></div>))}
           </div>
         ) : (
-          <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+          <div className="grid gap-3 sm:gap-4" style={{ columns: '2 sm:columns-3 lg:columns-4', columnGap: '0.75rem' }}>
             {items.map((c: any, i: number) => {
               const cpm = c.cpm_rate_cents ? (c.cpm_rate_cents / 100).toFixed(2) : null;
               const budget = c.total_budget_cents ? (c.total_budget_cents / 100).toFixed(0) : null;
