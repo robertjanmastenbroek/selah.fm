@@ -521,6 +521,8 @@ FROM public.campaigns c
 LEFT JOIN public.submissions s ON s.campaign_id = c.id
 GROUP BY c.id;
 
+ALTER VIEW public.campaign_stats SET (security_invoker = true);
+
 CREATE VIEW public.creator_earnings AS
 SELECT
     u.id AS creator_id,
@@ -533,6 +535,8 @@ FROM public.users u
 LEFT JOIN public.submissions s ON s.creator_id = u.id AND s.payout_status = 'paid'
 WHERE u.is_creator = true
 GROUP BY u.id, u.display_name;
+
+ALTER VIEW public.creator_earnings SET (security_invoker = true);
 
 CREATE VIEW public.creator_stats AS
 SELECT
