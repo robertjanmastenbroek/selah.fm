@@ -318,12 +318,13 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
           </div>
         )}
 
-        {/* Active campaigns section */}
+        {/* Featured tracks with active budgets */}
         {campaigns.length > 0 && (
           <div className="mb-8">
             <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
               <Sparkles size={14} className="text-amber-400" />
-              Active campaigns
+              Featured tracks
+              <span className="text-[10px] text-muted-foreground font-normal">({campaigns.length} with active budgets)</span>
             </h2>
             <div className="grid gap-2">
               {campaigns.map((c: any) => (
@@ -332,7 +333,12 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate group-hover:text-emerald-300 transition-colors">{c.track_title}</p>
                     <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                      ${((c.cpm_rate_cents || 0) / 100 * 1000).toFixed(0)}/1M views · ${((c.total_budget_cents || 0) / 100).toFixed(0)} budget
+                      <span className="text-emerald-400 font-medium">${((c.cpm_rate_cents || 0) / 100 * 1000).toFixed(0)}/1M views</span>
+                      <span className="mx-1.5 text-muted-foreground/30">·</span>
+                      ${((c.total_budget_cents || 0) / 100).toFixed(0)} budget
+                      {stats.total_submissions > 0 && (
+                        <><span className="mx-1.5 text-muted-foreground/30">·</span>{' '}{stats.total_submissions} submission{stats.total_submissions !== 1 ? 's' : ''}</>
+                      )}
                     </p>
                   </div>
                   <span className="text-xs text-emerald-400 font-medium shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">Join →</span>
@@ -425,47 +431,56 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                         );
                         return (
                           <div key={track.id}
-                            className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-primary/15 transition-all">
-                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0 relative group/thumb">
+                            className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-primary/15 transition-all group">
+                            {/* Track cover art — links to track page */}
+                            <Link href={`/artist/${slug}/tracks/${track.id}`}
+                              className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0 relative group/thumb">
                               {track.cover_art_url ? (
                                 <img src={track.cover_art_url} alt={track.track_title} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center"><Music size={16} className="text-white/10" /></div>
                               )}
-                              {track.track_url && (
-                                <a href={track.track_url} target="_blank" rel="noopener noreferrer"
-                                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/thumb:opacity-100 transition-opacity"
-                                  title={`Listen to ${track.track_title}`}>
-                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
-                                </a>
-                              )}
-                            </div>
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                                <ExternalLink size={14} className="text-white" />
+                              </div>
+                            </Link>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold truncate">
+                              {/* Track title — links to track page */}
+                              <Link href={`/artist/${slug}/tracks/${track.id}`}
+                                className="text-sm font-semibold truncate hover:text-primary transition-colors block">
                                 {track.track_title}
                                 {hasActiveCampaign && (
                                   <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                     Active budget
                                   </span>
                                 )}
-                              </p>
+                              </Link>
                               <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                                 <span className="text-emerald-400 font-medium">${(parseFloat(cpm) * 1000).toFixed(0)}/1M views</span>
                                 {track.submissions_count > 0 && <span className="ml-2">· {track.submissions_count} submissions</span>}
                                 {track.total_views > 0 && <span className="ml-2">· {track.total_views >= 1000 ? (track.total_views / 1000).toFixed(1) + 'K' : track.total_views} views</span>}
                               </p>
                             </div>
-                            {hasActiveCampaign ? (
-                              <Link href={`/c/${campaigns.find((c: any) => c.track_title?.toLowerCase() === track.track_title?.toLowerCase())?.slug || track.track_title}`}
-                                className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-primary/[0.04] transition-all shrink-0">
-                                Submit
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {/* Track page link */}
+                              <Link href={`/artist/${slug}/tracks/${track.id}`}
+                                className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-[9px] text-muted-foreground/50 hover:text-primary hover:border-primary/20 hover:bg-primary/[0.04] transition-all"
+                                title="View track details">
+                                <ExternalLink size={12} />
                               </Link>
-                            ) : (
-                              <button onClick={() => setShowSubmitModal(true)}
-                                className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all shrink-0">
-                                Create
-                              </button>
-                            )}
+                              {/* Submit / Create CTA */}
+                              {hasActiveCampaign ? (
+                                <Link href={`/c/${campaigns.find((c: any) => c.track_title?.toLowerCase() === track.track_title?.toLowerCase())?.slug || track.track_title}`}
+                                  className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-primary/[0.04] transition-all">
+                                  Submit
+                                </Link>
+                              ) : (
+                                <button onClick={() => setShowSubmitModal(true)}
+                                  className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 transition-all">
+                                  Create
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
