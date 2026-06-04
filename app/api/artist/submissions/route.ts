@@ -110,8 +110,8 @@ export async function PATCH(req: Request) {
       await sql`
         UPDATE campaigns SET
           budget_remaining_cents = budget_remaining_cents - ${payoutCents},
-          total_verified_views = (COALESCE(CAST(total_verified_views AS INTEGER), 0) + ${views})::text,
-          approved_submissions = (COALESCE(CAST(approved_submissions AS INTEGER), 0) + 1)::text
+          total_verified_views = total_verified_views + ${views},
+          approved_submissions = approved_submissions + 1
         WHERE id = ${sub.campaign_id}
       `;
 
