@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Bell, CircleCheck, CircleX, Banknote, Info, Send, DollarSign, Sparkles, MessageCircle, Heart } from 'lucide-react';
+import { Bell, CircleCheck, CircleX, Banknote, Info, Send, DollarSign, Wallet, Sparkles, MessageCircle, Heart } from 'lucide-react';
 
 const typeIcons: Record<string, React.ElementType> = {
   submission: Send,
@@ -14,6 +14,7 @@ const typeIcons: Record<string, React.ElementType> = {
   reaction: Heart,
   donation: Heart,
   message: MessageCircle,
+  payout_reminder: Wallet,
 };
 
 function timeAgo(dateStr: string): string {
