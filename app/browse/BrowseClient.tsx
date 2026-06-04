@@ -24,7 +24,7 @@ const SORT_CAMPAIGNS = [
   { value: 'most_funded', label: 'Most Funded' },
 ];
 
-type Tab = 'artists' | 'campaigns';
+type Tab = 'trending' | 'artists' | 'campaigns';
 
 export default function BrowseClient() {
   const [tab, setTab] = useState<Tab>('artists');
@@ -38,6 +38,20 @@ export default function BrowseClient() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [totalCampaigns, setTotalCampaigns] = useState(0);
   const [loadingCampaigns, setLoadingCampaigns] = useState(true);
+
+  // Trending state
+  const [trending, setTrending] = useState<any[]>([]);
+  const [loadingTrending, setLoadingTrending] = useState(true);
+
+  // Infinite scroll
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Keyboard navigation
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
@@ -77,6 +91,93 @@ export default function BrowseClient() {
     } catch {} finally { setLoadingArtists(false); }
   };
 
+  // Load trending
+  const loadTrending = async () => {
+    setLoadingTrending(true);
+    try {
+      const res = await fetch('/api/discover?limit=30', { credentials: 'omit' });
+      if (res.ok) { const d = await res.json(); setTrending(d.submissions || d.results || d || []); }
+    } catch {} finally { setLoadingTrending(false); }
+  };
+
+  // Load more (infinite scroll)
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const p = new URLSearchParams();
+      p.set('page', String(page + 1));
+      p.set('limit', '20');
+      if (selectedGenre) p.set('genre', selectedGenre);
+      if (searchQuery) p.set('search', searchQuery);
+      const endpoint = tab === 'artists' ? '/api/artists' : '/api/campaigns';
+      const res = await fetch(`${endpoint}?${p.toString()}`, { credentials: 'omit' });
+      if (res.ok) {
+        const d = await res.json();
+        const newItems = d.artists || d.campaigns || [];
+        if (newItems.length === 0) { setHasMore(false); }
+        else {
+          if (tab === 'artists') setArtists(prev => [...prev, ...newItems]);
+          else setCampaigns(prev => [...prev, ...newItems]);
+          setPage(prev => prev + 1);
+        }
+      }
+    } catch {} finally { setLoadingMore(false); }
+  };
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    if (tab === 'trending') return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && !loadingMore) loadMore();
+    }, { threshold: 0.1 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [tab, hasMore, loadingMore, page, selectedGenre, searchQuery]);
+
+  // Keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const items = tab === 'trending' ? trending : tab === 'artists' ? artists : campaigns;
+    const count = items.length;
+    if (count === 0) return;
+
+    let newIndex = focusedIndex;
+    switch (e.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        e.preventDefault();
+        newIndex = focusedIndex >= count - 1 ? 0 : focusedIndex + 1;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        e.preventDefault();
+        newIndex = focusedIndex <= 0 ? count - 1 : focusedIndex - 1;
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (focusedIndex >= 0 && focusedIndex < count) {
+          const item = items[focusedIndex];
+          const href = tab === 'trending'
+            ? `/artist/${item.artist_slug || item.slug}/tracks/${item.track_id || item.id}`
+            : tab === 'artists'
+              ? `/artist/${item.slug}`
+              : `/c/${item.slug || item.id}`;
+          window.location.href = href;
+        }
+        return;
+      case 'Escape':
+        setFocusedIndex(-1);
+        return;
+      default: return;
+    }
+    setFocusedIndex(newIndex);
+    // Scroll focused card into view
+    const cards = gridRef.current?.querySelectorAll('[data-browse-card]');
+    if (cards?.[newIndex]) cards[newIndex].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+
   // Load campaigns
   const loadCampaigns = async () => {
     setLoadingCampaigns(true);
@@ -96,8 +197,8 @@ export default function BrowseClient() {
   };
 
   // Reload on filter change
-  useEffect(() => { loadArtists(); }, [selectedGenre, selectedSort]);
-  useEffect(() => { loadCampaigns(); }, [selectedGenre, selectedSort, tab]);
+  useEffect(() => { if (tab === 'trending') { loadTrending(); return; } loadArtists(); }, [selectedGenre, selectedSort]);
+  useEffect(() => { if (tab === 'trending') return; loadCampaigns(); }, [selectedGenre, selectedSort, tab]);
 
   const handleSearch = (q: string) => {
     setSearchQuery(q);
@@ -105,9 +206,9 @@ export default function BrowseClient() {
     else loadCampaigns();
   };
 
-  const loading = tab === 'artists' ? loadingArtists : loadingCampaigns;
-  const items = tab === 'artists' ? artists : campaigns;
-  const total = tab === 'artists' ? totalArtists : totalCampaigns;
+  const loading = tab === 'trending' ? loadingTrending : tab === 'artists' ? loadingArtists : loadingCampaigns;
+  const items = tab === 'trending' ? trending : tab === 'artists' ? artists : campaigns;
+  const total = tab === 'trending' ? trending.length : tab === 'artists' ? totalArtists : totalCampaigns;
   const sortOptions = tab === 'artists' ? SORT_ARTISTS : SORT_CAMPAIGNS;
 
   return (
@@ -138,14 +239,21 @@ export default function BrowseClient() {
 
         {/* Tab toggle */}
         <div className="flex items-center gap-1 mb-6 bg-white/[0.03] rounded-xl p-1 w-fit">
-          <button onClick={() => { setTab('artists'); setSelectedSort('popular'); }}
+          <button onClick={() => { setTab('trending'); setSelectedSort('popular'); }}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
+              tab === 'trending' ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground'
+            }`}>
+            <Sparkles size={14} />
+            Trending
+          </button>
+          <button onClick={() => { setTab('artists'); setSelectedSort('popular'); setPage(1); setHasMore(true); }}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
               tab === 'artists' ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground'
             }`}>
             <Users2 size={14} />
             Artists
           </button>
-          <button onClick={() => { setTab('campaigns'); setSelectedSort('popular'); }}
+          <button onClick={() => { setTab('campaigns'); setSelectedSort('popular'); setPage(1); setHasMore(true); }}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
               tab === 'campaigns' ? 'bg-white text-black' : 'text-muted-foreground hover:text-foreground'
             }`}>
@@ -204,7 +312,10 @@ export default function BrowseClient() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Grid — keyboard navigable */}
+        <div ref={gridRef} tabIndex={0} onKeyDown={handleKeyDown}
+          className="outline-none focus-visible:ring-1 focus-visible:ring-primary/30 rounded-2xl"
+          aria-label={`Browse ${tab}, use arrow keys to navigate`}>
         {loading && items.length === 0 ? (
           <div className="grid gap-4 sm:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
             {[1, 2, 3, 4, 5, 6].map(i => (
@@ -217,35 +328,59 @@ export default function BrowseClient() {
         ) : items.length === 0 ? (
           <div className="text-center py-16">
             <EmptyState
-              icon={<span className="text-4xl">{tab === 'artists' ? '🎵' : '📢'}</span>}
-              title={`No ${tab} found`}
+              icon={<span className="text-4xl">{tab === 'trending' ? '🔥' : tab === 'artists' ? '🎵' : '📢'}</span>}
+              title={tab === 'trending' ? 'No trending submissions' : `No ${tab} found`}
               description={
-                selectedGenre || searchQuery
+                tab === 'trending'
+                  ? 'Be the first to submit a video!'
+                  : selectedGenre || searchQuery
                   ? 'Try different filters or browse all genres.'
                   : tab === 'artists'
                   ? 'Artists are added daily.'
                   : 'Campaigns are created by artists. Browse artists to find active campaigns.'
               } />
-            {tab === 'campaigns' && (
-              <Link href="/browse" className="inline-block mt-4 px-6 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm font-medium hover:bg-primary/20 transition-all">
-                Browse artists →
-              </Link>
-            )}
+          </div>
+        ) : tab === 'trending' ? (
+          <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+            {items.map((s: any, i: number) => {
+              const href = s.artist_slug ? `/artist/${s.artist_slug}/tracks/${s.track_id || s.id}` : `/c/${s.campaign_slug || s.id}`;
+              return (
+                <Link key={s.id || i} href={href} data-browse-card
+                  className={`group rounded-2xl bg-white/[0.03] border overflow-hidden transition-all hover:border-primary/20 ${focusedIndex === i ? 'border-primary/40 ring-1 ring-primary/30' : 'border-white/[0.06]'}`}>
+                  <div className="aspect-video bg-gradient-to-br from-amber-500/10 to-orange-500/5 relative overflow-hidden">
+                    {s.cover_art_url ? (
+                      <img src={s.cover_art_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl">🔥</div>
+                    )}
+                  </div>
+                  <div className="p-4 space-y-1.5">
+                    <p className="text-sm font-semibold truncate group-hover:text-primary">{s.track_title || s.title || 'Track'}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{s.artist_name || s.artist}</p>
+                    {s.views_verified > 0 && (
+                      <p className="text-[10px] text-muted-foreground/50 flex items-center gap-1">
+                        <Eye size={10} />{parseInt(s.views_verified).toLocaleString()} views
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         ) : tab === 'artists' ? (
           <div className="grid gap-4 sm:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-            {items.map((a: any) => (<ArtistCard key={a.id} artist={a} />))}
+            {items.map((a: any, i: number) => (<div key={a.id} data-browse-card className={focusedIndex === i ? 'ring-1 ring-primary/30 rounded-2xl' : ''}><ArtistCard artist={a} /></div>))}
           </div>
         ) : (
           <div className="grid gap-3 sm:gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-            {items.map((c: any) => {
+            {items.map((c: any, i: number) => {
               const cpm = c.cpm_rate_cents ? (c.cpm_rate_cents / 100).toFixed(2) : null;
               const budget = c.total_budget_cents ? (c.total_budget_cents / 100).toFixed(0) : null;
               const subs = parseInt(c.approved_submissions || '0');
               const views = parseInt(c.total_verified_views || '0');
               return (
-                <Link key={c.slug || c.id} href={`/c/${c.slug || c.id}`}
-                  className="group rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/20 hover:bg-white/[0.05] transition-all">
+                <Link key={c.slug || c.id} href={`/c/${c.slug || c.id}`} data-browse-card
+                  className={`group rounded-2xl bg-white/[0.03] border overflow-hidden transition-all hover:border-primary/20 hover:bg-white/[0.05] ${focusedIndex === i ? 'border-primary/40 ring-1 ring-primary/30' : 'border-white/[0.06]'}`}>
                   <div className="aspect-video bg-gradient-to-br from-primary/10 to-emerald-500/5 relative overflow-hidden">
                     {c.cover_art_url ? (
                       <img src={c.cover_art_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -280,6 +415,20 @@ export default function BrowseClient() {
             })}
           </div>
         )}
+
+        {/* Infinite scroll sentinel */}
+        {tab !== 'trending' && (
+          <div ref={sentinelRef} className="h-4 w-full" />
+        )}
+        {loadingMore && (
+          <div className="flex justify-center py-4">
+            <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+          </div>
+        )}
+        {!hasMore && items.length > 0 && (
+          <p className="text-center text-[10px] text-muted-foreground/40 py-4">No more results</p>
+        )}
+        </div>
       </main>
     </div>
   );
