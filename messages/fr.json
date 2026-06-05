@@ -86,7 +86,16 @@
     "selahColumn": "Selah.fm",
     "tikTok": "TikTok Creator Fund",
     "soundBetter": "SoundBetter",
-    "beatStars": "BeatStars"
+    "beatStars": "BeatStars",
+    "atCpm": "At ${cpm} CPM, creators earn ${cpm80} per 1,000 views — that's ${multiplier}× more than TikTok's Creator Fund",
+    "featurePricingModel": "Pricing model",
+    "featurePlatformFee": "Platform fee",
+    "featureCreatorShare": "Creator share",
+    "featureSetupCost": "Setup cost",
+    "featurePayoutSpeed": "Payout speed",
+    "featurePayoutSpeedValue": "2-3 business days",
+    "featureMinimumFollowers": "Min. followers",
+    "featureMinimumFollowersValue": "None"
   },
   "compare": {
     "title": "Comment Selah.fm se compare",

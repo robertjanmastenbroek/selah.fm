@@ -99,7 +99,16 @@
     "faqTitle": "Preguntas frecuentes sobre precios",
     "faqDesc": "Preguntas comunes sobre cómo funcionan los precios de Selah.fm.",
     "readyToStart": "¿Listo para empezar?",
-    "noCreditCard": "Sin tarjeta de crédito. Gratis para unirse. Empieza a promocionar tu música o gana como creador en 2 minutos."
+    "noCreditCard": "Sin tarjeta de crédito. Gratis para unirse. Empieza a promocionar tu música o gana como creador en 2 minutos.",
+    "atCpm": "At ${cpm} CPM, creators earn ${cpm80} per 1,000 views — that's ${multiplier}× more than TikTok's Creator Fund",
+    "featurePricingModel": "Pricing model",
+    "featurePlatformFee": "Platform fee",
+    "featureCreatorShare": "Creator share",
+    "featureSetupCost": "Setup cost",
+    "featurePayoutSpeed": "Payout speed",
+    "featurePayoutSpeedValue": "2-3 business days",
+    "featureMinimumFollowers": "Min. followers",
+    "featureMinimumFollowersValue": "None"
   },
   "compare": {
     "title": "Cómo se compara Selah.fm",
