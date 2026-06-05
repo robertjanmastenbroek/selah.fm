@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 
 /**
  * Stripe webhook — handles Connect account updates and payout confirmations.
@@ -21,17 +22,16 @@ export async function POST(request: Request) {
   const body = await request.text();
 
   try {
-    const { default: Stripe } = await import('stripe');
-    const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' as any });
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' });
     const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
 
     const { default: sql } = await import('@/lib/db');
 
     switch (event.type) {
       case 'account.updated': {
-        const account = event.data.object as any;
+        const account = event.data.object as Stripe.Account;
         if (account.charges_enabled && account.payouts_enabled) {
-          // Find user by stripe_account_id
           await sql`
             UPDATE users SET stripe_onboarding_complete = true, updated_at = NOW()
             WHERE stripe_account_id = ${account.id}
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       }
 
       case 'transfer.created': {
-        const transfer = event.data.object as any;
+        const transfer = event.data.object as Stripe.Transfer;
         await sql`
           UPDATE submissions SET payout_status = 'paid', updated_at = NOW()
           WHERE stripe_transfer_id = ${transfer.id}
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       }
 
       case 'transfer.reversed': {
-        const transfer = event.data.object as any;
+        const transfer = event.data.object as Stripe.Transfer;
         await sql`
           UPDATE submissions SET payout_status = 'failed', updated_at = NOW()
           WHERE stripe_transfer_id = ${transfer.id}
