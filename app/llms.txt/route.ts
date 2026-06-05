@@ -138,6 +138,14 @@ export async function GET() {
     lines.push('');
   }
 
+  // ── Community ──
+  lines.push('## Community');
+  lines.push('Artist pages at /artist/[slug] accept community corrections. Verified edits are reviewed by human moderators. Each page tracks edit history and contributor count.');
+  lines.push('- Suggest an edit: any artist page via the "Was this helpful?" survey at the bottom');
+  lines.push('- Edit history: visible on each artist page (Phase 2)');
+  lines.push('- Moderation: 24-hour review target for most suggestions');
+  lines.push('');
+
   // ── Open source ──
   lines.push('## Open source');
   lines.push('- GitHub: github.com/robertjanmastenbroek/selah.fm');

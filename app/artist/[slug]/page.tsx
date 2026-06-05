@@ -230,19 +230,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const hasCommunityEdits = data.verifiedEditCount >= 3;
   const isThin = !hasCommunityEdits && (stats.total_tracks === 0 || (stats.total_donations_cents === 0 && (artist.comment_count || 0) === 0 && stats.total_submissions === 0));
 
+  // Append community-updated signal to description if edits exist
+  const communityDesc = data.verifiedEditCount > 0
+    ? `${desc.slice(0, 140)} Community-updated page.`
+    : desc.slice(0, 160);
+
   return {
     title: `${name} — Music Promotion & Fan Community | Selah.fm`,
-    description: desc.slice(0, 160),
+    description: communityDesc,
+    ...(data.latestEditDate ? {
+      other: {
+        'dateModified': data.latestEditDate,
+        'article:modified_time': data.latestEditDate,
+      },
+    } : {}),
     ...(isThin ? { robots: { index: false, follow: true } as const } : {}),
     openGraph: {
       title: `${name} — Music Promotion & Fan Community | Selah.fm`,
-      description: desc.slice(0, 160),
+      description: communityDesc,
+      ...(data.latestEditDate ? { updated_time: data.latestEditDate } : {}),
       images: artist.spotify_image_url ? [{ url: artist.spotify_image_url }] : [],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${name} — Music Promotion & Fan Community | Selah.fm`,
-      description: desc.slice(0, 160),
+      description: communityDesc,
       images: artist.spotify_image_url ? [artist.spotify_image_url] : [],
     },
     alternates: { canonical: `https://selah.fm/artist/${params.slug}` },
@@ -314,6 +326,16 @@ export default async function ArtistPage({ params }: Props) {
     },
   ];
 
+  // Add community accuracy question
+  faqQuestions.push({
+    '@type': 'Question',
+    name: `Is this ${artist.artist_name} page accurate?`,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: `This page has been reviewed by ${Math.max(1, data.verifiedEditCount)} community contributor${data.verifiedEditCount !== 1 ? 's' : ''}. You can suggest corrections if something is wrong.`,
+    },
+  });
+
   // Add genre-specific question if we have a genre match
   const genreQuestionMap: Record<string, { q: string; a: string }> = {
     electronic: { q: `Where can I listen to ${artist.artist_name}'s electronic music?`, a: `Stream ${artist.artist_name}'s electronic tracks on Spotify, Apple Music, and YouTube. Visit their Selah.fm profile for direct links and to support their music promotion.` },
@@ -351,6 +373,8 @@ export default async function ArtistPage({ params }: Props) {
         url: `https://selah.fm/artist/${params.slug}`,
         name: `${artist.artist_name} — Music Promotion Profile | Selah.fm`,
         description: (bio || `Support ${artist.artist_name} on Selah.fm`).slice(0, 200),
+        ...(data.latestEditDate ? { dateModified: data.latestEditDate } : {}),
+        sdPublisher: { '@type': 'Organization', name: 'Selah.fm Community', url: 'https://selah.fm' },
         mainEntity: { '@id': `https://selah.fm/artist/${params.slug}#artist` },
       },
       {
@@ -362,6 +386,13 @@ export default async function ArtistPage({ params }: Props) {
         genre: genres.join(', ') || undefined,
         image: artist.spotify_image_url || undefined,
         identifier: identifiers.length > 0 ? identifiers : undefined,
+        ...(data.latestEditDate ? { dateModified: data.latestEditDate } : {}),
+        ...(data.verifiedEditCount > 0 ? {
+          correction: {
+            '@type': 'CorrectionComment',
+            text: `Bio corrected by community contributor${data.verifiedEditCount > 1 ? 's' : ''}`,
+          },
+        } : {}),
         sameAs: [
           ...(artist.spotify_id ? [`https://open.spotify.com/artist/${artist.spotify_id}`] : []),
           ...(socialLinks.spotify ? [socialLinks.spotify] : []),
