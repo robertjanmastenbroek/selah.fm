@@ -20,12 +20,14 @@ export async function GET(
           WHERE REPLACE(ci.campaign_id::text, '-', '') LIKE ${rawId + '%'}
           LIMIT 1
         `
-      : await sql`
+      : /^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(rawId)
+        ? await sql`
           SELECT ci.data, ci.mime_type
           FROM campaign_images ci
           WHERE ci.campaign_id = ${rawId}::uuid
           LIMIT 1
-        `;
+        `
+        : []; // Not a valid UUID or short hex — return empty
 
     if (!image?.data) {
       // Fallback to OG image
