@@ -1,0 +1,100 @@
+{
+  "nav": {
+    "pricing": "Prijzen",
+    "blog": "Blog",
+    "faq": "FAQ & Ondersteuning",
+    "privacy": "Privacy",
+    "terms": "Voorwaarden",
+    "dmca": "DMCA",
+    "openSource": "Open source",
+    "signIn": "Inloggen",
+    "getStarted": "Begin gratis",
+    "browseTracks": "Blader door tracks",
+    "messages": "Berichten",
+    "createCampaign": "Maak aan",
+    "submitVideo": "Verstuur",
+    "dashboard": "Dashboard",
+    "earnings": "Verdiensten",
+    "settings": "Instellingen",
+    "logOut": "Uitloggen"
+  },
+  "home": {
+    "title": "Jouw muziek, echte creators, echte weergaven.",
+    "subtitle": "Geverifieerde creators maken TikToks, Reels en Shorts met jouw track. Jij keurt elke video goed. Je betaalt alleen voor geverifieerde weergaven.",
+    "cta": "Promoot je muziek",
+    "guestCta": "Blader door campagnes",
+    "freeToStart": "Geen voorafbetaling · Gratis om te beginnen · Geen aanmelding nodig",
+    "earningsCalculator": "Verdiensten calculator",
+    "howItWorks": "Hoe het werkt",
+    "forArtists": "Voor artiesten",
+    "forCreators": "Voor creators",
+    "trustFreeToStart": "Gratis om te beginnen",
+    "trustYouKeep80": "Je houdt 80%",
+    "trustVerifiedViews": "Geverifieerde weergaven",
+    "trustStayInControl": "Jij houdt controle",
+    "testimonialText": "Selah.fm bracht me in contact met creators die mijn geluid echt begrepen. Mijn campagne kreeg 50K geverifieerde weergaven in de eerste week."
+  },
+  "pricing": {
+    "title": "Eerlijke prijzen, geen tussenpersonen",
+    "subtitle": "Stel je eigen CPM-tarief in. Creators verdienen per geverifieerde weergave. Selah.fm neemt 20%. Geen abonnementen, geen minimum, geen verborgen kosten.",
+    "calculatorTitle": "Verdiensten calculator",
+    "calculatorDesc": "Zie precies wat jij en creators verdienen bij verschillende CPM-tarieven.",
+    "forArtists": "Voor artiesten",
+    "forCreators": "Voor creators",
+    "platformFee": "20%",
+    "setupCost": "Gratis",
+    "monthlySubscription": "Geen",
+    "unspentBudget": "100% terugbetaalbaar",
+    "startPromoting": "Start met promoten",
+    "startEarning": "Begin met verdienen als creator",
+    "compareTitle": "Hoe we vergelijken",
+    "compareDesc": "Zie hoe Selah.fm zich verhoudt tot andere muziekpromotieplatforms.",
+    "faqTitle": "Prijzen FAQ"
+  },
+  "compare": {
+    "title": "Hoe Selah.fm vergelijkt",
+    "subtitle": "Ontdek waarom onafhankelijke artiesten en creators voor Selah.fm kiezen."
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Er is iets misgegaan",
+    "retry": "Probeer opnieuw",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "submit": "Versturen",
+    "search": "Zoeken",
+    "viewAll": "Bekijk alles",
+    "learnMore": "Meer informatie",
+    "readMore": "Lees meer",
+    "noResults": "Geen resultaten gevonden",
+    "back": "Terug",
+    "next": "Volgende",
+    "previous": "Vorige",
+    "close": "Sluiten",
+    "confirm": "Bevestigen",
+    "free": "Gratis"
+  },
+  "auth": {
+    "signIn": "Inloggen",
+    "signUp": "Account aanmaken",
+    "logOut": "Uitloggen",
+    "email": "E-mailadres",
+    "password": "Wachtwoord",
+    "continueWithGoogle": "Doorgaan met Google",
+    "continueWithEmail": "Doorgaan met e-mail",
+    "noAccount": "Nog geen account? Meld je aan",
+    "hasAccount": "Al een account? Log in",
+    "forgotPassword": "Wachtwoord vergeten?"
+  },
+  "browse": {
+    "title": "Ontdek muziek",
+    "subtitle": "Blader door artiesten en tracks, maak content en verdien per geverifieerde weergave.",
+    "trending": "Trending",
+    "artists": "Artiesten",
+    "tracks": "Tracks"
+  },
+  "footer": {
+    "copyright": "Selah.fm — Open source muziekpromotie"
+  }
+}
