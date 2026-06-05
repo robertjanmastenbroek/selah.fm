@@ -38,8 +38,8 @@ describe('fees.ts — Financial Calculations', () => {
       expect(MIN_CPM).toBe(1);
     });
 
-    it('minimum payout is $20', () => {
-      expect(MIN_PAYOUT).toBe(20);
+    it('minimum payout is $5', () => {
+      expect(MIN_PAYOUT).toBe(5);
     });
   });
 
