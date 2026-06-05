@@ -64,7 +64,7 @@ export async function GET() {
       totalDepositedCents = Number(deposits?.total || 0);
     } catch (e: any) { console.error('Unhandled error in api/stats/route.ts:', e); }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       artists: artistCount?.count || 0,
       creators: creatorCount?.count || 0,
       activeCampaigns: campaignCount?.count || 0,
@@ -80,6 +80,9 @@ export async function GET() {
       donors: donorCount,
       totalDonatedCents,
     });
+    // Cache for 60s (stale-while-revalidate for 300s) — stats change slowly
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    return response;
   } catch (e: any) {
     console.error('Stats API error:', e.message);
     return NextResponse.json({

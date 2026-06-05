@@ -1,6 +1,6 @@
 # Selah.fm — Living Document
 
-**Last updated:** 2026-06-05 (deep-dive audit + blind spots added)
+**Last updated:** 2026-06-05 (executed Phase 0 items 1,4,5 — Cache-Control, /pricing, social proof. Audit corrections: admin routes/CSRF/Claim API already fixed.)
 **Concept:** A global SEO/LLMO database of every artist — where fans donate, creators make content, and artists don't need to lift a finger.
 **Role:** Single source of truth. Replaces 40+ research, audit, and plan files. If it isn't here, it's either archived or doesn't matter right now.
 
@@ -321,88 +321,352 @@ The remaining ~38 findings (P2-P3) are real but can wait until the foundation is
 
 ---
 
-## Roadmap
+## A+ Roadmap: 16 Weeks to World-Class
 
-### Current Phase: Trust & Retention (June 5–12)
+**Last updated:** 2026-06-05
+**Method:** 6 parallel research agents × 10 expert domains. Cross-referenced vs SoundBetter, AirGigs, Fiverr, Upwork, Patreon, Kickstarter, Bandcamp, TikTok Creator Marketplace, YouTube BrandConnect, Stripe, Linear, Vercel.
+**Goal:** A+ in every dimension (90+/100). This means:
+- Security: Zero unauthenticated endpoints, CSP enforced, all Stripe webhooks verified, rate limiting on every public route
+- Conversion: 100% guided onboarding, post-first-action activation, social proof at every funnel stage
+- Performance: Lighthouse 95+, Core Web Vitals green, <1s TTFB, 100% images optimized
+- SEO/LLMO: Maintain A+, add VideoObject + AggregateRating schema, FAQPage on artist pages
+- Testing: 200+ tests, CI/CD blocking gates, 100% coverage on financial logic
+- Analytics: Cohort retention, conversion funnel, business dashboard, active A/B experiments
+- Legal: GDPR self-service, tax/1099, cookie banner with granular controls, DPO contact
+- Code quality: 0 `:any`, 0 `console.log`, single auth pattern, Zod for all API routes
 
-The platform needs to earn user trust before acquisition spend makes sense. These items make the existing experience sticky and trustworthy.
+---
 
-| Priority | Item | Effort | Impact | Why now |
-|----------|------|--------|--------|---------|
-| P0 | **Real-time notifications via WebSocket** | ~4h | 🔥 Prevents missed messages, drives re-engagement | Users return when they get notified |
-| P0 | **Automated view fraud detection** | ~3h | 🔥 Protects artist budget, builds trust | Artists won't deposit without fraud protection |
-| P1 | **Creator analytics dashboard** | ~6h | 📊 Shows earnings breakdown, top tracks, view trends | Keeps creators engaged, shows progress |
-| P1 | **Artist auto-suggested CPM** | ~2h | 🤖 Recommends optimal CPM based on budget & track | Removes friction for new artists |
-| P1 | **Dispute resolution system** | ~3h | ⚖️ Structured appeals, admin moderation, history | Trust requires a fair process |
+## Phase 0: Foundation (Week 1-2: June 5-19)
+**Target: Security D→A, Legal D→B, Testing F→D**
 
-### Phase 2: Growth Engines (June 12–26)
+### Week 1 — Security & Legal Emergency
 
-Once trust infrastructure is solid, ignite acquisition loops.
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | `isAdminRequest()` on 4 admin routes | ~30m | Security Engineer |
+| **1** | Fix Claim API: read `user_id` from session, not body | ~1h | Security Engineer |
+| **1** | Add CSRF protection (Origin/Referer validation) to middleware | ~1h | Security Engineer |
+| **2** | Cookie banner: add "Reject All" + granular controls | ~2h | Legal + Frontend |
+| **2** | Fix CSP: enforce with nonces, remove `unsafe-inline` | ~2h | Security Engineer |
+| **3** | GDPR endpoints: `/api/me/export` + `/api/me/delete` | ~3h | Backend Engineer |
+| **3** | Privacy Policy update: DPO contact, international transfers, portability | ~2h | Legal |
+| **4** | Tax/1099: add `business_type` + `tax_id` to Stripe Connect onboarding | ~4h | Backend Engineer |
+| **4** | Rate limiting: add DB-backed rate limiter to all public GET routes | ~2h | Security Engineer |
+| **5** | Server-side file validation: type/size/magic-byte check on uploads | ~2h | Security Engineer |
+| **5** | Admin email to env var: `ADMIN_EMAIL` not hardcoded | ~1h | Security Engineer |
 
-| Priority | Item | Effort | Impact | Why now |
-|----------|------|--------|--------|---------|
-| P0 | **Mobile PWA upgrade + push notifications** | ~8h | 📱 Service worker push, install prompt, deep links | 60%+ of creator traffic is mobile |
-| P0 | **Algorithmic trending feed** | ~5h | 🎯 Personalized recommendations, trending, "hot" | Discovery drives engagement |
-| P1 | **Community challenges + leaderboards** | ~6h | 🏆 Weekly challenges, seasonal leaderboards, badges | Creates stickiness and content |
-| P1 | **Onboarding with referral nudge** | ~3h | 🔗 Prompt to share after first deposit/submission | Capitalizes on enthusiasm moment |
-| P1 | **Instagram content automation** | ~2h | 📸 Blog → IG carousel cron | Expands reach to visual platform |
-| P2 | **Referral in bio links (`/r/[code]`)** | ~30m | 🔗 Short redirect links for artist/creator bios | Makes sharing frictionless |
+### Week 2 — Test Foundation + Fix Onboarding
 
-### Phase 3: Scale Infrastructure (June 26 – July 10)
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Install Vitest + React Testing Library + configure | ~1h | Test Engineer |
+| **1** | Property-based tests for `lib/fees.ts` (calculatePayout, grossDeposit, stripeCharge) | ~2h | Test Engineer |
+| **2** | Tests for `lib/validation.ts` (validateCampaignInput, isValidSubmissionUrl, sanitizeInput) | ~2h | Test Engineer |
+| **2** | Add `.env.test` + switch Playwright to local dev target | ~30m | Test Engineer |
+| **3** | Fix email onboarding: persist redirect through `/verify` → `/onboarding` | ~2h | Full Stack |
+| **3** | Block budget-zero submissions: disable Submit button when balance = $0 | ~1h | Full Stack |
+| **4** | Add post-first-action activation: "What's next?" modal after submit/campaign create | ~3h | Full Stack |
+| **4** | Set up CI/CD test gates: remove `continue-on-error: true` | ~30m | DevOps |
+| **5** | Fix login redirect loss: persist `?redirect=/onboarding` through auth flow | ~1h | Full Stack |
+| **5** | API route error handling: return 5xx instead of 200 with empty data | ~2h | Backend Engineer |
 
-Before pouring fuel on the fire, make sure the house won't burn down.
+**Phase 0 success metrics:**
+- 0 unauthenticated admin endpoints
+- 100% mutation endpoints have CSRF protection
+- GDPR export/delete functional in <30s
+- Test suite: 20+ tests passing, CI fails on test failure
+- Email signups land on onboarding (not browse)
+- Budget-zero submissions blocked
 
-| Priority | Item | Effort | Impact | Why now |
-|----------|------|--------|--------|---------|
-| P0 | **Multi-currency / international** | ~10h | 🌍 Stripe Connect multi-currency, locale detection, i18n framework | Unlocks global creator market |
-| P1 | **Performance optimization** | ~6h | ⚡ Lighthouse 90+, Core Web Vitals, image optimization, code splitting | SEO ranking factor, user retention |
-| P1 | **Monitoring + APM** | ~4h | 📈 Sentry error tracking, business metrics dashboard, uptime monitoring | Know when things break before users do |
-| P2 | **Email drip sequences** | ~4h | 📧 Behavior-triggered onboarding, re-engagement, milestone celebration | Automates user retention |
-| P2 | **A/B testing infrastructure** | ~4h | 🧪 Feature flags, experiment framework, statistical significance | Data-driven decisions |
+---
 
-### Phase 4: Platform Moat (July 10+)
+## Phase 1: Conversion & Performance (Week 3-4: June 19 - July 3)
+**Target: Conversion C→B+, Performance C→B, Architecture C→B**
 
-Defensible advantages that make switching costly and the platform genuinely world-class.
+### Week 3 — Performance Audit
 
-| Priority | Item | Effort | Impact |
-|----------|------|--------|--------|
-| P0 | **Native mobile app (React Native)** | ~40h | 📱 Full iOS + Android native experience |
-| P1 | **Artist auto-campaign management** | ~6h | 🤖 Auto-adjust CPM, auto-top-up budget, smart allocation |
-| P1 | **Creator growth recommendations engine** | ~8h | 🧠 Personalized tips: "TikTok videos perform 3× better", trending styles |
-| P2 | **Public API platform** | ~10h | 🔌 REST + GraphQL API for third-party integrations, developer docs |
-| P2 | **Content moderation system** | ~5h | 🛡️ Automated content flagging, human review queue, appeals |
-| P3 | **Virtual events + live streaming** | ~12h | 🎥 Artist-hosted listening parties, creator meetups, AMAs |
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Replace top 20 `<img>` with `next/image` (homepage, browse, campaign, artist) | ~3h | Frontend Engineer |
+| **1** | Add `next/dynamic` for framer-motion on low-interaction pages | ~2h | Frontend Engineer |
+| **2** | Add Cache-Control headers to all data API routes (60s stale-while-revalidate) | ~3h | Backend Engineer |
+| **2** | Fix SWR waterfall on dashboard: parallelize 6 calls | ~3h | Frontend Engineer |
+| **3** | Remove conflicting ISR config (decide: `force-dynamic` or `revalidate`) | ~30m | Backend Engineer |
+| **3** | Fix third-party scripts: move Meta Pixel + Google Ads to `next/script with strategy` | ~1h | Full Stack |
+| **4** | Convert 30 static pages from `'use client'` to server components | ~3h | Frontend Engineer |
+| **4** | Homepage: replace raw `fetch` with SWR for `/api/stats` and `/api/campaigns` | ~1h | Frontend Engineer |
+| **5** | Fix `mousemove` handler: use `requestAnimationFrame` or `transform: translate3d` | ~1h | Frontend Engineer |
+| **5** | Lighthouse audit: target 90+ on mobile, 95+ on desktop | ~2h | Frontend Engineer |
 
-### Immediate Execution Plan (This Week)
+### Week 4 — Conversion & Social Proof
 
-**Must fix from deep-dive audit (P0 blind spots):**
-1. **🔴 Admin auth** — add `isAdminRequest()` to `admin/user-flows`, `admin/emails`, `admin/email-stats`, `admin/backfill-audience`
-2. **🔴 CSRF protection** — add `Origin`/`Referer` header validation in middleware
-3. **🔴 Email onboarding fix** — persist redirect through `/verify` callback so email signups land on `/onboarding`
-4. **🔴 Post-first-action activation** — add "What's next?" CTA on submission/campaign success screen
-5. **🔴 GDPR data endpoints** — build `/api/me/export` (JSON dump) and `/api/me/delete` (soft-delete + anonymize)
-6. **🔴 Tax/1099 setup** — add `business_type` and `tax_id` collection to Stripe Connect onboarding
-7. **🔴 Test framework setup** — install Vitest + React Testing Library, configure test scripts
-8. **🔴 E2E staging target** — switch Playwright `baseURL` to local dev server or add `.env.test`
-9. **🔴 fees.ts tests** — add property-based tests for `calculatePayout`, `grossDeposit`, `stripeCharge`
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Social proof wall: "X paid to creators this week", live visitor counter | ~3h | Full Stack |
+| **1** | Testimonial carousel on homepage (loaded from DB or static) | ~2h | Frontend Engineer |
+| **2** | Create `/pricing` page: CPM explained, calculator, no signup required | ~3h | Frontend Engineer + Marketing |
+| **2** | Create `/compare` page: vs TikTok Fund, SoundBetter, BeatStars | ~2h | Full Stack |
+| **3** | Guest browsing: "Browse without signing up" CTA on logged-out views | ~1h | Frontend Engineer |
+| **3** | Add urgency signals: "X artists browsing now", real-time activity | ~2h | Full Stack |
+| **4** | PWA upgrade: push notifications, install prompt, service worker caching | ~4h | Frontend Engineer |
+| **4** | Quick-actions in TopNav: "Create Campaign" + "Submit Video" | ~1h | Frontend Engineer |
+| **5** | Earnings page: add CPM explanation + payout progress | ~2h | Full Stack |
+| **5** | Video submit: add platform-specific URL validation (TikTok/IG/YT regex) | ~1h | Full Stack |
 
-**Already planned roadmap items (continue in parallel):**
-10. **WebSocket notification service** — single shared connection, typed events for messages, submissions, payouts
-11. **Fraud detection pipeline** — cross-reference view counts from 3 platforms, flag anomalies, hold suspicious payouts
-12. **Creator analytics** — new `/dashboard?tab=analytics` tab with earnings breakdown, view trends, performance by platform
-13. **Artist auto-CPM** — `lib/cpm-suggest.ts` that recommends CPM based on campaign budget, track popularity, genre average
-14. **Dispute UI** — dispute form, admin review queue, status tracking, resolution notification
+**Phase 1 success metrics:**
+- Lighthouse: 90+ mobile, 95+ desktop
+- Cache-Control on all data APIs
+- `/pricing` and `/compare` pages live
+- PWA: push notifications working, install prompt shown
+- Testimonial carousel with real user quotes
 
-### Signals That Change Priorities
+---
 
-| Signal | Action |
-|--------|--------|
-| Page views hit 1,000/week | Accelerate Phase 2 (algorithmic feed, Instagram automation) |
-| Users hit 50 | Launch referral flywheel, ramp creator outreach 2× |
-| Deposits hit $200/month | Prioritize multi-currency (Phase 3), Instagram automation |
-| Paid artists hit 10 | Case study content, testimonial pipeline, PR outreach |
-| Bounce rate > 70% | Prioritize PWA + performance (Phase 3) |
-| Fraud attempt detected | Escalate fraud detection to P0, build escrow system |
+## Phase 2: Testing & Analytics (Week 5-6: July 3-17)
+**Target: Testing F→C, Analytics D-→C, Architecture C→B+**
+
+### Week 5 — Test Coverage Sprint
+
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Component tests: ArtistCard, CampaignCover, SubmitVideoModal, StripePaymentModal | ~4h | Test Engineer |
+| **2** | API integration tests: GET /api/campaigns, GET /api/artists, GET /api/stats | ~4h | Test Engineer |
+| **3** | Mutation API tests: POST /api/submit, POST /api/claim, PATCH /api/review | ~4h | Test Engineer |
+| **4** | Webhook tests: Stripe payment intents, Stripe Connect payouts | ~3h | Test Engineer |
+| **4** | `lib/discovery.ts` tests: Reddit/Bandcamp/YouTube parsing logic | ~3h | Test Engineer |
+| **5** | E2E tests: complete user journey (signup → browse → submit → earn) | ~4h | Test Engineer |
+
+### Week 6 — Analytics Infrastructure
+
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Cohort/retention analysis: weekly active users, retention curves | ~4h | Data Engineer |
+| **1** | Conversion funnel: signup → onboard → browse → submit → earn → payout | ~3h | Data Engineer |
+| **2** | Business dashboard: MRR, ARPU, CAC, NPS, LTV:CAC ratio | ~4h | Full Stack |
+| **3** | `session_id` fix: populate on every event, null-check removed | ~2h | Backend Engineer |
+| **3** | A/B testing: launch first experiment (CTA text, onboarding flow variant) | ~3h | Full Stack |
+| **4** | Real-time monitoring: Sentry error alerts, PagerDuty/email on 5xx spikes | ~3h | DevOps |
+| **4** | Unit economics: per-cohort revenue tracking, creator LTV model | ~3h | Data Engineer |
+| **5** | Fix cron dispatcher: parallel execution, timeout handling, crash recovery | ~4h | Backend Engineer |
+| **5** | Add Zod validation to top 10 API routes: request/response schemas | ~3h | Backend Engineer |
+
+**Phase 2 success metrics:**
+- 100+ tests passing, >60% code coverage on critical paths
+- Conversion funnel dashboard live
+- A/B testing framework with 1 active experiment
+- Sentry alerts on error spikes
+- Zod validation on all mutation routes
+- Cron dispatcher handles parallel execution
+
+---
+
+## Phase 3: Architecture & UX Polish (Week 7-8: July 17-31)
+**Target: Architecture C→A, UX/Design B+→A, Conversion B+→A**
+
+### Week 7 — Architecture Overhaul
+
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Migrate images from BYTEA to S3-compatible object storage (R2) | ~6h | Backend Engineer |
+| **1** | Add CDN caching layer: Cloudflare or Railay edge caching | ~4h | DevOps |
+| **2** | N+1 fix in `/api/feed`: UNION query instead of 3 separate queries | ~1h | Backend Engineer |
+| **2** | In-memory filtering in `/api/creators`: add SQL LIMIT | ~1h | Backend Engineer |
+| **3** | Consolidate auth patterns: single `getUser()` across all 40+ routes | ~3h | Backend Engineer |
+| **3** | Remove dual schema files: single source of truth from migrations | ~1h | Backend Engineer |
+| **4** | Zod for remaining 30 API routes: request/response validation | ~3h | Backend Engineer |
+| **4** | Fire-and-forget cascade fix: proper Promise.all with error handling | ~3h | Backend Engineer |
+| **5** | PgBouncer: deploy Railway PgBouncer service or remove config | ~30m | DevOps |
+| **5** | Stripe API version: remove `:any` cast, use typed version | ~5m | Backend Engineer |
+
+### Week 8 — UX Polish
+
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Replace `text-white/[opacity]` with `--gray-*` scale across codebase | ~4h | Frontend Engineer |
+| **1** | Enforce spacing tokens: `--space-section`, `--space-card` usage audit | ~2h | Frontend Engineer |
+| **2** | Add container queries to Browse grid | ~2h | Frontend Engineer |
+| **2** | Add page transition between dark pages (Browse → Track) | ~2h | Frontend Engineer |
+| **3** | Fix BottomNav active state differentiation | ~1h | Frontend Engineer |
+| **3** | Empty state consolidation: single `<EmptyState>` component used everywhere | ~2h | Frontend Engineer |
+| **4** | WCAG AA sweep: color-only form validation → add icons + aria-describedby + aria-invalid | ~3h | Frontend Engineer |
+| **4** | Toast system: add `role="alert"` and `aria-live="assertive"` | ~1h | Frontend Engineer |
+| **5** | Command palette + SupportWidget: add `role="dialog"` and `aria-modal` | ~1h | Frontend Engineer |
+| **5** | Range slider: add `aria-valuenow`, `aria-valuetext`, `aria-label` | ~1h | Frontend Engineer |
+| **5** | Skeleton visibility: fix `bg-muted` on OLED dark (contrast ratio ≥4.5:1) | ~30m | Frontend Engineer |
+| **5** | Error-state images: meaningful alt text | ~30m | Frontend Engineer |
+
+**Phase 3 success metrics:**
+- Images served from CDN (not PostgreSQL)
+- Single auth pattern across all routes
+- Zod validation on all API routes
+- WCAG AA audit pass (automated + manual spot-check)
+- Gray scale used instead of opacity chains
+- Container queries on Browse grid
+
+---
+
+## Phase 4: SEO/LLMO Polish + Marketing (Week 9-12: July 31 - Aug 28)
+**Target: SEO A→A+, Marketing B-→A**
+
+### Week 9 — SEO/LLMO to A+
+
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Add FAQPage schema to artist pages | ~2h | SEO Engineer |
+| **1** | Add VideoObject schema for submission videos | ~2h | SEO Engineer |
+| **2** | Add AggregateRating schema for reviews | ~1h | SEO Engineer |
+| **2** | Add `@id` references for schema entity linking | ~2h | SEO Engineer |
+| **3** | Fix blog image alt text: descriptive, not empty | ~2h | Content + Frontend |
+| **3** | Add Person schema to About page | ~1h | SEO Engineer |
+| **4** | Structured data testing: Google Rich Results Test + Schema.org validator | ~2h | SEO Engineer |
+| **4** | Blog pipeline: add FAQPage schema to posts | ~1h | SEO Engineer |
+| **5** | LLMO optimization: ensure all pages have answer-first content blocks | ~3h | Content Engineer |
+
+### Week 10 — Referral Flywheel & Growth Loops
+
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Launch referral flywheel: in-product "Share" prompt after first deposit/submission | ~3h | Full Stack |
+| **1** | Referral leaderboard: top referrers this week | ~2h | Full Stack |
+| **2** | Case study page: "How Artist X got Y views in Z days" | ~4h | Marketing + Full Stack |
+| **2** | Testimonial collection: email drip requesting reviews after payout | ~2h | Marketing |
+| **3** | PR/HARO outreach: pitch founder story to music tech press | ~2h | Marketing |
+| **3** | Instagram content automation: blog → IG carousel cron | ~3h | Full Stack |
+| **4** | Retargeting: Meta Pixel + Google Ads retargeting campaigns for browse visitors | ~2h | Marketing |
+| **4** | Email drip sequences: behavior-triggered onboarding, re-engagement, milestones | ~4h | Marketing + Backend |
+| **5** | Educator program: YouTube tutorial script + blog post series | ~3h | Marketing |
+
+### Week 11 — Positioning & Pricing
+
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | `/pricing` page: tiered plans, enterprise pricing for labels | ~4h | Marketing + Full Stack |
+| **1** | `/compare` page: feature matrix vs TikTok Fund, SoundBetter, BeatStars | ~3h | Marketing + Full Stack |
+| **2** | Landing pages: `/for-artists`, `/for-creators`, `/for-labels` | ~4h | Marketing + Full Stack |
+| **2** | Case study videos: record creator testimonials | ~3h | Marketing |
+| **3** | SEO optimization: optimize all landing pages for long-tail keywords | ~4h | SEO Engineer |
+| **4** | Product Hunt launch prep: copy, screenshots, founder story | ~3h | Marketing |
+| **4** | Launch on Hacker News: "Show HN" post with open source pitch | ~2h | Marketing |
+| **5** | PR distribution: music tech blogs, creator economy newsletters | ~2h | Marketing |
+
+### Week 12 — Outreach & Content Expansion
+
+| Day | Item | Effort | Who |
+|-----|------|--------|-----|
+| **1** | Ramp creator outreach: 2× frequency (all hours instead of half) | ~1h | Backend Engineer |
+| **1** | Artist outreach personalization: use artist stats in email | ~2h | Backend Engineer |
+| **2** | Guest posting: 5 blog posts on music tech sites | ~5h | Content Engineer |
+| **2** | Reddit expansion: post to 10 subreddits instead of current | ~2h | Content Engineer |
+| **3** | Bluesky automation: daily metrics + featured campaigns | ~2h | Backend Engineer |
+| **3** | GitHub release notes: auto-post to repo on deploy | ~1h | DevOps |
+| **4** | Email digest upgrade: personalized recommendations, view metrics | ~3h | Full Stack |
+| **4** | Abandoned checkout emails: "You have an incomplete campaign" | ~2h | Backend Engineer |
+| **5** | Referral in bio links: `/r/[code]` shortlinks | ~1h | Backend Engineer |
+
+**Phase 4 success metrics:**
+- FAQPage schema on all artist pages
+- VideoObject + AggregateRating schema live
+- Referral flywheel: 20% of new users from referrals
+- 5 case studies published
+- Instagram automation posting daily
+- `/pricing` and `/compare` driving traffic
+
+---
+
+## Phase 5: Analytics & Code Quality to A+ (Week 13-14: Aug 28 - Sep 11)
+**Target: Analytics D-→A+, Testing C→A**
+
+| Week | Day | Item | Effort | Who |
+|------|-----|------|--------|-----|
+| **13** | **1-2** | Complete test coverage: all components, all API routes | ~10h | Test Engineer |
+| **13** | **3** | Property-based tests for financial models (fuzz testing) | ~4h | Test Engineer |
+| **13** | **3** | Visual regression tests (Percy/Chromatic) | ~3h | Test Engineer |
+| **13** | **4-5** | Cohort analysis: weekly retention dashboard, cohort comparison | ~6h | Data Engineer |
+| **14** | **1** | Conversion funnel: automated monitoring + drop-off alerts | ~4h | Data Engineer |
+| **14** | **2** | Business dashboard: MRR, ARPU, CAC, LTV fully automated | ~4h | Full Stack |
+| **14** | **3** | A/B results dashboard: statistical significance calculator | ~3h | Full Stack |
+| **14** | **4-5** | Code quality sweep: 0 `:any`, 0 `console.log`, 0 `.bak` files | ~6h | All Engineers |
+| **14** | **5** | Auth pattern consolidation: final cleanup of remaining legacy patterns | ~2h | Backend Engineer |
+
+**Phase 5 success metrics:**
+- 200+ tests, 80%+ coverage on critical code
+- Visual regression tests on all major pages
+- Cohort retention analysis live
+- Business dashboard with real-time MRR/ARPU/CAC
+- 0 `:any`, 0 `console.log` in production
+
+---
+
+## Phase 6: i18n & International (Week 15-16: Sep 11-25)
+**Target: Legal D→B+, Architecture B+→A, All Others Maintain A**
+
+| Week | Day | Item | Effort | Who |
+|------|-----|------|--------|-----|
+| **15** | **1-2** | i18n framework: next-intl setup, routing, locale detection | ~6h | Frontend Engineer |
+| **15** | **2-3** | Translation extraction: all user-facing strings | ~4h | Frontend Engineer |
+| **15** | **4** | Currency: Stripe Connect multi-currency support | ~4h | Backend Engineer |
+| **15** | **5** | First translation: NL (Dutch) — founder's home market | ~3h | Content |
+| **16** | **1** | Date/time: remove hardcoded `en-US`, use locale-aware formatting | ~2h | Frontend Engineer |
+| **16** | **2** | Number formatting: locale-aware K/M abbreviations | ~1h | Frontend Engineer |
+| **16** | **3** | Font fallbacks: CJK/Arabic/Cyrillic support | ~2h | Frontend Engineer |
+| **16** | **4** | RTL CSS audit: ensure layout works in RTL | ~3h | Frontend Engineer |
+| **16** | **5** | Privacy Policy update: international transfers, DPO, portability | ~2h | Legal |
+| **16** | **5** | ToS update: arbitration clause, jurisdiction | ~2h | Legal |
+
+**Phase 6 success metrics:**
+- i18n framework deployed with NL + EN locales
+- Multi-currency payments through Stripe Connect
+- Date/time/currency locale-aware
+- Privacy Policy complete with DPO and international transfers
+
+---
+
+## Post-Phase 6: Maintain & Iterate
+
+Once all phases are complete, the platform should operate in **maintenance + iteration mode**:
+
+| Cadence | Activity |
+|---------|----------|
+| **Daily** | Monitor error rates, check conversion funnel, review A/B results |
+| **Weekly** | Cohort retention check, business dashboard review, deploy cycle |
+| **Bi-weekly** | A/B experiment analysis, feature flag cleanup, SEO content update |
+| **Monthly** | Full audit: security scan, dependency updates, Lighthouse score review |
+| **Quarterly** | Legal review, privacy policy update, 1099 filing, competitive landscape scan |
+
+---
+
+## Resource Allocation Summary
+
+| Phase | Total Effort | Engineer-days | Security | Frontend | Backend | Marketing | Legal |
+|-------|-------------|---------------|----------|----------|---------|-----------|-------|
+| **P0** Foundation | ~31h | ~4 days | 3 | 2 | 3 | — | 2 |
+| **P1** Conversion + Perf | ~38h | ~5 days | — | 7 | 3 | 1 | — |
+| **P2** Testing + Analytics | ~51h | ~6 days | — | 1 | 7 | — | — |
+| **P3** Architecture + UX | ~42h | ~5 days | — | 8 | 5 | — | — |
+| **P4** SEO + Marketing | ~65h | ~8 days | — | 2 | 1 | 10 | — |
+| **P5** Analytics + Code | ~45h | ~6 days | — | 2 | 3 | — | — |
+| **P6** i18n + Legal | ~32h | ~4 days | — | 5 | 2 | — | 2 |
+| **All Phases** | **~304h** | **~38 days** | 3 | 27 | 24 | 11 | 4 |
+
+**Note:** Effort estimates assume parallel work. Sequential wall-clock time depends on team size. With 1 full-time engineer: ~8-10 weeks of focused execution. With 2 engineers: ~5-6 weeks. With 2 engineers + 1 marketing: ~4 weeks.
+
+---
+
+## A+ Definition Per Dimension (Measurable Outcomes)
+
+| Dimension | Current Score | A+ Target | Key Metrics for A+ |
+|-----------|--------------|-----------|-------------------|
+| **SEO & LLMO** | A (90) | A+ (96+) | FAQPage on all pages, VideoObject schema, AggregateRating, @id references, 100% pages with answer-first blocks, all images have descriptive alt text |
+| **UI/UX & Design** | B+ (82) | A+ (94+) | Gray scale used everywhere, spacing tokens enforced, container queries, WCAG AA pass, no color-only validation, all modals accessible, responsive < 3s on 3G |
+| **Conversion & Funnel** | C (55) | A+ (90+) | 100% guided onboarding, post-first-action activation on every action, social proof at every funnel stage, A/B optimized CTAs, < 3 steps to first value |
+| **Security & Auth** | D (45) | A (90+) | 0 unauthenticated endpoints, CSP enforced, CSRF on every mutation, rate limiting on all routes, Stripe webhooks verified, no hardcoded secrets |
+| **Marketing & Outreach** | B- (65) | A (92+) | Referral flywheel driving 20%+ new users, 5+ case studies, Instagram automation, retargeting campaigns, HARO/PR coverage, drip sequences live |
+| **Performance & Arch** | C (55) | A (90+) | Lighthouse 95+, Core Web Vitals green, 100% next/image, Cache-Control on all APIs, CDN for images, server components on static pages |
+| **Legal & Compliance** | D (40) | B+ (82+) | GDPR self-service endpoints, tax/1099 handling, cookie banner granular, COPPA compliant, Privacy Policy complete, arbitration clause |
+| **Analytics & Data** | D- (30) | A (90+) | Cohort retention, conversion funnel, business dashboard (MRR/ARPU/CAC), A/B testing with significance, real-time monitoring alerts |
+| **Testing & Code Quality** | F (20) | A (92+) | 200+ tests, 80%+ coverage, CI/CD blocking gates, 0 `:any`, 0 `console.log`, single auth pattern, Zod on all routes |
+| **Market Positioning** | B (78) | A+ (94+) | /pricing page, /compare page, tiered plans, landing pages per persona, Product Hunt launch, Hacker News front page candidate |
 
 ---
 

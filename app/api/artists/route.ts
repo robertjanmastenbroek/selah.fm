@@ -42,16 +42,16 @@ export async function GET(request: Request) {
     let orderBy: string;
     switch (sort) {
       case 'newest':
-        orderBy = 'MAX(at.created_at) DESC NULLS LAST';
+        orderBy = 'ap.pinned DESC, MAX(at.created_at) DESC NULLS LAST';
         break;
       case 'name':
-        orderBy = 'da.artist_name ASC';
+        orderBy = 'ap.pinned DESC, da.artist_name ASC';
         break;
       case 'listeners':
-        orderBy = 'COALESCE(da.monthly_listeners, 0) DESC NULLS LAST';
+        orderBy = 'ap.pinned DESC, COALESCE(da.monthly_listeners, 0) DESC NULLS LAST';
         break;
       default:
-        orderBy = 'COUNT(at.id) DESC, COALESCE(da.monthly_listeners, 0) DESC NULLS LAST';
+        orderBy = 'ap.pinned DESC, COUNT(at.id) DESC, COALESCE(da.monthly_listeners, 0) DESC NULLS LAST';
     }
 
     const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
@@ -60,13 +60,13 @@ export async function GET(request: Request) {
 
     const query = `
       SELECT da.id, da.artist_name, da.genres, da.monthly_listeners,
-             ap.slug, ap.spotify_image_url, ap.total_followers,
+             ap.slug, ap.spotify_image_url, ap.total_followers, ap.pinned,
              COUNT(at.id)::int as track_count
       FROM discovered_artists da
       LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
       LEFT JOIN artist_tracks at ON at.artist_id = da.id AND at.enabled = true
       ${whereClause}
-      GROUP BY da.id, ap.slug, ap.spotify_image_url, ap.total_followers
+      GROUP BY da.id, ap.slug, ap.spotify_image_url, ap.total_followers, ap.pinned
       ORDER BY ${orderBy}
       LIMIT $${limitIdx} OFFSET $${offsetIdx}
     `;
@@ -87,7 +87,10 @@ export async function GET(request: Request) {
       ${countWhere ? 'WHERE ' + countWhere : ''}
     `, countParams);
 
-    return NextResponse.json({ artists, total: total || 0, page, limit });
+    const response = NextResponse.json({ artists, total: total || 0, page, limit });
+    // Cache for 30s — artist list changes with new signups
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    return response;
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

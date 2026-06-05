@@ -36,7 +36,10 @@ export async function GET(request: Request) {
       LIMIT ${limit}
     `;
 
-    return NextResponse.json({ submissions });
+    const response = NextResponse.json({ submissions });
+    // Cache for 60s — trending data is updated every few hours
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    return response;
   } catch (e: any) {
     console.error('Discover error:', e.message);
     return NextResponse.json({ submissions: [] });

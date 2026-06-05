@@ -1,6 +1,14 @@
 # Status — Selah.fm
 
-**Last updated:** 2026-06-05
+**Last updated:** 2026-06-05 (commit pending)
+
+## This Session (2026-06-05)
+- **Pinned Robert-Jan Mastenbroek** as top artist on /browse — added `pinned` column to artist_profiles, ORDER BY `ap.pinned DESC`
+- **Full platform audit** — 10 dimensions scored vs top 0.0001% platforms. Overall: 56/100. A+ roadmap written (6 phases, 16 weeks, ~304h)
+- **Cache-Control** added to `/api/stats`, `/api/artists`, `/api/discover` (60s s-maxage + stale-while-revalidate)
+- **`/pricing` page** — interactive CPM calculator, two-column pricing, competitor comparison, FAQPage schema
+- **Social proof** — always-visible stats on homepage (2,158 artists), testimonial section, /pricing in footer
+- **Audit corrections found**: 4 admin routes already secured, CSRF already in middleware, Claim API already reads session (previous audit was stale)
 
 ## Live System Health
 - **Site**: selah.fm → 200 OK
