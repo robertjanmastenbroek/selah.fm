@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import PricingClient from './PricingClient';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +23,11 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://selah.fm/pricing' },
 };
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const t = await getTranslations('pricing');
+  const tn = await getTranslations('nav');
+  const tc = await getTranslations('common');
+
   return (
     <div className="min-h-screen bg-[#080817]">
       {/* Navigation */}
@@ -31,9 +36,9 @@ export default function PricingPage() {
           Selah<span className="text-primary">.fm</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign in</Link>
+          <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{tn('signIn')}</Link>
           <Link href="/login?redirect=/onboarding" className="text-sm px-4 py-2 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-all">
-            Get started
+            {tn('getStarted')}
           </Link>
         </div>
       </div>
@@ -43,15 +48,14 @@ export default function PricingPage() {
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-emerald-400 text-[11px] font-medium mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            Free to start · No monthly fees
+            {tc('free')} · {t('monthlySubscription')}
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading tracking-tight mb-4">
-            Fair pricing,<br />
+            {t('title')}<br />
             <span className="bg-gradient-to-r from-[#4338CA] via-[#818CF8] to-[#22C55E] bg-clip-text text-transparent">no middlemen</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-            Set your own CPM rate. Creators earn per verified view. Selah.fm takes 20%.
-            No subscriptions, no minimums, no hidden fees.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -64,15 +68,15 @@ export default function PricingPage() {
             <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h2 className="text-xl font-heading mb-2">For artists</h2>
-            <p className="text-muted-foreground text-sm mb-6">You set the budget. You approve every video. You only pay for verified views.</p>
+            <h2 className="text-xl font-heading mb-2">{t('forArtists')}</h2>
+            <p className="text-muted-foreground text-sm mb-6">{t('forArtistsDesc')}</p>
             <ul className="space-y-3 text-sm">
               {[
-                { label: 'Platform fee', detail: '20%' },
-                { label: 'Setup cost', detail: 'Free' },
-                { label: 'Monthly subscription', detail: 'None' },
+                { label: t('platformFee'), detail: t('platformFeePercent') },
+                { label: t('setupCost'), detail: tc('free') },
+                { label: t('monthlySubscription'), detail: tc('free') },
                 { label: 'Withdrawal fee (Stripe)', detail: '2.9% + $0.30' },
-                { label: 'Unspent budget', detail: '100% refundable' },
+                { label: t('unspentBudget'), detail: '100% refundable' },
               ].map((item, i) => (
                 <li key={i} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
                   <span className="text-muted-foreground">{item.label}</span>
@@ -81,7 +85,7 @@ export default function PricingPage() {
               ))}
             </ul>
             <Link href="/welcome-artists" className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-500 transition-all">
-              Start promoting music →
+              {t('startPromoting')} →
             </Link>
           </div>
 
@@ -89,8 +93,8 @@ export default function PricingPage() {
             <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h2 className="text-xl font-heading mb-2">For creators</h2>
-            <p className="text-muted-foreground text-sm mb-6">Browse campaigns, make content, earn per verified view. No minimum followers required.</p>
+            <h2 className="text-xl font-heading mb-2">{t('forCreators')}</h2>
+            <p className="text-muted-foreground text-sm mb-6">{t('forCreatorsDesc')}</p>
             <ul className="space-y-3 text-sm">
               {[
                 { label: 'Platform fee', detail: '20% (from gross)' },
@@ -107,25 +111,25 @@ export default function PricingPage() {
               ))}
             </ul>
             <Link href="/welcome-creators" className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-500 transition-all">
-              Start earning as a creator →
+              {t('startEarning')} →
             </Link>
           </div>
         </div>
 
         {/* ── Comparison Table ── */}
         <div className="mt-20">
-          <h2 className="text-2xl md:text-3xl font-heading text-center mb-2">How we compare</h2>
-          <p className="text-muted-foreground text-sm text-center mb-10">See how Selah.fm stacks up against other music promotion platforms.</p>
+          <h2 className="text-2xl md:text-3xl font-heading text-center mb-2">{t('compareTitle')}</h2>
+          <p className="text-muted-foreground text-sm text-center mb-10">{t('compareDesc')}</p>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06]">
-                  <th className="text-left py-4 pr-4 font-semibold">Feature</th>
+                  <th className="text-left py-4 pr-4 font-semibold">{t('featureLabel')}</th>
                   <th className="text-center py-4 px-4 font-heading text-primary">Selah.fm</th>
-                  <th className="text-center py-4 px-4 text-muted-foreground/60">TikTok Creator Fund</th>
-                  <th className="text-center py-4 px-4 text-muted-foreground/60">SoundBetter</th>
-                  <th className="text-center py-4 px-4 text-muted-foreground/60">BeatStars</th>
+                  <th className="text-center py-4 px-4 text-muted-foreground/60">{t('tikTok')}</th>
+                  <th className="text-center py-4 px-4 text-muted-foreground/60">{t('soundBetter')}</th>
+                  <th className="text-center py-4 px-4 text-muted-foreground/60">{t('beatStars')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,8 +159,8 @@ export default function PricingPage() {
 
         {/* ── FAQ ── */}
         <div className="mt-20 max-w-2xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-heading text-center mb-2">Pricing FAQ</h2>
-          <p className="text-muted-foreground text-sm text-center mb-10">Common questions about how Selah.fm pricing works.</p>
+          <h2 className="text-2xl md:text-3xl font-heading text-center mb-2">{t('faqTitle')}</h2>
+          <p className="text-muted-foreground text-sm text-center mb-10">{t('faqDesc')}</p>
 
           <div className="space-y-3">
             {[
@@ -181,8 +185,8 @@ export default function PricingPage() {
 
         {/* ── Final CTA ── */}
         <div className="mt-20 text-center">
-          <h2 className="text-2xl md:text-3xl font-heading mb-3">Ready to start?</h2>
-          <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto">No credit card required. Free to join. Start promoting your music or earning as a creator in 2 minutes.</p>
+          <h2 className="text-2xl md:text-3xl font-heading mb-3">{t('readyToStart')}</h2>
+          <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto">{t('noCreditCard')}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/login?redirect=/onboarding" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all">
               Create free account
