@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 import { ADMIN_EMAILS } from '@/lib/constants';
 
 /**
@@ -9,10 +9,10 @@ import { ADMIN_EMAILS } from '@/lib/constants';
  * Called after approving a submission to clean up duplicates.
  */
 export async function POST(request: Request) {
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const isAdmin = ADMIN_EMAILS.includes(session.email || '');
+  const isAdmin = ADMIN_EMAILS.includes(user.email || '');
   if (!isAdmin) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
   try {
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       UPDATE submissions
       SET review_status = 'rejected',
           reviewed_at = NOW(),
-          reviewed_by = ${session.id},
+          reviewed_by = ${user.id},
           rejection_reason = 'Duplicate submission — original was approved'
       WHERE content_url = ${content_url}
         AND campaign_id = ${campaign_id}

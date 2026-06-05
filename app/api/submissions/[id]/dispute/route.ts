@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 import { ADMIN_EMAILS } from '@/lib/constants';
 
 /**
@@ -18,8 +18,8 @@ export async function POST(
     return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
   }
 
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
     const submissionId = params.id;
@@ -45,7 +45,7 @@ export async function POST(
     const sub = subs[0];
 
     // Only the creator who submitted can dispute
-    if (sub.creator_id !== session.id) {
+    if (sub.creator_id !== user.id) {
       return NextResponse.json({ error: 'Only the submission creator can dispute' }, { status: 403 });
     }
 
@@ -108,10 +108,10 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  const isAdmin = ADMIN_EMAILS.includes(session.email || '');
+  const isAdmin = ADMIN_EMAILS.includes(user.email || '');
   if (!isAdmin) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }

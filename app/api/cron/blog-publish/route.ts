@@ -64,7 +64,7 @@ export async function GET(request: Request) {
         }).catch(e => console.error('[blog-publish] X post failed:', e.message));
       }
 
-      console.log(`Blog post published: "${post.title}" (${post.slug})`);
+      // Blog post published
       published.push({ title: post.title, slug: post.slug });
     }
 

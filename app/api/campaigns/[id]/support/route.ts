@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 
 /**
  * POST /api/campaigns/[id]/support
@@ -30,7 +30,7 @@ export async function POST(
     const campaign = campaigns[0];
     const campaignId = campaign.id; // always UUID — never slug
     const amountCents = Math.round(donationAmount * 100);
-    const session = await getSession(request);
+    const user = await getUser();
 
     const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
 
@@ -41,7 +41,7 @@ export async function POST(
       metadata: {
         type: 'campaign_donation',
         campaignId,  // always UUID
-        donorId: session?.id || '',
+        donorId: user?.id || '',
         donorName: (donorName || 'Anonymous fan').slice(0, 100),
         donorEmail: email || '',
         message: (message || '').slice(0, 500),

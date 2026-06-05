@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession, ADMIN_EMAILS } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
+import { ADMIN_EMAILS } from '@/lib/constants';
 
 export async function POST(request: Request) {
-  const session = await getSession(request);
-  if (!session || !ADMIN_EMAILS.includes(session.email)) {
+  const user = await getUser();
+  if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   }
 
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     try {
       await sql`
         INSERT INTO email_logs (recipient, subject, status, metadata)
-        VALUES (${to}, ${subject}, ${sent ? 'sent' : 'failed'}, ${JSON.stringify({ sent_by: session.email, body_preview: body.substring(0, 200) })})
+        VALUES (${to}, ${subject}, ${sent ? 'sent' : 'failed'}, ${JSON.stringify({ sent_by: user.email, body_preview: body.substring(0, 200) })})
       `;
     } catch (e: any) { console.error('Unhandled error in api/admin/emails/send/route.ts:', e); }
 

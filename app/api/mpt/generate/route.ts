@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const script = await generateScript(input);
 
     // Step 2: Submit to MPT
-    console.log(`[mpt/generate] Submitting to MPT for ${input.artistName}...`);
+    // Submitting to MPT
     const mptRes = await fetch('http://localhost:8080/api/v1/videos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     // Step 3: Poll MPT for completion
-    console.log(`[mpt/generate] Polling task ${taskId.slice(0, 8)}...`);
+    // Polling task
     let videoUrl: string | null = null;
     for (let i = 0; i < 40; i++) {
       await new Promise(r => setTimeout(r, 3000));
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
     }
 
     // Step 4: Download video from MPT and upload to Supabase Storage
-    console.log(`[mpt/generate] Downloading video from MPT...`);
+    // Downloading video from MPT
     const videoRes = await fetch(videoUrl, { signal: AbortSignal.timeout(30000) });
     if (!videoRes.ok) {
       return NextResponse.json({ error: 'Failed to download video from MPT' }, { status: 502 });
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     }
 
     const { data: publicUrl } = supabase.storage.from('outreach-videos').getPublicUrl(videoId);
-    console.log(`[mpt/generate] ✅ Uploaded: ${publicUrl.publicUrl.slice(0, 60)}...`);
+    // Uploaded
 
     // Step 5: Generate caption + DM
     const caption = generateCaption(input);

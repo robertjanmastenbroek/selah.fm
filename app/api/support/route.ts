@@ -297,7 +297,7 @@ async function detectBug(message: string, history: any[]) {
         'new'
       )
     `;
-    console.log('[BUG] Auto-captured:', message.slice(0, 80));
+    // Bug auto-captured
   } catch {
     // Table might not exist — non-critical
   }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession, isAdminRequest } from '@/lib/auth';
+import { isAdminRequest } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 
 /**
  * POST — Submit a bug report (any authenticated user)
@@ -9,7 +10,7 @@ import { getSession, isAdminRequest } from '@/lib/auth';
  * DELETE — Delete a bug (admin only)
  */
 export async function POST(request: Request) {
-  const session = await getSession(request);
+  const user = await getUser();
   const { description, stepsToReproduce, severity = 'medium' } = await request.json();
 
   if (!description || typeof description !== 'string' || description.trim().length < 10) {
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   const sev = validSeverities.includes(severity) ? severity : 'medium';
 
   try {
-    const userId = session?.id || null;
+    const userId = user?.id || null;
     const result = await sql`
       INSERT INTO bugs (user_id, description, steps_to_reproduce, severity, status)
       VALUES (${userId}, ${description.trim()}, ${stepsToReproduce?.trim() || null}, ${sev}, 'new')
@@ -38,10 +39,10 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   // Allow users to see their own bug reports
-  const session = await getSession(request);
+  const user = await getUser();
   const isAdmin = await isAdminRequest(request);
   
-  if (!isAdmin && !session?.id) {
+  if (!isAdmin && !user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
              COALESCE(u.email, 'anonymous') as user_email
       FROM bugs b
       LEFT JOIN users u ON u.id = b.user_id
-      ${isAdmin || !session?.id ? sql`` : sql`WHERE b.user_id = ${session.id}`}
+      ${isAdmin || !user?.id ? sql`` : sql`WHERE b.user_id = ${user.id}`}
       ORDER BY b.created_at DESC
       LIMIT 100
     `;

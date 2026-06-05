@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { getUser } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,9 +47,9 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const { getSession } = await import('@/lib/auth');
-    const session = await getSession(request);
-    if (!session) {
+
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
@@ -60,7 +61,7 @@ export async function POST(
       JOIN artist_profiles ap ON ap.artist_id = da.id
       JOIN campaign_claims cc ON cc.discovered_artist_id = da.id
       JOIN campaigns c ON c.id = cc.campaign_id
-      WHERE ap.slug = ${slug} AND c.artist_id = ${session.id}
+      WHERE ap.slug = ${slug} AND c.artist_id = ${user.id}
       LIMIT 1
     `;
     if (!artist) {

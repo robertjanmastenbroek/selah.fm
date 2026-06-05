@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 
 /**
  * POST /api/stripe/connect — creates Stripe Connect Express onboarding link.
  * Creator clicks "Set up payouts" → gets Stripe-hosted onboarding URL.
  */
 export async function POST(request: Request) {
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const stripeKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeKey) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     // Check if creator already has a Stripe account (check both column names)
     const { default: sql } = await import('@/lib/db');
-    const rows = await sql`SELECT stripe_account_id, stripe_connect_id FROM users WHERE id = ${session.id}`;
+    const rows = await sql`SELECT stripe_account_id, stripe_connect_id FROM users WHERE id = ${user.id}`;
     let accountId = rows[0]?.stripe_account_id || rows[0]?.stripe_connect_id;
 
     // Create new Stripe Connect Express account if needed
@@ -27,12 +27,12 @@ export async function POST(request: Request) {
       const account = await stripe.accounts.create({
         type: 'express',
         country: 'US',
-        email: session.email,
+        email: user.email,
         capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
         business_type: 'individual',
       });
       accountId = account.id;
-      await sql`UPDATE users SET stripe_account_id = ${accountId} WHERE id = ${session.id}`;
+      await sql`UPDATE users SET stripe_account_id = ${accountId} WHERE id = ${user.id}`;
     } else {
       // Ensure existing accounts also have card_payments capability (Stripe requires it
       // alongside transfers for US accounts). Stripe's update is idempotent — safe to call

@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 import { ADMIN_EMAILS } from '@/lib/constants';
 
 export async function GET(request: Request) {
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
-    const userId = session.id;
-    const isAdmin = ADMIN_EMAILS.includes(session.email || '');
+    const userId = user.id;
+    const isAdmin = ADMIN_EMAILS.includes(user.email || '');
     
     // Admins see all submissions, users see only their own
     const filterClause = isAdmin ? '' : `AND s.creator_id = '${userId}'`;

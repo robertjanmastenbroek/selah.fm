@@ -25,9 +25,9 @@ export async function GET(request: Request) {
 
     // If user is authenticated, show only their campaigns (dashboard).
     // If not, show all active/draft campaigns (public browse).
-    const { getSession } = await import('@/lib/auth');
-    const session = await getSession(request);
-    const isOwnerView = !!session;
+    const { getUser } = await import('@/lib/supabase/server');
+    const user = await getUser();
+    const isOwnerView = !!user;
 
     // ORDER BY must be raw SQL — cannot use sql`` helper (returns object, not string)
     const pinSort = `c.is_pinned DESC NULLS LAST`;
@@ -83,7 +83,7 @@ export async function GET(request: Request) {
     let p = (v: any) => { params.push(v); return params.length; };
 
     if (isOwnerView) {
-      conditions.push(`c.artist_id = $${p(session.id)}`);
+      conditions.push(`c.artist_id = $${p(user.id)}`);
     } else {
       conditions.push(`c.status IN ('active', 'draft')`);
     }
@@ -206,7 +206,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { validateCampaignInput } = await import('@/lib/validation');
-    const { getSession } = await import('@/lib/auth');
+    const { getUser } = await import('@/lib/supabase/server');
 
     const validation = validateCampaignInput(body);
     if (!validation.valid) {
@@ -216,16 +216,16 @@ export async function POST(request: Request) {
     const { trackTitle, trackUrl, cpmRate, budget, maxPayout, requirements, driveUrl, hashtags, coverArtUrl } = validation.sanitized!;
     const { requiredHashtags, requireFtc, minVideoLength, captionRequirements } = body;
 
-    const session = await getSession(request);
-    if (!session) {
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const userId = session.id;
+    const userId = user.id;
 
     // Fetch display_name and genres for auto-generated defaults
     const profile = await sql`SELECT display_name, genres FROM users WHERE id = ${userId}`;
-    const artistName = profile.length > 0 ? profile[0].display_name : session.name;
+    const artistName = profile.length > 0 ? profile[0].display_name : (user.user_metadata?.full_name || user.email?.split('@')[0] || 'Artist');
     const artistGenres = profile.length > 0 ? profile[0].genres : null;
 
     // Auto-generate defaults for empty fields

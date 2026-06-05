@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 
 /**
  * OAuth callback — handles code exchange for TikTok, Instagram, YouTube, Facebook.
@@ -22,8 +22,8 @@ export async function GET(request: Request) {
   }
 
   // Get current user from session
-  const session = await getSession(request);
-  if (!session) {
+  const user = await getUser();
+  if (!user) {
     return NextResponse.redirect(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/login`);
   }
 
@@ -161,13 +161,13 @@ export async function GET(request: Request) {
     try {
       const formattedHandle = handle.startsWith('@') ? handle : '@' + handle;
       if (state === 'tiktok') {
-        await sql`UPDATE users SET tiktok_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${session.id}`;
+        await sql`UPDATE users SET tiktok_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${user.id}`;
       } else if (state === 'instagram') {
-        await sql`UPDATE users SET instagram_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${session.id}`;
+        await sql`UPDATE users SET instagram_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${user.id}`;
       } else if (state === 'youtube') {
-        await sql`UPDATE users SET youtube_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${session.id}`;
+        await sql`UPDATE users SET youtube_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${user.id}`;
       } else if (state === 'facebook') {
-        await sql`UPDATE users SET facebook_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${session.id}`;
+        await sql`UPDATE users SET facebook_handle = ${formattedHandle}, updated_at = NOW() WHERE id = ${user.id}`;
       }
     } catch (dbErr) {
       console.error('Failed to save handle:', dbErr);

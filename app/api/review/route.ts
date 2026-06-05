@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 import { trackApproveSubmission } from '@/lib/analytics-server';
 import { ADMIN_EMAILS } from '@/lib/constants';
 
@@ -9,8 +9,8 @@ export async function POST(request: Request) {
   const rl = await rateLimit(getRateLimitKey(request), { maxRequests: 30, windowMs: 60_000 });
   if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
 
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
     const { submissionId, status, feedback } = await request.json();
@@ -36,8 +36,8 @@ export async function POST(request: Request) {
     const sub = subs[0];
 
     // Ownership check: campaign artist OR admin can review
-    const isAdmin = ADMIN_EMAILS.includes(session.email || '');
-    if (sub.artist_id !== session.id && !isAdmin) {
+    const isAdmin = ADMIN_EMAILS.includes(user.email || '');
+    if (sub.artist_id !== user.id && !isAdmin) {
       return NextResponse.json({ error: 'You can only review submissions on your own campaigns' }, { status: 403 });
     }
 
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
       const result = await sql`
         UPDATE submissions
-        SET review_status = 'approved', reviewed_at = NOW(), reviewed_by = ${session.id},
+        SET review_status = 'approved', reviewed_at = NOW(), reviewed_by = ${user.id},
             payout_amount_cents = ${creatorEarnsCents}, payout_status = 'processing'
         WHERE id = ${submissionId}
         RETURNING *
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
       })();
 
       // 3. GA tracking (fire-and-forget)
-      trackApproveSubmission(session.id).catch((e: any) => console.error('[review] Analytics failed:', e.message));
+      trackApproveSubmission(user.id).catch((e: any) => console.error('[review] Analytics failed:', e.message));
 
       const responseData = { ...result[0], payout_note: payoutNote };
       return NextResponse.json(responseData);
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
     // Rejection
     const result = await sql`
       UPDATE submissions
-      SET review_status = ${status}, reviewed_at = NOW(), reviewed_by = ${session.id},
+      SET review_status = ${status}, reviewed_at = NOW(), reviewed_by = ${user.id},
           rejection_reason = ${feedback || null}
       WHERE id = ${submissionId}
       RETURNING *

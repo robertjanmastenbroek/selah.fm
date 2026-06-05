@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 
 /**
  * POST /api/ratings — Rate a user after a transaction completes
  * GET /api/ratings?userId=X — Get all ratings for a user (with avg)
  */
 export async function POST(request: Request) {
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
     const { submissionId, score, comment, role } = await request.json();
@@ -44,12 +44,12 @@ export async function POST(request: Request) {
     // Verify reviewer is the right person
     let revieweeId: string;
     if (role === 'artist') {
-      if (sub.artist_id !== session.id) {
+      if (sub.artist_id !== user.id) {
         return NextResponse.json({ error: 'Only the campaign artist can rate the creator' }, { status: 403 });
       }
       revieweeId = sub.creator_id;
     } else {
-      if (sub.creator_id !== session.id) {
+      if (sub.creator_id !== user.id) {
         return NextResponse.json({ error: 'Only the submitting creator can rate the artist' }, { status: 403 });
       }
       revieweeId = sub.artist_id;
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     // Check no duplicate
     const existing = await sql`
       SELECT id FROM ratings
-      WHERE submission_id = ${submissionId} AND reviewer_id = ${session.id}
+      WHERE submission_id = ${submissionId} AND reviewer_id = ${user.id}
     `;
     if (existing.length > 0) {
       return NextResponse.json({ error: 'You already rated this submission' }, { status: 409 });
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
     const result = await sql`
       INSERT INTO ratings (submission_id, reviewer_id, reviewee_id, reviewer_role, score, comment)
-      VALUES (${submissionId}, ${session.id}, ${revieweeId}, ${role}, ${score}, ${comment || null})
+      VALUES (${submissionId}, ${user.id}, ${revieweeId}, ${role}, ${score}, ${comment || null})
       RETURNING *
     `;
 

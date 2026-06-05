@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 
 export async function GET(
   request: Request,
@@ -82,8 +82,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   try {
     const body = await request.json();
@@ -100,7 +100,7 @@ export async function PATCH(
     // Ownership check
     const campaign = await sql`SELECT * FROM campaigns WHERE id = ${campaignId}`;
     if (campaign.length === 0) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
-    if (campaign[0].artist_id !== session.id) {
+    if (campaign[0].artist_id !== user.id) {
       return NextResponse.json({ error: 'Not your campaign' }, { status: 403 });
     }
 

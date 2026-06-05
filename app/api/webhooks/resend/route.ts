@@ -64,7 +64,7 @@ export async function POST(request: Request) {
           AND channel = 'email' 
           AND status = 'sent'
       `;
-      console.log(`📧 Bounce: ${artist.artist_name} (${email})`);
+      // Bounce logged
       return NextResponse.json({ ok: true, artist: artist.artist_name, event: eventType });
     }
 

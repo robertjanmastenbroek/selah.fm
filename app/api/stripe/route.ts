@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 import { trackFundCampaign } from '@/lib/analytics-server';
 
 /**
@@ -13,8 +13,8 @@ export async function POST(request: Request) {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
 
-  const session = await getSession(request);
-  if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  const user = await getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
   const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
   const rl = await rateLimit(getRateLimitKey(request), { maxRequests: 10, windowMs: 60_000 });
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     if (!depositAmount || depositAmount < 5) return NextResponse.json({ error: 'Minimum deposit is $5' }, { status: 400 });
 
     // Verify campaign ownership
-    const campaigns = await sql`SELECT id, track_title, cover_art_url FROM campaigns WHERE id = ${campaignId} AND artist_id = ${session.id}`;
+    const campaigns = await sql`SELECT id, track_title, cover_art_url FROM campaigns WHERE id = ${campaignId} AND artist_id = ${user.id}`;
     if (campaigns.length === 0) return NextResponse.json({ error: 'Campaign not found or not yours' }, { status: 404 });
 
     const campaign = campaigns[0];
@@ -39,14 +39,14 @@ export async function POST(request: Request) {
       metadata: {
         type: 'campaign_deposit',
         campaignId,
-        userId: session.id || '',
+        userId: user.id || '',
       },
       description: `Deposit to "${campaign.track_title}" campaign`,
       statement_descriptor_suffix: 'SELAHFM DEPOSIT',
     });
 
     // Server-side GA tracking
-    trackFundCampaign(depositAmount, session.id).catch(e => console.error('Async error in api/stripe/route.ts:', e));
+    trackFundCampaign(depositAmount, user.id).catch(e => console.error('Async error in api/stripe/route.ts:', e));
 
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret || '',

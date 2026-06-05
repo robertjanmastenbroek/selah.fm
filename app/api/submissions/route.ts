@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { getUser } from '@/lib/supabase/server';
 import { trackSubmitContent } from '@/lib/analytics-server';
 import { normalizeUrl, extractVideoId } from '@/lib/url-normalize';
 
@@ -39,12 +39,12 @@ export async function POST(request: Request) {
       }
     }
     
-    const session = await getSession(request);
-    if (!session) {
+    const user = await getUser();
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const creatorId = session.id;
+    const creatorId = user.id;
 
     // Normalize URL for storage (strips tracking params, resolves short URLs)
     const normalizedUrl = normalizeUrl(contentUrl);
@@ -110,7 +110,10 @@ export async function POST(request: Request) {
     trackSubmitContent(platform, creatorId).catch((e: any) => console.error('Async error in api/submissions/route.ts:', e));
 
     // Live ticker event
-    const creatorName = session.name || 'Someone';
+    const [profileRow] = await sql`
+      SELECT display_name FROM users WHERE id = ${creatorId} LIMIT 1
+    `;
+    const creatorName = profileRow?.display_name || (user.user_metadata?.full_name || user.email?.split('@')[0] || 'Someone');
     const creatorFirst = creatorName.split(' ')[0];
     const creatorLastInitial = creatorName.split(' ').slice(1).join(' ')[0] || '';
     const platformLabel = platform === 'instagram' ? 'Instagram Reels' : platform === 'youtube' ? 'YouTube Shorts' : platform === 'facebook' ? 'Facebook' : 'TikTok';
@@ -132,7 +135,7 @@ export async function POST(request: Request) {
           VALUES (
             ${campaign[0].artist_id},
             'submission',
-            ${`New submission on "${campaign[0].track_title}" from @${session.name}`},
+            ${`New submission on "${campaign[0].track_title}" from @${creatorName}`},
             '/review',
             ${JSON.stringify({ campaign_id: campaignId, submission_id: result[0].id })}
           )

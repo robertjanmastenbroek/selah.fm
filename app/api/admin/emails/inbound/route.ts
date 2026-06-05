@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       VALUES (${from}, ${email.from_name || ''}, ${subject}, ${text}, ${html}, NOW())
     `;
 
-    console.log(`Inbound email stored: ${subject} from ${from}`);
+    // Inbound email stored
 
     return NextResponse.json({ received: true });
   } catch (e: any) {
