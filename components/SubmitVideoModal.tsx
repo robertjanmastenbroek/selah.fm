@@ -113,24 +113,57 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
 
             <div className="p-5 space-y-4">
               {success ? (
-                <div className="text-center py-8 space-y-2">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto">
-                    <Video size={20} className="text-emerald-400" />
+                <div className="text-center py-6 space-y-4">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                    className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto"
+                  >
+                    <Video size={24} className="text-emerald-400" />
+                  </motion.div>
+                  <div>
+                    <p className="font-bold text-base">Video submitted! 🎉</p>
+                    <p className="text-xs text-muted-foreground mt-1">The artist will review it shortly.</p>
                   </div>
-                  <p className="font-semibold">Video submitted!</p>
-                  <p className="text-xs text-muted-foreground mb-3">The artist will review it shortly.</p>
-                  <a
-                    href="/earnings"
-                    className="block w-full py-2.5 rounded-xl bg-primary/[0.1] border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/[0.15] transition-colors"
-                  >
-                    Track your submissions & earnings →
-                  </a>
-                  <button
-                    onClick={() => { setSuccess(false); setContentUrl(''); }}
-                    className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
-                  >
-                    Submit another video
-                  </button>
+
+                  {/* What's next? guidance */}
+                  <div className="bg-white/[0.03] rounded-xl border border-white/[0.06] p-4 space-y-2 text-left">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">What's next?</p>
+                    <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
+                      <span className="w-5 h-5 rounded-full bg-primary/[0.08] flex items-center justify-center text-[9px] font-bold text-primary shrink-0 mt-0.5">1</span>
+                      <span>The artist reviews your video — usually within 24 hours</span>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
+                      <span className="w-5 h-5 rounded-full bg-primary/[0.08] flex items-center justify-center text-[9px] font-bold text-primary shrink-0 mt-0.5">2</span>
+                      <span>If approved, you earn per verified view from the CPM rate</span>
+                    </div>
+                    <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
+                      <span className="w-5 h-5 rounded-full bg-primary/[0.08] flex items-center justify-center text-[9px] font-bold text-primary shrink-0 mt-0.5">3</span>
+                      <span>Withdraw your earnings via Stripe once you reach $10</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <a
+                      href="/earnings"
+                      className="block w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white text-sm font-bold hover:opacity-90 transition-all"
+                    >
+                      View your earnings →
+                    </a>
+                    <a
+                      href="/browse"
+                      className="block w-full py-2.5 rounded-xl bg-primary/[0.08] border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/[0.12] transition-colors"
+                    >
+                      Browse more campaigns
+                    </a>
+                    <button
+                      onClick={() => { setSuccess(false); setContentUrl(''); }}
+                      className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5"
+                    >
+                      Submit another video
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>

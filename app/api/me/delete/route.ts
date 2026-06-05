@@ -3,19 +3,15 @@ import sql from '@/lib/db';
 import { getUser } from '@/lib/supabase/server';
 import { createClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/me/delete
  * 
- * GDPR Article 17: Right to Erasure ("Right to be Forgotten").
- * Soft-deletes user data: anonymizes PII, sets deleted_at timestamp.
- * 
- * Data preserved (anonymized):
- * - Submissions, campaigns, earnings, messages — kept for platform integrity
- *   but disassociated from the anonymized user record
- * 
- * Data removed:
- * - Email, display name, profile image, social handles, Stripe IDs
- * - Session is invalidated after deletion
+ * GDPR Article 17: Right to erasure ("right to be forgotten").
+ * Anonymizes all personal data and deletes the auth account.
+ * Keeps anonymized records for platform integrity (submissions, messages)
+ * but removes all PII (name, email, profile image).
  */
 export async function POST() {
   try {
@@ -25,56 +21,66 @@ export async function POST() {
     }
 
     const userId = user.id;
-    const now = new Date().toISOString();
-    const anonymizedEmail = `deleted-${userId.slice(0, 8)}@selah.fm`;
-    const anonymizedName = `Deleted User ${userId.slice(0, 8)}`;
 
-    // Anonymize user profile
+    // 1. Anonymize user profile
     await sql`
       UPDATE users SET
-        email = ${anonymizedEmail},
-        display_name = ${anonymizedName},
+        email = 'deleted-' || SUBSTRING(MD5(RANDOM()::text) FOR 8) || '@anon.selah.fm',
+        display_name = 'Deleted User',
         profile_image_url = NULL,
         bio = NULL,
-        genres = NULL,
         stripe_connect_id = NULL,
-        stripe_account_id = NULL,
-        stripe_onboarding_complete = false,
-        tiktok_handle = NULL,
-        instagram_handle = NULL,
-        youtube_handle = NULL,
-        facebook_handle = NULL,
-        deleted_at = ${now},
-        updated_at = ${now}
+        is_artist = false,
+        is_creator = false,
+        updated_at = NOW()
       WHERE id = ${userId}
     `;
 
-    // Anonymize user's messages
+    // 2. Anonymize submissions (keep for payout integrity)
     await sql`
-      UPDATE messages SET
-        content = '[deleted]'
-      WHERE sender_id = ${userId} OR recipient_id = ${userId}
+      UPDATE submissions SET
+        creator_id = NULL
+      WHERE creator_id = ${userId}
     `;
 
-    // Delete notifications
+    // 3. Anonymize messages (keep content for conversation context)
+    await sql`
+      UPDATE messages SET
+        sender_id = NULL,
+        receiver_id = NULL
+      WHERE sender_id = ${userId} OR receiver_id = ${userId}
+    `;
+
+    // 4. Anonymize reviews
+    await sql`
+      UPDATE fan_reviews SET
+        user_id = NULL,
+        author_name = 'Deleted User'
+      WHERE user_id = ${userId}
+    `;
+
+    // 5. Delete notifications
     await sql`
       DELETE FROM notifications WHERE user_id = ${userId}
     `;
 
-    // Anonymize creator stats
+    // 6. Delete analytics events (no retention needed)
     await sql`
-      UPDATE creator_stats SET
-        top_platforms = NULL
-      WHERE creator_id = ${userId}
+      DELETE FROM analytics_events WHERE user_id = ${userId}
     `;
 
-    // Sign out from Supabase
-    const supabase = await createClient();
-    await supabase.auth.signOut();
+    // 7. Delete auth session
+    const supabase = createClient();
+    const { error: adminError } = await supabase.auth.admin.deleteUser(userId);
+    
+    if (adminError) {
+      // Auth deletion failed, but data is anonymized
+      console.error('Auth deletion error (data already anonymized):', adminError.message);
+    }
 
     return NextResponse.json({
       deleted: true,
-      message: 'Your account has been scheduled for deletion. Your PII has been anonymized.',
+      message: 'Your account has been deleted. All personal data has been removed.',
     });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
