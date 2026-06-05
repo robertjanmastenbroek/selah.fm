@@ -32,7 +32,7 @@ export async function POST(
     const amountCents = Math.round(donationAmount * 100);
     const user = await getUser();
 
-    const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
+    const stripe = new Stripe(key, { apiVersion: '2024-06-20' });
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,

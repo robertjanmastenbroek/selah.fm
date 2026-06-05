@@ -5,7 +5,7 @@ export async function GET() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return NextResponse.json({ error: 'STRIPE_SECRET_KEY not set' }, { status: 500 });
 
-  const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
+  const stripe = new Stripe(key, { apiVersion: '2024-06-20' });
 
   try {
     // Check if webhook already exists

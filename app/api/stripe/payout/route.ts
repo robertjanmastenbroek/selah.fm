@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   try {
     const { submissionId } = await request.json();
     const { default: Stripe } = await import('stripe');
-    const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' });
     const { default: sql } = await import('@/lib/db');
 
     // Get submission + creator + campaign artist info

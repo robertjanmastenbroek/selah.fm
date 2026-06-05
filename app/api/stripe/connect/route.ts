@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   try {
     // Lazy-load Stripe (ESM library)
     const { default: Stripe } = await import('stripe');
-    const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' as any });
+    const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' });
 
     // Check if creator already has a Stripe account (check both column names)
     const { default: sql } = await import('@/lib/db');

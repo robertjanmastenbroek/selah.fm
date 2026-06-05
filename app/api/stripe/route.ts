@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     if (campaigns.length === 0) return NextResponse.json({ error: 'Campaign not found or not yours' }, { status: 404 });
 
     const campaign = campaigns[0];
-    const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
+    const stripe = new Stripe(key, { apiVersion: '2024-06-20' });
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: depositAmount * 100,

@@ -14,13 +14,14 @@ export async function GET(request: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Try to get referral_code — handle missing column gracefully
-  let profile: any = null;
+  type Profile = { id: string; referral_code: string | null; referrer_earnings_cents: number | null; referred_by: string | null };
+  let profile: Profile | null = null;
   try {
     const result = await sql`
       SELECT id, referral_code, referrer_earnings_cents, referred_by
       FROM users WHERE id = ${user.id}
     `;
-    profile = result[0];
+    profile = result[0] as Profile | undefined || null;
   } catch {
     // Migration may not have run — fall back to basic query
     const result = await sql`
