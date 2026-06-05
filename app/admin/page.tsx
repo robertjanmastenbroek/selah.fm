@@ -9,6 +9,7 @@ export default function AdminOverviewPage() {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState('');
   const [bugs, setBugs] = useState<number>(0);
+  const [community, setCommunity] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/admin/overview', { credentials: 'include' })
@@ -23,6 +24,12 @@ export default function AdminOverviewPage() {
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setBugs(d.filter((b: any) => b.status === 'new').length); })
       .catch(e => console.error('Async error in admin/page.tsx:', e));
+
+    // Community stats
+    fetch('/api/admin/community/stats', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { if (!d.error) setCommunity(d); })
+      .catch(e => console.error('[ADMIN] community stats error:', e));
   }, []);
 
   if (error) {
@@ -114,6 +121,36 @@ export default function AdminOverviewPage() {
           );
         })}
       </div>
+
+      {/* Community metrics */}
+      {community && (
+        <div>
+          <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <Users size={14} className="text-primary/60" /> Community
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
+              <div className="text-2xl font-bold">{community.totalFeedback || 0}</div>
+              <div className="text-xs text-muted-foreground mt-1">Feedback responses</div>
+              <div className="text-[10px] text-muted-foreground/50 mt-0.5">{community.helpfulPercent || 0}% helpful</div>
+            </div>
+            <div className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
+              <div className="text-2xl font-bold">{community.totalEdits || 0}</div>
+              <div className="text-xs text-muted-foreground mt-1">Edit suggestions</div>
+              <div className="text-[10px] text-muted-foreground/50 mt-0.5">{community.approvalRate || 0}% approved</div>
+            </div>
+            <div className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
+              <div className="text-2xl font-bold">{community.avgModerationHours || 0}h</div>
+              <div className="text-xs text-muted-foreground mt-1">Avg moderation time</div>
+            </div>
+            <div className="rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-5">
+              <div className="text-2xl font-bold">{community.topContributors || 0}</div>
+              <div className="text-xs text-muted-foreground mt-1">Active contributors</div>
+              <a href="/review" className="text-[10px] text-primary/60 hover:text-primary mt-1 block">Review edits →</a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Detail panels */}
       <div className="grid md:grid-cols-2 gap-4">

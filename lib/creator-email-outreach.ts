@@ -32,6 +32,9 @@ export function renderCreatorOutreachEmail(params: {
     '',
     `Browse campaigns here: ${browseUrl}`,
     '',
+    `<strong>Spot a mistake on an artist's page?</strong><br>`,
+    `You can <a href="${browseUrl}" style="color:#5B7FFF;">suggest edits to any artist page</a> to help other creators find accurate info.`,
+    '',
     `— Robert-Jan<br>Founder, Selah.fm`,
   ].join('<br>');
 

@@ -30,6 +30,9 @@ export function renderArtistOutreachEmail(params: {
     '',
     `The page is live right now. Just claim it and share with your people. Or don't — no pressure.`,
     '',
+    `<strong>See something wrong on your page?</strong><br>`,
+    `Your bio, genre, and tracks were auto-generated. If anything's off, you can <a href="${params.claimUrl || 'https://selah.fm/browse'}" style="color:#5B7FFF;">suggest corrections here</a> — it takes 30 seconds.`,
+    '',
     `— Robert-Jan<br>Founder, Selah.fm`,
   ].join('<br>');
 
