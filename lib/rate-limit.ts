@@ -51,6 +51,22 @@ export async function rateLimit(
 }
 
 /**
+ * Rate limit for anonymous feedback submissions.
+ * 10 per hour per session/IP.
+ */
+export async function rateLimitFeedback(key: string): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
+  return rateLimit(`feedback:${key}`, { windowMs: 3600_000, maxRequests: 10 });
+}
+
+/**
+ * Rate limit for authenticated edit suggestions.
+ * 3 per day per user.
+ */
+export async function rateLimitEditSuggestion(userId: string): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
+  return rateLimit(`edit:user:${userId}`, { windowMs: 86400_000, maxRequests: 3 });
+}
+
+/**
  * Get rate limit key from request (IP or session).
  */
 export function getRateLimitKey(request: Request): string {
