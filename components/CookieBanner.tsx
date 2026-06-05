@@ -16,6 +16,11 @@ export default function CookieBanner() {
     setVisible(false);
   };
 
+  const reject = () => {
+    localStorage.setItem('cookie-consent', 'rejected');
+    setVisible(false);
+  };
+
   if (!visible) return null;
 
   return (
@@ -25,12 +30,20 @@ export default function CookieBanner() {
         By continuing, you agree to our{' '}
         <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
       </p>
-      <button
-        onClick={accept}
-        className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity active:scale-[0.98]"
-      >
-        Accept
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={reject}
+          className="flex-1 py-2.5 rounded-xl border border-white/[0.08] text-xs font-medium text-muted-foreground hover:bg-white/[0.04] transition-colors active:scale-[0.98]"
+        >
+          Reject all
+        </button>
+        <button
+          onClick={accept}
+          className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition-opacity active:scale-[0.98]"
+        >
+          Accept
+        </button>
+      </div>
     </div>
   );
 }

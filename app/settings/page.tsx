@@ -12,7 +12,7 @@ import { useToast } from '@/components/Toast';
 import CreatorAvatar from '@/components/CreatorAvatar';
 import ImageUpload from '@/components/ImageUpload';
 import { TikTok, Instagram, YouTube, Spotify } from '@/components/SocialIcons';
-import { User, Music4, DollarSign, Save, LogOut, Check, ArrowRight, Camera, Copy, Share2, Gift } from 'lucide-react';
+import { User, Music4, DollarSign, Save, LogOut, Check, ArrowRight, Camera, Copy, Share2, Gift, Download, Trash2, Shield } from 'lucide-react';
 
 export default function SettingsPage() {
   const { data: profileData, isLoading: profileLoading } = useSWR('/api/auth/me', fetcher, swrConfig);
@@ -303,6 +303,53 @@ export default function SettingsPage() {
                     </span>
                   </div>
                 )})}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ── Privacy & Data (GDPR) ───────────────────────────── */}
+          <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{delay:0.28,duration:0.4}}>
+            <div className="rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] p-6">
+              <div className="flex items-center gap-2 mb-1"><Shield size={16} strokeWidth={1.5} className="text-primary/60"/><h2 className="font-semibold text-sm">Privacy &amp; Data</h2></div>
+              <p className="text-xs text-muted-foreground mb-5">Your data is yours. Download or delete it anytime.</p>
+              <div className="space-y-3">
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/me/export');
+                      if (!res.ok) { addToast('Failed to export data', 'error'); return; }
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `selahfm-data-${new Date().toISOString().split('T')[0]}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      addToast('Your data has been downloaded', 'success');
+                    } catch { addToast('Export failed', 'error'); }
+                  }}
+                  className="w-full py-3 rounded-xl bg-primary/[0.06] border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/[0.1] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Download size={14} /> Download my data
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('Are you sure you want to delete your account? This will anonymize all your personal data and sign you out. This action cannot be undone.')) return;
+                    try {
+                      const res = await fetch('/api/me/delete', { method: 'POST' });
+                      if (res.ok) {
+                        addToast('Account deleted. Redirecting...', 'success');
+                        setTimeout(() => router.push('/'), 2000);
+                      } else {
+                        const err = await res.json();
+                        addToast(err.error || 'Delete failed', 'error');
+                      }
+                    } catch { addToast('Delete failed', 'error'); }
+                  }}
+                  className="w-full py-3 rounded-xl border border-red-500/20 text-red-400 text-xs font-semibold hover:bg-red-500/[0.04] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={14} /> Delete my account
+                </button>
               </div>
             </div>
           </motion.div>
