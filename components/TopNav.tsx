@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import { LayoutDashboard, Banknote, Settings, LogOut, Search, Menu, MessageCircle, Sparkles, Mail, TrendingUp, Video } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
+import LocaleSwitcher from '@/components/LocaleSwitcher';
 
 export default function Header() {
   const { data } = useSWR('/api/auth/me', fetcher, swrConfig);
@@ -76,8 +77,9 @@ export default function Header() {
           )}
         </div>
 
-        {/* Right: messages icon + notification bell + hamburger menu */}
-        <div className="flex items-center" ref={dropdownRef}>
+        {/* Right: locale switcher + messages + notification bell + hamburger menu */}
+        <div className="flex items-center gap-0.5" ref={dropdownRef}>
+          <LocaleSwitcher />
           {profile && (
             <Link href="/messages" className="p-2 text-muted-foreground hover:text-primary transition-colors relative" aria-label="Messages">
               <Mail size={20} strokeWidth={1.5} />
