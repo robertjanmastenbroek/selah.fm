@@ -80,7 +80,17 @@
 | 4 | FAQPage + QAPage + Article triple schema | ✅ Already had |
 | 5 | BreadcrumbList schema | ✅ Already had |
 
-### Phase 5: Code Quality — 5/5 ✅ Complete
+### Phase 5: Code Quality — 7/7 ✅ Complete
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | Console.log sweep (8 calls removed) | ✅ Done |
+| 2 | Auth pattern consolidation (19 routes migrated) | ✅ Done |
+| 3 | TypeScript 0 errors | ✅ Maintained (all 23 pushes) |
+| 4 | Stripe API version `:any` cast removed | ✅ Done |
+| 5 | tsconfig ES2017 → ES2022 | ✅ Done |
+| 6 | useUnknownInCatchVariables | ✅ Enabled (0 errors) |
+| 7 | No .bak files | ✅ Verified clean |
 
 | # | Item | Status |
 |---|------|--------|
