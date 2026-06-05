@@ -56,7 +56,6 @@ export async function POST(request: Request) {
 
     // If approving, calculate payout
     if (status === 'approved') {
-      const MIN_PAYOUT_CENTS = 500; // $5 minimum payout per submission
       const views = parseInt(sub.views_verified || '0');
       let grossCents = Math.round((views / 1000) * sub.cpm_rate_cents);
       
@@ -65,13 +64,6 @@ export async function POST(request: Request) {
         grossCents = sub.max_payout_per_submission_cents;
       }
       
-      // Enforce $5 minimum payout
-      if (grossCents < MIN_PAYOUT_CENTS) {
-        return NextResponse.json({
-          error: `Payout would be $${(grossCents / 100).toFixed(2)}. Minimum payout is $5.00. This submission needs more views to qualify.`
-        }, { status: 400 });
-      }
-
       // Creator earns the FULL CPM amount (no 20% deduction).
       // Artist is charged 1.20x = CPM + 20% platform fee.
       const creatorEarnsCents = grossCents;

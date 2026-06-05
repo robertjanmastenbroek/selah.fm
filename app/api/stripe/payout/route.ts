@@ -31,6 +31,20 @@ export async function POST(request: Request) {
     if (!sub.payout_amount_cents || sub.payout_amount_cents < 1) {
       return NextResponse.json({ error: 'Payout amount too small' }, { status: 400 });
     }
+
+    // Check cumulative unpaid earnings for this creator — must total ≥ $5
+    const [{ total_unpaid }] = await sql`
+      SELECT COALESCE(SUM(payout_amount_cents), 0)::int as total_unpaid
+      FROM submissions
+      WHERE creator_id = ${sub.creator_id}
+        AND review_status = 'approved'
+        AND payout_status IN ('processing', 'pending')
+    `;
+    if (total_unpaid < 500) {
+      return NextResponse.json({
+        error: `Cumulative earnings must reach $5.00 before payout. Current total: $${(total_unpaid / 100).toFixed(2)}.`
+      }, { status: 400 });
+    }
     if (sub.payout_status === 'paid') {
       return NextResponse.json({ error: 'Already paid' }, { status: 409 });
     }

@@ -89,17 +89,9 @@ export async function PATCH(req: Request) {
 
     if (action === 'approve') {
       // Calculate payout: views * CPM / 1000
-      const MIN_PAYOUT = 500; // $5 minimum in cents
       const cpmCents = sub.cpm_rate_cents || 10;
       const views = views_verified || sub.views_verified || 0;
       let payoutCents = Math.round((views * cpmCents) / 1000);
-
-      // Enforce $5 minimum payout
-      if (payoutCents < MIN_PAYOUT) {
-        return NextResponse.json({
-          error: `Payout would be $${(payoutCents/100).toFixed(2)}. Minimum payout is $5.00. This submission needs more views to qualify.`
-        }, { status: 400 });
-      }
 
       // Check remaining budget
       const remaining = sub.budget_remaining_cents || 0;
