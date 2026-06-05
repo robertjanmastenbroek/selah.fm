@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, ErrorState } from '@/components/States';
 import VideoEmbed from '@/components/VideoEmbed';
 import RatingPrompt from '@/components/RatingPrompt';
+import ModerationEditQueue from '@/components/ModerationEditQueue';
 import { Play, ExternalLink, DollarSign, Eye, Check, X, RefreshCw, Music } from 'lucide-react';
 
 interface Submission {
@@ -34,6 +35,7 @@ function platformColor(platform: string) {
 export default function ReviewPage() {
   const [selectedTrack, setSelectedTrack] = useState('all');
   const [statusListFilter, setStatusListFilter] = useState('pending');
+  const [reviewTab, setReviewTab] = useState<'submissions' | 'edits'>('submissions');
   const [artistId, setArtistId] = useState<string | null>(null);
   const [profileName, setProfileName] = useState('');
   const { addToast } = useToast();
@@ -174,9 +176,34 @@ export default function ReviewPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight mb-1">Review</h1>
             <p className="text-muted-foreground text-sm">
-              {isLoading ? 'Loading...' : `${subs.length} ${statusListFilter} submission${subs.length !== 1 ? 's' : ''}`}
+              {reviewTab === 'edits' ? 'Edit suggestions' : (isLoading ? 'Loading...' : `${subs.length} ${statusListFilter} submission${subs.length !== 1 ? 's' : ''}`)}
             </p>
           </div>
+
+          {/* Tab switcher */}
+          <div className="flex rounded-xl bg-white/[0.03] border border-white/[0.06] p-0.5 gap-0.5 mr-2">
+            <button
+              onClick={() => setReviewTab('submissions')}
+              className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                reviewTab === 'submissions'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Submissions
+            </button>
+            <button
+              onClick={() => setReviewTab('edits')}
+              className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                reviewTab === 'edits'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Edit Suggestions
+            </button>
+          </div>
+
           <div className="flex items-center gap-2">
             <div className="flex rounded-xl bg-white/[0.03] border border-white/[0.06] p-0.5 gap-0.5">
               {['pending', 'approved', 'rejected'].map(tab => (
@@ -207,7 +234,9 @@ export default function ReviewPage() {
           </div>
         </div>
 
-        {error ? (
+        {reviewTab === 'edits' ? (
+          <ModerationEditQueue />
+        ) : error ? (
           <ErrorState message="We couldn't load your submissions right now." onRetry={() => mutate()} />
         ) : isLoading ? (
           <div className="space-y-4">
