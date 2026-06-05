@@ -74,8 +74,53 @@ export function isValidUrl(url: string): boolean {
 }
 
 /**
- * Validate campaign input for creation.
+ * Validate an artist edit suggestion.
  */
+export function validateEditSuggestion(body: any): { valid: false; error: string } | { valid: true; sanitized: any } {
+  const ALLOWED_FIELDS = ['bio', 'genre', 'track', 'social_link', 'image', 'other'] as const;
+
+  if (!body || typeof body !== 'object') {
+    return { valid: false, error: 'Request body is required' };
+  }
+
+  const fieldName = body.field_name?.trim() || '';
+  if (!fieldName) return { valid: false, error: 'field_name is required' };
+  if (!ALLOWED_FIELDS.includes(fieldName as any)) {
+    return { valid: false, error: `field_name must be one of: ${ALLOWED_FIELDS.join(', ')}` };
+  }
+
+  const suggestedValue = body.suggested_value?.trim();
+  if (!suggestedValue || suggestedValue.length < 2) {
+    return { valid: false, error: 'suggested_value must be at least 2 characters' };
+  }
+  if (suggestedValue.length > 5000) {
+    return { valid: false, error: 'suggested_value must be under 5000 characters' };
+  }
+
+  const currentValue = body.current_value?.trim()?.slice(0, 5000) || null;
+  const reason = body.reason?.trim()?.slice(0, 2000) || null;
+
+  return {
+    valid: true,
+    sanitized: { field_name: fieldName, current_value: currentValue, suggested_value: suggestedValue, reason },
+  };
+}
+
+/**
+ * Validate feedback submission (helpful/not helpful).
+ */
+export function validateFeedback(body: any): { valid: false; error: string } | { valid: true; sanitized: { helpful: boolean } } {
+  if (!body || typeof body !== 'object') {
+    return { valid: false, error: 'Request body is required' };
+  }
+
+  if (typeof body.helpful !== 'boolean') {
+    return { valid: false, error: 'helpful must be a boolean (true or false)' };
+  }
+
+  return { valid: true, sanitized: { helpful: body.helpful } };
+}
+
 export function validateCampaignInput(body: any): { valid: false; errors: string[] } | { valid: true; sanitized: any } {
   const errors: string[] = [];
 
