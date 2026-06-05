@@ -15,6 +15,11 @@ export async function POST(request: Request) {
   try {
     const { submissionId, status, feedback } = await request.json();
     
+    // Require minimum 20-char feedback for both approval and rejection
+    if (!feedback || feedback.trim().length < 20) {
+      return NextResponse.json({ error: 'Feedback must be at least 20 characters' }, { status: 400 });
+    }
+    
     // Verify the submission exists and get campaign ownership
     const subs = await sql`
       SELECT s.id, s.campaign_id, s.creator_id, s.content_url, s.views_verified, s.payout_amount_cents,

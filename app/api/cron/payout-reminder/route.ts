@@ -41,9 +41,8 @@ export async function POST(request: Request) {
 
       if (!existing) {
         await sql`
-          INSERT INTO notifications (user_id, type, title, message, link)
-          VALUES (${creator.id}, 'payout_reminder',
-            'Complete your payout setup',
+          INSERT INTO notifications (user_id, type, message, link)
+          VALUES (${creator.id}, 'payout',
             'You have approved earnings waiting! Connect Stripe to receive payouts to your bank account.',
             '/dashboard?tab=payout'
           )

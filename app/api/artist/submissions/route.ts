@@ -81,6 +81,12 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Already reviewed' }, { status: 409 });
     }
 
+    // Require minimum 20-char feedback for both approve and reject
+    if (!feedback || feedback.trim().length < 20) {
+      return NextResponse.json({ error: 'Feedback must be at least 20 characters' }, { status: 400 });
+    }
+    const cleanFeedback = feedback.trim();
+
     if (action === 'approve') {
       // Calculate payout: views * CPM / 1000
       const cpmCents = sub.cpm_rate_cents || 10;
@@ -124,10 +130,9 @@ export async function PATCH(req: Request) {
 
       // Add a notification for the creator
       await sql`
-        INSERT INTO notifications (user_id, type, title, message, link_to)
-        VALUES (${sub.creator_id}, 'submission_approved',
-          'Submission approved!',
-          ${`Your submission for "${sub.track_title}" was approved — $${(payoutCents/100).toFixed(2)} earned for ${views.toLocaleString()} verified views. Feedback: ${feedback || 'None'}`},
+        INSERT INTO notifications (user_id, type, message, link)
+        VALUES (${sub.creator_id}, 'approval',
+          ${`Your submission for "${sub.track_title}" was approved — $${(payoutCents/100).toFixed(2)} earned for ${views.toLocaleString()} verified views. Feedback: ${feedback}`},
           ${`/artist/${user.id}/tracks/${sub.campaign_id}`}
         )
       `;
@@ -146,9 +151,8 @@ export async function PATCH(req: Request) {
           `;
           if (!recentReminder) {
             await sql`
-              INSERT INTO notifications (user_id, type, title, message, link)
-              VALUES (${sub.creator_id}, 'payout_reminder',
-                'Complete your payout setup',
+              INSERT INTO notifications (user_id, type, message, link)
+              VALUES (${sub.creator_id}, 'payout',
                 'Your submission was approved! Connect Stripe to receive your earnings.',
                 '/dashboard?tab=payout'
               )
@@ -170,10 +174,9 @@ export async function PATCH(req: Request) {
 
       // Notify the creator
       await sql`
-        INSERT INTO notifications (user_id, type, title, message, link_to)
-        VALUES (${sub.creator_id}, 'submission_rejected',
-          'Submission not approved',
-          ${`Your submission for "${sub.track_title}" was not approved.${feedback ? ' Feedback: ' + feedback : ''}`},
+        INSERT INTO notifications (user_id, type, message, link)
+        VALUES (${sub.creator_id}, 'rejection',
+          ${`Your submission for "${sub.track_title}" was not approved. Feedback: ${feedback}`},
           ${`/artist/${user.id}/tracks/${sub.campaign_id}`}
         )
       `;
