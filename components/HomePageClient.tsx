@@ -280,18 +280,27 @@ export default function RootPage() {
             )}
           </motion.div>
 
-          {/* Primary CTA — one button */}
+          {/* Dual CTAs — primary action + guest browsing */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-            <Link href="/welcome-artists"
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-[15px] font-bold text-white
-                         transition-all duration-200 shadow-lg shadow-[#4338CA]/20
-                         bg-gradient-to-b from-[#4338CA] to-[#3730A3]
-                         hover:from-[#4F46E5] hover:to-[#4338CA]
-                         active:scale-[0.97]">
-              Promote your music <ArrowRight size={16} />
-            </Link>
-            <p className="text-[11px] text-white/20 mt-3">No upfront cost · Free to start</p>
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+            className="flex flex-col items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Link href="/welcome-artists"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-[15px] font-bold text-white
+                           transition-all duration-200 shadow-lg shadow-[#4338CA]/20
+                           bg-gradient-to-b from-[#4338CA] to-[#3730A3]
+                           hover:from-[#4F46E5] hover:to-[#4338CA]
+                           active:scale-[0.97]">
+                Promote your music <ArrowRight size={16} />
+              </Link>
+              <Link href="/browse"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-[13px] font-semibold
+                           border border-white/[0.08] text-white/50 hover:text-white hover:border-white/[0.15]
+                           transition-all duration-200 hover:bg-white/[0.03] active:scale-[0.97]">
+                Browse campaigns
+              </Link>
+            </div>
+            <p className="text-[11px] text-white/20 mt-1">No upfront cost · Free to start · No signup required to browse</p>
           </motion.div>
         </motion.div>
       </section>
