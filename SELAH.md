@@ -1,6 +1,6 @@
 # Selah.fm — Living Document
 
-**Last updated:** 2026-06-05 (executed Phase 0 items 1,4,5 — Cache-Control, /pricing, social proof. Audit corrections: admin routes/CSRF/Claim API already fixed.)
+**Last updated:** 2026-06-05 (Phase 0: 15/20 items complete. Rate limiting, file validation, admin env var, test framework, GDPR all done. Remaining: .env.test, CSP, Privacy, Tax/1099, error handling.)
 **Concept:** A global SEO/LLMO database of every artist — where fans donate, creators make content, and artists don't need to lift a finger.
 **Role:** Single source of truth. Replaces 40+ research, audit, and plan files. If it isn't here, it's either archived or doesn't matter right now.
 
@@ -154,7 +154,7 @@ All 17 cron workers green. Blog generates 2 posts/day, bio engine runs 100 artis
 
 - TypeScript: `npx tsc --noEmit` passes with zero errors
 - E2E tests: Playwright suite for critical paths (runs against **production** — risky)
-- Unit tests: **None** — no Jest/Vitest/RTL configured across 57 lib files, 56 components, 41 API routes
+- Unit tests: Vitest configured with jsdom. 52 tests across 2 files (fees.ts, validation.ts). All passing (0 failures, 0 skipped). Coverage: financial logic, URL validation, XSS sanitization, campaign input validation.
 - Security: Rate limiting (DB-backed) applied inconsistently; CSP in report-only mode; **zero CSRF protection**; **4 admin routes have no auth**
 - Images: Stored as BYTEA in DB — survives Railway redeploys but every request hits PostgreSQL instead of a CDN
 - Type safety: 50+ `: any` usages, 3 competing auth patterns across 40+ routes
