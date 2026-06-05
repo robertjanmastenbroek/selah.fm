@@ -7,7 +7,7 @@ import sql from '@/lib/db';
  */
 export async function createNotification(params: {
   userId: string;
-  type: 'submission' | 'approval' | 'rejection' | 'earning' | 'payout' | 'system';
+  type: 'submission' | 'approval' | 'rejection' | 'earning' | 'payout' | 'system' | 'edit_approved' | 'edit_needs_changes';
   message: string;
   link?: string;
   metadata?: Record<string, any>;
