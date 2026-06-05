@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
 export const metadata: Metadata = {
   title: 'Selah.fm vs TikTok Creator Fund, SoundBetter, BeatStars — Comparison',
@@ -13,7 +14,12 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://selah.fm/compare' },
 };
 
-export default function ComparePage() {
+export default async function ComparePage() {
+  const t = await getTranslations('compare');
+  const tn = await getTranslations('nav');
+  const th = await getTranslations('home');
+  const tp = await getTranslations('pricing');
+  
   return (
     <div className="min-h-screen bg-[#080817]">
       <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-4 sm:px-6 py-4">
@@ -21,9 +27,9 @@ export default function ComparePage() {
           Selah<span className="text-primary">.fm</span>
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</Link>
+          <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{tn('pricing')}</Link>
           <Link href="/login?redirect=/onboarding" className="text-sm px-4 py-2 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-all">
-            Get started
+            {tn('getStarted')}
           </Link>
         </div>
       </div>
@@ -31,10 +37,10 @@ export default function ComparePage() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-24 pb-20">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">
-            How Selah.fm compares
+            {t('title')}
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            See why independent artists and creators choose Selah.fm over traditional music promotion platforms.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -43,11 +49,11 @@ export default function ComparePage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.02]">
-                <th className="text-left py-4 px-5 font-semibold w-[30%]">Feature</th>
-                <th className="text-center py-4 px-3 font-heading text-primary w-[17.5%]">Selah.fm</th>
-                <th className="text-center py-4 px-3 text-muted-foreground/60 w-[17.5%]">TikTok Creator Fund</th>
-                <th className="text-center py-4 px-3 text-muted-foreground/60 w-[17.5%]">SoundBetter</th>
-                <th className="text-center py-4 px-3 text-muted-foreground/60 w-[17.5%]">BeatStars</th>
+                <th className="text-left py-4 px-5 font-semibold w-[30%]">{t('featureColumn')}</th>
+                <th className="text-center py-4 px-3 font-heading text-primary w-[17.5%]">{t('selahColumn')}</th>
+                <th className="text-center py-4 px-3 text-muted-foreground/60 w-[17.5%]">{t('tikTokColumn')}</th>
+                <th className="text-center py-4 px-3 text-muted-foreground/60 w-[17.5%]">{t('soundBetterColumn')}</th>
+                <th className="text-center py-4 px-3 text-muted-foreground/60 w-[17.5%]">{t('beatStarsColumn')}</th>
               </tr>
             </thead>
             <tbody>
@@ -80,8 +86,8 @@ export default function ComparePage() {
         {/* Creator earnings deep dive */}
         <div className="grid md:grid-cols-2 gap-6 mb-12">
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-emerald-500/[0.03] border border-emerald-500/10 p-6 md:p-8">
-            <h2 className="text-lg font-heading mb-3 text-emerald-400">Creator earnings comparison</h2>
-            <p className="text-sm text-muted-foreground mb-4">What a creator earns per 1 million views on each platform:</p>
+            <h2 className="text-lg font-heading mb-3 text-emerald-400">{t('creatorEarnings')}</h2>
+            <p className="text-sm text-muted-foreground mb-4">{t('whatCreatorEarns')}</p>
             <div className="space-y-3">
               {[
                 { label: 'Selah.fm (at $1 CPM)', earn: '$800', color: 'text-emerald-400' },
@@ -101,8 +107,8 @@ export default function ComparePage() {
           </div>
 
           <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-indigo-500/[0.03] border border-indigo-500/10 p-6 md:p-8">
-            <h2 className="text-lg font-heading mb-3 text-indigo-400">Artist value comparison</h2>
-            <p className="text-sm text-muted-foreground mb-4">What an artist gets for a $100 budget on each platform:</p>
+            <h2 className="text-lg font-heading mb-3 text-indigo-400">{t('artistValue')}</h2>
+            <p className="text-sm text-muted-foreground mb-4">{t('whatCreatorEarns')}</p>
             <div className="space-y-3">
               {[
                 { label: 'Selah.fm (at $5 CPM)', earn: '~16,000 verified views', color: 'text-emerald-400' },
@@ -123,7 +129,7 @@ export default function ComparePage() {
 
         {/* Why Selah wins */}
         <div className="rounded-2xl bg-white/[0.02] border border-white/[0.06] p-8 mb-12">
-          <h2 className="text-xl font-heading mb-4 text-center">Why creators and artists choose Selah.fm</h2>
+          <h2 className="text-xl font-heading mb-4 text-center">{t('whyChoose')}</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
               { title: 'CPM beats funds', desc: 'Even at $1 CPM, Selah.fm pays 20× more than TikTok Creator Fund. At $30 CPM — 600× more. Creators earn what they\'re worth.' },
@@ -143,7 +149,7 @@ export default function ComparePage() {
 
         {/* FAQ */}
         <div className="max-w-2xl mx-auto mb-12">
-          <h2 className="text-xl font-heading text-center mb-6">Common comparison questions</h2>
+          <h2 className="text-xl font-heading text-center mb-6">{t('commonQuestions')}</h2>
           <div className="space-y-3">
             {[
               { q: 'How does Selah.fm compare to TikTok\'s Creator Fund?', a: 'TikTok\'s Creator Fund pays $0.02–$0.04 per 1,000 views. Selah.fm pays $0.80–$24.00 per 1,000 views depending on the CPM rate artists set. That\'s 20–600× more. Creators also keep 80% of the CPM vs TikTok keeping 100% of ad revenue.' },
@@ -164,14 +170,14 @@ export default function ComparePage() {
 
         {/* CTA */}
         <div className="text-center">
-          <h2 className="text-2xl md:text-3xl font-heading mb-3">Ready to experience the difference?</h2>
-          <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto">No credit card required. Free to join. See why creators and artists are switching to CPM-based promotion.</p>
+          <h2 className="text-2xl md:text-3xl font-heading mb-3">{t('readyToExperience')}</h2>
+          <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto">{t('seeWhy')}</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/login?redirect=/onboarding" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-all">
-              Create free account
+              {th('cta')}
             </Link>
             <Link href="/pricing" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-white/[0.08] text-muted-foreground hover:text-foreground transition-all">
-              View pricing
+              {tn('pricing')}
             </Link>
           </div>
         </div>
