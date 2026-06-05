@@ -25,6 +25,7 @@ const WORKERS: Record<number, { path: string; params?: string }[]> = {
   13: [{ path: '/api/cron/payout-reminder' }],
   14: [{ path: '/api/cron/blog-pipeline' }],
   15: [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/blog-publish' }],
+  16: [{ path: '/api/cron/blog-publish' }],
   17: [{ path: '/api/cron/creator-discovery' }],
   20: [{ path: '/api/cron/blog-pipeline' }],
   21: [{ path: '/api/cron/email-outreach' }],
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
           ? `${origin}${w.path}?${w.params}&secret=${secret}`
           : `${origin}${w.path}?secret=${secret}`;
         try {
-          const res = await fetch(url, { signal: AbortSignal.timeout(300000) });
+          const res = await fetch(url, { signal: AbortSignal.timeout(600000) });
           return { path: w.path, status: res.status, response: await res.json().catch(() => null) };
         } catch (e: any) {
           return { path: w.path, status: 500, error: e.message };
