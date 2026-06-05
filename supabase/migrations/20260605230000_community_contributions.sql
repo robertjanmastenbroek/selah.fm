@@ -83,7 +83,7 @@ CREATE POLICY "Moderators can update suggestions"
 
 CREATE TABLE IF NOT EXISTS artist_edit_history (
   id BIGSERIAL PRIMARY KEY,
-  artist_id INTEGER NOT NULL REFERENCES discovered_artists(id) ON DELETE CASCADE,
+  artist_id UUID NOT NULL REFERENCES discovered_artists(id) ON DELETE CASCADE,
   suggestion_id UUID REFERENCES artist_edit_suggestions(id),
   field_name TEXT NOT NULL,
   old_value TEXT,
@@ -129,7 +129,7 @@ CREATE TRIGGER trg_edit_suggestion_timestamp
 -- Returns the number of verified edits for an artist.
 -- Used by the artist page to determine noindex status and badge display.
 
-CREATE OR REPLACE FUNCTION count_verified_edits(artist_id INTEGER)
+CREATE OR REPLACE FUNCTION count_verified_edits(artist_id UUID)
 RETURNS INTEGER AS $$
   SELECT COUNT(*)::integer FROM artist_edit_history
   WHERE artist_edit_history.artist_id = $1 AND is_verified = TRUE;
