@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { getUser } from '@/lib/supabase/server';
 
 /**
  * Claim API — handles the claim code verification and campaign transfer.
@@ -57,11 +58,18 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { claim_code, user_id, verification_method } = body;
+    // Derive user_id from session, NOT from request body
+    const sessionUser = await getUser();
+    if (!sessionUser?.id) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    const user_id = sessionUser.id;
 
-    if (!claim_code || !user_id) {
-      return NextResponse.json({ error: 'claim_code and user_id required' }, { status: 400 });
+    const body = await request.json();
+    const { claim_code, verification_method } = body;
+
+    if (!claim_code) {
+      return NextResponse.json({ error: 'claim_code required' }, { status: 400 });
     }
 
     // Verify the claim code

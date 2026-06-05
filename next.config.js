@@ -38,8 +38,8 @@ const nextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-          // Content-Security-Policy in Report-Only mode — monitors violations without breaking
-          { key: 'Content-Security-Policy-Report-Only', value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://api.deepseek.com https://selah.fm https://api.resend.com; frame-src https://js.stripe.com https://accounts.google.com; report-uri /api/csp-report" },
+          // Content-Security-Policy — enforced (removed 'unsafe-eval', keeping 'unsafe-inline' for Next.js hydration scripts)
+          { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://js.stripe.com https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://www.google-analytics.com https://region1.google-analytics.com https://api.deepseek.com https://selah.fm https://api.resend.com; frame-src https://js.stripe.com https://accounts.google.com; report-uri /api/csp-report" },
         ],
       },
       {

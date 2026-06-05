@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { isAdminRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ export const dynamic = 'force-dynamic';
  * what actions they took, and whether they signed up.
  */
 export async function GET(request: Request) {
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   try {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);

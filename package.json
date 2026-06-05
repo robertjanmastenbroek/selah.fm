@@ -14,7 +14,10 @@
     "bugs:pull": "node scripts/fetch-new-bugs.mjs",
     "test:e2e:quick": "npx playwright test e2e/core.spec.ts --reporter=list",
     "test:e2e:full": "npx playwright test --reporter=list",
-    "test:e2e:specific": "npx playwright test --reporter=list --grep"
+    "test:e2e:specific": "npx playwright test --reporter=list --grep",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -47,14 +50,19 @@
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.60.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
     "@types/pg": "^8.20.0",
     "@types/react": "^18.3.0",
     "autoprefixer": "^10.4.0",
+    "jsdom": "^27.0.1",
     "playwright": "^1.59.1",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^3.2.6",
+    "zod": "^4.4.3"
   }
 }

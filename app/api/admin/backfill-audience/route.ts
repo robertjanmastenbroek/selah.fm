@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { addToAudience } from '@/lib/email-outreach';
+import { isAdminRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,8 @@ export const dynamic = 'force-dynamic';
  * Backfills all previously-emailed artists into the Resend audience.
  * One-time operation — safe to rerun (Resend deduplicates by email).
  */
-export async function GET() {
+export async function GET(request: Request) {
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   const audienceId = process.env.RESEND_AUDIENCE_ID;
   if (!audienceId) {
     return NextResponse.json({ error: 'RESEND_AUDIENCE_ID not configured' }, { status: 500 });

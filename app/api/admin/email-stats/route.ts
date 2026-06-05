@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isAdminRequest } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +9,8 @@ export const dynamic = 'force-dynamic';
  * Fetches delivery stats from Resend API for the last 50 emails.
  * Requires RESEND_API_KEY in environment.
  */
-export async function GET() {
+export async function GET(request: Request) {
+  if (!(await isAdminRequest(request))) return NextResponse.json({ error: 'Admin only' }, { status: 403 });
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 });
