@@ -19,30 +19,16 @@ export async function POST(request: Request) {
 
   try {
     if (deleteAll) {
-      // Delete ALL posts regardless of source — clean slate for pipeline restart
-      const allPosts = await sql`
-        SELECT id, title, status FROM blog_posts
-        ORDER BY created_at DESC
+      // Archive ALL posts — set status to 'archived' so they disappear from the blog
+      // but still exist for data integrity. Pipeline regenerates fresh posts.
+      const [{ count }] = await sql`
+        UPDATE blog_posts SET status = 'archived', updated_at = NOW()
+        WHERE status IN ('draft', 'scheduled', 'published')
       `;
 
-      if (allPosts.length === 0) {
-        return NextResponse.json({ deleted: 0, message: 'No posts to delete' });
-      }
-
-      for (const post of allPosts) {
-        await sql`DELETE FROM blog_images WHERE blog_post_id = ${post.id}`;
-        await sql`DELETE FROM blog_syndication_log WHERE blog_post_id = ${post.id}`;
-        await sql`DELETE FROM blog_syndication_queue WHERE blog_post_id = ${post.id}`;
-        await sql`DELETE FROM used_questions WHERE blog_post_id = ${post.id}`;
-        await sql`DELETE FROM blog_quality_scores WHERE blog_post_id = ${post.id}`;
-      }
-
-      const ids = allPosts.map((p: any) => p.id);
-      await sql`DELETE FROM blog_posts WHERE id = ANY(${ids}::uuid[])`;
-
       return NextResponse.json({
-        deleted: allPosts.length,
-        message: `All ${allPosts.length} posts removed. Pipeline will regenerate with quality threshold ≥75.`,
+        deleted: count,
+        message: `${count} posts archived. Pipeline will regenerate with quality threshold ≥75.`,
       });
     }
 
