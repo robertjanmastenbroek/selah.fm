@@ -39,6 +39,13 @@ export async function POST(request: Request) {
       }
     }
     
+    // Resolve campaignId from slug to UUID (campaignId can come from URL slug)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(campaignId || '');
+    if (campaignId && !isUuid) {
+      const [resolved] = await sql`SELECT id FROM campaigns WHERE slug = ${campaignId} LIMIT 1`;
+      if (resolved) campaignId = resolved.id;
+    }
+
     const user = await getUser();
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -174,10 +181,18 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const campaignId = searchParams.get('campaignId');
+    let campaignId = searchParams.get('campaignId') || '';
     const artistId = searchParams.get('artistId');
     const creatorId = searchParams.get("creator_id");
     const statusListFilter = searchParams.get('status');
+
+    // Resolve campaignId from slug to UUID
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(campaignId);
+    if (campaignId && !isUuid) {
+      const [resolved] = await sql`SELECT id FROM campaigns WHERE slug = ${campaignId} LIMIT 1`;
+      if (resolved) campaignId = resolved.id;
+    }
+
     let submissions;
 
     // If creatorId is provided, get submissions by that creator
