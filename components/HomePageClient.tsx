@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import useSWR from 'swr';
@@ -107,6 +108,8 @@ function CalculatorSection() {
 }
 
 export default function RootPage() {
+  const t = useTranslations('home');
+  const tc = useTranslations('common');
   const mouseRef = useRef({ x: 0, y: 0 });
   const bgLeftRef = useRef<HTMLDivElement>(null);
   const bgRightRef = useRef<HTMLDivElement>(null);
@@ -236,7 +239,7 @@ export default function RootPage() {
             {/* Logo + badge */}
             <div className="inline-flex items-center gap-3 mb-2">
               <Image src="/images/Selah Logo transparant no text.png" alt="Selah" className="h-10 w-auto" priority width="120" height="40" />
-              <span className="text-[11px] font-medium text-[#22C55E]/70 bg-[#22C55E]/5 px-2.5 py-1 rounded-full border border-[#22C55E]/10">Open source</span>
+              <span className="text-[11px] font-medium text-[#22C55E]/70 bg-[#22C55E]/5 px-2.5 py-1 rounded-full border border-[#22C55E]/10">{tc('free')}</span>
             </div>
 
             <h1 className="text-[44px] md:text-[64px] lg:text-[76px] font-heading tracking-tight leading-[1.03] text-balance">
@@ -256,26 +259,26 @@ export default function RootPage() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
             <div className="text-center">
               <div className="text-[32px] md:text-[40px] font-bold text-white tracking-tight">{formatCount(stats.artists || 2158)}</div>
-              <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Artists in DB</div>
+              <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">{t('artistsInDb')}</div>
             </div>
             <div className="text-center">
               <div className="text-[32px] md:text-[40px] font-bold text-[#818CF8] tracking-tight">{formatCount(stats.totalViews || 0)}</div>
-              <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Verified views</div>
+              <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">{t('verifiedViews')}</div>
             </div>
             {stats.totalDepositedCents > 0 && (
               <div className="text-center">
                 <div className="text-[32px] md:text-[40px] font-bold text-[#22C55E] tracking-tight">{formatMoney(stats.totalDepositedCents)}</div>
-                <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Total funded</div>
+                <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">{t('totalFunded')}</div>
               </div>
             )}
             <div className="text-center">
               <div className="text-[32px] md:text-[40px] font-bold text-white tracking-tight">{formatCount(stats.creators || 19)}</div>
-              <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Creators earning</div>
+              <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">{t('creatorsEarning')}</div>
             </div>
             {stats.totalPaidCents > 0 && (
               <div className="text-center">
                 <div className="text-[32px] md:text-[40px] font-bold text-[#4338CA] tracking-tight">{formatMoney(stats.totalPaidCents)}</div>
-                <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Paid to creators</div>
+                <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">{t('paidToCreators')}</div>
               </div>
             )}
           </motion.div>
@@ -291,16 +294,16 @@ export default function RootPage() {
                            bg-gradient-to-b from-[#4338CA] to-[#3730A3]
                            hover:from-[#4F46E5] hover:to-[#4338CA]
                            active:scale-[0.97]">
-                Promote your music <ArrowRight size={16} />
+                {t('cta')} <ArrowRight size={16} />
               </Link>
               <Link href="/browse"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-[13px] font-semibold
                            border border-white/[0.08] text-white/50 hover:text-white hover:border-white/[0.15]
                            transition-all duration-200 hover:bg-white/[0.03] active:scale-[0.97]">
-                Browse campaigns
+                {t('guestCta')}
               </Link>
             </div>
-            <p className="text-[11px] text-white/20 mt-1">No upfront cost · Free to start · No signup required to browse</p>
+            <p className="text-[11px] text-white/20 mt-1">{t('freeToStart')}</p>
           </motion.div>
         </motion.div>
       </section>
@@ -309,9 +312,9 @@ export default function RootPage() {
       <section className="relative z-10 px-4 py-20 max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-          <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-2 text-center">How much could you earn?</p>
-          <h2 className="text-3xl md:text-4xl font-heading tracking-tight mb-1 text-center">See it before you start</h2>
-          <p className="text-white/35 text-xs text-center mb-8">No signup required. Drag the slider to estimate your earnings.</p>
+          <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-2 text-center">{t('howMuchCouldYouEarn')}</p>
+          <h2 className="text-3xl md:text-4xl font-heading tracking-tight mb-1 text-center">{t('seeBeforeYouStart')}</h2>
+          <p className="text-white/35 text-xs text-center mb-8">{t('dragSlider')}</p>
 
           <CalculatorSection />
         </motion.div>
@@ -348,9 +351,9 @@ export default function RootPage() {
       <section className="relative z-10 px-4 py-28 max-w-5xl mx-auto">
         <motion.div className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-          <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-5">How it works</p>
-          <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">Three steps. Full control.</h2>
-          <p className="text-white/35 max-w-md mx-auto text-sm">No complicated dashboards. No hidden fees.</p>
+          <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-5">{t('howItWorks')}</p>
+          <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">{t('threeSteps')}</h2>
+          <p className="text-white/35 max-w-md mx-auto text-sm">{t('noDashboards')}</p>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-10 md:gap-20">
@@ -363,8 +366,8 @@ export default function RootPage() {
                 <Music4 size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-heading text-white/90">For artists</h3>
-                <p className="text-[11px] text-white/25">Promote your music</p>
+                <h3 className="text-lg font-heading text-white/90">{t('forArtists')}</h3>
+                <p className="text-[11px] text-white/25">{t('promoteYourMusic')}</p>
               </div>
             </div>
             {[
@@ -382,7 +385,7 @@ export default function RootPage() {
             ))}
             <Link href="/welcome-artists"
               className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#818CF8] hover:text-[#A5B4FC] transition-colors pt-3">
-              Start as artist <ArrowRight size={13} />
+              {t('ctaStartArtist')} <ArrowRight size={13} />
             </Link>
           </motion.div>
 
@@ -395,8 +398,8 @@ export default function RootPage() {
                 <Clapperboard size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-heading text-white/90">For creators</h3>
-                <p className="text-[11px] text-white/25">Earn by making content</p>
+                <h3 className="text-lg font-heading text-white/90">{t('forCreators')}</h3>
+                <p className="text-[11px] text-white/25">{t('earnByContent')}</p>
               </div>
             </div>
             {[
@@ -414,7 +417,7 @@ export default function RootPage() {
             ))}
             <Link href="/welcome-creators"
               className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#22C55E]/70 hover:text-[#22C55E] transition-colors pt-3">
-              Start as creator <ArrowRight size={13} />
+              {t('ctaStartCreator')} <ArrowRight size={13} />
             </Link>
           </motion.div>
         </div>
@@ -443,12 +446,9 @@ export default function RootPage() {
         <section className="relative z-10 px-4 py-28 max-w-6xl mx-auto">
           <motion.div className="text-center mb-12"
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-            <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-5">Live now</p>
-            <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">Recommended campaigns</h2>
-              <p className="text-muted-foreground text-sm mb-8 max-w-md mx-auto">
-                Top campaigns matched to your taste. High-budget promotions from popular artists.
-              </p>
-            <p className="text-white/35 max-w-md mx-auto text-sm">Artists looking for creators right now.</p>
+            <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-5">{t('liveNow')}</p>
+            <h2 className="text-4xl md:text-5xl font-heading tracking-tight mb-4">{t('recommendedCampaigns')}</h2>
+            <p className="text-white/35 max-w-md mx-auto text-sm">{t('artistsLooking')}</p>
           </motion.div>
 
           {/* Sort by budget: highest first */}
