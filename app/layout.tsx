@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import SupportWidget from '@/components/SupportWidget';
 import CookieBanner from '@/components/CookieBanner';
 import NewsletterSignup from '@/components/NewsletterSignup';
+import InstallPrompt from '@/components/InstallPrompt';
 import { Poppins, Righteous } from "next/font/google";
 import Analytics from '@/components/Analytics';
 import CommandPalette from '@/components/CommandPalette';
@@ -140,6 +141,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Suspense>
         <Suspense fallback={null}>
           <NewsletterSignup source="selah.fm-layout" />
+        </Suspense>
+        <Suspense fallback={null}>
+          <InstallPrompt />
         </Suspense>
       </body>
     </html>
