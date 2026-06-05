@@ -64,7 +64,7 @@ export async function GET(request: Request) {
           senderName = sender.display_name || 'Someone';
           senderAvatar = sender.profile_image_url || '';
         }
-      } catch {}
+      } catch (e: any) { console.error('[notifications] Sender lookup failed:', e.message); }
 
       bundled.push({
         id: group.latest.id,
@@ -104,7 +104,7 @@ export async function GET(request: Request) {
     });
   } catch (e: any) {
     console.error('Notifications GET error:', e.message);
-    return NextResponse.json({ notifications: [], unreadCount: 0 });
+    return NextResponse.json({ error: 'Failed to load notifications', notifications: [], unreadCount: 0 }, { status: 500 });
   }
 }
 

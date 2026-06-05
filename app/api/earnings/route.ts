@@ -40,6 +40,6 @@ export async function GET(request: Request) {
     });
   } catch (e: any) {
     console.error('Earnings GET error:', e.message);
-    return NextResponse.json({ submissions: [], totalPaid: 0, totalPending: 0, totalEarned: 0 });
+    return NextResponse.json({ error: 'Failed to load earnings', submissions: [], totalPaid: 0, totalPending: 0, totalEarned: 0 }, { status: 500 });
   }
 }
