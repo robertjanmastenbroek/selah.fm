@@ -1448,10 +1448,44 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
   const loaded = !!refData;
   const referralCode = refData?.referral_code;
   const earningsCents = refData?.referrer_earnings_cents || 0;
-  const pendingBonuses = refData?.pending_bonuses || 0;
   const totalPendingCents = refData?.total_pending_cents || 0;
   const referredUsers = refData?.referred_users || 0;
+  const recentReferred = refData?.recent_referred || [];
+  const nextMilestone = refData?.next_milestone || null;
   const shareLink = referralCode ? `https://selah.fm/login?ref=${referralCode}` : '';
+
+  const shareNative = async () => {
+    if (typeof (navigator as any)?.share === 'function') {
+      try {
+        await navigator.share({
+          title: 'Join me on Selah.fm',
+          text: 'Create content, earn per verified view. Use my link and we both get a bonus when you fund your first campaign!',
+          url: shareLink,
+        });
+        addToast('Shared!', 'success');
+      } catch {}
+    } else {
+      copy();
+    }
+  };
+
+  const shareTwitter = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        `I'm earning on @SelahFM — create content, get paid per verified view. Join with my link and we both get a bonus! 🎵💰`
+      )}&url=${encodeURIComponent(shareLink)}`,
+      '_blank'
+    );
+  };
+
+  const shareWhatsApp = () => {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(
+        `Join me on Selah.fm! Create content, earn per verified view. We both get a bonus when you fund your first campaign: ${shareLink}`
+      )}`,
+      '_blank'
+    );
+  };
 
   const copy = () => {
     navigator.clipboard.writeText(shareLink).then(() => {
@@ -1472,57 +1506,182 @@ function ReferralSection({ userId, email }: { userId: string; email: string }) {
     setWithdrawing(false);
   };
 
+  // Milestone badges for completed tiers
+  const milestoneBadges = [
+    { at: 1, label: '🥇', tooltip: 'First referral' },
+    { at: 3, label: '🥉', tooltip: 'Bronze — $10 bonus' },
+    { at: 5, label: '🥈', tooltip: 'Silver — $25 bonus' },
+    { at: 10, label: '🥇', tooltip: 'Gold — $50 bonus' },
+    { at: 25, label: '💎', tooltip: 'Platinum — $150 bonus' },
+  ];
+
   return (
-    <Card className="md:col-span-1">
+    <Card className="md:col-span-1 border-amber-500/10 hover:border-amber-500/20 transition-colors">
       <CardContent className="p-5 space-y-4">
+        {/* Headline — benefit driven */}
         <div className="flex items-start gap-3">
-          <Heart size={18} className="text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-semibold">Refer & earn</p>
-            <p className="text-xs text-muted-foreground">You earn 5% of every first deposit they make. They get 5% too.</p>
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400/20 to-orange-500/10 flex items-center justify-center shrink-0">
+            <Heart size={16} className="text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-bold">Share $5 with a friend</p>
+            <p className="text-[11px] text-muted-foreground">
+              When they sign up and fund their first campaign, you both get <strong className="text-amber-400">5%</strong> of their deposit.
+            </p>
           </div>
         </div>
 
-        <div className="space-y-1">
-          <div className="flex justify-between text-[10px] text-muted-foreground/50">
-            <span>Referral progress</span>
-            <span>{referredUsers} / 10</span>
-          </div>
-          <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all" style={{ width: Math.min(100, (referredUsers / 10) * 100) + '%' }} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-center">
-          <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-            <p className="text-lg font-bold text-emerald-400">${(earningsCents / 100).toFixed(2)}</p>
-            <p className="text-[10px] text-muted-foreground uppercase">Earned</p>
-          </div>
-          <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.04]">
-            <p className="text-lg font-bold">{referredUsers}</p>
-            <p className="text-[10px] text-muted-foreground uppercase">Referred</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {!loaded ? (
-            <div className="flex-1 flex items-center gap-2">
-              <div className="flex-1 h-8 rounded-lg bg-white/[0.04] animate-pulse" />
-              <div className="w-16 h-8 rounded-lg bg-white/[0.04] animate-pulse" />
+        {/* Milestone progress */}
+        {loaded && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground/60 font-medium">Milestones</span>
+              <div className="flex items-center gap-0.5">
+                {milestoneBadges.map(m => (
+                  <span
+                    key={m.at}
+                    title={m.tooltip}
+                    className={`text-[11px] transition-opacity ${referredUsers >= m.at ? 'opacity-100' : 'opacity-20'}`}
+                  >
+                    {m.label}
+                  </span>
+                ))}
+              </div>
             </div>
-          ) : referralCode ? (
-            <>
-              <code className="flex-1 text-[10px] bg-white/[0.04] px-3 py-2 rounded-lg font-mono truncate">{shareLink}</code>
-              <button onClick={copy}
-                className="shrink-0 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-colors flex items-center gap-1 active:scale-95">
-                {copied ? <Check size={12} /> : <Copy size={12} />}
-                {copied ? 'Copied' : 'Copy'}
-              </button>
-            </>
-          ) : (
-            <p className="text-[10px] text-muted-foreground/50 text-center">No referral code yet — submit a video to get one</p>
-          )}
+            {/* Next milestone progress bar */}
+            {nextMilestone && (
+              <div className="space-y-1">
+                <div className="flex justify-between text-[9px] text-muted-foreground/50">
+                  <span>{nextMilestone.label} — ${(nextMilestone.bonus_cents / 100).toFixed(0)} bonus</span>
+                  <span>{nextMilestone.referrals_needed} more referral{nextMilestone.referrals_needed !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(100, (referredUsers / nextMilestone.total_needed) * 100)}%` }}
+                    className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Stats grid */}
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+            <motion.p
+              key={earningsCents}
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              className="text-xl font-bold text-emerald-400"
+            >
+              ${(earningsCents / 100).toFixed(2)}
+            </motion.p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Earned</p>
+          </div>
+          <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+            <p className="text-xl font-bold">{referredUsers}</p>
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Referred</p>
+          </div>
         </div>
+
+        {/* Native share + channels */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            {typeof (navigator as any)?.share === 'function' ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={shareNative}
+                className="flex-1 px-3 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm shadow-amber-500/20"
+              >
+                <Heart size={14} /> Share with a friend
+              </motion.button>
+            ) : (
+              <>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={shareTwitter}
+                  className="flex-1 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
+                  title="Share on X / Twitter"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  Tweet
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={shareWhatsApp}
+                  className="flex-1 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-medium flex items-center justify-center gap-1.5 transition-colors"
+                  title="Share on WhatsApp"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                  WhatsApp
+                </motion.button>
+              </>
+            )}
+          </div>
+          {/* Copy link row */}
+          <div className="flex items-center gap-1.5">
+            <code className="flex-1 text-[9px] bg-white/[0.04] px-2 py-1.5 rounded-lg font-mono truncate text-muted-foreground/70">{shareLink}</code>
+            <button onClick={copy}
+              className="shrink-0 px-2.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-[10px] text-muted-foreground transition-colors flex items-center gap-1 active:scale-95"
+              title="Copy link"
+            >
+              {copied ? <Check size={10} className="text-emerald-400" /> : <Copy size={10} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Withdraw */}
+        {totalPendingCents > 0 && (
+          <div className="pt-1 border-t border-white/[0.06]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Pending bonus</p>
+                <p className="text-xs font-bold text-emerald-400">${(totalPendingCents / 100).toFixed(2)}</p>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={withdraw}
+                disabled={withdrawing}
+                className="text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors disabled:opacity-40 flex items-center gap-1"
+              >
+                {withdrawing ? <LoaderCircle size={10} className="animate-spin" /> : <Wallet size={10} />}
+                {withdrawing ? 'Claiming...' : 'Claim → campaign'}
+              </motion.button>
+            </div>
+          </div>
+        )}
+
+        {/* Recent referral activity — social proof */}
+        {recentReferred.length > 0 && (
+          <div className="pt-1 border-t border-white/[0.06] space-y-2">
+            <p className="text-[10px] font-medium text-muted-foreground/60">Recent referrals</p>
+            <div className="space-y-1.5">
+              {recentReferred.slice(0, 3).map((r: any, i: number) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-2 text-[10px] text-muted-foreground"
+                >
+                  <div className="w-5 h-5 rounded-full bg-white/[0.04] flex items-center justify-center text-[8px] font-bold shrink-0">
+                    {r.display_name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                  <span className="truncate flex-1">{r.display_name || 'Someone'} joined</span>
+                  <span className="text-muted-foreground/40">
+                    {r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

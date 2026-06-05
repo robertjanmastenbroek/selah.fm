@@ -45,18 +45,52 @@ export async function GET(request: Request) {
     WHERE user_id = ${user.id} AND status = 'pending'
   `;
 
-  // Get referred users count
+  // Get referred users count + recent activity
   const [referredCount] = await sql`
     SELECT COUNT(*)::int as count FROM users WHERE referred_by = ${user.id}
   `;
+
+  // Get recent referred users for social proof
+  const recentReferred = await sql`
+    SELECT display_name, created_at, referrer_earnings_cents
+    FROM users 
+    WHERE referred_by = ${user.id}
+    ORDER BY created_at DESC
+    LIMIT 5
+  `;
+
+  // Calculate next milestone
+  const referredCountVal = referredCount?.count || 0;
+  const milestones = [
+    { at: 1, bonus: 500, label: 'First referral' },
+    { at: 3, bonus: 1000, label: 'Bronze' },
+    { at: 5, bonus: 2500, label: 'Silver' },
+    { at: 10, bonus: 5000, label: 'Gold' },
+    { at: 25, bonus: 15000, label: 'Platinum' },
+  ];
+  const nextMilestone = milestones.find(m => m.at > referredCountVal);
+  const currentMilestone = milestones.filter(m => m.at <= referredCountVal).pop();
 
   return NextResponse.json({
     referral_code: profile.referral_code,
     referrer_earnings_cents: profile.referrer_earnings_cents,
     total_pending_cents: bonusStats?.total_pending_cents || 0,
     pending_bonuses: bonusStats?.pending_bonuses || 0,
-    referred_users: referredCount?.count || 0,
+    referred_users: referredCountVal,
     referred_by: profile.referred_by,
+    recent_referred: recentReferred,
+    next_milestone: nextMilestone ? {
+      referrals_needed: nextMilestone.at - referredCountVal,
+      bonus_cents: nextMilestone.bonus,
+      label: nextMilestone.label,
+      total_needed: nextMilestone.at,
+    } : null,
+    current_milestone: currentMilestone ? {
+      bonus_cents: currentMilestone.bonus,
+      label: currentMilestone.label,
+      total_needed: currentMilestone.at,
+    } : null,
+    next_bonus_at: nextMilestone?.at || null,
   });
 }
 
