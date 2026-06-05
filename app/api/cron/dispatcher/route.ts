@@ -24,7 +24,7 @@ const WORKERS: Record<number, { path: string; params?: string }[]> = {
   11: [{ path: '/api/cron/creator-outreach' }, { path: '/api/cron/reengage' }],
   12: [{ path: '/api/cron/message-notifications' }],
   13: [{ path: '/api/cron/payout-reminder' }],
-  14: [{ path: '/api/cron/blog-pipeline', params: 'step=interview' }],
+  14: [{ path: '/api/cron/blog-pipeline', params: 'step=interview' }, { path: '/api/cron/email-digest' }],
   15: [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/blog-publish' }],
   16: [{ path: '/api/cron/blog-publish' }],
   17: [{ path: '/api/cron/creator-discovery' }],
