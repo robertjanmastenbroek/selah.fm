@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
@@ -219,6 +220,7 @@ function BrowseSkeleton() {
 // ── MAIN COMPONENT ──────────────────────────────────────────────
 
 export default function BrowseClient() {
+  const tb = useTranslations('browse');
   const [tab, setTab] = useState<Tab>('artists');
   const [artists, setArtists] = useState<any[]>([]);
   const [totalArtists, setTotalArtists] = useState(0);
@@ -544,7 +546,7 @@ export default function BrowseClient() {
               <SlidersHorizontal size={12} className="text-muted-foreground/40" />
               <select value={selectedSort} onChange={e => setSelectedSort(e.target.value)}
                 className="rounded-lg bg-white/[0.04] border border-white/[0.06] px-2.5 py-1.5 text-[10px] text-foreground focus:outline-none focus:border-primary/30 appearance-none cursor-pointer">
-                {sortOptions.map(o => <option key={o.value} value={o.value} className="bg-[#1C1C3A]">{o.label}</option>)}
+                {sortOptions.map(o => <option key={o.value} value={o.value} className="bg-[#1C1C3A]">{o.value === 'popular' ? tb('sortPopular') : o.value === 'newest' ? tb('sortNewest') : o.value === 'listeners' ? tb('sortListeners') : o.value === 'name' ? tb('sortName') : o.value === 'highest_cpm' ? 'Highest CPM' : o.value === 'most_funded' ? 'Most Funded' : o.label}</option>)}
               </select>
             </div>
           </div>
