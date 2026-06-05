@@ -19,8 +19,9 @@ export async function GET(request: Request) {
         LIMIT 100
       `;
       return NextResponse.json(emails);
-    } catch {
-      return NextResponse.json([]);
+    } catch (e: any) {
+      console.error('Admin emails inbound error:', e.message);
+      return NextResponse.json({ error: 'Failed to load inbound emails' }, { status: 500 });
     }
   }
 
@@ -33,7 +34,8 @@ export async function GET(request: Request) {
       LIMIT 100
     `;
     return NextResponse.json({ emails });
-  } catch {
-    return NextResponse.json({ emails: [] });
+  } catch (e: any) {
+    console.error('Admin emails outbound error:', e.message);
+    return NextResponse.json({ error: 'Failed to load email log' }, { status: 500 });
   }
 }

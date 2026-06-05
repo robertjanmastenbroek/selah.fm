@@ -46,6 +46,6 @@ export async function GET(request: Request) {
     return response;
   } catch (e: any) {
     console.error('Discover error:', e.message);
-    return NextResponse.json({ submissions: [] });
+    return NextResponse.json({ error: 'Failed to load trending submissions' }, { status: 500 });
   }
 }

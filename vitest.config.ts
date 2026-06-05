@@ -7,7 +7,6 @@ export default defineConfig({
     globals: true,
     include: ['lib/**/*.test.ts', 'lib/**/*.test.tsx'],
     setupFiles: [],
-    envDir: path.resolve(__dirname, '.'),
     env: {
       // Ensure test defaults even if .env.test is missing
       NEXT_PUBLIC_URL: 'http://localhost:3000',

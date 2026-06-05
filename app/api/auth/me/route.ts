@@ -49,7 +49,8 @@ export async function GET(request: Request) {
       isAdmin: ADMIN_EMAILS.includes(user.email || ''),
     });
   } catch (e: any) {
-    return NextResponse.json({ user: null, isAdmin: false, error: e.message });
+    console.error('Auth/me error:', e.message);
+    return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
   }
 }
 
