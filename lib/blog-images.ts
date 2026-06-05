@@ -19,9 +19,15 @@ export async function fetchBlogImage(query: string, blogPostId?: string): Promis
   if (!PEXELS_API_KEY) return FALLBACK_IMAGE;
 
   try {
-    // 1. Search Pexels
+    // 0. Get already-used Pexels URLs to avoid duplicates
+    const usedUrls = await sql`
+      SELECT DISTINCT source_url FROM blog_images WHERE source_type = 'pexels' AND source_url IS NOT NULL
+    `;
+    const usedUrlSet = new Set(usedUrls.map((r: any) => r.source_url));
+
+    // 1. Search Pexels — get more results for better dedup
     const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=10&orientation=landscape&size=large`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=15&orientation=landscape&size=large`,
       { headers: { Authorization: PEXELS_API_KEY }, signal: AbortSignal.timeout(10000) }
     );
 
@@ -30,8 +36,15 @@ export async function fetchBlogImage(query: string, blogPostId?: string): Promis
     const data = await res.json();
     if (!data.photos?.length) return FALLBACK_IMAGE;
 
-    // Pick a random photo from top results
-    const photo = data.photos[Math.floor(Math.random() * Math.min(data.photos.length, 5))];
+    // Filter out already-used photos, then pick random from unused ones
+    const unused = data.photos.filter((p: any) => {
+      const url = p.src?.large2x || p.src?.large || p.src?.original;
+      return url && !usedUrlSet.has(url);
+    });
+    
+    // If all photos have been used, pick a random one anyway (better than fallback)
+    const pool = unused.length > 0 ? unused : data.photos;
+    const photo = pool[Math.floor(Math.random() * pool.length)];
     const pexelsUrl = photo.src?.large2x || photo.src?.large || photo.src?.original;
     if (!pexelsUrl) return FALLBACK_IMAGE;
 
@@ -46,11 +59,26 @@ export async function fetchBlogImage(query: string, blogPostId?: string): Promis
     const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
     const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
     const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+    
+    // Compute image hash for byte-level dedup
+    const crypto = await import('crypto');
+    const imageHash = crypto.createHash('sha256').update(imageBuffer).digest('hex');
+    
+    // Check if this exact image was already used
+    const existingImage = await sql`
+      SELECT id FROM blog_images WHERE image_hash = ${imageHash} LIMIT 1
+    `;
+    if (existingImage.length > 0) {
+      // Reuse the existing image — just link it
+      const shortId = existingImage[0].id.replace(/-/g, '').slice(0, 12);
+      const existingExt = existingImage[0].mime_type?.includes('png') ? 'png' : 'jpg';
+      return `/api/images/blog/${shortId}.${existingExt}`;
+    }
 
     // 3. Store in database
     const [row] = await sql`
-      INSERT INTO blog_images (blog_post_id, image_data, mime_type, source_url, source_type)
-      VALUES (${blogPostId || null}, ${imageBuffer}, ${contentType}, ${pexelsUrl}, 'pexels')
+      INSERT INTO blog_images (blog_post_id, image_data, mime_type, source_url, source_type, image_hash)
+      VALUES (${blogPostId || null}, ${imageBuffer}, ${contentType}, ${pexelsUrl}, 'pexels', ${imageHash})
       RETURNING id
     `;
 

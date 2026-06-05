@@ -255,8 +255,11 @@ export async function GET(request: Request) {
         // Enforce question-title format for QAPage schema + SEO featured snippets
         const title = enforceQuestionTitle(article.title, iv.raw_question);
         const slug = slugify(title) + '-' + Date.now().toString(36);
-        const imageQuery = article.image_suggestions?.[0]?.description || 'music promotion';
-        const featuredImage = await fetchBlogImage(imageQuery);
+        // Use primary keyword for image search if available — more specific = more variety
+        const imageQuery = article.image_suggestions?.[0]?.description 
+          || article.primary_keyword 
+          || 'music promotion';
+        const featuredImage = await fetchBlogImage(imageQuery.slice(0, 100));
 
         // Generate direct answer block — first thing AI crawlers + readers see
         let directAnswerHtml = '';
