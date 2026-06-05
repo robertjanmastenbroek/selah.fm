@@ -60,6 +60,22 @@ export default function Header() {
           <Image src="/images/selah-nav-logo.png" alt="Selah.fm" className="h-7 w-auto" priority width="200" height="40" />
         </Link>
 
+        {/* Quick actions — visible pill buttons for authenticated users */}
+        <div className="hidden sm:flex items-center gap-1.5 ml-auto mr-2">
+          {profile?.is_artist && (
+            <Link href="/dashboard?tab=campaigns"
+              className="px-3 py-1.5 rounded-lg bg-primary/[0.08] border border-primary/20 text-primary text-[10px] font-semibold hover:bg-primary/[0.12] transition-colors flex items-center gap-1">
+              <TrendingUp size={12} /> Create
+            </Link>
+          )}
+          {profile?.is_creator && (
+            <Link href="/browse"
+              className="px-3 py-1.5 rounded-lg bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold hover:bg-emerald-500/[0.12] transition-colors flex items-center gap-1">
+              <Video size={12} /> Submit
+            </Link>
+          )}
+        </div>
+
         {/* Right: messages icon + notification bell + hamburger menu */}
         <div className="flex items-center" ref={dropdownRef}>
           {profile && (
