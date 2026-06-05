@@ -1,3 +1,7 @@
+const createNextIntlPlugin = require('next-intl/plugin');
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -67,36 +71,22 @@ const nextConfig = {
   },
 };
 
-// next-intl + Sentry are loaded lazily via async function to avoid
-// Node 18 ESM require() issues on Railway (next-intl is "type": "module")
-module.exports = async () => {
-  let config = { ...nextConfig };
+let config = withNextIntl(nextConfig);
 
-  // next-intl plugin
+if (process.env.SENTRY_AUTH_TOKEN) {
   try {
-    const createNextIntlPlugin = (await import('next-intl/plugin')).default;
-    const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
-    config = withNextIntl(config);
+    const { withSentryConfig } = require('@sentry/nextjs');
+    config = withSentryConfig(config, {
+      silent: true,
+      org: process.env.SENTRY_ORG || '',
+      project: process.env.SENTRY_PROJECT || 'selahfm',
+      widenClientFileUpload: true,
+      hideSourceMaps: true,
+      disableLogger: true,
+    });
   } catch (e) {
-    console.warn('[config] next-intl not available, skipping i18n plugin:', e.message);
+    console.warn('[config] @sentry/nextjs not found — skipping source map upload');
   }
+}
 
-  // Sentry
-  if (process.env.SENTRY_AUTH_TOKEN) {
-    try {
-      const { withSentryConfig } = await import('@sentry/nextjs');
-      config = withSentryConfig(config, {
-        silent: true,
-        org: process.env.SENTRY_ORG || '',
-        project: process.env.SENTRY_PROJECT || 'selahfm',
-        widenClientFileUpload: true,
-        hideSourceMaps: true,
-        disableLogger: true,
-      });
-    } catch (e) {
-      console.warn('[config] @sentry/nextjs not found — skipping source map upload');
-    }
-  }
-
-  return config;
-};
+module.exports = config;
