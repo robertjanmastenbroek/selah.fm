@@ -30,7 +30,7 @@ const WORKERS: Record<number, { path: string; params?: string }[]> = {
   17: [{ path: '/api/cron/creator-discovery' }],
   20: [{ path: '/api/cron/blog-pipeline' }],
   21: [{ path: '/api/cron/email-outreach' }],
-  22: [{ path: '/api/admin/outreach', params: 'action=reaudit_emails&limit=100' }],
+  22: [{ path: '/api/cron/self-improve' }, { path: '/api/admin/outreach', params: 'action=reaudit_emails&limit=100' }],
   23: [{ path: '/api/cron/creator-outreach' }],
 };
 
