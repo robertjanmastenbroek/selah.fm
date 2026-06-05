@@ -45,16 +45,29 @@ export async function GET(request: Request) {
 
   const origin = 'https://selah.fm';
 
-  for (const w of workers) {
-    const url = w.params 
-      ? `${origin}${w.path}?${w.params}&secret=${secret}`
-      : `${origin}${w.path}?secret=${secret}`;
-    
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(300000) });
-      results.push({ path: w.path, status: res.status, response: await res.json().catch(() => null) });
-    } catch (e: any) {
-      results.push({ path: w.path, status: 500, error: e.message });
+  // Parallel execution with concurrency limit — all workers at the same hour are independent
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < workers.length; i += BATCH_SIZE) {
+    const batch = workers.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.allSettled(
+      batch.map(async (w) => {
+        const url = w.params 
+          ? `${origin}${w.path}?${w.params}&secret=${secret}`
+          : `${origin}${w.path}?secret=${secret}`;
+        try {
+          const res = await fetch(url, { signal: AbortSignal.timeout(300000) });
+          return { path: w.path, status: res.status, response: await res.json().catch(() => null) };
+        } catch (e: any) {
+          return { path: w.path, status: 500, error: e.message };
+        }
+      })
+    );
+    for (const br of batchResults) {
+      if (br.status === 'fulfilled') {
+        results.push(br.value);
+      } else {
+        results.push({ path: 'unknown', status: 500, error: br.reason?.message || 'Batch worker failed' });
+      }
     }
   }
 

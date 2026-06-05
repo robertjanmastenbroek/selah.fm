@@ -90,71 +90,58 @@ export async function POST(request: Request) {
         RETURNING *
       `;
 
-      // Notify the creator
-      try {
-        const earningsDollars = (creatorEarnsCents / 100).toFixed(2);
-        await sql`
-          INSERT INTO notifications (user_id, type, message, link, metadata)
-          VALUES (
-            ${sub.creator_id}, 'approval',
-            ${`Your submission on "${sub.track_title}" was approved — $${earningsDollars} earned (${views.toLocaleString()} views)`},
-            '/earnings',
-            ${JSON.stringify({ submission_id: submissionId, amount_cents: creatorEarnsCents })}
-          )
-        `;
-        const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
-        if (creatorData.length > 0) {
-          // Creator notified via NotificationBell above. Welcome emails handled via info@selah.fm
-        }
-      } catch (e: any) { console.error('Unhandled error in api/review/route.ts:', e); }
-
-      // Attempt auto-payout via Stripe
+      // Structured side-effects: notify creator, process payout, track analytics
+      // All fire-and-forget: failures are logged but don't break the main response
+      const earningsDollars = (creatorEarnsCents / 100).toFixed(2);
       let payoutNote: string | null = null;
-      try {
-        const payoutRes = await fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/stripe/payout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ submissionId }),
-        });
-        if (!payoutRes.ok) {
-          const payoutErr = await payoutRes.json().catch(() => ({ error: 'Unknown' }));
-          payoutNote = payoutErr.error || 'Payout deferred';
-          
-          // If payout failed because creator hasn't set up Stripe, email them
-          if (payoutErr.error?.includes('Stripe onboarding') || payoutErr.error?.includes('not completed')) {
-            try {
+
+      // 1. Create notification (fire-and-forget with logging)
+      sql`
+        INSERT INTO notifications (user_id, type, message, link, metadata)
+        VALUES (
+          ${sub.creator_id}, 'approval',
+          ${`Your submission on "${sub.track_title}" was approved — $${earningsDollars} earned (${views.toLocaleString()} views)`},
+          '/earnings',
+          ${JSON.stringify({ submission_id: submissionId, amount_cents: creatorEarnsCents })}
+        )
+      `.catch((e: any) => console.error('[review] Notification failed:', e.message));
+
+      // 2. Attempt auto-payout via Stripe (fire-and-forget with logging)
+      (async () => {
+        try {
+          const payoutRes = await fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/stripe/payout`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ submissionId }),
+          });
+          if (!payoutRes.ok) {
+            const payoutErr = await payoutRes.json().catch(() => ({ error: 'Unknown' }));
+            payoutNote = payoutErr.error || 'Payout deferred';
+            if (payoutErr.error?.includes('Stripe onboarding') || payoutErr.error?.includes('not completed')) {
               const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
               if (creatorData.length > 0 && creatorData[0].email) {
-                const name = creatorData[0].display_name || 'Creator';
-                const earnings = (creatorEarnsCents / 100).toFixed(2);
-                // Fire-and-forget: send Stripe setup email via Resend
                 fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/email/send`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     to: creatorData[0].email,
-                    subject: `$${earnings} earned — complete your payout setup`,
-                    html: `
-                      <h2>You earned $${earnings} on Selah.fm!</h2>
-                      <p>Hi ${name},</p>
-                      <p>Your video was approved and you've earned <strong>$${earnings}</strong>. To receive your payout, you need to connect your bank account (takes 2 minutes).</p>
-                      <p><a href="https://selah.fm/earnings" style="display:inline-block;padding:12px 24px;background:#4338CA;color:white;border-radius:8px;text-decoration:none;font-weight:600;">Set up payouts →</a></p>
-                      <p style="color:#888;font-size:13px;">Payouts are processed within 2-3 business days after setup. Works in 40+ countries.</p>
-                    `,
+                    subject: `$${earningsDollars} earned — complete your payout setup`,
+                    html: `<h2>You earned $${earningsDollars} on Selah.fm!</h2><p>Hi ${creatorData[0].display_name || 'Creator'},</p><p>Your video was approved and you've earned <strong>$${earningsDollars}</strong>. To receive your payout, you need to connect your bank account (takes 2 minutes).</p><p><a href="https://selah.fm/earnings" style="display:inline-block;padding:12px 24px;background:#4338CA;color:white;border-radius:8px;text-decoration:none;font-weight:600;">Set up payouts →</a></p><p style="color:#888;font-size:13px;">Payouts are processed within 2-3 business days after setup. Works in 40+ countries.</p>`,
                   }),
-                }).catch(e => console.error('Async error in api/review/route.ts:', e));
+                }).catch((e: any) => console.error('[review] Payout setup email failed:', e.message));
               }
-            } catch (e: any) { console.error('Unhandled error in api/review/route.ts:', e); }
+            }
+          } else {
+            payoutNote = 'Payout processing';
           }
-        } else {
-          payoutNote = 'Payout processing';
+        } catch (e: any) {
+          payoutNote = 'Payout endpoint unreachable';
+          console.error('[review] Payout fetch failed:', e.message);
         }
-      } catch {
-        payoutNote = 'Payout endpoint unreachable';
-      }
+      })();
 
-      // Server-side GA tracking
-      trackApproveSubmission(session.id).catch(e => console.error('Async error in api/review/route.ts:', e));
+      // 3. GA tracking (fire-and-forget)
+      trackApproveSubmission(session.id).catch((e: any) => console.error('[review] Analytics failed:', e.message));
 
       const responseData = { ...result[0], payout_note: payoutNote };
       return NextResponse.json(responseData);
@@ -171,21 +158,15 @@ export async function POST(request: Request) {
 
     if (status === 'rejected' && result.length > 0) {
       const feedbackMsg = feedback ? `Reason: "${feedback}"` : 'No specific reason given.';
-      try {
-        await sql`
-          INSERT INTO notifications (user_id, type, message, link, metadata)
-          VALUES (
-            ${sub.creator_id}, 'rejection',
-            ${`Your submission on "${sub.track_title}" was rejected. ${feedbackMsg}`},
-            '/earnings',
-            ${JSON.stringify({ submission_id: submissionId, feedback })}
-          )
-        `;
-        const creatorData = await sql`SELECT email, display_name FROM users WHERE id = ${sub.creator_id}`;
-        if (creatorData.length > 0) {
-          // Creator notified via NotificationBell above. Rejection emails handled via info@selah.fm
-        }
-      } catch (e: any) { console.error('Unhandled error in api/review/route.ts:', e); }
+      sql`
+        INSERT INTO notifications (user_id, type, message, link, metadata)
+        VALUES (
+          ${sub.creator_id}, 'rejection',
+          ${`Your submission on "${sub.track_title}" was rejected. ${feedbackMsg}`},
+          '/earnings',
+          ${JSON.stringify({ submission_id: submissionId, feedback })}
+        )
+      `.catch((e: any) => console.error('[review] Rejection notification failed:', e.message));
     }
 
     return NextResponse.json(result[0]);

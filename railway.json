@@ -16,6 +16,22 @@
       "image": "postgres:16",
       "volumes": { "pgdata": "/var/lib/postgresql/data" }
     },
+    "pgbouncer": {
+      "image": "bitnami/pgbouncer:latest",
+      "port": 6432,
+      "env": {
+        "PGBOUNCER_DATABASE": "postgres",
+        "PGBOUNCER_PORT": "6432",
+        "PGBOUNCER_MAX_CLIENT_CONN": "100",
+        "PGBOUNCER_POOL_MODE": "transaction",
+        "PGBOUNCER_DEFAULT_POOL_SIZE": "20",
+        "POSTGRESQL_HOST": "${{POSTGRES_URL_HOST}}",
+        "POSTGRESQL_PORT": "${{POSTGRES_URL_PORT}}",
+        "POSTGRESQL_USERNAME": "${{POSTGRES_URL_USER}}",
+        "POSTGRESQL_PASSWORD": "${{POSTGRES_URL_PASSWORD}}",
+        "POSTGRESQL_DATABASE": "${{POSTGRES_URL_DATABASE}}"
+      }
+    },
     "crawl4ai": {
       "image": "unclecode/crawl4ai:latest",
       "port": 8000,
