@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import { LayoutDashboard, Banknote, Settings, LogOut, Search, Menu, MessageCircle, Sparkles, Mail, TrendingUp, Video } from 'lucide-react';
@@ -56,7 +57,7 @@ export default function Header() {
 
         {/* Center: logo */}
         <Link href="/" className="absolute left-1/2 -translate-x-1/2">
-          <img src="/images/selah-nav-logo.png" alt="Selah.fm" className="h-7 w-auto" fetchPriority="high" width="200" height="40" />
+          <Image src="/images/selah-nav-logo.png" alt="Selah.fm" className="h-7 w-auto" priority width="200" height="40" />
         </Link>
 
         {/* Right: messages icon + notification bell + hamburger menu */}

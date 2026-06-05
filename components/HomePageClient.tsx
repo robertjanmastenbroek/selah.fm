@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -187,7 +188,7 @@ export default function RootPage() {
             <Link href="/settings"
               className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] text-[13px] font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-all duration-200">
               {user.avatar ? (
-                <img src={user.avatar} alt="" className="w-6 h-6 rounded-full object-cover" referrerPolicy="no-referrer" />
+                <Image src={user.avatar} alt="" className="w-6 h-6 rounded-full object-cover" width="24" height="24" referrerPolicy="no-referrer" />
               ) : (
                 <div className="w-6 h-6 rounded-full bg-[#4338CA]/30 flex items-center justify-center text-white/70 text-[11px] font-bold">
                   {user.name?.charAt(0)?.toUpperCase() || '?'}
@@ -210,7 +211,7 @@ export default function RootPage() {
             initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }}>
             {/* Logo + badge */}
             <div className="inline-flex items-center gap-3 mb-2">
-              <img src="/images/Selah Logo transparant no text.png" alt="Selah" className="h-10 w-auto" />
+              <Image src="/images/Selah Logo transparant no text.png" alt="Selah" className="h-10 w-auto" priority width="120" height="40" />
               <span className="text-[11px] font-medium text-[#22C55E]/70 bg-[#22C55E]/5 px-2.5 py-1 rounded-full border border-[#22C55E]/10">Open source</span>
             </div>
 
@@ -629,7 +630,7 @@ export default function RootPage() {
       <footer className="relative z-10 border-t border-white/[0.03] px-4 py-12">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src="/images/Selah Logo transparant no text.png" alt="Selah" className="h-6 w-auto" />
+            <Image src="/images/Selah Logo transparant no text.png" alt="Selah" className="h-6 w-auto" width="80" height="26" />
             <span className="text-[11px] text-white/20">Selah.fm — Open source music promotion</span>
           </div>
           <div className="flex items-center gap-6">

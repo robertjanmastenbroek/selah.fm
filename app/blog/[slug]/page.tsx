@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import sql from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+// ISR: revalidate every hour — blog posts don't change frequently
 export const revalidate = 3600;
 
 interface Props { params: { slug: string } }
