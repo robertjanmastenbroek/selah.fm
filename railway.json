@@ -1,7 +1,11 @@
 {
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "npm run build"
+    "buildCommand": "npm run build",
+    "watchPatterns": ["app/**", "components/**", "lib/**", "public/**"],
+    "env": {
+      "NODE_OPTIONS": "--max-old-space-size=4096"
+    }
   },
   "deploy": {
     "startCommand": "npm start",
