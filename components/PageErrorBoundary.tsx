@@ -26,7 +26,7 @@ export default class PageErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex items-center justify-center px-4"
           style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23' }}>
           <div className="text-center max-w-sm space-y-5">
-            <img src="/images/error-state.png" alt="" className="mx-auto w-32 h-32 object-contain opacity-80" />
+            <img src="/images/error-state.png" alt="Error illustration" className="mx-auto w-32 h-32 object-contain opacity-80" />
             <div>
               <h2 className="text-lg font-semibold mb-1">Something went sideways</h2>
               <p className="text-sm text-muted-foreground">

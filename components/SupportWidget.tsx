@@ -143,6 +143,7 @@ export default function SupportWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.95 }}
             transition={{ duration: 0.2 }}
+            role="dialog" aria-modal="true" aria-label="AI Support chat"
             className="w-[360px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-8rem)] rounded-2xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden backdrop-blur-xl"
           >
             {/* Header */}

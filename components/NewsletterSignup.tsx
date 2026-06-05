@@ -167,7 +167,7 @@ export default function NewsletterSignup({ source = 'website', delay = 30 }: Pro
                       <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                         placeholder="Email address" required
                         className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none" />
-                      {error && <p className="text-xs text-red-400">{error}</p>}
+                      {error && <p className="text-xs text-red-400" role="alert" aria-live="polite">{error}</p>}
                       <button type="submit" disabled={loading || !email}
                         className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white text-sm font-semibold hover:shadow-[0_0_16px_rgba(67,56,202,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
                         {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Mail size={14} /> Send me the Cheat Sheet</>}
@@ -198,7 +198,7 @@ export default function NewsletterSignup({ source = 'website', delay = 30 }: Pro
                         className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors">
                         Continue with email
                       </button>
-                      {error && <p className="text-xs text-red-400 text-center">{error}</p>}
+                      {error && <p className="text-xs text-red-400 text-center" role="alert" aria-live="polite">{error}</p>}
                     </div>
                   )}
 

@@ -80,7 +80,7 @@ export default function CommandPalette() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[9998] flex items-start justify-center pt-[15vh]" onClick={() => setOpen(false)}>
+    <div className="fixed inset-0 z-[9998] flex items-start justify-center pt-[15vh]" role="dialog" aria-modal="true" aria-label="Command search" onClick={() => setOpen(false)}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
