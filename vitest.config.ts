@@ -6,7 +6,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     include: ['lib/**/*.test.ts', 'lib/**/*.test.tsx'],
-    setupFiles: [],
+    setupFiles: ['./lib/__tests__/setup.ts'],
     env: {
       // Ensure test defaults even if .env.test is missing
       NEXT_PUBLIC_URL: 'http://localhost:3000',
@@ -22,3 +22,4 @@ export default defineConfig({
     },
   },
 });
+
