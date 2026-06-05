@@ -43,6 +43,9 @@ export function renderWelcomeEmail1(name: string, role: 'artist' | 'creator'): {
         '',
         `No upfront costs. You only pay when videos get verified views.`,
         '',
+        `<strong>One more thing — your artist page could use your help.</strong><br>`,
+        `The bio, genre tags, and track list on your page were generated automatically. If something looks wrong, you can fix it. <a href="https://selah.fm/dashboard" style="color:#5B7FFF;">Suggest corrections to your bio</a>, add missing tracks, or fix your genre. It takes 30 seconds.`,
+        '',
         `— Robert-Jan<br>Founder, Selah.fm`,
       ].join('<br>')
     : [
@@ -57,6 +60,9 @@ export function renderWelcomeEmail1(name: string, role: 'artist' | 'creator'): {
         `3. <strong>Get paid per view</strong> — every verified view counts. You keep every cent. No deductions.`,
         '',
         `Some creators are making $50-500 per campaign. Not life-changing, but real money for content you're already making.`,
+        '',
+        `<strong>Know an artist whose page looks wrong?</strong><br>`,
+        `You can <a href="https://selah.fm/browse" style="color:#5B7FFF;">suggest edits to any artist page</a> to help other creators discover accurate info about the artists they want to work with. Every fix helps the whole community.`,
         '',
         `— Robert-Jan<br>Founder, Selah.fm`,
       ].join('<br>');
