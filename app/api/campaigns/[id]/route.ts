@@ -165,16 +165,23 @@ export async function PATCH(
     let patchImageBuffer: Buffer | null = null;
     let patchImageMime = 'image/jpeg';
     if (coverArtUrl && coverArtUrl.startsWith("data:")) {
-      try {
-        const matches = coverArtUrl.match(/^data:image\/(\w+);base64,(.+)$/);
-        if (matches) {
-          patchImageMime = `image/${matches[1]}`;
-          patchImageBuffer = Buffer.from(matches[2], "base64");
-          // Don't set finalCoverArt yet — will use API URL after storing
+      const matches = coverArtUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (matches) {
+        const ext = matches[1].toLowerCase();
+        const ACCEPTED = ['jpeg', 'png', 'webp', 'gif'];
+        if (!ACCEPTED.includes(ext)) {
+          return NextResponse.json({ error: `Invalid image format: ${ext}. Accepted: JPEG, PNG, WebP, GIF` }, { status: 400 });
         }
-      } catch (e: any) { console.error("Failed to decode cover art:", e.message); }
+        try {
+          patchImageMime = `image/${ext === 'jpeg' ? 'jpeg' : ext}`;
+          patchImageBuffer = Buffer.from(matches[2], "base64");
+          // Server-side size check: max 10MB
+          if (patchImageBuffer.length > 10 * 1024 * 1024) {
+            return NextResponse.json({ error: 'Image too large. Maximum 10MB.' }, { status: 400 });
+          }
+        } catch (e: any) { console.error('Unhandled error in api/campaigns/[id]/route.ts:', e); }
+      }
     }
-
     const result = await sql`
       UPDATE campaigns SET
         track_title = COALESCE(${trackTitle}, track_title),

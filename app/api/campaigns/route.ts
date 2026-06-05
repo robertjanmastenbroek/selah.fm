@@ -247,10 +247,18 @@ export async function POST(request: Request) {
     if (coverArtUrl && coverArtUrl.startsWith('data:')) {
       const match = coverArtUrl.match(/^data:image\/(\w+);base64,(.+)$/);
       if (match) {
+        const ext = match[1].toLowerCase();
+        const ACCEPTED = ['jpeg', 'png', 'webp', 'gif'];
+        if (!ACCEPTED.includes(ext)) {
+          return NextResponse.json({ error: `Invalid image format: ${ext}. Accepted: JPEG, PNG, WebP, GIF` }, { status: 400 });
+        }
         try {
-          imageMime = `image/${match[1] === 'jpeg' ? 'jpeg' : match[1]}`;
+          imageMime = `image/${ext === 'jpeg' ? 'jpeg' : ext}`;
           imageBuffer = Buffer.from(match[2], 'base64');
-          // Don't set finalCoverArt yet — we'll set it after we have the campaign ID
+          // Server-side size check: max 10MB
+          if (imageBuffer.length > 10 * 1024 * 1024) {
+            return NextResponse.json({ error: 'Image too large. Maximum 10MB.' }, { status: 400 });
+          }
         } catch (e: any) { console.error('Unhandled error in api/campaigns/route.ts:', e); }
       }
     }
