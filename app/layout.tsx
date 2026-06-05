@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
+import Script from 'next/script';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import PageTransition from '@/components/PageTransition';
 import SupportWidget from '@/components/SupportWidget';
 import CookieBanner from '@/components/CookieBanner';
 import NewsletterSignup from '@/components/NewsletterSignup';
@@ -12,14 +12,18 @@ import Analytics from '@/components/Analytics';
 import CommandPalette from '@/components/CommandPalette';
 import { cn } from "@/lib/utils";
 
+// Dynamic import for page transitions — framer-motion is heavy (37+ files import it)
+const PageTransition = lazy(() => import('@/components/PageTransition'));
+
 const poppins = Poppins({subsets:['latin'],weight:['300','400','500','600','700'],variable:'--font-sans',display:'swap',preload:true});
 const righteous = Righteous({subsets:['latin'],weight:'400',variable:'--font-heading',display:'swap',preload:true});
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Allow pinch-zoom for WCAG 1.4.4 compliance
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export const metadata: Metadata = {
@@ -58,30 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Selah.fm" />
         <link rel="apple-touch-icon" href="/images/selah-nav-logo.png" />
-        {process.env.NODE_ENV === 'production' && (
-          <script dangerouslySetInnerHTML={{ __html: `
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                  if (reg.installing) console.log('SW installing');
-                  else if (reg.waiting) console.log('SW installed');
-                  else if (reg.active) console.log('SW active');
-                }).catch(function(err) { console.log('SW registration failed:', err); });
-              });
-            }
-          ` }} />
-        )}
-        {/* Meta Pixel — only loads if META_PIXEL_ID is configured */}
-        {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
-          <script dangerouslySetInnerHTML={{ __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('track','PageView');` }} />
-        )}
-        {/* Google Ads Remarketing — only loads if NEXT_PUBLIC_GOOGLE_ADS_ID is configured */}
-        {process.env.NEXT_PUBLIC_GOOGLE_ADS_ID && (
-          <script async src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}`} />
-        )}
-        {process.env.NEXT_PUBLIC_GOOGLE_ADS_ID && (
-          <script dangerouslySetInnerHTML={{ __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}');` }} />
-        )}
+        {/* Third-party scripts moved to next/script in body for non-blocking loading */}
       </head>
       <body className="min-h-screen bg-background overflow-x-hidden">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[10000] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium focus:outline-none">
@@ -125,6 +106,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </a>
           </div>
         </footer>
+        {/* Third-party scripts loaded non-blocking via next/script */}
+        {process.env.NODE_ENV === 'production' && (
+          <Script id="service-worker" strategy="lazyOnload" dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker'in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(err){console.log('SW registration failed:',err)})})}`
+          }} />
+        )}
+        {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
+          <Script id="meta-pixel" strategy="afterInteractive" dangerouslySetInnerHTML={{
+            __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${process.env.NEXT_PUBLIC_META_PIXEL_ID}');fbq('track','PageView');`
+          }} />
+        )}
+        {process.env.NEXT_PUBLIC_GOOGLE_ADS_ID && (
+          <Script id="google-ads-config" strategy="afterInteractive" dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}');`
+          }} />
+        )}
+        {process.env.NEXT_PUBLIC_GOOGLE_ADS_ID && (
+          <Script id="google-ads-src" strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ADS_ID}`} />
+        )}
+
         <Suspense fallback={null}>
           <Analytics />
         </Suspense>

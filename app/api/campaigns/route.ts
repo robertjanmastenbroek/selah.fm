@@ -5,8 +5,7 @@ import { generateCampaignDefaults } from '@/lib/defaults';
 import { trackCreateCampaign } from '@/lib/analytics-server';
 
 export const dynamic = 'force-dynamic';
-// Allow larger request bodies for campaign creation (cover art can be 5MB+ as data URL)
-export const maxDuration = 30; // 30 seconds timeout
+export const maxDuration = 30;
 
 export async function GET(request: Request) {
   try {
@@ -177,12 +176,19 @@ export async function GET(request: Request) {
 
     const page = campaigns.slice(offset, offset + limit);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       campaigns: page,
       total,
       offset,
       limit,
     });
+
+    // Cache public browse responses for 30s (stale-while-revalidate allows serving stale for 60s)
+    if (!isOwnerView) {
+      response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+    }
+
+    return response;
   } catch (e: any) {
     return NextResponse.json({ error: e.message, campaigns: [], total: 0 }, { status: 500 });
   }

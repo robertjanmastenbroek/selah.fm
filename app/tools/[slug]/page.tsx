@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation';
 import sql from '@/lib/db';
 import { CpmCalculator, CreatorEarningsEstimator, PromotionBudgetPlanner } from '@/components/ToolCalculators';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // Revalidate every hour for fresh CPM data
+export const revalidate = 3600; // ISR — revalidate every hour
+// Note: removed force-dynamic which was overriding revalidate
 
 // ── Valid tool slugs ──────────────────────────────────────────────
 
