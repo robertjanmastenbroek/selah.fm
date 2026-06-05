@@ -128,6 +128,22 @@ async function getArtistData(slug: string) {
     LIMIT 4
   `; } catch (e: any) { console.error('[ARTIST] related artists failed:', e.message); }
 
+  // ── Community edit data ──
+  let verifiedEditCount = 0;
+  let latestEditDate: Date | null = null;
+  try {
+    const [result] = await sql`
+      SELECT COUNT(*)::int as count,
+             MAX(created_at) as latest
+      FROM artist_edit_history
+      WHERE artist_id = ${artistId} AND is_verified = TRUE
+    `;
+    verifiedEditCount = result?.count || 0;
+    latestEditDate = result?.latest || null;
+  } catch (e: any) {
+    console.error('[ARTIST] edit history fetch failed:', e.message);
+  }
+
   // Use artist_profiles as single source of truth for financial data
   // balance_cents = current available, lifetime_deposits_cents = all-time total
   const profileBalanceCents = Number(artist.balance_cents) || 0;
@@ -169,6 +185,8 @@ async function getArtistData(slug: string) {
     recent_submissions: recentSubmissions,
     related_artists: relatedArtists,
     campaigns,
+    verifiedEditCount,
+    latestEditDate: latestEditDate?.toISOString() || null,
   };
   } catch (e: any) {
     console.error('[ARTIST DATA] Error in getArtistData:', e.message);
@@ -208,7 +226,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   // Noindex artists with no tracks and no activity (thin content)
-  const isThin = stats.total_tracks === 0 || (stats.total_donations_cents === 0 && (artist.comment_count || 0) === 0 && stats.total_submissions === 0);
+  // Community edits (3+) override thin status — gives pages a path to indexability
+  const hasCommunityEdits = data.verifiedEditCount >= 3;
+  const isThin = !hasCommunityEdits && (stats.total_tracks === 0 || (stats.total_donations_cents === 0 && (artist.comment_count || 0) === 0 && stats.total_submissions === 0));
 
   return {
     title: `${name} — Music Promotion & Fan Community | Selah.fm`,
@@ -428,6 +448,8 @@ export default async function ArtistPage({ params }: Props) {
         campaigns={campaigns}
         balanceCents={data.balance_cents}
         claimedByUserId={artist.claimed_by_user_id}
+        verifiedEditCount={data.verifiedEditCount}
+        latestEditDate={data.latestEditDate}
       />
     </>
   );

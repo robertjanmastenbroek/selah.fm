@@ -13,6 +13,9 @@ import SubmissionReactions from '@/components/SubmissionReactions';
 import SubmitVideoModal from '@/components/SubmitVideoModal';
 import ArtistCard from '@/components/ArtistCard';
 import ArtistStreamingStats from '@/components/ArtistStreamingStats';
+import HelpfulSurvey from '@/components/HelpfulSurvey';
+import EditSuggestionModal from '@/components/EditSuggestionModal';
+import EditorAttributionBadge from '@/components/EditorAttributionBadge';
 import { getArtistLinks } from '@/lib/internal-links';
 
 interface ArtistProps {
@@ -26,13 +29,15 @@ interface ArtistProps {
   campaigns?: any[];
   balanceCents?: number;
   claimedByUserId?: string;
+  verifiedEditCount?: number;
+  latestEditDate?: string | null;
 }
 
 function trackSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'track';
 }
 
-export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [], campaigns = [], balanceCents = 0, claimedByUserId }: ArtistProps) {
+export default function ArtistProfileClient({ artist, tracks, stats, recentSubmissions, socialButtons, slug, relatedArtists = [], campaigns = [], balanceCents = 0, claimedByUserId, verifiedEditCount = 0, latestEditDate = null }: ArtistProps) {
   const name = artist.artist_name || 'Unknown Artist';
   const genres = (() => {
     const raw = artist.genres;
@@ -79,6 +84,8 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
   const supporterCount = stats.supporter_count || 0;
   const topCpm = tracks[0]?.cpm_rate_cents ? (tracks[0].cpm_rate_cents / 100).toFixed(2) : null;
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editModalInitialField, setEditModalInitialField] = useState<string | undefined>(undefined);
   const [activeTab, setActiveTab] = useState('tracks');
   const [currentUserId, setCurrentUserId] = useState('');
   const [streamingStats, setStreamingStats] = useState<any>(null);
@@ -559,6 +566,12 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                     </h2>
                     <div className="text-sm text-muted-foreground/70 leading-relaxed prose prose-invert max-w-none"
                       dangerouslySetInnerHTML={{ __html: bio }} />
+                    {/* Community attribution badge */}
+                    <EditorAttributionBadge
+                      artistId={artist.id}
+                      lastEditedAt={latestEditDate || undefined}
+                      contributorCount={verifiedEditCount}
+                    />
                   </section>
                 )}
                 {!bio && (
@@ -566,6 +579,17 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                     No bio yet. Check back soon.
                   </p>
                 )}
+
+                {/* Community feedback survey */}
+                <div id="helpful-survey">
+                  <HelpfulSurvey
+                    artistId={artist.id}
+                    artistSlug={slug}
+                    artistName={name}
+                    userId={currentUserId || undefined}
+                    hasExistingContributions={verifiedEditCount}
+                  />
+                </div>
               </div>
             )}
 
@@ -682,6 +706,17 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
         tracks={tracks.slice(0, 20)}
         artistSlug={slug}
         artistName={name}
+      />
+
+      {/* Edit suggestion modal */}
+      <EditSuggestionModal
+        isOpen={showEditModal}
+        onClose={() => { setShowEditModal(false); setEditModalInitialField(undefined); }}
+        artistId={artist.id}
+        artistName={name}
+        currentBio={bio}
+        currentGenres={genres}
+        initialField={editModalInitialField}
       />
     </div>
   );

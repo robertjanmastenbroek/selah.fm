@@ -10,7 +10,7 @@ interface HelpfulSurveyProps {
   hasExistingContributions?: number;
 }
 
-type SurveyState = 'idle' | 'voted_helpful' | 'voted_not_helpful' | 'feedback_selected' | 'submitting' | 'submitted';
+type SurveyState = 'idle' | 'voted_helpful' | 'voted_not_helpful' | 'feedback_selected' | 'submitted';
 
 const FEEDBACK_OPTIONS = [
   { value: 'wrong_genre', label: 'Wrong genre' },
@@ -29,6 +29,7 @@ export default function HelpfulSurvey({
   const [surveyState, setSurveyState] = useState<SurveyState>('idle');
   const [selectedFeedback, setSelectedFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitFeedback = useCallback(async (helpful: boolean) => {
     setError(null);
@@ -61,7 +62,7 @@ export default function HelpfulSurvey({
 
   const submitSuggestion = useCallback(async () => {
     if (!selectedFeedback) return;
-    setSurveyState('submitting');
+    setIsSubmitting(true);
     setError(null);
 
     // If not logged in, redirect to login with return URL
@@ -92,7 +93,7 @@ export default function HelpfulSurvey({
       if (!res.ok) {
         const data = await res.json();
         if (res.status === 429) {
-          setSurveyState('voted_not_helpful');
+          setIsSubmitting(false);
           setError('You\'ve submitted suggestions today. Please try again tomorrow.');
           return;
         }
@@ -103,9 +104,10 @@ export default function HelpfulSurvey({
         throw new Error(data.error || 'Failed to submit');
       }
 
+      setIsSubmitting(false);
       setSurveyState('submitted');
     } catch (e: any) {
-      setSurveyState('voted_not_helpful');
+      setIsSubmitting(false);
       setError(e.message || 'Something went wrong.');
     }
   }, [selectedFeedback, artistSlug, userId]);
@@ -194,10 +196,10 @@ export default function HelpfulSurvey({
           <div className="flex items-center gap-2">
             <button
               onClick={submitSuggestion}
-              disabled={surveyState === 'submitting'}
+              disabled={isSubmitting}
               className="px-4 py-1.5 rounded-lg bg-primary/80 hover:bg-primary text-white text-[10px] font-medium transition-all disabled:opacity-40"
             >
-              {surveyState === 'submitting' ? 'Submitting...' : userId ? 'Submit suggestion' : 'Sign in'}
+              {isSubmitting ? 'Submitting...' : userId ? 'Submit suggestion' : 'Sign in'}
             </button>
             <button
               onClick={() => { setSelectedFeedback(null); setError(null); }}
