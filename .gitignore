@@ -60,4 +60,4 @@ scripts/*.mjs
 scripts/*.cjs
 !scripts/migrations/
 !scripts/start-mpt.sh
-app/llms.txt/
+# llms.txt is now a dynamic route at app/llms.txt/route.ts
