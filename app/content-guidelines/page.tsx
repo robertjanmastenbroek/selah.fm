@@ -99,6 +99,7 @@ export default function ContentGuidelinesPage() {
           <section>
             <h2 className="text-foreground font-semibold text-base mb-3">8. View Requirements & Payout</h2>
             <ul className="list-disc pl-5 space-y-2">
+              <li>Each submission has a <strong>$5 minimum payout</strong> — if the calculated payout is below $5, the artist can approve but no payment is made until the threshold is met.</li>
               <li>Each track may have a <strong>minimum view threshold</strong> — your video must reach this many views to qualify for payout.</li>
               <li>Each submission has a <strong>maximum payout cap</strong> — you won&apos;t earn more than this amount per video, regardless of views.</li>
               <li>The artist reviews every submission and has final approval. Only approved content counts toward your earnings.</li>

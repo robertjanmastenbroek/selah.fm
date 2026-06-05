@@ -22,7 +22,8 @@ export const STRIPE_PROCESSING_FIXED = 0.30; // $0.30
 export const STRIPE_PAYOUT_FEE = 0.25; // $0.25 per payout
 export const MIN_DEPOSIT = 25; // $25 minimum
 export const MIN_CPM = 1; // $1 per 1000 views
-export const MIN_PAYOUT = 20; // $20 minimum payout to creator
+export const MIN_PAYOUT = 5; // $5 minimum payout per submission (in dollars)
+export const MIN_PAYOUT_CENTS = 500; // $5 minimum in cents
 
 /**
  * Calculate what the artist actually pays (including Stripe fees)

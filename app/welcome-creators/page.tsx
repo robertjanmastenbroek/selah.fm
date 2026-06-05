@@ -30,7 +30,7 @@ export default function WelcomeCreatorsPage() {
           </motion.h1>
 
           <motion.p className="text-lg text-muted-foreground max-w-xl mx-auto mb-4 leading-relaxed" initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.2}}>
-            Browse music from independent artists, make a TikTok or Reel with it, and earn per verified view. No brand deals. No minimum followers. Just real money for your content.
+            Browse music from independent artists, make a TikTok or Reel with it, and earn per verified view. No brand deals. No minimum followers. $5 minimum payout per video. Just real money for your content.
           </motion.p>
 
           <motion.div className="flex flex-wrap justify-center gap-3 text-xs text-muted-foreground mb-12" initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.25}}>
@@ -56,7 +56,7 @@ export default function WelcomeCreatorsPage() {
           {[
             { step: '01', icon: Search, title: 'Browse & Pick', desc: 'Find tracks you actually like from 1,200+ campaigns. ListFilter by genre, CPM rate, and budget.' },
             { step: '02', icon: Camera, title: 'Make & Post', desc: 'Create a TikTok, Reel, or Short with the track. 15-60 seconds. Vertical. Public account. That\'s it.' },
-            { step: '03', icon: DollarSign, title: 'Earn Per View', desc: 'Artist approves your video. You earn per 1,000 verified views. Paid weekly via Stripe.' }
+            { step: '03', icon: DollarSign, title: 'Earn Per View', desc: 'Artist approves your video. You earn per 1,000 verified views (minimum $5 per submission). Paid weekly via Stripe.' }
           ].map((s, i) => {
             const I = s.icon;
             return (
@@ -81,7 +81,7 @@ export default function WelcomeCreatorsPage() {
           {[
             { icon: Zap, title: 'No Brand Deals Needed', desc: 'Stop cold-DMing 50 brands for a $50 offer. Browse campaigns that already have budgets and start earning immediately.' },
             { icon: Shield, title: 'Stable, Transparent Pay', desc: 'You know exactly what you\'ll earn per 1M views before you even start. No algorithm changes, no monetization policy updates.' },
-            { icon: Wallet, title: 'You Keep 100%', desc: 'The full CPM rate goes to you. Selah adds a 20% fee on the artist\'s side. No deductions from your earnings — ever.' },
+            { icon: Wallet, title: '$5 Minimum Payout', desc: 'Every approved submission pays at least $5. No micro-payments. No earning pennies per video — you get paid real money for your content.' },
           ].map((item, i) => {
             const I = item.icon;
             return (
