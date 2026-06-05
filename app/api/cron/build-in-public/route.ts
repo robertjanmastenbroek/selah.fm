@@ -31,20 +31,32 @@ export async function GET(request: Request) {
       [{ count: creatorCount }],
       [{ count: blogPostCount }],
       [{ count: publishedToday }],
+      [{ count: submissionCount }],
+      [{ count: approvedSubmissions }],
+      [{ val: donatedCents }],
+      [{ val: paidOutCents }],
+      [{ count: campaignCount }],
     ] = await Promise.all([
       sql`SELECT COUNT(*)::int FROM users`,
       sql`SELECT COUNT(*)::int FROM users WHERE is_artist = true`,
       sql`SELECT COUNT(*)::int FROM users WHERE is_creator = true`,
       sql`SELECT COUNT(*)::int FROM blog_posts WHERE status = 'published'`,
       sql`SELECT COUNT(*)::int FROM blog_posts WHERE status = 'published' AND published_at > CURRENT_DATE`,
+      sql`SELECT COUNT(*)::int FROM submissions`,
+      sql`SELECT COUNT(*)::int FROM submissions WHERE review_status = 'approved'`,
+      sql`SELECT COALESCE(SUM(amount_cents), 0)::int / 100 as val FROM campaign_donations`,
+      sql`SELECT COALESCE(SUM(payout_amount_cents), 0)::int / 100 as val FROM submissions WHERE payout_status = 'paid'`,
+      sql`SELECT COUNT(*)::int FROM campaigns`,
     ]);
 
     const dayCount = Math.floor((Date.now() - new Date('2025-09-01').getTime()) / 86400000);
     const statusText = [
       `Building Selah.fm — Day ${dayCount}`,
-      `👥 ${userCount} users (${artistCount} artists, ${creatorCount} creators)`,
+      `👥 ${userCount} users · ${artistCount} artists · ${creatorCount} creators`,
+      `🎵 ${campaignCount} campaigns · ${submissionCount} submissions (${approvedSubmissions} approved)`,
+      `💰 $${donatedCents} donated · $${paidOutCents} paid out to creators`,
       `📝 ${blogPostCount} blog posts (${publishedToday} today)`,
-      `🎵 Open source CPM marketplace for music promotion`,
+      `🎵 Open source CPM marketplace`,
       ``,
       `selah.fm`,
     ].join('\n');
