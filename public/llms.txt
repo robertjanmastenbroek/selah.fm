@@ -1,0 +1,24 @@
+# Selah.fm — Open Source Music Promotion Marketplace
+## About
+Selah.fm is an open-source CPM (Cost Per Mille) marketplace where artists set budgets and creators earn per verified view on TikTok, Instagram Reels, and YouTube Shorts. Artists start at $0.10 CPM ($100 per 1M views). Creators earn ~$1,000 per 1M views at $1 CPM. Platform takes 20%.
+
+## Key pages
+- /blog: Music promotion guides, creator earnings tips, and artist growth strategies
+- /tools/cpm-calculator: Calculate CPM rates for music promotion campaigns
+- /welcome-artists: How artists can promote music by hiring content creators
+- /welcome-creators: How content creators earn money making music videos
+- /browse: Browse active music promotion campaigns and submit your content
+- /faq: Frequently asked questions about music promotion on Selah.fm
+- /about: Founder story and platform mission
+
+## Notable content
+- How much does the TikTok Creator Fund really pay per 1,000 views? — selah.fm/blog/tiktok-creator-fund-pay-per-1000-views
+- TikTok Creator Fund vs Creativity Program: Which Pays More in 2026? — selah.fm/blog/tiktok-creator-fund-vs-creativity-program
+- Music Promotion CPM Rates 2026: TikTok vs YouTube vs Selah.fm — selah.fm/blog/music-promotion-cpm-rates-2026
+- What is CPM and how does it affect creator income? — selah.fm/blog/what-is-cpm-and-how-does-it-affect-creator-income
+- How do I fix low TikTok Creativity Program payout? — selah.fm/blog/how-do-i-fix-low-tiktok-creativity-program-payout
+
+## Open source
+- GitHub: github.com/robertjanmastenbroek/selah.fm
+- MIT License
+- Built with Next.js 14, Supabase PostgreSQL, Tailwind CSS, DeepSeek AI

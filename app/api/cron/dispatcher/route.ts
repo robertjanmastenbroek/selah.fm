@@ -11,8 +11,8 @@ export const maxDuration = 600;
  */
 
 const WORKERS: Record<number, { path: string; params?: string }[]> = {
-  0:  [{ path: '/api/cron/generate-artist-bios', params: 'limit=100' }, { path: '/api/cron/enrich-wikipedia' }],
-  1:  [{ path: '/api/cron/archive-activity' }, { path: '/api/cron/scrape-bandcamp' }],
+  0:  [{ path: '/api/cron/generate-artist-bios', params: 'limit=100' }, { path: '/api/cron/enrich-wikipedia' }, { path: '/api/cron/validate-schema' }],
+  1:  [{ path: '/api/cron/archive-activity' }, { path: '/api/cron/scrape-bandcamp' }, { path: '/api/cron/source-questions' }],
   2:  [{ path: '/api/cron/blog-pipeline', params: 'step=sourcing' }, { path: '/api/cron/reconcile' }, { path: '/api/cron/extract-colors', params: 'limit=50' }],
   3:  [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/blog-pipeline', params: 'step=interview' }],
   4:  [{ path: '/api/cron/blog-syndicate' }, { path: '/api/cron/blog-pipeline', params: 'step=answer' }],
