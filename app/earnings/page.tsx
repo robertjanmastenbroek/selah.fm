@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Search, TrendingUp, DollarSign, Music, Star, Flame, Medal, Zap, User, BarChart3, ChevronRight } from 'lucide-react';
+import { Trophy, Search, TrendingUp, DollarSign, Music, Star, Flame, Medal, Zap, User, BarChart3, ChevronRight, Wallet, LoaderCircle } from 'lucide-react';
 import Header from '@/components/TopNav';
 
 interface LeaderboardEntry {
@@ -100,6 +100,45 @@ export default function EarningsPage() {
             Top creators ranked by verified view earnings. Submit videos, earn per view, and climb the ranks.
           </p>
         </motion.div>
+
+        {/* ════════════════ PAYOUT SETUP BANNER ════════════════ */}
+        {me && !me?.stripe_connect_id && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/[0.06] to-green-500/[0.03] border border-emerald-500/15 relative overflow-hidden"
+          >
+            <div className="absolute -top-16 -right-16 w-40 h-40 bg-emerald-500/[0.04] rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold flex items-center gap-2">
+                  <Wallet size={16} className="text-emerald-400" />
+                  Get paid for your content
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Connect your bank via Stripe to receive earnings from approved videos.
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  setStripeLoading(true); setStripeError('');
+                  try {
+                    const res = await fetch('/api/stripe/connect', { method: 'POST', credentials: 'include' });
+                    const data = await res.json();
+                    if (data.url) window.location.href = data.url;
+                    else setStripeError(data.error || 'Failed');
+                  } catch { setStripeError('Network error'); }
+                  setStripeLoading(false);
+                }}
+                disabled={stripeLoading}
+                className="text-xs font-bold px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shrink-0 hover:opacity-90 transition-all disabled:opacity-40 flex items-center gap-1.5 shadow-sm shadow-emerald-500/20"
+              >
+                {stripeLoading ? <><LoaderCircle size={14} className="animate-spin" /> Connecting</> : 'Set up payouts →'}
+              </button>
+            </div>
+            {stripeError && <p className="text-[10px] text-red-400 mt-2">{stripeError}</p>}
+          </motion.div>
+        )}
 
         {/* ════════════════ PERIOD TABS ════════════════ */}
         <div className="flex items-center justify-center gap-1 mb-6 bg-white/[0.03] rounded-xl p-1 max-w-xs mx-auto">
