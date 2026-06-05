@@ -13,10 +13,18 @@ interface AnalyticsData {
   hourly: { hour: string; views: number }[];
 }
 
+interface FunnelData {
+  days: number;
+  summary: { total_events: number; unique_sessions: number; unique_users: number; total_signups: number; total_submissions: number };
+  funnel: { step: string; label: string; count: number; dropPercent: number }[];
+  cohorts: { week: string; size: number; week1: number; week2: number; week3: number; week4: number; retention_w1: number; retention_w2: number; retention_w3: number; retention_w4: number }[];
+}
+
 export default function AnalyticsDashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [days, setDays] = useState(7);
   const [loading, setLoading] = useState(true);
+  const [funnelData, setFunnelData] = useState<FunnelData | null>(null);
   const [userFlows, setUserFlows] = useState<any[]>([]);
 
   useEffect(() => {
@@ -30,6 +38,10 @@ export default function AnalyticsDashboard() {
       .then(r => r.json())
       .then(d => setUserFlows(d.sessions || []))
       .catch(e => console.error('Async error in admin/analytics/AnalyticsClient.tsx:', e));
+    fetch(`/api/admin/analytics/funnel?days=${days}`)
+      .then(r => r.json())
+      .then(setFunnelData)
+      .catch(() => {});
   }, [days]);
 
   if (loading) return <div className="p-8 text-muted-foreground">Loading analytics...</div>;
@@ -164,6 +176,102 @@ export default function AnalyticsDashboard() {
           </div>
         </section>
       </div>
+
+      {/* ════════════════════════════════════════ */}
+      {/* CONVERSION FUNNEL                        */}
+      {/* ════════════════════════════════════════ */}
+      {funnelData && (
+        <>
+          <section className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold">Conversion Funnel ({funnelData.days}d)</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground/50">
+                  {funnelData.summary.unique_sessions} visitors · {funnelData.summary.unique_users} users
+                </span>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              {funnelData.funnel.map((step, i) => (
+                <div key={step.step} className="flex items-center gap-3 text-xs">
+                  <div className="w-32 text-right text-muted-foreground shrink-0">{step.label}</div>
+                  <div className="flex-1 h-6 bg-white/[0.03] rounded-full overflow-hidden relative">
+                    {funnelData.funnel[0].count > 0 && (
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          step.dropPercent > 50 ? 'bg-red-500/30' :
+                          step.dropPercent > 20 ? 'bg-amber-500/30' :
+                          'bg-emerald-500/30'
+                        }`}
+                        style={{ width: `${Math.max((step.count / funnelData.funnel[0].count) * 100, 1)}%` }}
+                      />
+                    )}
+                  </div>
+                  <div className="w-20 text-right font-mono tabular-nums">{step.count.toLocaleString()}</div>
+                  {i > 0 && step.dropPercent > 0 && (
+                    <div className="w-16 text-right text-muted-foreground/50 text-[9px]">-{step.dropPercent}%</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ════════════════════════════════════════ */}
+          {/* COHORT RETENTION                        */}
+          {/* ════════════════════════════════════════ */}
+          <section className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4">
+            <h2 className="text-sm font-semibold mb-4">Weekly Cohort Retention</h2>
+            {funnelData.cohorts.length === 0 ? (
+              <p className="text-xs text-muted-foreground/60 text-center py-4">
+                Insufficient data for cohort analysis. More signups needed across multiple weeks.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-white/[0.04]">
+                      <th className="text-left py-2 pr-4 font-medium text-muted-foreground">Cohort</th>
+                      <th className="text-right py-2 px-2 font-medium text-muted-foreground">Size</th>
+                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">W1</th>
+                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">W2</th>
+                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">W3</th>
+                      <th className="text-center py-2 px-2 font-medium text-muted-foreground">W4</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {funnelData.cohorts.map((c) => (
+                      <tr key={c.week} className="border-b border-white/[0.02] hover:bg-white/[0.01]">
+                        <td className="py-2 pr-4 text-muted-foreground">{c.week}</td>
+                        <td className="py-2 px-2 text-right font-mono">{c.size}</td>
+                        <td className="py-2 px-2 text-center font-mono">
+                          <span className={c.retention_w1 > 30 ? 'text-emerald-400' : c.retention_w1 > 10 ? 'text-amber-400' : 'text-muted-foreground/50'}>
+                            {c.retention_w1}%
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 text-center font-mono">
+                          <span className={c.retention_w2 > 20 ? 'text-emerald-400' : c.retention_w2 > 5 ? 'text-amber-400' : 'text-muted-foreground/50'}>
+                            {c.retention_w2}%
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 text-center font-mono">
+                          <span className={c.retention_w3 > 15 ? 'text-emerald-400' : c.retention_w3 > 3 ? 'text-amber-400' : 'text-muted-foreground/50'}>
+                            {c.retention_w3}%
+                          </span>
+                        </td>
+                        <td className="py-2 px-2 text-center font-mono">
+                          <span className={c.retention_w4 > 10 ? 'text-emerald-400' : c.retention_w4 > 2 ? 'text-amber-400' : 'text-muted-foreground/50'}>
+                            {c.retention_w4}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
 
       {/* Hourly trend (last 48h) */}
       <section className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4">

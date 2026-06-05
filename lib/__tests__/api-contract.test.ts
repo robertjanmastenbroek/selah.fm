@@ -4,121 +4,132 @@ import { describe, it, expect } from 'vitest';
  * API Contract Tests
  * 
  * These validate that our API routes return the expected shapes.
- * They run against a real server (local or production).
- * Skip if no E2E_BASE_URL is set (these are integration tests, not unit).
+ * Only run when E2E_BASE_URL or CI env is set.
  */
 
 const BASE = process.env.E2E_BASE_URL || process.env.NEXT_PUBLIC_URL || 'http://localhost:3000';
-const runIntegration = !!process.env.E2E_BASE_URL || !!process.env.CI;
+const shouldRun = !!process.env.E2E_BASE_URL || !!process.env.CI;
 
-describe.runIf(runIntegration)('API Contract: Health', () => {
-  it('returns 200 with expected shape', async () => {
-    const res = await fetch(`${BASE}/api/health`);
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.status).toBe('ok');
-    expect(body.db).toBe('connected');
-    expect(body.stats).toBeDefined();
-    expect(typeof body.stats.users).toBe('number');
-  });
-});
+function apiTest(name: string, fn: () => void | Promise<void>) {
+  if (shouldRun) {
+    it(name, fn);
+  } else {
+    it.skip(name, fn);
+  }
+}
 
-describe.runIf(runIntegration)('API Contract: Stats', () => {
-  it('returns aggregated platform metrics', async () => {
-    const res = await fetch(`${BASE}/api/stats`);
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(typeof body.artists).toBe('number');
-    expect(typeof body.creators).toBe('number');
-    expect(typeof body.totalViews).toBe('number');
-  });
-
-  it('returns Cache-Control header', async () => {
-    const res = await fetch(`${BASE}/api/stats`);
-    const cc = res.headers.get('cache-control');
-    expect(cc).toContain('s-maxage=');
-  });
-});
-
-describe.runIf(runIntegration)('API Contract: Campaigns', () => {
-  it('returns array of campaigns', async () => {
-    const res = await fetch(`${BASE}/api/campaigns?limit=3`);
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(Array.isArray(body.campaigns)).toBe(true);
+if (shouldRun) {
+  describe('API Contract: Health', () => {
+    apiTest('returns 200 with expected shape', async () => {
+      const res = await fetch(`${BASE}/api/health`);
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.status).toBe('ok');
+      expect(body.db).toBe('connected');
+      expect(body.stats).toBeDefined();
+      expect(typeof body.stats.users).toBe('number');
+    });
   });
 
-  it('each campaign has required fields', async () => {
-    const res = await fetch(`${BASE}/api/campaigns?limit=3`);
-    const body = await res.json();
-    for (const c of body.campaigns) {
-      expect(c.id).toBeDefined();
-      expect(typeof c.slug).toBe('string');
-    }
-  });
-});
+  describe('API Contract: Stats', () => {
+    apiTest('returns aggregated platform metrics', async () => {
+      const res = await fetch(`${BASE}/api/stats`);
+      expect(res.ok).toBe(true);
+      const body = await res.json();
+      expect(typeof body.artists).toBe('number');
+      expect(typeof body.creators).toBe('number');
+      expect(typeof body.totalViews).toBe('number');
+    });
 
-describe.runIf(runIntegration)('API Contract: Artists', () => {
-  it('returns paginated artist list', async () => {
-    const res = await fetch(`${BASE}/api/artists?limit=3`);
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(Array.isArray(body.artists)).toBe(true);
-    expect(typeof body.total).toBe('number');
-    expect(body.total).toBeGreaterThan(0);
+    apiTest('returns Cache-Control header', async () => {
+      const res = await fetch(`${BASE}/api/stats`);
+      const cc = res.headers.get('cache-control');
+      expect(cc).toContain('s-maxage=');
+    });
   });
 
-  it('filters by genre', async () => {
-    const res = await fetch(`${BASE}/api/artists?genre=electronic&limit=3`);
-    expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(Array.isArray(body.artists)).toBe(true);
+  describe('API Contract: Campaigns', () => {
+    apiTest('returns array of campaigns', async () => {
+      const res = await fetch(`${BASE}/api/campaigns?limit=3`);
+      expect(res.ok).toBe(true);
+      const body = await res.json();
+      expect(Array.isArray(body.campaigns)).toBe(true);
+    });
+
+    apiTest('each campaign has required fields', async () => {
+      const res = await fetch(`${BASE}/api/campaigns?limit=3`);
+      const body = await res.json();
+      for (const c of body.campaigns) {
+        expect(c.id).toBeDefined();
+        expect(typeof c.slug).toBe('string');
+      }
+    });
   });
 
-  it('searches by name', async () => {
-    const res = await fetch(`${BASE}/api/artists?search=a&limit=3`);
-    expect(res.ok()).toBeTruthy();
-  });
-});
+  describe('API Contract: Artists', () => {
+    apiTest('returns paginated artist list', async () => {
+      const res = await fetch(`${BASE}/api/artists?limit=3`);
+      expect(res.ok).toBe(true);
+      const body = await res.json();
+      expect(Array.isArray(body.artists)).toBe(true);
+      expect(typeof body.total).toBe('number');
+      expect(body.total).toBeGreaterThan(0);
+    });
 
-describe.runIf(runIntegration)('API Contract: Discover', () => {
-  it('returns trending submissions', async () => {
-    const res = await fetch(`${BASE}/api/discover?limit=5`);
-    expect(res.ok()).toBeTruthy();
-    const body = await res.json();
-    expect(Array.isArray(body.submissions)).toBe(true);
-  });
-});
+    apiTest('filters by genre', async () => {
+      const res = await fetch(`${BASE}/api/artists?genre=electronic&limit=3`);
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(Array.isArray(body.artists)).toBe(true);
+    });
 
-describe.runIf(runIntegration)('API Contract: Auth', () => {
-  it('returns 401 for unauthenticated export', async () => {
-    const res = await fetch(`${BASE}/api/me/export`);
-    expect(res.status).toBe(401);
+    apiTest('searches by name', async () => {
+      const res = await fetch(`${BASE}/api/artists?search=a&limit=3`);
+      expect(res.ok).toBe(true);
+    });
   });
 
-  it('returns 401 for unauthenticated delete', async () => {
-    const res = await fetch(`${BASE}/api/me/delete`, { method: 'POST' });
-    expect(res.status).toBe(401);
+  describe('API Contract: Discover', () => {
+    apiTest('returns trending submissions', async () => {
+      const res = await fetch(`${BASE}/api/discover?limit=5`);
+      expect(res.ok).toBe(true);
+      const body = await res.json();
+      expect(Array.isArray(body.submissions)).toBe(true);
+    });
   });
-});
 
-describe.runIf(runIntegration)('API Contract: Collections (auth-gated)', () => {
-  it('requires auth', async () => {
-    const res = await fetch(`${BASE}/api/collections`);
-    expect(res.status).toBe(401);
-  });
-});
+  describe('API Contract: Auth (unauthenticated)', () => {
+    apiTest('returns 401 for unauthenticated export', async () => {
+      const res = await fetch(`${BASE}/api/me/export`);
+      expect(res.status).toBe(401);
+    });
 
-describe.runIf(runIntegration)('API Contract: Feed (auth-gated)', () => {
-  it('requires auth', async () => {
-    const res = await fetch(`${BASE}/api/feed`);
-    expect(res.status).toBe(401);
+    apiTest('returns 401 for unauthenticated delete', async () => {
+      const res = await fetch(`${BASE}/api/me/delete`, { method: 'POST' });
+      expect(res.status).toBe(401);
+    });
   });
-});
 
-describe.runIf(runIntegration)('API Contract: Referral', () => {
-  it('requires auth for code endpoint', async () => {
-    const res = await fetch(`${BASE}/api/referral/code`);
-    expect(res.status).toBe(401);
+  describe('API Contract: Auth-gated endpoints', () => {
+    apiTest('collections requires auth', async () => {
+      const res = await fetch(`${BASE}/api/collections`);
+      expect(res.status).toBe(401);
+    });
+
+    apiTest('feed requires auth', async () => {
+      const res = await fetch(`${BASE}/api/feed`);
+      expect(res.status).toBe(401);
+    });
+
+    apiTest('referral code requires auth', async () => {
+      const res = await fetch(`${BASE}/api/referral/code`);
+      expect(res.status).toBe(401);
+    });
   });
-});
+} else {
+  describe('API Contract Tests', () => {
+    it('skipped — set E2E_BASE_URL or CI to run', () => {
+      expect(true).toBe(true);
+    });
+  });
+}
