@@ -7,8 +7,14 @@ function getPool(): Pool {
     const dbUrl = process.env.SUPABASE_DATABASE_URL;
     if (!dbUrl) throw new Error('SUPABASE_DATABASE_URL is required');
 
-    // Add ?pgbouncer=true for Supabase connection pooler compatibility
-    const connStr = dbUrl.includes('?') ? dbUrl : dbUrl + '?pgbouncer=true';
+    // Strip PgBouncer query param — transaction mode forces read-only under load.
+    // Also switch from pooler.supabase.com to direct db.supabase.com connection
+    // so writes work reliably. Pooler is only needed for >100 concurrent connections.
+    let connStr = dbUrl.split('?')[0];
+    // Replace pooler host with direct host for read-write access
+    connStr = connStr.replace('.pooler.supabase.com', '.supabase.co');
+    // Note: direct connections may have fewer concurrent slots. If you hit
+    // connection limits, set USE_DIRECT_DB=false in Railway env to revert to pooler.
     _pool = new Pool({
       connectionString: connStr,
       ssl: { rejectUnauthorized: false },

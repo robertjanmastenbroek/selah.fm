@@ -17,7 +17,7 @@ const WORKERS: Record<number, { path: string; params?: string }[]> = {
   3:  [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/blog-pipeline', params: 'step=interview' }],
   4:  [{ path: '/api/cron/blog-syndicate' }, { path: '/api/cron/blog-pipeline', params: 'step=answer' }],
   5:  [{ path: '/api/cron/creator-discovery' }],
-  6:  [{ path: '/api/cron/enrich-wikidata', params: 'limit=200' }],
+  6:  [{ path: '/api/cron/enrich-wikidata', params: 'limit=200' }, { path: '/api/cron/sync-audience' }],
   8:  [{ path: '/api/cron/blog-pipeline', params: 'step=sourcing' }, { path: '/api/cron/generate-outreach-videos' }, { path: '/api/cron/refresh-artist-metrics' }],
   9:  [{ path: '/api/cron/email-outreach' }, { path: '/api/cron/welcome-sequence' }, { path: '/api/cron/blog-publish' }],
   10: [{ path: '/api/cron/blog-publish' }, { path: '/api/cron/outreach-followup' }, { path: '/api/cron/indexnow-submit' }],
