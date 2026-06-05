@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import useSWR from 'swr';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -106,7 +107,10 @@ function CalculatorSection() {
 }
 
 export default function RootPage() {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const bgLeftRef = useRef<HTMLDivElement>(null);
+  const bgRightRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
   const [stats, setStats] = useState({
     artists: 0, creators: 0, activeCampaigns: 0,
     totalPaidCents: 0, totalDepositedCents: 0, approvedSubmissions: 0,
@@ -141,24 +145,48 @@ export default function RootPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Stats + featured campaigns
-  useEffect(() => {
-    fetch('/api/stats').then(r => r.json()).then(d => {
-      setStats(d);
-    }).catch(() => {});
-    fetch('/api/campaigns?limit=6&sort=recent').then(r => r.json()).then(d => {
-      if (Array.isArray(d.campaigns)) setFeaturedCampaigns(d.campaigns);
-    }).catch(() => {});
-  }, []);
+  // Stats + featured campaigns via SWR (deduped, cached, auto-refreshes)
+  const { data: statsData } = useSWR('/api/stats', (url: string) => fetch(url).then(r => r.json()), {
+    refreshInterval: 60_000, // revalidate every 60s
+    revalidateOnFocus: false,
+    dedupingInterval: 30_000,
+  });
+  const { data: campaignsData } = useSWR('/api/campaigns?limit=6&sort=recent', (url: string) => fetch(url).then(r => r.json()), {
+    refreshInterval: 120_000,
+    revalidateOnFocus: false,
+    dedupingInterval: 60_000,
+  });
 
   useEffect(() => {
-    const handler = (e: MouseEvent) =>
-      setMousePos({ x: (e.clientX / window.innerWidth - 0.5) * 15, y: (e.clientY / window.innerHeight - 0.5) * 15 });
-    window.addEventListener('mousemove', handler);
-    return () => window.removeEventListener('mousemove', handler);
-  }, []);
+    if (statsData) setStats(statsData);
+  }, [statsData]);
+  useEffect(() => {
+    if (campaignsData && Array.isArray(campaignsData.campaigns)) setFeaturedCampaigns(campaignsData.campaigns);
+  }, [campaignsData]);
 
-  const hasStats = stats.activeCampaigns > 0 || stats.creators > 0 || stats.totalViews > 0 || stats.totalDepositedCents > 0;
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      mouseRef.current = {
+        x: (e.clientX / window.innerWidth - 0.5) * 15,
+        y: (e.clientY / window.innerHeight - 0.5) * 15,
+      };
+      // RAF-throttled: only update DOM once per frame
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          rafRef.current = 0;
+          const mx = mouseRef.current.x * -2;
+          const my = mouseRef.current.y * -2;
+          if (bgLeftRef.current) bgLeftRef.current.style.transform = `translate(${mx}px, ${my}px)`;
+          if (bgRightRef.current) bgRightRef.current.style.transform = `translate(${-mx}px, ${-my}px)`;
+        });
+      }
+    };
+    window.addEventListener('mousemove', handler, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handler);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   return (
     <div className="relative overflow-hidden min-h-screen" style={{ background: '#080817' }}>
@@ -169,13 +197,9 @@ export default function RootPage() {
 
       {/* Ambient light */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <motion.div className="absolute -top-1/3 -left-1/4 w-[900px] h-[900px] rounded-full opacity-25"
-          animate={{ x: mousePos.x * -2, y: mousePos.y * -2 }}
-          transition={{ type: 'spring', stiffness: 25, damping: 20 }}
+        <div ref={bgLeftRef} className="absolute -top-1/3 -left-1/4 w-[900px] h-[900px] rounded-full opacity-25 will-change-transform"
           style={{ background: 'radial-gradient(circle, rgba(67,56,202,0.35) 0%, rgba(99,102,241,0.15) 35%, transparent 70%)' }} />
-        <motion.div className="absolute top-1/3 -right-1/4 w-[700px] h-[700px] rounded-full opacity-15"
-          animate={{ x: mousePos.x * 2, y: mousePos.y * 2 }}
-          transition={{ type: 'spring', stiffness: 20, damping: 18 }}
+        <div ref={bgRightRef} className="absolute top-1/3 -right-1/4 w-[700px] h-[700px] rounded-full opacity-15 will-change-transform"
           style={{ background: 'radial-gradient(circle, rgba(34,197,94,0.25) 0%, transparent 70%)' }} />
       </div>
 
