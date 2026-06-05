@@ -66,28 +66,31 @@ export async function GET(request: Request) {
   // ── 2. Generate 200+ DeepSeek questions across ALL categories ──
   // Weighted toward underserved categories
   const CATEGORIES: { name: string; weight: number; keywords: string[]; count: number }[] = [
-    // ARTIST-FOCUSED (highest priority — nearly empty)
-    { name: 'artist_promotion', weight: 3, keywords: ['promote my music', 'get discovered', 'music marketing tips', 'independent artist', 'promote song', 'music career', 'grow audience', 'music branding', 'promote album', 'music PR', 'music release strategy', 'promote single'], count: 30 },
-    { name: 'artist_budget', weight: 3, keywords: ['music promotion budget', 'how much to spend on promotion', 'cheap music promotion', 'promote music on a budget', 'cost effective music promotion', 'music marketing ROI', 'music advertising budget'], count: 20 },
-    { name: 'artist_platforms', weight: 2, keywords: ['promote music on TikTok', 'promote music on Instagram', 'promote music on YouTube', 'social media for musicians', 'TikTok for musicians', 'Instagram for artists', 'YouTube for musicians'], count: 20 },
-    { name: 'artist_labels', weight: 2, keywords: ['record deal vs independent', 'signing a record contract', 'independent vs label', 'music label contract', 'leave record label', 'start independent label', 'distribution deal'], count: 15 },
+    // ARTIST-FOCUSED (highest priority — was empty, now getting filled)
+    { name: 'artist_promotion', weight: 3, keywords: ['promote my music', 'get discovered', 'music marketing tips', 'independent artist', 'promote song', 'music career', 'grow audience', 'music branding', 'promote album', 'music PR', 'music release strategy', 'promote single', 'promote my song', 'make my music go viral', 'get more streams', 'spotify playlist pitching', 'release strategy independent'], count: 35 },
+    { name: 'artist_budget', weight: 3, keywords: ['music promotion budget', 'how much to spend on promotion', 'cheap music promotion', 'promote music on a budget', 'cost effective music promotion', 'music marketing ROI', 'music advertising budget', 'marketing on a budget', 'low cost music promotion', '$100 promotion budget'], count: 25 },
+    { name: 'artist_platforms', weight: 2, keywords: ['promote music on TikTok', 'promote music on Instagram', 'promote music on YouTube', 'social media for musicians', 'TikTok for musicians', 'Instagram for artists', 'YouTube for musicians', 'tiktok music promotion tips', 'instagram music marketing', 'youtube music promo'], count: 25 },
+    { name: 'artist_labels', weight: 2, keywords: ['record deal vs independent', 'signing a record contract', 'independent vs label', 'music label contract', 'leave record label', 'start independent label', 'distribution deal', 'diy music career', 'independent artist record deal'], count: 20 },
+    { name: 'artist_songwriting', weight: 2, keywords: ['songwriting tips', 'write better songs', 'songwriting process', 'song structure', 'lyric writing', 'songwriting for beginners', 'write hit songs', 'songwriting inspiration', 'music composition'], count: 20 },
     
-    // FAN-FOCUSED (second priority — completely empty)
-    { name: 'fan_support', weight: 3, keywords: ['support independent artist', 'support musician', 'how to help indie artist', 'crowdfund music', 'donate to musician', 'support music creator', 'fan funding music', 'patreon musician'], count: 15 },
-    { name: 'fan_discovery', weight: 2, keywords: ['find new music', 'discover independent artists', 'new music recommendations', 'find underground music', 'discover indie musicians', 'music discovery platforms'], count: 15 },
+    // FAN-FOCUSED (second priority — was completely empty)
+    { name: 'fan_support', weight: 3, keywords: ['support independent artist', 'support musician', 'how to help indie artist', 'crowdfund music', 'donate to musician', 'support music creator', 'fan funding music', 'patreon musician', 'support local musician', 'help indie artists', 'support music community'], count: 20 },
+    { name: 'fan_discovery', weight: 2, keywords: ['find new music', 'discover independent artists', 'new music recommendations', 'find underground music', 'discover indie musicians', 'music discovery platforms', 'underground music scene', 'hidden gem artists', 'find new bands', 'music curation'], count: 20 },
+    { name: 'fan_community', weight: 2, keywords: ['music fan community', 'artist fan engagement', 'music discord server', 'fan club ideas', 'building music community', 'artist fan relationship', 'fan interaction music', 'music community tips'], count: 15 },
     
-    // FAITH & PURPOSE (empty)
-    { name: 'faith_music', weight: 2, keywords: ['Christian musician', 'worship music career', 'faith based music', 'Christian artist promotion', 'gospel music marketing', 'worship music monetization', 'holy rave', 'Christian electronic music'], count: 15 },
+    // FAITH & PURPOSE (was empty)
+    { name: 'faith_music', weight: 2, keywords: ['Christian musician', 'worship music career', 'faith based music', 'Christian artist promotion', 'gospel music marketing', 'worship music monetization', 'holy rave', 'Christian electronic music', 'faith and music career', 'worship artist tips', 'spiritual music'], count: 20 },
     
-    // CREATOR ECONOMY (already well-served, lower priority)
-    { name: 'creator_income', weight: 1, keywords: ['creator income', 'how much creators earn', 'TikTok pay', 'short form video income', 'content creator salary', 'creator fund payout', 'monetize content'], count: 15 },
-    { name: 'cpm_mechanics', weight: 1, keywords: ['what is CPM', 'CPM rate', 'CPM explained', 'cost per mille', 'CPM advertising', 'CPM vs CPC', 'good CPM rate'], count: 10 },
-    { name: 'platform_strategy', weight: 1, keywords: ['TikTok algorithm', 'Instagram algorithm', 'YouTube algorithm', 'get more views', 'viral video strategy', 'content strategy', 'posting schedule'], count: 15 },
-    { name: 'music_promotion', weight: 1, keywords: ['music promotion', 'promote music online', 'music marketing strategy', 'get music heard', 'promote independent music', 'music promotion tips'], count: 15 },
+    // CREATOR ECONOMY (well-served, keeping lower priority)
+    { name: 'creator_income', weight: 1, keywords: ['creator income', 'how much creators earn', 'TikTok pay', 'short form video income', 'content creator salary', 'creator fund payout', 'monetize content', 'creator economy'], count: 10 },
+    { name: 'cpm_mechanics', weight: 1, keywords: ['what is CPM', 'CPM rate', 'CPM explained', 'cost per mille', 'CPM advertising', 'CPM vs CPC', 'good CPM rate', 'CPM for musicians'], count: 8 },
+    { name: 'platform_strategy', weight: 1, keywords: ['TikTok algorithm', 'Instagram algorithm', 'YouTube algorithm', 'get more views', 'viral video strategy', 'content strategy', 'posting schedule'], count: 10 },
+    { name: 'music_promotion', weight: 1, keywords: ['music promotion', 'promote music online', 'music marketing strategy', 'get music heard', 'promote independent music', 'music promotion tips'], count: 10 },
     
     // BUSINESS & PHILOSOPHY
-    { name: 'music_business', weight: 2, keywords: ['music business', 'make money as musician', 'music career advice', 'touring income', 'merchandise sales', 'music royalties', 'streaming revenue', 'sync licensing'], count: 15 },
-    { name: 'founder_story', weight: 2, keywords: ['record deal experience', 'leaving record label', 'music startup founder', 'building a music platform', 'open source music', 'faith entrepreneurship', 'starting over after failure'], count: 15 },
+    { name: 'music_business', weight: 2, keywords: ['music business', 'make money as musician', 'music career advice', 'touring income', 'merchandise sales', 'music royalties', 'streaming revenue', 'sync licensing', 'music publishing', 'music manager'], count: 20 },
+    { name: 'founder_story', weight: 2, keywords: ['record deal experience', 'leaving record label', 'music startup founder', 'building a music platform', 'open source music', 'faith entrepreneurship', 'starting over after failure', 'music industry story', 'from broke to entrepreneur'], count: 20 },
+    { name: 'music_live', weight: 2, keywords: ['live music promotion', 'concert promotion', 'gig promotion', 'book live shows', 'tour planning', 'get more gigs', 'live performance tips', 'promote concert', 'music venue booking'], count: 15 },
   ];
 
   // Calculate total we need to generate

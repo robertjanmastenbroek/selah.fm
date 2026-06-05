@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import sql from '@/lib/db';
 
-export const revalidate = 3600; // ISR — revalidate every hour
-// Note: removed force-dynamic which was overriding revalidate
+export const dynamic = 'force-dynamic'; // Show new posts immediately
 
 export const metadata: Metadata = {
   title: 'Blog — Selah.fm | Music Promotion Tips & Creator Insights',
