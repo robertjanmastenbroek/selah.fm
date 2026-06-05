@@ -1,0 +1,100 @@
+{
+  "nav": {
+    "pricing": "Pricing",
+    "blog": "Blog",
+    "faq": "FAQ & Support",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "dmca": "DMCA",
+    "openSource": "Open source",
+    "signIn": "Sign in",
+    "getStarted": "Get started",
+    "browseTracks": "Browse tracks",
+    "messages": "Messages",
+    "createCampaign": "Create",
+    "submitVideo": "Submit",
+    "dashboard": "Dashboard",
+    "earnings": "Earnings",
+    "settings": "Settings",
+    "logOut": "Log out"
+  },
+  "home": {
+    "title": "Your music, real creators, real views.",
+    "subtitle": "Vetted creators make TikToks, Reels, and Shorts with your track. You approve every video. You only pay for verified views.",
+    "cta": "Promote your music",
+    "guestCta": "Browse campaigns",
+    "freeToStart": "No upfront cost · Free to start · No signup required to browse",
+    "earningsCalculator": "Earnings calculator",
+    "howItWorks": "How it works",
+    "forArtists": "For artists",
+    "forCreators": "For creators",
+    "trustFreeToStart": "Free to start",
+    "trustYouKeep80": "You keep 80%",
+    "trustVerifiedViews": "Verified views",
+    "trustStayInControl": "You stay in control",
+    "testimonialText": "Selah.fm connected me with creators who actually understood my sound. My campaign got 50K verified views in the first week."
+  },
+  "pricing": {
+    "title": "Fair pricing, no middlemen",
+    "subtitle": "Set your own CPM rate. Creators earn per verified view. Selah.fm takes 20%. No subscriptions, no minimums, no hidden fees.",
+    "calculatorTitle": "Earnings calculator",
+    "calculatorDesc": "See exactly what you and creators earn at different CPM rates.",
+    "forArtists": "For artists",
+    "forCreators": "For creators",
+    "platformFee": "20%",
+    "setupCost": "Free",
+    "monthlySubscription": "None",
+    "unspentBudget": "100% refundable",
+    "startPromoting": "Start promoting music",
+    "startEarning": "Start earning as a creator",
+    "compareTitle": "How we compare",
+    "compareDesc": "See how Selah.fm stacks up against other music promotion platforms.",
+    "faqTitle": "Pricing FAQ"
+  },
+  "compare": {
+    "title": "How Selah.fm compares",
+    "subtitle": "See why independent artists and creators choose Selah.fm over traditional music promotion platforms."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "submit": "Submit",
+    "search": "Search",
+    "viewAll": "View all",
+    "learnMore": "Learn more",
+    "readMore": "Read more",
+    "noResults": "No results found",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "confirm": "Confirm",
+    "free": "Free"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Create account",
+    "logOut": "Log out",
+    "email": "Email address",
+    "password": "Password",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithEmail": "Continue with email",
+    "noAccount": "No account? Sign up",
+    "hasAccount": "Already have an account? Log in",
+    "forgotPassword": "Forgot your password?"
+  },
+  "browse": {
+    "title": "Discover music",
+    "subtitle": "Browse artists and tracks, create content, and earn per verified view.",
+    "trending": "Trending",
+    "artists": "Artists",
+    "tracks": "Tracks"
+  },
+  "footer": {
+    "copyright": "Selah.fm — Open source music promotion"
+  }
+}
