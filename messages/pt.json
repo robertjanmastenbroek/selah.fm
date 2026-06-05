@@ -1,0 +1,100 @@
+{
+  "nav": {
+    "pricing": "Preços",
+    "blog": "Blog",
+    "faq": "FAQ & Suporte",
+    "privacy": "Privacidade",
+    "terms": "Termos",
+    "dmca": "DMCA",
+    "openSource": "Código aberto",
+    "signIn": "Entrar",
+    "getStarted": "Comece grátis",
+    "browseTracks": "Explorar faixas",
+    "messages": "Mensagens",
+    "createCampaign": "Criar",
+    "submitVideo": "Enviar",
+    "dashboard": "Painel",
+    "earnings": "Ganhos",
+    "settings": "Configurações",
+    "logOut": "Sair"
+  },
+  "home": {
+    "title": "Sua música, criadores reais, visualizações reais.",
+    "subtitle": "Criadores verificados fazem TikToks, Reels e Shorts com sua faixa. Você aprova cada vídeo. Você só paga por visualizações verificadas.",
+    "cta": "Promova sua música",
+    "guestCta": "Explorar campanhas",
+    "freeToStart": "Sem custo inicial · Grátis para começar · Sem necessidade de cadastro",
+    "earningsCalculator": "Calculadora de ganhos",
+    "howItWorks": "Como funciona",
+    "forArtists": "Para artistas",
+    "forCreators": "Para criadores",
+    "trustFreeToStart": "Grátis para começar",
+    "trustYouKeep80": "Você fica com 80%",
+    "trustVerifiedViews": "Visualizações verificadas",
+    "trustStayInControl": "Você mantém o controle",
+    "testimonialText": "Selah.fm me conectou com criadores que realmente entenderam meu som. Minha campanha teve 50K visualizações verificadas na primeira semana."
+  },
+  "pricing": {
+    "title": "Preços justos, sem intermediários",
+    "subtitle": "Defina sua própria taxa de CPM. Criadores ganham por visualização verificada. Selah.fm fica com 20%. Sem assinaturas, sem mínimos, sem taxas ocultas.",
+    "calculatorTitle": "Calculadora de ganhos",
+    "calculatorDesc": "Veja exatamente o que você e os criadores ganham com diferentes taxas de CPM.",
+    "forArtists": "Para artistas",
+    "forCreators": "Para criadores",
+    "platformFee": "20%",
+    "setupCost": "Grátis",
+    "monthlySubscription": "Nenhuma",
+    "unspentBudget": "100% reembolsável",
+    "startPromoting": "Comece a promover",
+    "startEarning": "Comece a ganhar como criador",
+    "compareTitle": "Como nos comparamos",
+    "compareDesc": "Veja como Selah.fm se compara a outras plataformas de promoção musical.",
+    "faqTitle": "FAQ de preços"
+  },
+  "compare": {
+    "title": "Como Selah.fm se compara",
+    "subtitle": "Descubra por que artistas e criadores independentes escolhem Selah.fm."
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Algo deu errado",
+    "retry": "Tentar novamente",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "submit": "Enviar",
+    "search": "Pesquisar",
+    "viewAll": "Ver tudo",
+    "learnMore": "Saiba mais",
+    "readMore": "Leia mais",
+    "noResults": "Nenhum resultado encontrado",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "free": "Grátis"
+  },
+  "auth": {
+    "signIn": "Entrar",
+    "signUp": "Criar conta",
+    "logOut": "Sair",
+    "email": "Endereço de e-mail",
+    "password": "Senha",
+    "continueWithGoogle": "Continuar com Google",
+    "continueWithEmail": "Continuar com e-mail",
+    "noAccount": "Não tem conta? Cadastre-se",
+    "hasAccount": "Já tem conta? Entre",
+    "forgotPassword": "Esqueceu a senha?"
+  },
+  "browse": {
+    "title": "Descubra música",
+    "subtitle": "Explore artistas e faixas, crie conteúdo e ganhe por visualização verificada.",
+    "trending": "Tendências",
+    "artists": "Artistas",
+    "tracks": "Faixas"
+  },
+  "footer": {
+    "copyright": "Selah.fm — Promoção musical open source"
+  }
+}
