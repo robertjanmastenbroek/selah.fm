@@ -7,10 +7,9 @@ function getPool(): Pool {
     const dbUrl = process.env.SUPABASE_DATABASE_URL;
     if (!dbUrl) throw new Error('SUPABASE_DATABASE_URL is required');
 
-    // Strip PgBouncer query param — `?pgbouncer=true` forces transaction mode
-    // which routes to read replicas under load. Removing it keeps the pooler
-    // connection in session mode, which supports writes reliably.
-    let connStr = dbUrl.split('?')[0];
+    // Add ?pgbouncer=true for Supabase connection pooler compatibility
+    // (session mode via port 6543 is the default; this flag is for the pg driver)
+    const connStr = dbUrl.includes('?') ? dbUrl : dbUrl + '?pgbouncer=true';
     _pool = new Pool({
       connectionString: connStr,
       ssl: { rejectUnauthorized: false },
