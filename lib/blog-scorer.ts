@@ -9,7 +9,7 @@
 
 export interface BlogScore {
   score: number;      // 0-100
-  passed: boolean;    // score >= 60
+  passed: boolean;    // score >= 75 (raised from 60 for higher quality floor)
   checks: ScoreCheck[];
 }
 
@@ -314,7 +314,7 @@ export function scoreBlogPost(
 
   return {
     score: totalScore,
-    passed: totalScore >= 60,
+    passed: totalScore >= 75,
     checks,
   };
 }
