@@ -88,7 +88,7 @@ async function getCampaignsByGenre(genreSlug: string) {
     LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
     LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
     WHERE c.status IN ('active', 'draft')
-      AND (da.genres ILIKE '%' || $1 || '%')
+      AND (da.genre ILIKE '%' || $1 || '%')
     ORDER BY c.created_at DESC
     LIMIT 20`,
     [genre]
