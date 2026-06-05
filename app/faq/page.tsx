@@ -153,12 +153,12 @@ const faqs: { section: string; items: FAQItem[] }[] = [
     items: [
       {
         q: 'How does the referral program work?',
-        a: 'When someone signs up using your referral link and later makes their first deposit, you both get 5% of that deposit credited to your campaign budgets. Share your referral link from the Dashboard.',
+        a: 'Share your referral link with a friend. When they sign up and fund their first campaign, you both get 5% of their deposit. You also unlock milestone bonuses — $5 at 1 referral, $10 at 3, $25 at 5, $50 at 10, and $150 at 25. Referral earnings can be withdrawn to your campaign budget from the Dashboard.',
         section: 'Referrals',
       },
       {
         q: 'Where is my referral link?',
-        a: 'Your referral link is shown at the top of your Dashboard. It looks like: selah.fm/login?ref=youremail@example.com.',
+        a: 'Your referral link is in the Referral section on your Dashboard. You can also share it directly via Twitter or WhatsApp, or copy it to send anywhere. It looks like: selah.fm/login?ref=yourcode.',
         section: 'Referrals',
       },
     ],
