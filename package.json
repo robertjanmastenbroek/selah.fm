@@ -17,7 +17,8 @@
     "test:e2e:specific": "npx playwright test --reporter=list --grep",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run && npx playwright test e2e/core.spec.ts --reporter=list"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

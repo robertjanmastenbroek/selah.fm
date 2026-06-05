@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = 'https://selah.fm';
+// Use E2E_BASE_URL from playwright.config.ts, or default to localhost
+const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
 // ─── HOMEPAGE ────────────────────────────────────────────────
 test.describe('Homepage', () => {
