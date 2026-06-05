@@ -8,9 +8,9 @@
     }
   },
   "deploy": {
-    "startCommand": "PORT=$PORT npx next start -p $PORT -H 0.0.0.0",
-    "healthcheckPath": "/",
-    "healthcheckTimeout": 30,
+    "startCommand": "next start -p ${PORT:-3000} -H 0.0.0.0",
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 300,
     "cron": [
       { "schedule": "0 * * * *", "path": "/api/cron/dispatcher", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } }
     ]
