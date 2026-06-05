@@ -545,6 +545,7 @@ function DashboardContent() {
               {tab === 'earnings' && (
                 <EarningsTab
                   isArtist={isArtist}
+                  profile={profile}
                   artistData={artistData}
                   formatDollars={formatDollars}
                   artistSlug={artistSlug}
@@ -949,7 +950,7 @@ function ProfileTab({
   );
 }
 
-function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampaigns, totalSpent, earningsData, exportCSV }: any) {
+function EarningsTab({ isArtist, profile, artistData, formatDollars, artistSlug, rawCampaigns, totalSpent, earningsData, exportCSV }: any) {
   return (
     <div className="max-w-2xl space-y-6">
       <Card>
@@ -1030,7 +1031,18 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
             </div>
           ) : (
             <div className="space-y-4">
-              <h3 className="font-semibold text-sm">Your earnings</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">Your earnings</h3>
+                {profile?.stripe_connect_id ? (
+                  <span className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-medium flex items-center gap-1">
+                    <Check size={10} /> Payouts active
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 font-medium">
+                    Payouts not set up
+                  </span>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: 'Total earned', value: formatDollars(earningsData?.totalEarned || 0) },
@@ -1044,7 +1056,16 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
                   </div>
                 ))}
               </div>
-              <div className="pt-2 text-center">
+
+              {/* Payout setup — creators without Stripe Connect */}
+              {!profile?.stripe_connect_id && (
+                <PayoutInlineEarnings />
+              )}
+
+              <div className="pt-2 text-center flex items-center justify-center gap-4">
+                {profile?.stripe_connect_id && (
+                  <span className="text-xs text-muted-foreground/60">✅ Stripe Connect active — payouts go directly to your bank</span>
+                )}
                 <a href="/earnings" className="text-xs text-primary hover:underline">View leaderboard →</a>
               </div>
             </div>
@@ -1263,22 +1284,115 @@ function PayoutCardInline() {
   };
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-emerald-500/[0.04] to-green-500/[0.02] border border-emerald-500/10 p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold flex items-center gap-2">
-            <Wallet size={14} className="text-emerald-400" />
-            Set up payouts
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">Connect your bank account via Stripe to receive earnings from approved videos.</p>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl bg-gradient-to-br from-emerald-500/[0.08] to-green-500/[0.04] border border-emerald-500/20 p-5 md:p-6 relative overflow-hidden group"
+    >
+      {/* Glow effect */}
+      <div className="absolute -top-20 -right-20 w-48 h-48 bg-emerald-500/[0.06] rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+      
+      <div className="relative z-10">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-base font-bold flex items-center gap-2">
+              <Wallet size={18} className="text-emerald-400" />
+              Get paid for your content
+            </p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-md">
+              Connect your bank account via Stripe to receive earnings from approved videos. It takes 2 minutes to set up.
+            </p>
+            {/* Quick steps */}
+            <div className="flex items-center gap-3 mt-3">
+              {[
+                { step: '1', label: 'Connect Stripe' },
+                { step: '2', label: 'Verify identity' },
+                { step: '3', label: 'Link bank account' },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-[9px] font-bold shrink-0">
+                    {s.step}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/60">{s.label}</span>
+                  {i < 2 && <span className="text-muted-foreground/20 text-[9px]">→</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handlePayoutConnect}
+            disabled={payoutLoading}
+            className="text-xs px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold shrink-0 hover:opacity-90 transition-all disabled:opacity-40 flex items-center gap-1.5 active:scale-95 shadow-lg shadow-emerald-500/20"
+          >
+            {payoutLoading ? <><LoaderCircle size={14} className="animate-spin" /> Connecting...</> : 'Set up payouts →'}
+          </motion.button>
         </div>
-        <button onClick={handlePayoutConnect} disabled={payoutLoading}
-          className="text-[10px] px-3 py-2 rounded-lg bg-primary text-white font-semibold shrink-0 hover:opacity-90 transition-all disabled:opacity-40 flex items-center gap-1.5 active:scale-95">
-          {payoutLoading ? <><LoaderCircle size={12} className="animate-spin" /> Connecting...</> : 'Set up payouts'}
-        </button>
+        {payoutError && (
+          <p className="text-[11px] text-red-400 mt-2 bg-red-500/10 px-3 py-1.5 rounded-lg">{payoutError}</p>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── PAYOUT INLINE (for Earnings tab — compact version) ─────────
+function PayoutInlineEarnings() {
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutError, setPayoutError] = useState('');
+
+  const handlePayoutConnect = async () => {
+    setPayoutLoading(true);
+    setPayoutError('');
+    try {
+      const res = await fetch('/api/stripe/connect', { 
+        method: 'POST', 
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const d = await res.json();
+      if (d.url) {
+        window.location.href = d.url;
+      } else {
+        setPayoutError(d.error || 'Failed to create connection');
+        setPayoutLoading(false);
+      }
+    } catch {
+      setPayoutError('Network error — please try again');
+      setPayoutLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-xl bg-gradient-to-r from-emerald-500/[0.06] to-green-500/[0.03] border border-emerald-500/15 p-4 relative overflow-hidden"
+    >
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/[0.04] rounded-full blur-3xl pointer-events-none" />
+      <div className="relative z-10 flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+            <Wallet size={14} />
+            Set up payouts to receive your earnings
+          </p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            Connect your bank via Stripe to get paid for approved videos. Takes 2 minutes.
+          </p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={handlePayoutConnect}
+          disabled={payoutLoading}
+          className="text-[11px] font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shrink-0 hover:opacity-90 transition-all disabled:opacity-40 flex items-center gap-1.5 shadow-sm shadow-emerald-500/20"
+        >
+          {payoutLoading ? <><LoaderCircle size={12} className="animate-spin" /> Connecting</> : 'Set up payouts'}
+        </motion.button>
       </div>
       {payoutError && <p className="text-[10px] text-red-400 mt-2">{payoutError}</p>}
-    </div>
+    </motion.div>
   );
 }
 

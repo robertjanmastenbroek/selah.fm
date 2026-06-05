@@ -28,11 +28,22 @@ export async function POST(request: Request) {
         type: 'express',
         country: 'US',
         email: session.email,
-        capabilities: { transfers: { requested: true } },
+        capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
         business_type: 'individual',
       });
       accountId = account.id;
       await sql`UPDATE users SET stripe_account_id = ${accountId} WHERE id = ${session.id}`;
+    } else {
+      // Ensure existing accounts also have card_payments capability (Stripe requires it
+      // alongside transfers for US accounts). Stripe's update is idempotent — safe to call
+      // even if already enabled.
+      try {
+        await stripe.accounts.update(accountId, {
+          capabilities: { card_payments: { requested: true } },
+        });
+      } catch (capErr: any) {
+        console.warn('[STRIPE CONNECT] Could not update capabilities for existing account:', capErr.message);
+      }
     }
 
     const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm';
