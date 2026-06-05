@@ -1,5 +1,4 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import sql from '@/lib/db';
 import CampaignCover from '@/components/CampaignCover';
@@ -72,12 +71,13 @@ function displayGenre(slug: string): string {
 async function getCampaignsByGenre(genreSlug: string) {
   const genre = decodeURIComponent(genreSlug);
 
+  // Search across multiple sources: discovered_artists.genre, users.genres, artist_audits.genres
   const campaigns = await sql.raw(
-    `SELECT c.*,
+    `SELECT DISTINCT c.*,
       COALESCE(c.title, c.track_title) as title,
-      COALESCE(v.approved_submissions, '0') as approved_submissions,
-      COALESCE(v.pending_submissions, '0') as pending_submissions,
-      COALESCE(v.total_verified_views, '0') as total_verified_views,
+      COALESCE(v.approved_submissions, '0')::int as approved_submissions,
+      COALESCE(v.pending_submissions, '0')::int as pending_submissions,
+      COALESCE(v.total_verified_views, '0')::int as total_verified_views,
       COALESCE(da.artist_name, u.display_name) as artist_name,
       c.artist_id,
       u.is_creator as artist_is_creator,
@@ -87,8 +87,13 @@ async function getCampaignsByGenre(genreSlug: string) {
     LEFT JOIN users u ON u.id = c.artist_id
     LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
     LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
+    LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
     WHERE c.status IN ('active', 'draft')
-      AND (da.genre ILIKE '%' || $1 || '%')
+      AND (
+        da.genre ILIKE '%' || $1 || '%'
+        OR u.genres ILIKE '%' || $1 || '%'
+        OR aa.genres::text ILIKE '%' || $1 || '%'
+      )
     ORDER BY c.created_at DESC
     LIMIT 20`,
     [genre]
@@ -131,7 +136,44 @@ export default async function GenrePage({ params }: Props) {
   const genreDisplay = displayGenre(params.slug);
 
   if (!campaigns || campaigns.length === 0) {
-    notFound();
+    // Return an SEO-friendly "no campaigns yet" page instead of 404
+    // so the page gets indexed and accumulates authority for when artists join
+    return (
+      <div className="min-h-screen" style={{ background: '#0F0F23' }}>
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+          <nav className="mb-6">
+            <ol className="flex items-center gap-1.5 text-[11px] text-muted-foreground/40">
+              <li><Link href="/" className="hover:text-muted-foreground transition-colors">Selah.fm</Link></li>
+              <li className="text-muted-foreground/20">/</li>
+              <li><Link href="/browse" className="hover:text-muted-foreground transition-colors">Browse</Link></li>
+              <li className="text-muted-foreground/20">/</li>
+              <li className="text-muted-foreground/60">{genreDisplay}</li>
+            </ol>
+          </nav>
+          <div className="text-center py-16">
+            <h1 className="text-3xl font-bold mb-4" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>{genreDisplay} Music Promotion</h1>
+            <p className="text-muted-foreground max-w-md mx-auto mb-8">
+              No active {genreDisplay.toLowerCase()} campaigns yet. Check back soon or browse all available tracks.
+            </p>
+            <Link href="/browse" className="inline-flex px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity">Browse all tracks</Link>
+          </div>
+          {/* FAQ for SEO */}
+          <section className="mt-16">
+            <h2 className="text-2xl font-bold mb-6" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>FAQs about {genreDisplay} Music Promotion</h2>
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4">
+                <h3 className="font-semibold text-sm mb-2">How do I promote {genreDisplay.toLowerCase()} music?</h3>
+                <p className="text-sm text-muted-foreground">Independent {genreDisplay.toLowerCase()} artists promote their music by working with content creators who make TikToks, Reels, and Shorts featuring their songs. On Selah.fm, artists set a CPM budget and only pay for verified views.</p>
+              </div>
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-4">
+                <h3 className="font-semibold text-sm mb-2">Can I earn money making {genreDisplay.toLowerCase()} music videos?</h3>
+                <p className="text-sm text-muted-foreground">Yes — creators earn per verified view. Artists set their own CPM rate starting at $0.10 per 1,000 views. Once your total approved earnings reach $5, we send the payout via Stripe.</p>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
   }
 
   return (
