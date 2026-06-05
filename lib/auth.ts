@@ -18,6 +18,9 @@ import { ADMIN_EMAILS } from '@/lib/constants';
 /**
  * @deprecated Use `getUser()` from @/lib/supabase/server instead.
  * Returns a SessionUser-compatible object for backward compat.
+ * 
+ * NOTE: This function does a dynamic import + extra DB query on every call.
+ * Migrate routes to use getUser() directly for better performance.
  */
 export async function getSession(request?: Request): Promise<{
   id: string;
@@ -27,6 +30,9 @@ export async function getSession(request?: Request): Promise<{
   is_artist: boolean;
   is_creator: boolean;
 } | null> {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('[auth] getSession() is deprecated — use getUser() from @/lib/supabase/server instead');
+  }
   const user = await getUser();
   if (!user) return null;
 

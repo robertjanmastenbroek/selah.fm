@@ -67,6 +67,7 @@ export async function GET(request: Request) {
       limit,
     });
   } catch (e: any) {
-    return NextResponse.json({ creators: [], total: 0 });
+    console.error('Creators GET error:', e.message);
+    return NextResponse.json({ error: e.message, creators: [], total: 0 }, { status: 500 });
   }
 }
