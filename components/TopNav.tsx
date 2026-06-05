@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
-import { LayoutDashboard, Banknote, Settings, LogOut, Search, Menu, MessageCircle, Sparkles, Mail, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Banknote, Settings, LogOut, Search, Menu, MessageCircle, Sparkles, Mail, TrendingUp, Video } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 
 export default function Header() {
@@ -126,6 +126,24 @@ export default function Header() {
                       <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1.5">
                         <Sparkles size={11} className="text-accent/40" /> No new alerts
                       </p>
+                    </div>
+                  )}
+
+                  {/* Quick actions */}
+                  {profile?.is_artist && (
+                    <div className="border-b border-white/[0.04] px-3 py-2">
+                      <Link href="/dashboard?tab=campaigns" onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 w-full px-2 py-2 rounded-lg bg-primary/[0.08] border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/[0.12] transition-colors">
+                        <TrendingUp size={14} /> Create Campaign
+                      </Link>
+                    </div>
+                  )}
+                  {profile?.is_creator && (
+                    <div className="border-b border-white/[0.04] px-3 py-2">
+                      <Link href="/browse" onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 w-full px-2 py-2 rounded-lg bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/[0.12] transition-colors">
+                        <Video size={14} /> Submit Video
+                      </Link>
                     </div>
                   )}
 

@@ -65,7 +65,15 @@ function LoginForm() {
   const supabase = createClient();
 
   const buildRedirectUrl = () => {
-    let next = redirect || '/browse';
+    // For signups, default to onboarding (role-aware) instead of /browse
+    let next = redirect;
+    if (!next) {
+      if (mode === 'signup') {
+        next = role === 'fan' ? '/browse?welcome=fan' : '/onboarding';
+      } else {
+        next = '/browse';
+      }
+    }
     return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${refCode ? "&ref="+refCode : ""}`;
   };
 

@@ -118,7 +118,19 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
                     <Video size={20} className="text-emerald-400" />
                   </div>
                   <p className="font-semibold">Video submitted!</p>
-                  <p className="text-xs text-muted-foreground">The artist will review it shortly.</p>
+                  <p className="text-xs text-muted-foreground mb-3">The artist will review it shortly.</p>
+                  <a
+                    href="/earnings"
+                    className="block w-full py-2.5 rounded-xl bg-primary/[0.1] border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/[0.15] transition-colors"
+                  >
+                    Track your submissions & earnings →
+                  </a>
+                  <button
+                    onClick={() => { setSuccess(false); setContentUrl(''); }}
+                    className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                  >
+                    Submit another video
+                  </button>
                 </div>
               ) : (
                 <>
@@ -192,9 +204,17 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
                     </div>
                   )}
 
+                  {/* Budget warning + block */}
+                  {artistBalance !== null && artistBalance <= 0 && (
+                    <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-3 text-xs text-amber-400 flex items-start gap-2">
+                      <CircleAlert size={12} className="shrink-0 mt-0.5" />
+                      This artist hasn't funded their campaign yet. Check back after they've added budget.
+                    </div>
+                  )}
+
                   {/* Submit */}
                   <Button onClick={handleSubmit}
-                    disabled={sending || !selectedTrack || !contentUrl.trim() || success}
+                    disabled={sending || !selectedTrack || !contentUrl.trim() || success || (artistBalance !== null && artistBalance <= 0)}
                     className="w-full py-6 rounded-2xl text-base font-bold
                                bg-gradient-to-r from-emerald-500 to-emerald-600
                                hover:shadow-[0_0_40px_rgba(34,197,94,0.3)]
