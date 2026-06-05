@@ -14,6 +14,10 @@ export const dynamic = 'force-dynamic';
  * but removes all PII (name, email, profile image).
  */
 export async function POST() {
+  const { rateLimit } = await import('@/lib/rate-limit');
+  const rl = await rateLimit('delete:global', { maxRequests: 3, windowMs: 3600_000 }); // 3 per hour
+  if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
+
   try {
     const user = await getUser();
     if (!user?.id) {

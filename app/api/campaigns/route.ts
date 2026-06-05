@@ -8,6 +8,10 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 export async function GET(request: Request) {
+  const { rateLimit, getRateLimitKey } = await import('@/lib/rate-limit');
+  const rl = await rateLimit(getRateLimitKey(request), { maxRequests: 30, windowMs: 60_000 });
+  if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
+
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || searchParams.get('q') || '';

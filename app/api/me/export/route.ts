@@ -12,6 +12,10 @@ export const dynamic = 'force-dynamic';
  * messages, notifications, earnings, and activity.
  */
 export async function GET() {
+  const { rateLimit } = await import('@/lib/rate-limit');
+  const rl = await rateLimit('export:global', { maxRequests: 5, windowMs: 60_000 });
+  if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
+
   try {
     const user = await getUser();
     if (!user?.id) {

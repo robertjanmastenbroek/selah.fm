@@ -9,6 +9,10 @@ export const revalidate = 60; // Cache for 60s
  * Returns aggregated platform metrics for social proof.
  */
 export async function GET() {
+  const { rateLimit } = await import('@/lib/rate-limit');
+  const rl = await rateLimit('stats:global', { maxRequests: 30, windowMs: 60_000 });
+  if (!rl.allowed) return NextResponse.json({ error: 'Too many requests. Slow down.' }, { status: 429 });
+
   try {
     // User counts
     const [artistCount] = await sql`SELECT COUNT(*)::int as count FROM users WHERE is_artist = true`;
