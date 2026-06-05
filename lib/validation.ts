@@ -28,8 +28,8 @@ export function isValidSubmissionUrl(url: string): { valid: false; error: string
 
   const trimmed = url.trim();
 
-  // Basic URL structure check
-  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+  // Basic URL structure check — only https:// allowed
+  if (!trimmed.startsWith('https://')) {
     return { valid: false, error: 'URL must start with https://' };
   }
 
