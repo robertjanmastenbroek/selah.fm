@@ -4,12 +4,14 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import useSWR from 'swr';
+import { useTranslations } from 'next-intl';
 import { fetcher, swrConfig } from '@/lib/swr-config';
 import { LayoutDashboard, Banknote, Settings, LogOut, Search, Menu, MessageCircle, Sparkles, Mail, TrendingUp, Video } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
 
 export default function Header() {
+  const t = useTranslations('nav');
   const { data } = useSWR('/api/auth/me', fetcher, swrConfig);
   const profile = data?.user || null;
   const [open, setOpen] = useState(false);
@@ -52,7 +54,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-white/[0.04]" style={{ background: 'linear-gradient(180deg, rgba(15,15,35,0.98) 0%, rgba(15,15,35,0.92) 100%)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
       <div className="max-w-5xl mx-auto flex h-14 items-center justify-between px-4">
         {/* Left: search → /browse */}
-        <Link href="/browse?focus=search" className="p-2 -ml-2 text-muted-foreground hover:text-primary transition-colors" aria-label="Browse tracks">
+        <Link href="/browse?focus=search" className="p-2 -ml-2 text-muted-foreground hover:text-primary transition-colors" aria-label={t('browseTracks')}>
           <Search size={20} strokeWidth={1.5} />
         </Link>
 
@@ -66,13 +68,13 @@ export default function Header() {
           {profile?.is_artist && (
             <Link href="/dashboard?tab=campaigns"
               className="px-3 py-1.5 rounded-lg bg-primary/[0.08] border border-primary/20 text-primary text-[10px] font-semibold hover:bg-primary/[0.12] transition-colors flex items-center gap-1">
-              <TrendingUp size={12} /> Create
+              <TrendingUp size={12} /> {t('createCampaign')}
             </Link>
           )}
           {profile?.is_creator && (
             <Link href="/browse"
               className="px-3 py-1.5 rounded-lg bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold hover:bg-emerald-500/[0.12] transition-colors flex items-center gap-1">
-              <Video size={12} /> Submit
+              <Video size={12} /> {t('submitVideo')}
             </Link>
           )}
         </div>
@@ -81,7 +83,7 @@ export default function Header() {
         <div className="flex items-center gap-0.5" ref={dropdownRef}>
           <LocaleSwitcher />
           {profile && (
-            <Link href="/messages" className="p-2 text-muted-foreground hover:text-primary transition-colors relative" aria-label="Messages">
+            <Link href="/messages" className="p-2 text-muted-foreground hover:text-primary transition-colors relative" aria-label={t('messages')}>
               <Mail size={20} strokeWidth={1.5} />
               {unreadMessages > 0 && (
                 <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1" style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)' }}>
@@ -91,10 +93,13 @@ export default function Header() {
             </Link>
           )}
           {profile && <NotificationBell />}
+          {process.env.NODE_ENV === 'development' && (
+            <span className="text-[10px] text-amber-400/40 font-mono px-1">DEV</span>
+          )}
           <button
             onClick={() => setOpen(!open)}
             className="p-2 -mr-2 text-muted-foreground hover:text-primary transition-colors relative"
-            aria-label="Menu"
+            aria-label={t('dashboard')}
           >
             <Menu size={20} strokeWidth={1.5} />
             {totalUnread > 0 && (
@@ -131,10 +136,10 @@ export default function Header() {
                         className="flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.03] transition-colors">
                         <span className="text-xs font-semibold flex items-center gap-1.5">
                           <MessageCircle size={12} className="text-primary" />
-                          Messages
+                          {t('messages')}
                           <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full" style={{ background: 'linear-gradient(135deg, #4338CA, #5B7FFF)' }}>{unreadMessages}</span>
                         </span>
-                        <span className="text-[10px] text-primary font-medium">View</span>
+                        <span className="text-[10px] text-primary font-medium">{t('dashboard')}</span>
                       </Link>
                     </div>
                   )}
@@ -153,7 +158,7 @@ export default function Header() {
                     <div className="border-b border-white/[0.04] px-3 py-2">
                       <Link href="/dashboard?tab=campaigns" onClick={() => setOpen(false)}
                         className="flex items-center gap-2 w-full px-2 py-2 rounded-lg bg-primary/[0.08] border border-primary/20 text-primary text-xs font-semibold hover:bg-primary/[0.12] transition-colors">
-                        <TrendingUp size={14} /> Create Campaign
+                        <TrendingUp size={14} /> {t('createCampaign')}
                       </Link>
                     </div>
                   )}
@@ -161,21 +166,20 @@ export default function Header() {
                     <div className="border-b border-white/[0.04] px-3 py-2">
                       <Link href="/browse" onClick={() => setOpen(false)}
                         className="flex items-center gap-2 w-full px-2 py-2 rounded-lg bg-emerald-500/[0.08] border border-emerald-500/20 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/[0.12] transition-colors">
-                        <Video size={14} /> Submit Video
+                        <Video size={14} /> {t('submitVideo')}
                       </Link>
                     </div>
                   )}
 
                   {/* Navigation links */}
                   <div className="py-1">
-                    <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={() => setOpen(false)} />
-                    <NavItem href="/messages" icon={MessageCircle} label="Messages" onClick={() => setOpen(false)} />
-                    <NavItem href="/earnings" icon={Banknote} label="Earnings" onClick={() => setOpen(false)} />
+                    <NavItem href="/dashboard" icon={LayoutDashboard} label={t('dashboard')} onClick={() => setOpen(false)} />
+                    <NavItem href="/messages" icon={MessageCircle} label={t('messages')} onClick={() => setOpen(false)} />
+                    <NavItem href="/earnings" icon={Banknote} label={t('earnings')} onClick={() => setOpen(false)} />
                   </div>
 
                   <div className="border-t border-white/[0.05] py-1">
-
-                    <NavItem href="/browse" icon={Search} label="Browse tracks" onClick={() => setOpen(false)} />
+                    <NavItem href="/browse" icon={Search} label={t('browseTracks')} onClick={() => setOpen(false)} />
                     <a href="https://github.com/robertjanmastenbroek/selah.fm" target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}
                       className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-colors">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -185,14 +189,14 @@ export default function Header() {
 
                   <div className="border-t border-white/[0.05] py-1">
                     <button onClick={handleLogout} className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 text-sm text-red-400/80 hover:text-red-400 hover:bg-red-500/[0.04] transition-colors">
-                      <LogOut size={16} strokeWidth={1.5} /> Log out
+                      <LogOut size={16} strokeWidth={1.5} /> {t('logOut')}
                     </button>
                   </div>
                 </>
               ) : (
                 <div className="py-1">
-                  <Link href="/login" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.03] transition-colors font-medium text-primary">Sign in</Link>
-                  <Link href="/browse" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.03] transition-colors"><Search size={16} /> Browse tracks</Link>
+                  <Link href="/login" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.03] transition-colors font-medium text-primary">{t('signIn')}</Link>
+                  <Link href="/browse" onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-white/[0.03] transition-colors"><Search size={16} /> {t('browseTracks')}</Link>
                 </div>
               )}
             </div>
