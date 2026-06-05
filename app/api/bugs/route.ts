@@ -47,15 +47,24 @@ export async function GET(request: Request) {
   }
 
   try {
-    const bugs = await sql`
-      SELECT b.id, b.user_id, b.description, b.steps_to_reproduce, b.severity, b.status, b.created_at,
-             COALESCE(u.email, 'anonymous') as user_email
-      FROM bugs b
-      LEFT JOIN users u ON u.id = b.user_id
-      ${isAdmin || !user?.id ? sql`` : sql`WHERE b.user_id = ${user.id}`}
-      ORDER BY b.created_at DESC
-      LIMIT 100
-    `;
+    const bugs = isAdmin || !user?.id
+      ? await sql`
+          SELECT b.id, b.user_id, b.description, b.steps_to_reproduce, b.severity, b.status, b.created_at,
+                 COALESCE(u.email, 'anonymous') as user_email
+          FROM bugs b
+          LEFT JOIN users u ON u.id = b.user_id
+          ORDER BY b.created_at DESC
+          LIMIT 100
+        `
+      : await sql`
+          SELECT b.id, b.user_id, b.description, b.steps_to_reproduce, b.severity, b.status, b.created_at,
+                 COALESCE(u.email, 'anonymous') as user_email
+          FROM bugs b
+          LEFT JOIN users u ON u.id = b.user_id
+          WHERE b.user_id = ${user.id}
+          ORDER BY b.created_at DESC
+          LIMIT 100
+        `;
     return NextResponse.json(bugs);
   } catch (e: any) {
     console.error('Bug fetch error:', e.message);
