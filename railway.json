@@ -8,7 +8,7 @@
     }
   },
   "deploy": {
-    "startCommand": "next start -p ${PORT:-3000} -H 0.0.0.0",
+    "startCommand": "PORT=$PORT npx next start -p $PORT -H 0.0.0.0",
     "healthcheckPath": "/",
     "healthcheckTimeout": 30,
     "cron": [
