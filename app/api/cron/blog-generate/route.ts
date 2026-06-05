@@ -108,6 +108,30 @@ async function generateAndSchedulePost(): Promise<{ success: boolean; title?: st
     
     await attachImageToPost(featuredImage, post.id);
 
+    // Add schema: NewsArticle + QAPage (Google Discover eligibility)
+    const schema = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': ['NewsArticle', 'Article'],
+          headline: title,
+          description: article.meta_description || article.excerpt || '',
+          image: featuredImage,
+          datePublished: new Date().toISOString(),
+          dateModified: new Date().toISOString(),
+          author: { '@type': 'Person', name: 'Selah.fm Music Team', url: 'https://selah.fm/about' },
+          publisher: { '@type': 'Organization', name: 'Selah.fm' },
+          mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${slug}` },
+          articleSection: (article.tags?.[0]) || 'music-promotion',
+        },
+        ...(directAnswerText ? [{
+          '@type': 'QAPage',
+          mainEntity: { '@type': 'Question', name: answered.raw_question || title, answerCount: 1, acceptedAnswer: { '@type': 'Answer', text: directAnswerText, url: `https://selah.fm/blog/${slug}` } },
+        }] : []),
+      ],
+    };
+    await sql`UPDATE blog_posts SET schema_markup = ${JSON.stringify(schema)} WHERE id = ${post.id}`;
+
     // Schedule for next available slot
     const existingSlots = await sql`
       SELECT publish_at::date as d, EXTRACT(HOUR FROM publish_at)::int as h

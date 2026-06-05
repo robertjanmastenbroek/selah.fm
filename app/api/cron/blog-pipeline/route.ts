@@ -301,19 +301,22 @@ export async function GET(request: Request) {
         // Link the downloaded image to this post
         await attachImageToPost(featuredImage, post.id);
 
-        // Add dual schema: Article + QAPage
+        // Add triple schema: NewsArticle + Article + QAPage
         const schema = {
           '@context': 'https://schema.org',
           '@graph': [
             {
-              '@type': 'Article',
+              '@type': ['NewsArticle', 'Article'],
               headline: article.title,
               description: article.meta_description || article.excerpt,
               image: featuredImage,
               datePublished: new Date().toISOString(),
+              dateModified: new Date().toISOString(),
               author: { '@type': 'Person', name: 'Selah.fm Music Team', url: 'https://selah.fm/about' },
               publisher: { '@type': 'Organization', name: 'Selah.fm', logo: { '@type': 'ImageObject', url: 'https://selah.fm/images/selah-nav-logo.png' } },
               mainEntityOfPage: { '@type': 'WebPage', '@id': `https://selah.fm/blog/${slug}` },
+              articleSection: (article.tags?.[0]) || 'music-promotion',
+              backstory: article.meta_description || article.excerpt || 'Music promotion tips and creator insights',
             },
             ...(directAnswerText ? [{
               '@type': 'QAPage',
