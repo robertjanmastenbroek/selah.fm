@@ -39,8 +39,18 @@ export async function GET(request: Request) {
         WHERE id = ${post.id}
       `;
 
-      // ── Auto-post to social media (fire-and-forget) ──────────
+      // ── Post-publish validation: verify URL returns 200 ──────
       const postUrl = `https://selah.fm/blog/${post.slug}`;
+      try {
+        const headRes = await fetch(postUrl, { method: 'HEAD', signal: AbortSignal.timeout(10000) });
+        if (!headRes.ok) {
+          console.error(`[blog-publish] Post ${post.slug} returned ${headRes.status} after publish`);
+        }
+      } catch (e: any) {
+        console.error(`[blog-publish] Post validation failed for ${post.slug}:`, e.message);
+      }
+
+      // ── Auto-post to social media (fire-and-forget) ──────────
       const tweetText = `${post.title}\n\n${postUrl}\n\n#musicpromotion #indiemusic #musicians`;
       
       if (process.env.X_BEARER_TOKEN) {
@@ -51,7 +61,7 @@ export async function GET(request: Request) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ text: tweetText.slice(0, 280) }),
-        }).catch(e => console.error('Async error in api/cron/blog-publish/route.ts:', e));
+        }).catch(e => console.error('[blog-publish] X post failed:', e.message));
       }
 
       console.log(`Blog post published: "${post.title}" (${post.slug})`);

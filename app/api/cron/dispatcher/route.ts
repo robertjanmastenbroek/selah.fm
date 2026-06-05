@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600;
@@ -66,8 +67,14 @@ export async function GET(request: Request) {
     for (const br of batchResults) {
       if (br.status === 'fulfilled') {
         results.push(br.value);
+        // Log failures to cron_failures table
+        if (br.value.status >= 400) {
+          sql`INSERT INTO cron_failures (worker_path, error_message) VALUES (${br.value.path}, ${br.value.error || `HTTP ${br.value.status}`})`.catch(() => {});
+        }
       } else {
-        results.push({ path: 'unknown', status: 500, error: br.reason?.message || 'Batch worker failed' });
+        const errMsg = br.reason?.message || 'Batch worker failed';
+        results.push({ path: 'unknown', status: 500, error: errMsg });
+        sql`INSERT INTO cron_failures (worker_path, error_message) VALUES ('unknown', ${errMsg})`.catch(() => {});
       }
     }
   }

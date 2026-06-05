@@ -19,39 +19,71 @@ interface DeepSeekMessage {
 async function chat(messages: DeepSeekMessage[], options: { temperature?: number; max_tokens?: number; frequency_penalty?: number; presence_penalty?: number; top_p?: number } = {}) {
   if (!DEEPSEEK_API_KEY) throw new Error('DEEPSEEK_API_KEY not configured');
 
-  // 120s timeout — prevents hanging when DeepSeek is slow on large prompts
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 120_000);
+  const MAX_RETRIES = 3;
+  let lastError: Error | null = null;
 
-  try {
-    const res = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages,
-        temperature: options.temperature ?? 0.7,
-        max_tokens: options.max_tokens ?? 2000,
-        frequency_penalty: options.frequency_penalty ?? 0,
-        presence_penalty: options.presence_penalty ?? 0,
-        top_p: options.top_p ?? 1,
-      }),
-    });
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120_000);
 
-    if (!res.ok) {
+    try {
+      const res = await fetch(`${DEEPSEEK_BASE}/chat/completions`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages,
+          temperature: options.temperature ?? 0.7,
+          max_tokens: options.max_tokens ?? 2000,
+          frequency_penalty: options.frequency_penalty ?? 0,
+          presence_penalty: options.presence_penalty ?? 0,
+          top_p: options.top_p ?? 1,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        return data.choices[0].message.content;
+      }
+
+      // Handle retryable errors (429 rate limit, 503 service unavailable)
+      if (res.status === 429 || res.status === 503) {
+        lastError = new Error(`DeepSeek API error ${res.status}: rate limited or unavailable`);
+        if (attempt < MAX_RETRIES) {
+          const waitMs = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 1000, 15_000);
+          console.warn(`[blog-engine] DeepSeek ${res.status}, retry ${attempt + 1}/${MAX_RETRIES} in ${waitMs}ms`);
+          await new Promise(resolve => setTimeout(resolve, waitMs));
+          continue;
+        }
+      }
+
+      // Non-retryable errors — throw immediately
       const err = await res.text();
       throw new Error(`DeepSeek API error ${res.status}: ${err.slice(0, 200)}`);
+    } catch (e: any) {
+      lastError = e;
+      // Retry on network errors and timeouts too
+      if (e.name === 'AbortError' || e.message?.includes('fetch failed') || e.message?.includes('network')) {
+        if (attempt < MAX_RETRIES) {
+          const waitMs = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 1000, 15_000);
+          console.warn(`[blog-engine] DeepSeek ${e.name}: ${e.message?.slice(0, 80)}, retry ${attempt + 1}/${MAX_RETRIES} in ${waitMs}ms`);
+          await new Promise(resolve => setTimeout(resolve, waitMs));
+          continue;
+        }
+      }
+      // Non-retryable or exhausted — rethrow
+      clearTimeout(timeoutId);
+      throw e;
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const data = await res.json();
-    return data.choices[0].message.content;
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  throw lastError || new Error('DeepSeek chat failed after retries');
 }
 
 // ── Question Generation ──────────────────────────────────────────

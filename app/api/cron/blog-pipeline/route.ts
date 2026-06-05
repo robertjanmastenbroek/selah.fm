@@ -239,7 +239,7 @@ export async function GET(request: Request) {
       WHERE bi.batch_id = ${batchId} AND bi.status = 'answered' AND bi.transcript IS NOT NULL
         AND NOT EXISTS (SELECT 1 FROM blog_posts bp WHERE bp.interview_id = bi.id)
       ORDER BY bi.created_at DESC
-      LIMIT 1
+      LIMIT 2
     `;
     for (const iv of answered) {
       try {
