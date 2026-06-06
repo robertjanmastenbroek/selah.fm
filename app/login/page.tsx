@@ -354,6 +354,7 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const t = useTranslations('login');
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{background:'#0F0F23'}}>
       <div className="animate-pulse text-muted-foreground text-sm">{t('globalLoading')}</div>
