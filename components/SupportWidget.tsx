@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { MessageCircle, X, Send, Bug, Mail, Sparkles, Minimize2 } from 'lucide-react';
 
 interface Message {
@@ -13,6 +14,7 @@ interface Message {
 
 // ── Component ────────────────────────────────────────────────────
 export default function SupportWidget() {
+  const t = useTranslations('support');
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
