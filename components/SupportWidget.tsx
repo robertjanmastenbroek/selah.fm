@@ -17,8 +17,12 @@ export default function SupportWidget() {
   const t = useTranslations('support');
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
+  const WELCOME_MSG = t('welcomeMsg');
+  const ERROR_MSG = t('errorMsg');
+  const CONNECTION_ERROR_MSG = t('connectionErrorMsg');
+
   const [messages, setMessages] = useState<Message[]>([
-    { id: 'welcome', role: 'bot', content: "Hi! I'm Selah AI — your support assistant. Ask me anything about campaigns, payments, creators, or the platform. If I can't help, I'll connect you with a human.", timestamp: new Date() },
+    { id: 'welcome', role: 'bot', content: WELCOME_MSG, timestamp: new Date() },
   ]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -58,7 +62,7 @@ export default function SupportWidget() {
         setMessages(prev => [...prev, {
           id: `b-${Date.now()}`,
           role: 'bot',
-          content: `⏳ You're sending messages too quickly. Please wait about ${retryAfter} seconds before sending another.`,
+          content: t('rateLimitMsg', { seconds: retryAfter }),
           timestamp: new Date(),
         }]);
         setTimeout(() => setRateLimited(false), retryAfter * 1000);
@@ -77,10 +81,10 @@ export default function SupportWidget() {
         }).catch(() => {});
         if (data.source === 'human') setEmailForwarded(true);
       } else {
-        setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: "Sorry, something went wrong. Try again or email support@selah.fm.", timestamp: new Date() }]);
+        setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: ERROR_MSG, timestamp: new Date() }]);
       }
     } catch {
-      setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: "Sorry, I couldn't reach our servers. Please try again or email support@selah.fm.", timestamp: new Date() }]);
+      setMessages(prev => [...prev, { id: `b-${Date.now()}`, role: 'bot', content: CONNECTION_ERROR_MSG, timestamp: new Date() }]);
     }
     setSending(false);
     inputRef.current?.focus();
@@ -154,8 +158,8 @@ export default function SupportWidget() {
                 <Sparkles size={16} className="text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">Selah AI Support</p>
-                <p className="text-[10px] text-muted-foreground">{emailForwarded ? 'Human notified' : 'Instant AI responses'}</p>
+                <p className="font-semibold text-sm">{t('title')}</p>
+                <p className="text-[10px] text-muted-foreground">{emailForwarded ? t('humanNotified') : t('aiResponses')}</p>
               </div>
               <button onClick={() => setMinimized(true)} className="p-1.5 rounded-lg hover:bg-white/[0.04] text-muted-foreground active:scale-[0.95]" title="Minimize">
                 <Minimize2 size={14} />
@@ -197,13 +201,13 @@ export default function SupportWidget() {
                 onClick={reportBug}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors active:scale-[0.97]"
               >
-                <Bug size={12} /> Report a bug
+                <Bug size={12} /> {t('reportBug')}
               </button>
               <button
                 onClick={requestHuman}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors active:scale-[0.97]"
               >
-                <Mail size={12} /> Talk to a human
+                <Mail size={12} /> {t('talkToHuman')}
               </button>
             </div>
 
@@ -215,7 +219,7 @@ export default function SupportWidget() {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                  placeholder="Ask anything..."
+                  placeholder={t('placeholder')}
                   disabled={sending || rateLimited}
                   maxLength={500}
                   className="flex-1 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors disabled:opacity-50"
@@ -274,7 +278,7 @@ export default function SupportWidget() {
           onClick={() => setMinimized(false)}
           className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
-          Support chat minimized — tap to open
+          {t('minimizedLabel')}
         </motion.button>
       )}
     </div>

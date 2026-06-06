@@ -385,16 +385,18 @@
   },
   "support": {
     "title": "Selah AI Support",
-    "subtitle": "Ask me anything about Selah.fm",
-    "placeholder": "Type your message...",
-    "send": "Send",
-    "sending": "Sending...",
-    "connecting": "Connecting...",
-    "error": "Something went wrong. Please try again.",
-    "retry": "Try again",
-    "close": "Close",
-    "poweredBy": "Powered by DeepSeek AI",
-    "welcome": "Hi! I'm Selah AI. Ask me about promoting music, earning as a creator, or how our platform works."
+    "aiResponses": "Instant AI responses",
+    "humanNotified": "Human notified",
+    "welcomeMsg": "Hi! I'm Selah AI — your support assistant. Ask me anything about campaigns, payments, creators, or the platform. If I can't help, I'll connect you with a human.",
+    "rateLimitMsg": "⏳ You're sending messages too quickly. Please wait about {seconds} seconds before sending another.",
+    "errorMsg": "Sorry, something went wrong. Try again or email support@selah.fm.",
+    "connectionErrorMsg": "Sorry, I couldn't reach our servers. Please try again or email support@selah.fm.",
+    "reportBug": "Report a bug",
+    "talkToHuman": "Talk to a human",
+    "placeholder": "Ask anything...",
+    "reportBugMsg": "🐛 Opening bug report form... You can also report directly at /report-bug.",
+    "forwardingMsg": "📧 Forwarding your conversation to support@selah.fm. Someone will email you shortly.",
+    "minimizedLabel": "Support chat minimized — tap to open"
   },
   "welcomeArtists": {
     "title": "Real Artists. Real Budgets. Real Results.",
