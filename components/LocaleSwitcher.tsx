@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { usePathname, useRouter } from '@/i18n/navigation';
 import { useLocale } from 'next-intl';
 import { Globe } from 'lucide-react';
 
@@ -15,8 +14,6 @@ const LOCALES = [
 
 export default function LocaleSwitcher() {
   const locale = useLocale();
-  const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -48,7 +45,8 @@ export default function LocaleSwitcher() {
             <button
               key={l.code}
               onClick={() => {
-                router.replace(pathname, { locale: l.code });
+                document.cookie = `NEXT_LOCALE=${l.code}; path=/; max-age=31536000; SameSite=Lax`;
+                window.location.reload();
                 setOpen(false);
               }}
               className={`flex items-center gap-2.5 w-full text-left px-4 py-2 text-xs transition-colors ${
