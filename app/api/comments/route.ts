@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     if (content.trim().length > 1000) {
       return NextResponse.json({ error: 'Comment too long (max 1000 characters)' }, { status: 400 });
     }
-    if (!['artist', 'campaign'].includes(pageType)) {
+    if (!['artist', 'campaign', 'track'].includes(pageType)) {
       return NextResponse.json({ error: 'Invalid pageType' }, { status: 400 });
     }
 

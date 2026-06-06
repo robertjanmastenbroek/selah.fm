@@ -10,7 +10,7 @@ interface Comment {
 }
 
 interface Props {
-  pageType: 'artist' | 'campaign';
+  pageType: 'artist' | 'campaign' | 'track';
   pageId: string;
   currentUserId?: string;
 }
@@ -109,7 +109,7 @@ function CommentForm({ pageType, pageId, parentId, placeholder, onSubmitted, onC
   );
 }
 
-function CommentItem({ comment, depth = 0, pageId }: { comment: Comment; depth?: number; pageId: string }) {
+function CommentItem({ comment, depth = 0, pageId, pageType }: { comment: Comment; depth?: number; pageId: string; pageType?: string }) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(comment.likes_count);
   const [showReply, setShowReply] = useState(false);

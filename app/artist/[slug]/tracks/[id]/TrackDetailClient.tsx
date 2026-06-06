@@ -3,10 +3,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Music, Film, Eye, Sparkles, ChevronRight, ChartBar, ExternalLink, Heart, Bookmark, Check, Share2, ArrowRight, DollarSign, Shield, BadgeCheck, Clapperboard, Upload } from 'lucide-react';
+import { Music, Film, Eye, Sparkles, ChevronRight, ChartBar, ExternalLink, Heart, Bookmark, Check, Share2, ArrowRight, DollarSign, Shield, BadgeCheck, Clapperboard, Upload, Video } from 'lucide-react';
 import { SupporterGrid, FAQAccordion, ShareModal, TrustBar } from '@/components/TrackFeatures';
 import Header from '@/components/TopNav';
 import EarnModal from '@/components/EarnModal';
+import PageComments from '@/components/PageComments';
 
 // ════════════════════════════════════════════════════════════
 // EARNINGS CALCULATOR
@@ -321,17 +322,17 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
             {/* Dual CTAs — side by side */}
             <div className="flex flex-col sm:flex-row gap-3">
               <button onClick={() => setJoinOpen(true)}
-                className="flex-1 py-4 px-6 text-center text-base font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                  active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)] shadow-lg shadow-indigo-500/20
+                className="flex-1 py-4 px-6 text-center text-base font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white
+                  active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(16,185,129,0.3)] shadow-lg shadow-emerald-500/20
                   flex items-center justify-center gap-2 group">
-                <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                {cpmPer1M ? `Submit video — earn ${cpmPer1M}` : 'Submit video'}
+                <Video size={18} className="group-hover:rotate-12 transition-transform" />
+                Create
               </button>
               <Link href={`/checkout?campaignId=${track.id}`}
-                className="flex-1 py-4 px-6 text-center text-base font-semibold rounded-xl border border-white/[0.08] bg-white/[0.02]
-                  hover:bg-white/[0.05] hover:border-white/[0.12] transition-all
-                  flex items-center justify-center gap-2 text-muted-foreground hover:text-white">
-                <DollarSign size={18} /> Support
+                className="flex-1 py-4 px-6 text-center text-base font-semibold rounded-xl bg-red-500/10 border border-red-500/20 text-red-400
+                  hover:bg-red-500/15 hover:border-red-500/30 transition-all
+                  flex items-center justify-center gap-2">
+                <Heart size={18} /> Donate
               </Link>
             </div>
 
@@ -424,6 +425,14 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
         </section>
 
         {/* ════════════════════════════════════════ */}
+        {/* REVIEWS */}
+        {/* ════════════════════════════════════════ */}
+        <section className="max-w-2xl mb-10">
+          <h2 className="text-lg font-semibold mb-4">Reviews & comments</h2>
+          <PageComments pageType="track" pageId={track.id} />
+        </section>
+
+        {/* ════════════════════════════════════════ */}
         {/* TRUST BAR */}
         {/* ════════════════════════════════════════ */}
         <section className="max-w-2xl mb-10">
@@ -491,14 +500,14 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
             </div>
             <div className="flex gap-2 shrink-0">
               <Link href={`/checkout?campaignId=${track.id}`}
-                className="px-4 py-2.5 text-xs font-semibold rounded-xl border border-white/[0.08] text-muted-foreground hover:text-white transition-all flex items-center gap-1.5">
-                <DollarSign size={14} /> Support
+                className="px-4 py-2.5 text-xs font-semibold rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/15 hover:border-red-500/30 transition-all flex items-center gap-1.5">
+                <Heart size={14} /> Donate
               </Link>
               <button onClick={() => setJoinOpen(true)}
-                className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                  active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
-                <Sparkles size={14} />
-                Submit
+                className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white
+                  active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-1.5">
+                <Video size={14} />
+                Create
               </button>
             </div>
           </div>
