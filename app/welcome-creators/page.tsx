@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { DollarSign, Smartphone, Wallet, ArrowRight, Check, Search, Camera, Music4, Zap, Shield, Sparkles } from 'lucide-react';
 
 const stagger = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
@@ -12,6 +13,7 @@ function SectionWrap({ children, className = '' }: { children: React.ReactNode; 
 }
 
 export default function WelcomeCreatorsPage() {
+  const t = useTranslations('welcomeCreator');
   return (
     <div className="min-h-screen text-foreground overflow-x-hidden" style={{ background: '#0F0F23' }}>
       {/* ═══════════ HERO ═══════════ */}

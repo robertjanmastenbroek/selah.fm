@@ -148,11 +148,11 @@ function LoginForm() {
   };
 
   const benefits = [
-    { icon: Shield, text: 'No bots·Real creators only' },
-    { icon: TrendingUp, text: 'You set the CPM & approve every video' },
-    { icon: Check, text: 'Only pay for verified views' },
-    { icon: DollarSign, text: 'Free to start·Keep 80%' },
-    { icon: BadgeCheck, text: 'Third-party view verification' },
+    { icon: Shield, text: t('benefitNoBots') },
+    { icon: TrendingUp, text: t('benefitSetCpm') },
+    { icon: Check, text: t('benefitOnlyPayVerified') },
+    { icon: DollarSign, text: t('benefitFreeToStart') },
+    { icon: BadgeCheck, text: t('benefitThirdPartyVerification') },
   ];
 
 
@@ -300,7 +300,7 @@ function LoginForm() {
             <div className="text-center pt-2">
               <button onClick={() => { setShowEmailForm(true); setMode(mode === 'login' ? 'signup' : 'login'); }}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                {mode === 'login' ? "New here? Create an account" : "Already have an account? Log in"}
+                {mode === 'login' ? t('newHereCreateAccount') : t('alreadyHaveAccountLogIn')}
               </button>
             </div>
           </>
@@ -316,11 +316,11 @@ function LoginForm() {
                 </svg>
               ))}
             </div>
-            <p className="text-[11px] text-muted-foreground/70 leading-relaxed">&ldquo;Selah.fm connected me with creators who understood my sound. 50K verified views in the first week.&rdquo;</p>
+            <p className="text-[11px] text-muted-foreground/70 leading-relaxed">&ldquo;{t('testimonialQuote')}&rdquo;</p>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-[9px] font-bold text-primary/60 shrink-0">RJ</div>
-              <p className="text-[10px] text-muted-foreground/50"><span className="text-muted-foreground/70 font-medium">Robert-Jan</span> · Independent Artist</p>
-              <span className="ml-auto text-[8px] px-1.5 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-300">Spotify</span>
+              <p className="text-[10px] text-muted-foreground/50"><span className="text-muted-foreground/70 font-medium">{t('testimonialName')}</span> · {t('testimonialRole')}</p>
+              <span className="ml-auto text-[8px] px-1.5 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-300">{t('testimonialBadge')}</span>
             </div>
           </div>
         )}
@@ -340,12 +340,12 @@ function LoginForm() {
             ))}
           </div>
           <p className="text-[10px] text-muted-foreground/40 text-center mt-3">
-            💎 MIT licensed ·{' '}
+            💎 {t('mitLicensed')} ·{' '}
             <a href="https://github.com/robertjanmastenbroek/selah.fm" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
               GitHub
             </a>
             <span className="mx-2 opacity-30">·</span>
-            <a href="/browse" className="hover:text-primary transition-colors">Browse first</a>
+            <a href="/browse" className="hover:text-primary transition-colors">{t('browseFirst')}</a>
           </p>
         </div>
       </div>
@@ -356,7 +356,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{background:'#0F0F23'}}>
-      <div className="animate-pulse text-muted-foreground text-sm">Loading...</div>
+      <div className="animate-pulse text-muted-foreground text-sm">{t('globalLoading')}</div>
     </div>}>
       <LoginForm />
     </Suspense>

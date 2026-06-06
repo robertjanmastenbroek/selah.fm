@@ -341,15 +341,15 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-3 gap-3 py-3 border-y border-white/[0.06]">
                   <div>
                     <div className="text-lg font-bold">{totalRaised > 0 ? `$${totalRaised.toFixed(0)}` : '$0'}</div>
-                    <div className="text-[10px] text-white/30 uppercase">Raised</div>
+                    <div className="text-[10px] text-white/30 uppercase">{t('raised')}</div>
                   </div>
                   <div>
                     <div className="text-lg font-bold">${budget.toFixed(0)}</div>
-                    <div className="text-[10px] text-white/30 uppercase">Budget</div>
+                    <div className="text-[10px] text-white/30 uppercase">{t('budget')}</div>
                   </div>
                   <div>
                     <div className="text-lg font-bold">{supporterCount}</div>
-                    <div className="text-[10px] text-white/30 uppercase">Supporters</div>
+                    <div className="text-[10px] text-white/30 uppercase">{t('supporters')}</div>
                   </div>
                 </div>
                 <RecentSupporters donations={donations.supporters} />
