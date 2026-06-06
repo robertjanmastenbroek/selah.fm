@@ -299,7 +299,7 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
             { label: 'CPM', value: cpmPer1M ? `${cpmPer1M}/1M views` : '—', icon: <ChartBar size={14} className="text-indigo-400" /> },
             { label: 'Views', value: views?.toLocaleString() || '0', icon: <Eye size={14} className="text-emerald-400" /> },
             { label: 'Submissions', value: String(submissions || 0), icon: <Film size={14} className="text-amber-400" /> },
-            { label: 'Status', value: campaignActive ? 'Active' : track.campaign_status || 'Draft', icon: <Sparkles size={14} className={campaignActive ? 'text-emerald-400' : 'text-muted-foreground'} /> },
+            { label: 'Status', value: campaignActive ? 'Active' : track.campaign_status === 'draft' ? 'Coming soon' : 'Open for submissions', icon: <Sparkles size={14} className={campaignActive ? 'text-emerald-400' : 'text-muted-foreground'} /> },
           ].map(s => (
             <div key={s.label} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
               <div className="flex justify-center mb-1">{s.icon}</div>
