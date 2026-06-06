@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Music, Film, Eye, Sparkles, ChevronRight, ChartBar, ExternalLink, Heart, Bookmark, Check } from 'lucide-react';
+import { Music, Film, Eye, Sparkles, ChevronRight, ChartBar, ExternalLink, Heart, Bookmark, Check, Share2 } from 'lucide-react';
+import { SupporterGrid, FAQAccordion, ShareModal, TrustBar } from '@/components/TrackFeatures';
 import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
 import EarnModal from '@/components/EarnModal';
@@ -223,6 +224,23 @@ function trackSlug(title: string): string {
 
 export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
   const [joinOpen, setJoinOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [supporters, setSupporters] = useState<any[]>([]);
+  const [supporterCount, setSupporterCount] = useState(0);
+
+  // Fetch supporters/donations on mount
+  useEffect(() => {
+    if (!track.id) return;
+    fetch(`/api/campaigns/${track.id}?include=donations`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.donations?.supporters) {
+          setSupporters(d.donations.supporters);
+          setSupporterCount(d.donations.count || d.donations.supporters.length);
+        }
+      })
+      .catch(() => {});
+  }, [track.id]);
 
   const artistName = track.artist_name || 'Artist';
   const trackTitle = track.title || 'Untitled';
@@ -358,6 +376,60 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
           {cpmPer1M && <p>At the current CPM rate of ${cpm.toFixed(2)} per 1,000 views, creators can earn {cpmPer1M} for every 1 million verified views their video receives.</p>}
           {submissions > 0 && <p>{submissions} creator{submissions !== 1 ? 's have' : ' has'} already submitted videos for this track, generating {views?.toLocaleString() || '0'} verified views.</p>}
         </section>
+
+        {/* ════════════════════════════════════════ */}
+        {/* SUPPORTERS / DONATIONS */}
+        {/* ════════════════════════════════════════ */}
+        {track.total_budget_cents > 0 && (
+          <section className="mt-16 max-w-2xl">
+            <h2 className="text-lg font-semibold mb-3">Support this track</h2>
+            <SupporterGrid supporters={supporters} totalCount={supporterCount} />
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex-1 h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500"
+                  style={{ width: `${Math.min(100, ((track.total_budget_cents - (track.budget_remaining_cents || track.total_budget_cents)) / track.total_budget_cents) * 100)}%` }} />
+              </div>
+              <span className="text-[10px] text-muted-foreground shrink-0">
+                ${((track.total_budget_cents - (track.budget_remaining_cents || track.total_budget_cents)) / 100).toFixed(0)} raised
+              </span>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <Link href={`/checkout?campaignId=${track.id}`}
+                className="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold hover:bg-indigo-500/20 transition-colors">
+                Donate
+              </Link>
+              <button onClick={() => setShareOpen(true)}
+                className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-muted-foreground text-xs font-semibold hover:text-foreground transition-colors flex items-center gap-1.5">
+                <Share2 size={12} /> Share
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* ════════════════════════════════════════ */}
+        {/* TRUST BAR */}
+        {/* ════════════════════════════════════════ */}
+        <section className="mt-16 max-w-2xl">
+          <TrustBar />
+        </section>
+
+        {/* ════════════════════════════════════════ */}
+        {/* FAQ */}
+        {/* ════════════════════════════════════════ */}
+        <section className="mt-16 max-w-2xl">
+          <h2 className="text-lg font-semibold mb-4">Common questions</h2>
+          <FAQAccordion />
+        </section>
+
+        {/* ════════════════════════════════════════ */}
+        {/* SHARE MODAL */}
+        {/* ════════════════════════════════════════ */}
+        <ShareModal
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          url={`https://selah.fm/artist/${slug}/tracks/${trackSlug(trackTitle)}`}
+          title={`Earn ${cpmPer1M || 'money'} promoting "${trackTitle}" by ${artistName} on Selah.fm`}
+        />
 
         {/* Related tracks carousel */}
         {track.relatedTracks?.length > 0 && (
