@@ -337,36 +337,6 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
           </div>
         )}
 
-        {/* Featured tracks with active budgets */}
-        {campaigns.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
-              <Sparkles size={14} className="text-amber-400" />
-              Featured tracks
-              <span className="text-[10px] text-muted-foreground font-normal">({new Set(campaigns.map((c: any) => c.track_title)).size} with active budgets)</span>
-            </h2>
-            <div className="grid gap-2">
-              {campaigns.map((c: any) => (
-                <Link key={c.id} href={`/artist/${slug}/tracks/${trackSlug(c.track_title)}`}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all group">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate group-hover:text-emerald-300 transition-colors">{c.track_title}</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-                      <span className="text-emerald-400 font-medium">${((c.cpm_rate_cents || 0) / 100 * 1000).toFixed(0)}/1M views</span>
-                      <span className="mx-1.5 text-muted-foreground/30">·</span>
-                      {(c.total_budget_cents || 0) > 0 ? `$${((c.total_budget_cents || 0) / 100).toFixed(0)} budget` : 'No budget yet'}
-                      {c.submissions_count > 0 && (
-                        <><span className="mx-1.5 text-muted-foreground/30">·</span>{' '}{c.submissions_count} submission{c.submissions_count !== 1 ? 's' : ''}</>
-                      )}
-                    </p>
-                  </div>
-                  <span className="text-xs text-emerald-400 font-medium shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">Join →</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* ════════════════════════════════════════════════ */}
         {/* TWO-COLUMN LAYOUT */}
         {/* ════════════════════════════════════════════════ */}
