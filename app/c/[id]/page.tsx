@@ -149,10 +149,11 @@ function buildListenLinks(campaign: any): ListenLink[] {
 export default async function CampaignPage({ params }: Props) {
   const campaign = await getCampaign(params.id);
 
-  // Redirect to SEO-friendly track page when possible
+  // Permanent 308 redirect to SEO-friendly track page
   if (campaign?.artist_slug && campaign?.track_title) {
     const trackSlug = campaign.track_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
-    redirect(`/artist/${campaign.artist_slug}/tracks/${trackSlug}`);
+    const trackUrl = `/artist/${campaign.artist_slug}/tracks/${trackSlug}`;
+    redirect(trackUrl);
   }
 
   const lightweightCampaign = stripBase64Images(campaign);
