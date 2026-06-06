@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
 import { ChevronDown } from 'lucide-react';
@@ -206,6 +207,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
 ];
 
 export default function FAQPage() {
+  const t = useTranslations('faq');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const bg = 'radial-gradient(ellipse at 50% 0%, rgba(67,56,202,0.2) 0%, #0F0F23 60%), #0F0F23';
 
@@ -223,8 +225,8 @@ export default function FAQPage() {
       <Header />
       <main className="max-w-3xl mx-auto px-4 py-12 md:py-16">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Frequently asked questions</h1>
-          <p className="text-muted-foreground text-sm mb-10">Everything you need to know about Selah.fm — artists, creators, payments, and more.</p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">{t('title')}</h1>
+          <p className="text-muted-foreground text-sm mb-10">{t('subtitle')}</p>
         </motion.div>
 
         {faqs.map((section, sectionIdx) => {
@@ -281,9 +283,9 @@ export default function FAQPage() {
           transition={{ delay: 0.5, duration: 0.4 }}
           className="text-center py-12 border-t border-white/[0.06] mt-8"
         >
-          <p className="text-sm text-muted-foreground mb-3">Still have questions?</p>
+          <p className="text-sm text-muted-foreground mb-3">{t('stillHaveQuestions')}</p>
           <p className="text-xs text-muted-foreground/70">
-            Email us at <a href="mailto:support@selah.fm" className="text-primary hover:underline">support@selah.fm</a> or use the chat widget in the bottom-right corner.
+            {t('emailUs')} <a href="mailto:support@selah.fm" className="text-primary hover:underline">support@selah.fm</a> {t('orUseChat')}
           </p>
         </motion.div>
       </main>

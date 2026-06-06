@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useTranslations } from 'next-intl';
 import {
   Heart, ArrowLeft, Shield, Lock, CircleAlert, Check, Zap, Wallet,
   DollarSign, Sparkles, Users,
@@ -144,6 +145,7 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
 
 // ── Main Consolidated Checkout Page ─────────────────────────
 export default function CheckoutPage() {
+  const t = useTranslations('checkout');
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -284,20 +286,20 @@ export default function CheckoutPage() {
       <div className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#080817]/95 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
         <button onClick={() => router.back()}
           className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors">
-          <ArrowLeft size={18} /> Back
+          <ArrowLeft size={18} /> {t('back')}
         </button>
         <div className="flex items-center gap-3">
           {type === 'donation' ? (
             <span className="text-xs text-white/40 flex items-center gap-1">
-              <Heart size={12} className="text-[#4338CA]/60" /> Donation
+              <Heart size={12} className="text-[#4338CA]/60" /> {t('donation')}
             </span>
           ) : (
             <span className="text-xs text-white/40 flex items-center gap-1">
-              <Wallet size={12} className="text-[#4338CA]/60" /> Deposit
+              <Wallet size={12} className="text-[#4338CA]/60" /> {t('deposit')}
             </span>
           )}
           <span className="text-[10px] text-white/30 flex items-center gap-1">
-            <Lock size={10} /> Secure
+            <Lock size={10} /> {t('secure')}
           </span>
         </div>
       </div>
