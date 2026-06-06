@@ -3,10 +3,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Music, Film, Eye, Sparkles, ChevronRight, ChartBar, ExternalLink, Heart, Bookmark, Check, Share2 } from 'lucide-react';
+import { Music, Film, Eye, Sparkles, ChevronRight, ChartBar, ExternalLink, Heart, Bookmark, Check, Share2, ArrowRight, DollarSign, Shield, BadgeCheck, Clapperboard, Upload } from 'lucide-react';
 import { SupporterGrid, FAQAccordion, ShareModal, TrustBar } from '@/components/TrackFeatures';
 import Header from '@/components/TopNav';
-import { Button } from '@/components/ui/button';
 import EarnModal from '@/components/EarnModal';
 
 // ════════════════════════════════════════════════════════════
@@ -16,83 +15,71 @@ import EarnModal from '@/components/EarnModal';
 function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
   const cpmDollars = cpmCents / 100;
   const [views, setViews] = useState(10000);
-  const earnings = (views / 1000) * cpmDollars * 0.8;
-
+  const grossEarnings = (views / 1000) * cpmDollars;
+  const earnings = grossEarnings * 0.8;
   const presets = [
     { label: '1K', value: 1000 },
     { label: '10K', value: 10000 },
     { label: '100K', value: 100000 },
     { label: '1M', value: 1000000 },
   ];
-
   const closestPreset = useMemo(() =>
     presets.reduce((prev, curr) =>
       Math.abs(curr.value - views) < Math.abs(prev.value - views) ? curr : prev
     ), [views]);
 
-  return (
-    <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-indigo-500/[0.03] border border-white/[0.06] p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <ChartBar size={16} className="text-indigo-400" />
-        <h3 className="font-semibold text-sm">How much you could earn</h3>
-      </div>
+  if (cpmCents <= 0) return null;
 
-      <div className="mb-4">
-        <div className="flex justify-between mb-2">
-          <span className="text-xs text-muted-foreground">Your estimated views</span>
-          <span className="text-sm font-bold text-white">
-            {views >= 1000000 ? `${(views / 1000000).toFixed(1)}M` : views >= 1000 ? `${(views / 1000).toFixed(0)}K` : views.toLocaleString()} views
+  return (
+    <div className="rounded-2xl bg-gradient-to-br from-white/[0.03] to-indigo-500/[0.03] border border-indigo-500/10 p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <ChartBar size={20} className="text-indigo-400" />
+        <div>
+          <p className="text-sm font-semibold">Earnings calculator</p>
+          <p className="text-[10px] text-muted-foreground">At ${cpmDollars.toFixed(2)} CPM · You keep 80%</p>
+        </div>
+      </div>
+      <div className="mb-5">
+        <div className="flex justify-between items-end mb-2">
+          <span className="text-xs text-muted-foreground">Estimated views</span>
+          <span className="text-lg font-bold text-white">
+            {views >= 1000000 ? `${(views / 1000000).toFixed(1)}M` : views >= 1000 ? `${(views / 1000).toFixed(0)}K` : views.toLocaleString()}
           </span>
         </div>
         <input type="range" min={100} max={5000000} step={100} value={views}
           onChange={(e) => setViews(parseInt(e.target.value))}
-          className="w-full h-2 rounded-full appearance-none bg-white/[0.08]
-            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-500
+          className="w-full h-2.5 rounded-full appearance-none bg-white/[0.08] cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-[#4338CA] [&::-webkit-slider-thumb]:to-[#6366F1]
             [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-indigo-500/40"
-          style={{ background: `linear-gradient(to right, rgb(99,102,241) ${(views / 5000000) * 100}%, rgba(255,255,255,0.08) ${(views / 5000000) * 100}%)` }} />
-        <div className="flex justify-between mt-1.5">
+          style={{ background: `linear-gradient(to right, rgba(99,102,241,0.6) ${(views / 5000000) * 100}%, rgba(255,255,255,0.08) ${(views / 5000000) * 100}%)` }} />
+        <div className="flex justify-between mt-2">
           {presets.map((p) => (
             <button key={p.label} onClick={() => setViews(p.value)}
-              className={`text-[10px] px-2 py-0.5 rounded-full transition-all ${
+              className={`text-[10px] px-3 py-1 rounded-full transition-all ${
                 closestPreset.value === p.value ? 'bg-indigo-500/20 text-indigo-300 font-semibold' : 'text-muted-foreground/50 hover:text-muted-foreground'
               }`}>{p.label}</button>
           ))}
         </div>
       </div>
-
-      <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-        <div>
-          <p className="text-xs text-muted-foreground">Your earnings (80%)</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-4 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Platform fee (20%)</p>
+          <p className="text-lg font-bold text-amber-400">${((grossEarnings - earnings).toFixed(2))}</p>
+        </div>
+        <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 text-center">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">You earn</p>
           <p className="text-2xl font-bold text-emerald-400">
             ${earnings >= 1 ? earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : earnings.toFixed(2)}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">At ${cpmDollars.toFixed(2)} CPM</p>
-          <p className="text-[10px] text-muted-foreground/50">Platform fee: 20%</p>
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {[10000, 100000, 1000000].map((v) => {
-          const earn = (v / 1000) * cpmDollars * 0.8;
-          return (
-            <div key={v} className={`text-center p-2 rounded-lg border transition-all ${
-              views >= v * 0.5 && views <= v * 1.5 ? 'border-indigo-500/30 bg-indigo-500/10' : 'border-white/[0.04] bg-white/[0.02]'
-            }`}>
-              <p className="text-[10px] text-muted-foreground/70">{v >= 1000000 ? `${(v / 1000000).toFixed(0)}M` : `${(v / 1000).toFixed(0)}K`}</p>
-              <p className="text-xs font-bold text-emerald-400/90">${earn.toFixed(2)}</p>
-            </div>
-          );
-        })}
       </div>
     </div>
   );
 }
 
 // ════════════════════════════════════════════════════════════
-// SAVE TO COLLECTION BUTTON
+// SAVE TO COLLECTION BUTTON (unchanged)
 // ════════════════════════════════════════════════════════════
 
 function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string; trackTitle: string; artistName: string }) {
@@ -115,22 +102,15 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
   }, [showPicker]);
 
   const addToCollection = async (collectionId: string) => {
-    setSaving(collectionId);
-    setError('');
+    setSaving(collectionId); setError('');
     try {
       const res = await fetch(`/api/collections/${collectionId}/items`, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trackId }),
       });
-      if (res.ok) {
-        setSaved(true);
-        setSavedCollectionId(collectionId);
-        setShowPicker(false);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setError(err.error || 'Failed to save');
-      }
+      if (res.ok) { setSaved(true); setSavedCollectionId(collectionId); setShowPicker(false); }
+      else { const err = await res.json().catch(() => ({})); setError(err.error || 'Failed to save'); }
     } catch { setError('Network error'); }
     setSaving(null);
   };
@@ -147,13 +127,7 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
       });
       if (res.ok) {
         const d = await res.json();
-        if (d.collection) {
-          await addToCollection(d.collection.id);
-          // Reload collections list so new collection appears if picker reopens
-          fetch('/api/collections', { credentials: 'include' })
-            .then(r2 => r2.json())
-            .then(d2 => setCollections(d2.collections || []));
-        }
+        if (d.collection) await addToCollection(d.collection.id);
       }
     } catch {}
   };
@@ -161,28 +135,18 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
   return (
     <div className="relative">
       <button onClick={async () => {
-        try {
-          const auth = await fetch('/api/auth/me', { credentials: 'include' });
-          if (!auth.ok) { window.location.href = '/login'; return; }
-        } catch { window.location.href = '/login'; return; }
+        try { const auth = await fetch('/api/auth/me', { credentials: 'include' }); if (!auth.ok) { window.location.href = '/login'; return; } }
+        catch { window.location.href = '/login'; return; }
         setShowPicker(!showPicker);
       }}
-        className="flex items-center gap-2 w-full p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground">
+        className="flex items-center gap-2 w-full py-2.5 px-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground justify-center">
         {saved ? <Check size={14} className="text-emerald-400" /> : <Bookmark size={14} />}
-        {saved ? 'Saved!' : 'Save to collection'}
+        {saved ? `Saved!` : 'Save track'}
       </button>
-      {saved && savedCollectionId && (
-        <a href={`/collection/${savedCollectionId}`} className="block text-[10px] text-primary hover:underline mt-1 text-center">
-          View collection →
-        </a>
-      )}
-      {error && <p className="text-[10px] text-red-400 mt-1">{error}</p>}
-
       {showPicker && (
-        <div className="absolute bottom-full mb-2 left-0 right-0 rounded-xl bg-[#1C1C3A] border border-white/[0.08] shadow-xl p-3 max-h-48 overflow-y-auto z-10">
-          {loading ? (
-            <p className="text-xs text-muted-foreground text-center py-2">Loading...</p>
-          ) : collections.length === 0 ? (
+        <div className="absolute bottom-full mb-2 left-0 right-0 rounded-xl bg-[#1C1C3A] border border-white/[0.08] shadow-xl p-3 z-10">
+          {loading ? <p className="text-xs text-muted-foreground text-center py-2">Loading...</p>
+          : collections.length === 0 ? (
             <div className="text-center py-2">
               <p className="text-xs text-muted-foreground mb-2">No collections yet</p>
               <button onClick={createAndAdd} className="text-xs text-primary hover:underline">Create one</button>
@@ -197,15 +161,49 @@ function SaveToCollection({ trackId, trackTitle, artistName }: { trackId: string
                 </button>
               ))}
               <div className="border-t border-white/[0.06] pt-1 mt-1">
-                <button onClick={createAndAdd} className="w-full text-left px-3 py-2 rounded-lg text-xs text-primary hover:bg-white/[0.04] transition-colors">
-                  + New collection
-                </button>
+                <button onClick={createAndAdd} className="w-full text-left px-3 py-2 rounded-lg text-xs text-primary hover:bg-white/[0.04] transition-colors">+ New collection</button>
               </div>
             </div>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// HOW IT WORKS SECTION
+// ════════════════════════════════════════════════════════════
+
+function HowItWorks() {
+  const steps = [
+    { icon: Music, step: '01', title: 'Pick this track', desc: 'Choose "Living Water" or any track from this artist. Make sure you use the official audio from TikTok, Instagram, or YouTube.' },
+    { icon: Clapperboard, step: '02', title: 'Create your video', desc: 'Film a short-form vertical video (15-60 seconds) featuring the track. Be creative — the best content gets the most views.' },
+    { icon: Upload, step: '03', title: 'Submit and earn', desc: 'Paste your video link, submit for review. The artist approves and you earn per verified view — paid automatically via Stripe.', highlight: true },
+  ];
+  return (
+    <section className="max-w-2xl">
+      <h2 className="text-lg font-semibold mb-6">How it works</h2>
+      <div className="space-y-5">
+        {steps.map((s, i) => (
+          <div key={i} className="flex gap-4 group">
+            <div className="flex flex-col items-center">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${s.highlight ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-white/[0.04]'}`}>
+                <s.icon size={18} className={s.highlight ? 'text-white' : 'text-indigo-400'} />
+              </div>
+              {i < steps.length - 1 && <div className="w-px flex-1 bg-white/[0.06] mt-1" />}
+            </div>
+            <div className="pb-5 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] font-mono text-indigo-400/60">{s.step}</span>
+                <h3 className="font-semibold text-sm text-white/80">{s.title}</h3>
+              </div>
+              <p className="text-[12px] text-muted-foreground/70 leading-relaxed">{s.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -228,7 +226,6 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
   const [supporters, setSupporters] = useState<any[]>([]);
   const [supporterCount, setSupporterCount] = useState(0);
 
-  // Fetch supporters/donations on mount
   useEffect(() => {
     if (!track.id) return;
     fetch(`/api/campaigns/${track.id}?include=donations`)
@@ -249,16 +246,18 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
   const campaignActive = track.campaign_status === 'active';
   const submissions = track.submission_count || 0;
   const views = track.total_views || 0;
+  const hasBudget = (track.total_budget_cents || 0) > 0;
+  const raised = track.total_budget_cents ? ((track.total_budget_cents - (track.budget_remaining_cents || track.total_budget_cents)) / 100) : 0;
 
-  // Detect streaming platform from URL
+  const statusText = campaignActive ? 'Active' : track.campaign_status === 'draft' ? 'Coming soon' : 'Open for submissions';
+  const statusColor = campaignActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20';
+
   const streamingLinks: { url: string; label: string; icon: JSX.Element; bg: string; color: string }[] = [];
   if (track.spotify_url) {
     streamingLinks.push({
-      url: track.spotify_url,
-      label: 'Listen on Spotify',
+      url: track.spotify_url, label: 'Listen on Spotify',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="#1DB954"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>,
-      bg: 'bg-green-500/5',
-      color: 'text-green-400',
+      bg: 'bg-green-500/5', color: 'text-green-400',
     });
   }
 
@@ -266,83 +265,116 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
     <div className="min-h-screen" style={{ background: '#0F0F23' }}>
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-12 pb-32 md:pb-20">
-        {/* Track header */}
-        <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
-          <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl overflow-hidden bg-white/[0.04] shrink-0">
-            {track.cover_art_url ? (
-              <img src={track.cover_art_url} alt={`${trackTitle} cover`} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white/10">
-                {trackTitle[0]?.toUpperCase() || '?'}
-              </div>
-            )}
+      <main className="max-w-4xl mx-auto px-4 py-8 pb-32 md:pb-20">
+        {/* ════════════════════════════════════════ */}
+        {/* HERO SECTION */}
+        {/* ════════════════════════════════════════ */}
+        <div className="grid md:grid-cols-3 gap-8 mb-10">
+          {/* Cover art — large & prominent */}
+          <div className="md:col-span-1">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-900/40 to-purple-900/40 shadow-2xl shadow-indigo-500/10">
+              {track.cover_art_url ? (
+                <img src={track.cover_art_url} alt={`${trackTitle} cover`} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-6xl font-bold text-white/10">{trackTitle[0]?.toUpperCase() || '?'}</span>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
+
+          {/* Track info + CTAs */}
+          <div className="md:col-span-2 flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-3">
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${statusColor}`}>
+                <Sparkles size={10} /> {statusText}
+              </span>
+              {cpmPer1M && (
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                  {cpmPer1M}/1M views
+                </span>
+              )}
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>
               {trackTitle}
             </h1>
-            <Link href={`/artist/${slug}`} className="text-primary hover:underline text-sm">
-              {artistName}
+            <Link href={`/artist/${slug}`} className="text-primary/80 hover:text-primary text-sm mb-5 inline-block">
+              by {artistName}
             </Link>
-            {campaignActive && (
-              <span className="ml-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <Sparkles size={10} /> Active
-              </span>
+
+            {/* Social proof mini-bar */}
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              <SupporterGrid supporters={supporters} totalCount={supporterCount} />
+              {submissions > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  <strong className="text-white">{submissions}</strong> submission{submissions !== 1 ? 's' : ''}
+                </span>
+              )}
+              {hasBudget && raised > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  <strong className="text-emerald-400">${raised.toFixed(0)}</strong> raised
+                </span>
+              )}
+            </div>
+
+            {/* Dual CTAs — side by side */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button onClick={() => setJoinOpen(true)}
+                className="flex-1 py-4 px-6 text-center text-base font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
+                  active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)] shadow-lg shadow-indigo-500/20
+                  flex items-center justify-center gap-2 group">
+                <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
+                {cpmPer1M ? `Submit video — earn ${cpmPer1M}` : 'Submit video'}
+              </button>
+              <Link href={`/checkout?campaignId=${track.id}`}
+                className="flex-1 py-4 px-6 text-center text-base font-semibold rounded-xl border border-white/[0.08] bg-white/[0.02]
+                  hover:bg-white/[0.05] hover:border-white/[0.12] transition-all
+                  flex items-center justify-center gap-2 text-muted-foreground hover:text-white">
+                <DollarSign size={18} /> Support
+              </Link>
+            </div>
+
+            {/* Budget status indicator */}
+            {!hasBudget && (
+              <p className="text-[11px] text-muted-foreground/50 mt-2 text-center sm:text-left">
+                Submissions welcome — earnings depend on budget set by artist
+              </p>
             )}
           </div>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        {/* ════════════════════════════════════════ */}
+        {/* QUICK STATS ROW */}
+        {/* ════════════════════════════════════════ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
           {[
-            { label: 'CPM', value: cpmPer1M ? `${cpmPer1M}/1M views` : '—', icon: <ChartBar size={14} className="text-indigo-400" /> },
+            { label: 'CPM', value: cpmPer1M ? `${cpmPer1M}/1M` : 'Not set', icon: <ChartBar size={14} className="text-indigo-400" /> },
             { label: 'Views', value: views?.toLocaleString() || '0', icon: <Eye size={14} className="text-emerald-400" /> },
             { label: 'Submissions', value: String(submissions || 0), icon: <Film size={14} className="text-amber-400" /> },
-            { label: 'Status', value: campaignActive ? 'Active' : track.campaign_status === 'draft' ? 'Coming soon' : 'Open for submissions', icon: <Sparkles size={14} className={campaignActive ? 'text-emerald-400' : 'text-muted-foreground'} /> },
+            { label: 'Status', value: statusText, icon: <Sparkles size={14} className={campaignActive ? 'text-emerald-400' : 'text-indigo-400'} /> },
           ].map(s => (
-            <div key={s.label} className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 text-center">
+            <div key={s.label} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 text-center backdrop-blur-sm">
               <div className="flex justify-center mb-1">{s.icon}</div>
-              <p className="text-xs text-muted-foreground/60 uppercase tracking-wider mb-1">{s.label}</p>
-              <p className="text-lg font-bold">{s.value}</p>
+              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">{s.label}</p>
+              <p className="text-sm font-bold">{s.value}</p>
             </div>
           ))}
         </div>
 
-        {/* Two-column layout: CTA + Calculator left, streaming links right */}
-        <div className="grid md:grid-cols-5 gap-6 mb-12">
-          <div className="md:col-span-3 space-y-4">
-            {/* Earnings calculator — the #1 question creators have */}
+        {/* ════════════════════════════════════════ */}
+        {/* MAIN CONTENT: Two-column */}
+        {/* ════════════════════════════════════════ */}
+        <div className="grid md:grid-cols-5 gap-8 mb-12">
+          {/* LEFT: Calculator + How it works */}
+          <div className="md:col-span-3 space-y-8">
             <EarningsCalculator cpmCents={track.cpm_rate_cents || 0} />
-
-            {/* Primary CTA — always opens EarnModal on the track page */}
-            <button onClick={() => setJoinOpen(true)}
-              className="block w-full py-4 text-center text-base font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)] shadow-lg shadow-indigo-500/20
-                flex items-center justify-center gap-2 group">
-              <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-              {cpmPer1M ? `Submit video — earn ${cpmPer1M}/1M views` : 'Submit video →'}
-            </button>
-
-            {/* Trust bar */}
-            <div className="flex flex-wrap gap-1.5">
-              {[
-                { text: 'Free to start' },
-                { text: 'You earn 80%' },
-                { text: 'Verified views only' },
-              ].map((b, i) => (
-                <span key={i}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06]
-                    text-[10px] text-muted-foreground/70 font-medium">
-                  {b.text}
-                </span>
-              ))}
-            </div>
-
+            <HowItWorks />
           </div>
 
-          <div className="md:col-span-2 space-y-3">
-            {/* Streaming links */}
+          {/* RIGHT: Sidebar */}
+          <div className="md:col-span-2 space-y-4">
+            {/* Listen on links */}
             {streamingLinks.length > 0 && (
               <div>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground/40 mb-2">Listen on</p>
@@ -357,89 +389,56 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
               </div>
             )}
 
-            {/* Save to collection */}
             <SaveToCollection trackId={track.id} trackTitle={trackTitle} artistName={artistName} />
 
-            {/* Back to artist */}
+            <button onClick={() => setShareOpen(true)}
+              className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground">
+              <Share2 size={14} /> Share this track
+            </button>
+
             <Link href={`/artist/${slug}`}
-              className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground">
-              View all tracks by {artistName}
-              <ChevronRight size={12} className="ml-auto" />
+              className="flex items-center gap-2 py-2.5 px-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground justify-center">
+              View all tracks <ChevronRight size={12} />
             </Link>
           </div>
         </div>
 
-        {/* SEO content */}
-        <section className="text-sm text-muted-foreground/60 leading-relaxed space-y-4 max-w-2xl">
-          <h2 className="text-base font-semibold text-foreground">About this track</h2>
-          <p>"{trackTitle}" is a track by {artistName} available on Selah.fm. Creators can make short-form videos featuring this track and earn per verified view.</p>
-          {cpmPer1M && <p>At the current CPM rate of ${cpm.toFixed(2)} per 1,000 views, creators can earn {cpmPer1M} for every 1 million verified views their video receives.</p>}
-          {submissions > 0 && <p>{submissions} creator{submissions !== 1 ? 's have' : ' has'} already submitted videos for this track, generating {views?.toLocaleString() || '0'} verified views.</p>}
-        </section>
-
         {/* ════════════════════════════════════════ */}
-        {/* SUPPORTERS / DONATIONS */}
+        {/* ABOUT THIS TRACK (SEO content — moved below fold) */}
         {/* ════════════════════════════════════════ */}
-        <section className="mt-16 max-w-2xl">
-          <h2 className="text-lg font-semibold mb-3">Support this track</h2>
-          <SupporterGrid supporters={supporters} totalCount={supporterCount} />
-          {track.total_budget_cents > 0 && (
-            <div className="mt-3 flex items-center gap-2">
-              <div className="flex-1 h-2 rounded-full bg-white/[0.06] overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500"
-                  style={{ width: `${Math.min(100, ((track.total_budget_cents - (track.budget_remaining_cents || track.total_budget_cents)) / track.total_budget_cents) * 100)}%` }} />
-              </div>
-              <span className="text-[10px] text-muted-foreground shrink-0">
-                ${((track.total_budget_cents - (track.budget_remaining_cents || track.total_budget_cents)) / 100).toFixed(0)} raised
-              </span>
-            </div>
-          )}
-          <div className="mt-4 flex gap-2">
-            <Link href={`/checkout?campaignId=${track.id}`}
-              className="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold hover:bg-indigo-500/20 transition-colors">
-              Donate
-            </Link>
-            <button onClick={() => setShareOpen(true)}
-              className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-muted-foreground text-xs font-semibold hover:text-foreground transition-colors flex items-center gap-1.5">
-              <Share2 size={12} /> Share
-            </button>
+        <section className="max-w-2xl mb-10">
+          <h2 className="text-base font-semibold mb-3">About this track</h2>
+          <div className="text-sm text-muted-foreground/60 leading-relaxed space-y-3">
+            <p>"{trackTitle}" is a track by {artistName} available on Selah.fm. Creators can make short-form videos featuring this track and earn per verified view.</p>
+            {cpmPer1M && <p>At the current CPM rate of ${cpm.toFixed(2)} per 1,000 views, creators can earn {cpmPer1M} for every 1 million verified views their video receives.</p>}
+            {submissions > 0 && <p>{submissions} creator{submissions !== 1 ? 's have' : ' has'} already submitted videos for this track, generating {views?.toLocaleString() || '0'} verified views.</p>}
           </div>
-        </section>
-
-        {/* ════════════════════════════════════════ */}
-        {/* TRUST BAR */}
-        {/* ════════════════════════════════════════ */}
-        <section className="mt-16 max-w-2xl">
-          <TrustBar />
         </section>
 
         {/* ════════════════════════════════════════ */}
         {/* FAQ */}
         {/* ════════════════════════════════════════ */}
-        <section className="mt-16 max-w-2xl">
+        <section className="max-w-2xl mb-10">
           <h2 className="text-lg font-semibold mb-4">Common questions</h2>
           <FAQAccordion />
         </section>
 
         {/* ════════════════════════════════════════ */}
-        {/* SHARE MODAL */}
+        {/* TRUST BAR */}
         {/* ════════════════════════════════════════ */}
-        <ShareModal
-          open={shareOpen}
-          onClose={() => setShareOpen(false)}
-          url={`https://selah.fm/artist/${slug}/tracks/${trackSlug(trackTitle)}`}
-          title={`Earn ${cpmPer1M || 'money'} promoting "${trackTitle}" by ${artistName} on Selah.fm`}
-        />
+        <section className="max-w-2xl mb-10">
+          <TrustBar />
+        </section>
 
-        {/* Related tracks carousel */}
+        {/* ════════════════════════════════════════ */}
+        {/* RELATED TRACKS */}
+        {/* ════════════════════════════════════════ */}
         {track.relatedTracks?.length > 0 && (
-          <section className="mt-16">
+          <section className="mb-10">
             <h2 className="text-lg font-semibold mb-4">More from {artistName}</h2>
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory">
               {track.relatedTracks.map((rt: any) => (
-                <Link
-                  key={rt.id}
-                  href={`/artist/${slug}/tracks/${trackSlug(rt.title || '')}`}
+                <Link key={rt.id} href={`/artist/${slug}/tracks/${trackSlug(rt.title || '')}`}
                   className="snap-start shrink-0 w-36 group">
                   <div className="aspect-square rounded-xl overflow-hidden bg-white/[0.04] mb-2">
                     {rt.cover_art_url ? (
@@ -459,48 +458,63 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
             </div>
           </section>
         )}
-      </main>
 
-      {/* ════════════════════════════════════════════════ */}
-      {/* STICKY MOBILE BAR */}
-      {/* ════════════════════════════════════════════════ */}
-      <motion.div
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3"
-      >
-        <div className="flex items-center justify-between">
-          <div className="min-w-0 flex-1 mr-3">
-            <p className="text-xs font-semibold truncate">{trackTitle}</p>
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span className="text-emerald-400 font-medium">{cpmPer1M}</span>
-              <span className="text-muted-foreground/30">·</span>
-              <span>{artistName}</span>
-              {submissions > 0 && (
-                <><span className="text-muted-foreground/30">·</span><span className="text-indigo-400">{submissions} sub{submissions !== 1 ? 's' : ''}</span></>
-              )}
+        {/* ════════════════════════════════════════ */}
+        {/* SHARE MODAL */}
+        {/* ════════════════════════════════════════ */}
+        <ShareModal
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          url={`https://selah.fm/artist/${slug}/tracks/${trackSlug(trackTitle)}`}
+          title={`Earn ${cpmPer1M || 'money'} promoting "${trackTitle}" by ${artistName} on Selah.fm`}
+        />
+
+        {/* ════════════════════════════════════════ */}
+        {/* STICKY MOBILE BAR */}
+        {/* ════════════════════════════════════════ */}
+        <motion.div
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          className="fixed bottom-0 inset-x-0 z-50 block bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3 shadow-2xl"
+        >
+          <div className="flex items-center justify-between max-w-4xl mx-auto">
+            <div className="min-w-0 flex-1 mr-3">
+              <p className="text-xs font-semibold truncate">{trackTitle}</p>
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                <span className="text-emerald-400 font-medium">{cpmPer1M || 'CPM not set'}</span>
+                <span className="text-muted-foreground/30">·</span>
+                <span>{artistName}</span>
+                {submissions > 0 && (
+                  <><span className="text-muted-foreground/30">·</span><span className="text-indigo-400">{submissions} sub{submissions !== 1 ? 's' : ''}</span></>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Link href={`/checkout?campaignId=${track.id}`}
+                className="px-4 py-2.5 text-xs font-semibold rounded-xl border border-white/[0.08] text-muted-foreground hover:text-white transition-all flex items-center gap-1.5">
+                <DollarSign size={14} /> Support
+              </Link>
+              <button onClick={() => setJoinOpen(true)}
+                className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
+                  active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
+                <Sparkles size={14} />
+                Submit
+              </button>
             </div>
           </div>
-          <div className="flex gap-2 shrink-0">
-            <button onClick={() => setJoinOpen(true)}
-              className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
-              <Sparkles size={14} />
-              Submit video
-            </button>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
-      {/* Earn modal (for when no campaign exists yet) */}
-      {/* Earn modal — track.id is the campaign UUID */}
-      <EarnModal
-        open={joinOpen}
-        campaignId={track.id || ""}
-        onClose={() => setJoinOpen(false)}
-        trackTitle={trackTitle}
-        cpmCents={track.cpm_rate_cents || 0}
-      />
+        {/* ════════════════════════════════════════ */}
+        {/* EARN MODAL */}
+        {/* ════════════════════════════════════════ */}
+        <EarnModal
+          open={joinOpen}
+          campaignId={track.id || ""}
+          onClose={() => setJoinOpen(false)}
+          trackTitle={trackTitle}
+          cpmCents={track.cpm_rate_cents || 0}
+        />
+      </main>
     </div>
   );
 }
