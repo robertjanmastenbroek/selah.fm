@@ -18,6 +18,10 @@ export async function GET() {
     const [artistCount] = await sql`SELECT COUNT(*)::int as count FROM users WHERE is_artist = true`;
     const [creatorCount] = await sql`SELECT COUNT(*)::int as count FROM users WHERE is_creator = true`;
 
+    // Database size counts
+    const [dbArtists] = await sql`SELECT COUNT(*)::int as count FROM discovered_artists`;
+    const [dbTracks] = await sql`SELECT COUNT(*)::int as count FROM artist_tracks WHERE enabled = true`;
+
     // Funded campaigns (those with actual budget — the honest count)
     const [campaignCount] = await sql`SELECT COUNT(*)::int as count FROM campaigns WHERE status = 'active' AND total_budget_cents > 0`;
 
@@ -83,6 +87,9 @@ export async function GET() {
       totalDepositedCents,
       donors: donorCount,
       totalDonatedCents,
+      // Database size
+      totalArtists: dbArtists?.count || 0,
+      totalTracks: dbTracks?.count || 0,
     });
     // Cache for 60s (stale-while-revalidate for 300s) — stats change slowly
     response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
@@ -94,6 +101,7 @@ export async function GET() {
       totalSubmissions: 0, approvedSubmissions: 0,
       totalViews: 0, totalPaidCents: 0, paidCents: 0, processingCents: 0,
       totalDepositedCents: 0, donors: 0, totalDonatedCents: 0,
+      totalArtists: 0, totalTracks: 0,
     });
   }
 }

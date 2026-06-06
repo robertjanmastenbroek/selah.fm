@@ -321,9 +321,11 @@ export async function GET(request: Request) {
             RETURNING *
           `;
 
-          // Store image in campaign_images table
+          // Upload cover art to Supabase Storage
           if (imageData) {
-            await sql`INSERT INTO campaign_images (campaign_id, data, mime) VALUES (${campaign.id}, ${imageData}, ${imageMime})`;
+            const { uploadCampaignImage } = await import('@/lib/upload-campaign-image');
+            const storageUrl = await uploadCampaignImage(imageData, imageMime, campaign.id);
+            await sql`UPDATE campaigns SET cover_art_url = ${storageUrl} WHERE id = ${campaign.id}`;
           }
 
           // Create claim code

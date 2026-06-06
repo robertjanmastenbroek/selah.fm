@@ -205,18 +205,12 @@ export async function PATCH(
       RETURNING *
     `;
 
-    // Store/update image in campaign_images table and set API URL
+    // Upload cover art to Supabase Storage
     if (patchImageBuffer) {
-      await sql`
-        INSERT INTO campaign_images (campaign_id, data, mime)
-        VALUES (${campaignId}::uuid, ${patchImageBuffer}, ${patchImageMime})
-        ON CONFLICT (campaign_id) DO UPDATE SET data = EXCLUDED.data, mime = EXCLUDED.mime
-      `;
-      const ext = patchImageMime.includes('png') ? 'png' : 'jpg';
-      const shortId = campaignId.replace(/-/g, '').slice(0, 12);
-      const apiUrl = `/api/images/campaign/${shortId}.${ext}`;
-      await sql`UPDATE campaigns SET cover_art_url = ${apiUrl} WHERE id = ${campaignId}`;
-      result[0].cover_art_url = apiUrl;
+      const { uploadCampaignImage } = await import('@/lib/upload-campaign-image');
+      const storageUrl = await uploadCampaignImage(patchImageBuffer, patchImageMime, campaignId);
+      await sql`UPDATE campaigns SET cover_art_url = ${storageUrl} WHERE id = ${campaignId}`;
+      result[0].cover_art_url = storageUrl;
     }
 
     return NextResponse.json(result[0]);

@@ -3,34 +3,27 @@ import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+/** Redirect old /images/campaigns/{filename} requests to Storage or fallback */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { filename: string } }
 ) {
   const { filename } = params;
   if (!filename) return new NextResponse('Not found', { status: 404 });
 
   try {
-    const [row] = await sql`
-      SELECT ci.data, ci.mime FROM campaign_images ci
-      JOIN campaigns c ON c.id = ci.campaign_id
-      WHERE c.cover_art_url LIKE ${'%' + filename}
+    const [campaign] = await sql`
+      SELECT cover_art_url FROM campaigns
+      WHERE cover_art_url LIKE ${'%' + filename}
       LIMIT 1
     `;
 
-    if (!row?.data) {
-      return new NextResponse('Not found', { status: 404 });
+    if (campaign?.cover_art_url?.startsWith('http')) {
+      return NextResponse.redirect(campaign.cover_art_url, 308);
     }
-
-    const mime = row.mime || 'image/jpeg';
-
-    return new NextResponse(row.data, {
-      headers: {
-        'Content-Type': mime,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-      },
-    });
   } catch {
-    return new NextResponse('Server error', { status: 500 });
+    // Fall through to og-image
   }
+
+  return NextResponse.redirect('https://selah.fm/images/og-image.jpg', 308);
 }

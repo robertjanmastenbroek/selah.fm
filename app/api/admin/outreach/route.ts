@@ -281,12 +281,11 @@ async function runCreateCampaign(artistId: string) {
     RETURNING *
   `;
 
-  // Store image in campaign_images table (persistent, survives deploys)
+  // Upload cover art to Supabase Storage
   if (imageData) {
-    await sql`
-      INSERT INTO campaign_images (campaign_id, data, mime)
-      VALUES (${campaign.id}, ${imageData}, ${imageMime})
-    `;
+    const { uploadCampaignImage } = await import('@/lib/upload-campaign-image');
+    const storageUrl = await uploadCampaignImage(imageData, imageMime, campaign.id);
+    await sql`UPDATE campaigns SET cover_art_url = ${storageUrl} WHERE id = ${campaign.id}`;
   }
 
   // Generate claim code
@@ -694,18 +693,9 @@ async function repairCampaignImages() {
     if (sourceUrl) {
       const result = await downloadImage(sourceUrl);
       if (result) {
-        const ext = sourceUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)?.[1] || 'jpg';
-        const filename = `campaign-${crypto.randomUUID().slice(0, 8)}.${ext}`;
-        const imagePath = `/images/campaigns/${filename}`;
-
-        // Store image binary in campaign_images table (survives redeploys)
-        await sql`
-          INSERT INTO campaign_images (campaign_id, data, mime)
-          VALUES (${c.id}::uuid, ${result.buffer}, ${result.mime})
-          ON CONFLICT (campaign_id) DO UPDATE SET data = EXCLUDED.data, mime = EXCLUDED.mime
-        `;
-
-        await sql`UPDATE campaigns SET cover_art_url = ${imagePath} WHERE id = ${c.id}`;
+        const { uploadCampaignImage } = await import('@/lib/upload-campaign-image');
+        const storageUrl = await uploadCampaignImage(result.buffer, result.mime, c.id);
+        await sql`UPDATE campaigns SET cover_art_url = ${storageUrl} WHERE id = ${c.id}`;
         if (originalUrl?.startsWith('http') && currentUrl !== originalUrl) {
           restored++;
         } else {

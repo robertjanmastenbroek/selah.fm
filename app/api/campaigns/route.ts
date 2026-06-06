@@ -240,7 +240,7 @@ export async function POST(request: Request) {
     const slugSource = `${artistName}-${trackTitle}`.toLowerCase().replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').slice(0, 100);
     const uniqueSlug = slugSource + '-' + crypto.randomUUID().slice(0, 4);
 
-    // Handle cover art: store binary in campaign_images, serve from API
+    // Handle cover art: upload to Supabase Storage
     let finalCoverArt = coverArtUrl || null;
     let imageBuffer: Buffer | null = null;
     let imageMime = 'image/jpeg';
@@ -279,14 +279,12 @@ export async function POST(request: Request) {
       RETURNING *
     `;
 
-    // Store image in campaign_images and update cover_art_url to API format
+    // Upload cover art to Supabase Storage
     if (imageBuffer) {
-      await sql`INSERT INTO campaign_images (campaign_id, data, mime) VALUES (${result[0].id}, ${imageBuffer}, ${imageMime})`;
-      const ext = imageMime.includes('png') ? 'png' : 'jpg';
-      const shortId = result[0].id.replace(/-/g, '').slice(0, 12);
-      const apiUrl = `/api/images/campaign/${shortId}.${ext}`;
-      await sql`UPDATE campaigns SET cover_art_url = ${apiUrl} WHERE id = ${result[0].id}`;
-      result[0].cover_art_url = apiUrl;
+      const { uploadCampaignImage } = await import('@/lib/upload-campaign-image');
+      const storageUrl = await uploadCampaignImage(imageBuffer, imageMime, result[0].id);
+      await sql`UPDATE campaigns SET cover_art_url = ${storageUrl} WHERE id = ${result[0].id}`;
+      result[0].cover_art_url = storageUrl;
     }
 
     // Server-side GA tracking

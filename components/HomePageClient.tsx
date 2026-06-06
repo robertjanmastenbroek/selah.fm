@@ -115,7 +115,7 @@ export default function RootPage() {
   const bgRightRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
   const [stats, setStats] = useState({
-    artists: 0, creators: 0, activeCampaigns: 0,
+    artists: 0, creators: 0, activeCampaigns: 0, totalArtists: 0, totalTracks: 0,
     totalPaidCents: 0, totalDepositedCents: 0, approvedSubmissions: 0,
     totalViews: 0
   });
@@ -258,11 +258,15 @@ export default function RootPage() {
           <motion.div className="flex items-center justify-center gap-6 sm:gap-10 flex-wrap"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
             <div className="text-center">
-              <div className="text-[32px] md:text-[40px] font-bold text-white tracking-tight">{formatCount(stats.artists || 2158)}</div>
+              <div className="text-[32px] md:text-[40px] font-bold text-white tracking-tight">{formatCount(stats.totalArtists || 0)}+</div>
               <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">{t('artistsInDb')}</div>
             </div>
             <div className="text-center">
-              <div className="text-[32px] md:text-[40px] font-bold text-[#818CF8] tracking-tight">{formatCount(stats.totalViews || 0)}</div>
+              <div className="text-[32px] md:text-[40px] font-bold text-[#818CF8] tracking-tight">{formatCount(stats.totalTracks || 0)}+</div>
+              <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Tracks</div>
+            </div>
+            <div className="text-center">
+              <div className="text-[32px] md:text-[40px] font-bold text-[#22C55E] tracking-tight">{formatCount(stats.totalViews || 0)}</div>
               <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">{t('verifiedViews')}</div>
             </div>
             {stats.totalDepositedCents > 0 && (

@@ -307,8 +307,8 @@ export default function BrowseClient() {
       if (selectedGenre) p.set('genre', selectedGenre);
       if (searchQuery) p.set('search', searchQuery);
       p.set('sort', selectedSort); p.set('limit', '50');
-      const res = await fetch(`/api/campaigns?${p.toString()}`, { credentials: 'omit' });
-      if (res.ok) { const d = await res.json(); setTracks(d.campaigns || []); setTotalTracks(d.total || 0); }
+      const res = await fetch(`/api/tracks?${p.toString()}`, { credentials: 'omit' });
+      if (res.ok) { const d = await res.json(); setTracks(d.tracks || []); setTotalTracks(d.total || 0); }
     } catch {} finally { setLoadingTracks(false); }
   };
 
@@ -320,11 +320,11 @@ export default function BrowseClient() {
       p.set('page', String(page + 1)); p.set('limit', '20');
       if (selectedGenre) p.set('genre', selectedGenre);
       if (searchQuery) p.set('search', searchQuery);
-      const endpoint = tab === 'artists' ? '/api/artists' : '/api/campaigns';
+      const endpoint = tab === 'artists' ? '/api/artists' : '/api/tracks';
       const res = await fetch(`${endpoint}?${p.toString()}`, { credentials: 'omit' });
       if (res.ok) {
         const d = await res.json();
-        const newItems = d.artists || d.campaigns || [];
+        const newItems = d.artists || d.tracks || [];
         if (newItems.length === 0) setHasMore(false);
         else {
           if (tab === 'artists') setArtists(prev => [...prev, ...newItems]);
