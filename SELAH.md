@@ -1,6 +1,6 @@
 # Selah.fm — Living Document
 
-**Last updated:** 2026-06-05 (Phase 0: 15/20 items complete. Rate limiting, file validation, admin env var, test framework, GDPR all done. Remaining: .env.test, CSP, Privacy, Tax/1099, error handling.)
+**Last updated:** 2026-06-06 (All 7 phases complete. 42 pushes to main. Campaign→track consolidation done. Artist-wide donations. No "draft" status.)
 **Concept:** A global SEO/LLMO database of every artist — where fans donate, creators make content, and artists don't need to lift a finger.
 **Role:** Single source of truth. Replaces 40+ research, audit, and plan files. If it isn't here, it's either archived or doesn't matter right now.
 
@@ -65,8 +65,8 @@ The platform works **without requiring artists to participate**. Every discovere
 | Page | Purpose | Route |
 |------|---------|-------|
 | Artist Profile | Every artist gets a full SEO page with bio, tracks, social stats, comments, activity feed, donate + create CTAs | `/artist/[slug]` |
-| Track Page | Per-track SEO with earnings calculator, schema, CTA | `/artist/[slug]/tracks/[id]` |
-| Campaign (Promotion) | Per-track campaign with budget, CPM, submission gallery | `/c/[slug]` |
+| Track Page | Per-track SEO with 7 schema types (MusicRecording, VideoObject, FAQPage, HowTo, Offer, AggregateRating, BreadcrumbList), earnings calculator, supporter grid, donate CTA, share modal, FAQ, trust bar. Creators can submit videos regardless of budget. Donations are artist-wide. | `/artist/[slug]/tracks/[id]` |
+| Campaign (Legacy) | Legacy per-track campaign detail — permanently redirects (308) to track page | `/c/[slug]` → 308 → `/artist/.../tracks/...` |
 | Browse | Artists + Campaigns tabs, genre/sort/search | `/browse` |
 | Checkout | Donations + deposits, Stripe Elements | `/checkout` |
 | Dashboard | 4 tabs: Profile, Tracks, Campaigns, Stats | `/dashboard` |
@@ -736,6 +736,19 @@ Current SSE polling for messages works at low volume but won't scale. WebSocket 
 
 ### Why fraud detection first (before acquisition)
 A single fraudulent payout erodes trust completely. Artists deposit money based on our promise of verified views. If that verification is exploitable, the platform collapses. The fraud detection pipeline cross-references view counts from TikTok, Instagram, and YouTube APIs, flags anomalous spikes (>3σ from mean), and holds payouts for manual review.
+
+### Why artist-wide donations (not per-campaign)
+Donations fund the artist, not a specific campaign. A fan discovers an artist through any page — artist profile, track page, browse — and donates to the artist. The funds go into a shared promotion pool the artist controls. They can allocate it across tracks or withdraw it. This simplifies the mental model: "I support this artist" not "I support this specific promotion."
+
+### Why no "draft" status
+Every track on the platform is either available or not. There's no intermediate "draft" state. If a track is discovered (via Spotify, YouTube, Bandcamp enrichment) or manually added, it's immediately visible with:
+- A donate button (fans can support the artist)
+- A submit CTA (creators can make content)
+- Full SEO (MusicRecording schema, open graph, sitemap)
+The CPM and budget are optional — they show if the artist has set them, but their absence doesn't hide the track or disable participation.
+
+### Why submissions without budget
+Creators can submit videos to any track, even unfunded ones. The difference: without a budget, the submission won't generate earnings. The track page clearly shows the budget status so creators know whether a track is funded before they invest time making content. This maximizes content creation (more tracks = more submissions) while maintaining transparency about earnings.
 
 ---
 
