@@ -380,10 +380,10 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
         {/* ════════════════════════════════════════ */}
         {/* SUPPORTERS / DONATIONS */}
         {/* ════════════════════════════════════════ */}
-        {track.total_budget_cents > 0 && (
-          <section className="mt-16 max-w-2xl">
-            <h2 className="text-lg font-semibold mb-3">Support this track</h2>
-            <SupporterGrid supporters={supporters} totalCount={supporterCount} />
+        <section className="mt-16 max-w-2xl">
+          <h2 className="text-lg font-semibold mb-3">Support this track</h2>
+          <SupporterGrid supporters={supporters} totalCount={supporterCount} />
+          {track.total_budget_cents > 0 && (
             <div className="mt-3 flex items-center gap-2">
               <div className="flex-1 h-2 rounded-full bg-white/[0.06] overflow-hidden">
                 <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500"
@@ -393,18 +393,18 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
                 ${((track.total_budget_cents - (track.budget_remaining_cents || track.total_budget_cents)) / 100).toFixed(0)} raised
               </span>
             </div>
-            <div className="mt-4 flex gap-2">
-              <Link href={`/checkout?campaignId=${track.id}`}
-                className="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold hover:bg-indigo-500/20 transition-colors">
-                Donate
-              </Link>
-              <button onClick={() => setShareOpen(true)}
-                className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-muted-foreground text-xs font-semibold hover:text-foreground transition-colors flex items-center gap-1.5">
-                <Share2 size={12} /> Share
-              </button>
-            </div>
-          </section>
-        )}
+          )}
+          <div className="mt-4 flex gap-2">
+            <Link href={`/checkout?campaignId=${track.id}`}
+              className="px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold hover:bg-indigo-500/20 transition-colors">
+              Donate
+            </Link>
+            <button onClick={() => setShareOpen(true)}
+              className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] text-muted-foreground text-xs font-semibold hover:text-foreground transition-colors flex items-center gap-1.5">
+              <Share2 size={12} /> Share
+            </button>
+          </div>
+        </section>
 
         {/* ════════════════════════════════════════ */}
         {/* TRUST BAR */}
