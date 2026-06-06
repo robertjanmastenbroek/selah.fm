@@ -297,24 +297,14 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
             {/* Earnings calculator — the #1 question creators have */}
             <EarningsCalculator cpmCents={track.cpm_rate_cents || 0} />
 
-            {/* Primary CTA */}
-            {track.campaign_slug ? (
-              <Link href={`/c/${track.campaign_slug}`}
-                className="block w-full py-4 text-center text-base font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                  active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)] shadow-lg shadow-indigo-500/20
-                  flex items-center justify-center gap-2 group">
-                <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                {cpmPer1M ? `Join campaign — earn ${cpmPer1M}/1M views` : 'Join campaign →'}
-              </Link>
-            ) : (
-              <button onClick={() => setJoinOpen(true)}
-                className="block w-full py-4 text-center text-base font-bold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white
-                  active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(34,197,94,0.4)] shadow-lg shadow-emerald-500/20
-                  flex items-center justify-center gap-2">
-                <Sparkles size={18} />
-                Create a video
-              </button>
-            )}
+            {/* Primary CTA — always opens EarnModal on the track page */}
+            <button onClick={() => setJoinOpen(true)}
+              className="block w-full py-4 text-center text-base font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
+                active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)] shadow-lg shadow-indigo-500/20
+                flex items-center justify-center gap-2 group">
+              <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
+              {cpmPer1M ? `Submit video — earn ${cpmPer1M}/1M views` : 'Submit video →'}
+            </button>
 
             {/* Trust bar */}
             <div className="flex flex-wrap gap-1.5">
@@ -420,29 +410,21 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
-            {track.campaign_slug ? (
-              <Link href={`/c/${track.campaign_slug}`}
-                className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                  active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
-                <Sparkles size={14} />
-                Join
-              </Link>
-            ) : (
-              <button onClick={() => setJoinOpen(true)}
-                className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white
-                  active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-1.5">
-                <Sparkles size={14} />
-                Create
-              </button>
-            )}
+            <button onClick={() => setJoinOpen(true)}
+              className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
+                active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
+              <Sparkles size={14} />
+              Submit video
+            </button>
           </div>
         </div>
       </motion.div>
 
       {/* Earn modal (for when no campaign exists yet) */}
+      {/* Earn modal — track.id is the campaign UUID */}
       <EarnModal
         open={joinOpen}
-        campaignId=""
+        campaignId={track.id || ""}
         onClose={() => setJoinOpen(false)}
         trackTitle={trackTitle}
         cpmCents={track.cpm_rate_cents || 0}

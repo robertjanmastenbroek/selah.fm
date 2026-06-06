@@ -137,14 +137,30 @@ export default async function TrackPage({ params }: Props) {
   const cpmPer1M = track.cpm_rate_cents ? `$${((track.cpm_rate_cents / 100) * 1000).toFixed(0)}` : null;
   const seoSlug = track.track_slug || params.id;
 
+  const cpm = track.cpm_rate_cents ? (track.cpm_rate_cents / 100).toFixed(2) : null;
+  const canonicalUrl = `https://selah.fm/artist/${params.slug}/tracks/${seoSlug}`;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'MusicRecording', name: trackTitle, byArtist: { '@type': 'MusicGroup', name: artistName }, image: track.cover_art_url || track.spotify_image_url, url: `https://selah.fm/artist/${params.slug}/tracks/${seoSlug}`, datePublished: track.created_at ? new Date(track.created_at).toISOString().split('T')[0] : undefined },
+      { '@type': 'MusicRecording', name: trackTitle, byArtist: { '@type': 'MusicGroup', name: artistName }, image: track.cover_art_url || track.spotify_image_url, url: canonicalUrl, datePublished: track.created_at ? new Date(track.created_at).toISOString().split('T')[0] : undefined },
+      { '@type': 'VideoObject', name: `Promote "${trackTitle}" by ${artistName}`, description: cpm ? `Submit a video and earn $${(parseFloat(cpm) * 1000).toFixed(0)} per 1M verified views promoting "${trackTitle}".` : `Join this campaign for "${trackTitle}" and earn per verified view.`, thumbnailUrl: track.cover_art_url || track.spotify_image_url, embedUrl: canonicalUrl, uploadDate: track.created_at || new Date().toISOString() },
+      ...(cpm ? [{ '@type': 'Offer', name: `Earn $${(parseFloat(cpm) * 1000).toFixed(0)} per 1M views promoting "${trackTitle}"`, price: cpm, priceCurrency: 'USD', description: `Creators earn per verified view. Artists pay CPM + 20% platform fee.${track.total_budget_cents ? ` Budget: $${(track.total_budget_cents / 100).toFixed(0)}.` : ''}`, url: canonicalUrl }] : []),
+      { '@type': 'FAQPage', mainEntity: [
+        { '@type': 'Question', name: `How do I earn money promoting "${trackTitle}"?`, acceptedAnswer: { '@type': 'Answer', text: `Create a short video featuring "${trackTitle}" on TikTok, Instagram Reels, or YouTube Shorts. Submit your video to this campaign. The artist approves and you earn per verified view.` } },
+        { '@type': 'Question', name: 'How much can I earn per video?', acceptedAnswer: { '@type': 'Answer', text: cpm ? `At this campaign's rate, you earn $${(parseFloat(cpm) * 1000).toFixed(0)} per 1 million verified views. A video with 10,000 views earns about $${(parseFloat(cpm) * 10).toFixed(2)}.` : 'Earnings depend on the CPM rate set by the artist and how many views your video gets.' } },
+        { '@type': 'Question', name: 'What platforms can I post my video on?', acceptedAnswer: { '@type': 'Answer', text: 'TikTok, Instagram Reels, and YouTube Shorts are all supported. Post wherever your audience is — views count across all platforms.' } },
+        { '@type': 'Question', name: 'How does the artist pay me?', acceptedAnswer: { '@type': 'Answer', text: 'Artists pay through Selah.fm for verified views only. You connect your Stripe account and get paid automatically when your views are verified.' } },
+      ]},
+      { '@type': 'HowTo', name: `How to earn money promoting "${trackTitle}" by ${artistName}`, description: cpm ? `Create a short video with "${trackTitle}", submit it, and earn $${(parseFloat(cpm) * 1000).toFixed(0)} per 1M verified views.` : `Create a short video with "${trackTitle}", submit it, and earn per verified view.`, step: [
+        { '@type': 'HowToStep', position: 1, name: 'Download or find the audio', text: `Search for "${trackTitle}" on TikTok, Instagram, or YouTube and use the official audio.` },
+        { '@type': 'HowToStep', position: 2, name: 'Create your video', text: 'Record a vertical 9:16 video (15-60 seconds) using the official audio. Make sure your account is public.' },
+        { '@type': 'HowToStep', position: 3, name: 'Submit and earn', text: cpm ? `Post your video publicly, paste the link in your submission. Earn $${(parseFloat(cpm) * 1000).toFixed(0)} per 1M verified views — paid automatically via Stripe.` : 'Post your video publicly, paste the link. Earn per verified view — paid automatically via Stripe.' },
+      ]},
       { '@type': 'BreadcrumbList', itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Selah.fm', item: 'https://selah.fm' },
         { '@type': 'ListItem', position: 2, name: artistName, item: `https://selah.fm/artist/${params.slug}` },
-        { '@type': 'ListItem', position: 3, name: trackTitle, item: `https://selah.fm/artist/${params.slug}/tracks/${params.id}` },
+        { '@type': 'ListItem', position: 3, name: trackTitle, item: canonicalUrl },
       ]},
     ],
   };
