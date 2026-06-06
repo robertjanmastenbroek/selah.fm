@@ -347,7 +347,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
             </h2>
             <div className="grid gap-2">
               {campaigns.map((c: any) => (
-                <Link key={c.id} href={`/c/${c.slug}`}
+                <Link key={c.id} href={`/artist/${slug}/tracks/${trackSlug(c.track_title)}`}
                   className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/20 hover:bg-white/[0.04] transition-all group">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate group-hover:text-emerald-300 transition-colors">{c.track_title}</p>
@@ -489,7 +489,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                               </Link>
                               {/* Submit / Create CTA */}
                               {hasActiveCampaign ? (
-                                <Link href={`/c/${campaigns.find((c: any) => c.track_title?.toLowerCase() === track.track_title?.toLowerCase())?.slug || track.track_title}`}
+                                <Link href={`/artist/${slug}/tracks/${trackSlug(track.track_title || track.title || '')}`}
                                   className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/20 hover:bg-primary/[0.04] transition-all">
                                   Submit
                                 </Link>

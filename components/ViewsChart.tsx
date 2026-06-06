@@ -230,7 +230,10 @@ export default function DashboardChart({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.08 }}
                     className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer"
-                    onClick={() => window.location.href = `/c/${c.slug || c.id}`}
+                    onClick={() => {
+                      const trackSlug = (c.track_title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'track';
+                      window.location.href = c.artist_slug ? `/artist/${c.artist_slug}/tracks/${trackSlug}` : `/c/${c.slug || c.id}`;
+                    }}
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-medium truncate">{c.track_title}</p>

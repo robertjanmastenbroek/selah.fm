@@ -81,13 +81,15 @@ async function getCampaignsByGenre(genreSlug: string) {
       COALESCE(da.artist_name, u.display_name) as artist_name,
       c.artist_id,
       u.is_creator as artist_is_creator,
-      u.profile_image_url as artist_avatar
+      u.profile_image_url as artist_avatar,
+      ap.slug as artist_slug
     FROM campaigns c
     LEFT JOIN campaign_stats v ON v.id = c.id
     LEFT JOIN users u ON u.id = c.artist_id
     LEFT JOIN campaign_claims cc ON cc.campaign_id = c.id
     LEFT JOIN discovered_artists da ON da.id = cc.discovered_artist_id
     LEFT JOIN artist_audits aa ON aa.discovered_artist_id = da.id
+    LEFT JOIN artist_profiles ap ON ap.artist_id = da.id
     WHERE c.status IN ('active', 'draft')
       AND (
         da.genre ILIKE '%' || $1 || '%'
@@ -213,7 +215,7 @@ export default async function GenrePage({ params }: Props) {
             return (
               <Link
                 key={c.id}
-                href={`/c/${c.slug || c.id}`}
+                href={c.artist_slug ? `/artist/${c.artist_slug}/tracks/${c.track_title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'track'}` : `/c/${c.slug || c.id}`}
                 className="h-full flex flex-col rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden
                   transition-all duration-200 hover:border-[#4338CA]/15 hover:bg-white/[0.04]"
               >

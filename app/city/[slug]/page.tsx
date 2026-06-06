@@ -44,9 +44,10 @@ export default async function CityPage({ params }: Props) {
 
   // Find campaigns from artists in this city
   const campaigns = await sql`
-    SELECT c.*, u.display_name as artist_name
+    SELECT c.*, u.display_name as artist_name, ap.slug as artist_slug
     FROM campaigns c
     JOIN users u ON u.id = c.artist_id
+    LEFT JOIN artist_profiles ap ON ap.artist_id = c.artist_id
     WHERE c.status IN ('active', 'draft')
       AND (u.bio ILIKE ${'%' + cityName + '%'} OR u.instagram_handle IS NOT NULL)
     ORDER BY c.created_at DESC
@@ -82,7 +83,7 @@ export default async function CityPage({ params }: Props) {
 
         <div className="grid gap-4 sm:gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
           {campaigns.map((c: any) => (
-            <Link key={c.id} href={`/c/${c.slug || c.id}`} className="h-full flex flex-col rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-[#4338CA]/15 hover:bg-white/[0.04]">
+            <Link key={c.id} href={c.artist_slug ? `/artist/${c.artist_slug}/tracks/${c.track_title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'track'}` : `/c/${c.slug || c.id}`} className="h-full flex flex-col rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-[#4338CA]/15 hover:bg-white/[0.04]">
               <div className="p-4">
                 <p className="text-[11px] text-muted-foreground mb-1">{c.artist_name || 'Artist'}</p>
                 <h3 className="text-sm font-semibold" style={{ fontFamily: 'Righteous, system-ui, sans-serif' }}>{c.track_title}</h3>

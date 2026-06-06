@@ -55,10 +55,11 @@ export default function CommandPalette() {
       const campRes = await fetch(`/api/campaigns?search=${encodeURIComponent(q)}&limit=5`);
       const campData = await campRes.json();
       (campData.campaigns || []).forEach((c: any) => {
+        const trackSlug = (c.track_title || c.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'track';
         allResults.push({
           type: 'campaign', label: c.track_title || c.title || 'Campaign',
           sublabel: c.artist_name || `${((c.cpm_rate_cents || 0) / 100).toFixed(2)} CPM`,
-          href: `/c/${c.slug || c.id}`,
+          href: c.artist_slug ? `/artist/${c.artist_slug}/tracks/${trackSlug}` : `/c/${c.slug || c.id}`,
         });
       });
     } catch {}
