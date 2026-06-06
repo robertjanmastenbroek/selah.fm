@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Music, Film, Eye, Sparkles, ChevronRight, ChartBar, ExternalLink, Heart, Bookmark, Check } from 'lucide-react';
 import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
@@ -223,30 +223,6 @@ function trackSlug(title: string): string {
 
 export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
   const [joinOpen, setJoinOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [supporters, setSupporters] = useState<any[]>([]);
-  const [donationTotal, setDonationTotal] = useState(0);
-  const scrollY = useRef(0);
-
-  // Track scroll position for floating CTA
-  useEffect(() => {
-    const onScroll = () => { scrollY.current = window.scrollY; };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // Fetch donation data
-  useEffect(() => {
-    if (!track?.id) return;
-    fetch(`/api/campaigns/${track.id}`)
-      .then(r => r.json())
-      .then(d => {
-        if (!d.error && d.donations) {
-          setSupporters(d.donations.supporters || []);
-          setDonationTotal((d.donations.totalCents || 0) / 100);
-        }
-      }).catch(() => {});
-  }, [track?.id]);
 
   const artistName = track.artist_name || 'Artist';
   const trackTitle = track.title || 'Untitled';
@@ -299,20 +275,6 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
           </div>
         </div>
 
-        {/* Social proof bar */}
-        <div className="rounded-2xl bg-gradient-to-r from-white/[0.03] to-indigo-500/[0.02] border border-white/[0.06] p-4 mb-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-1.5"><Film size={14} className="text-indigo-400" /><span className="font-bold text-sm">{submissions || 0}</span><span className="text-xs text-muted-foreground">submissions</span></div>
-            <div className="flex items-center gap-1.5"><Eye size={14} className="text-emerald-400" /><span className="font-bold text-sm">{views?.toLocaleString() || '0'}</span><span className="text-xs text-muted-foreground">views</span></div>
-            {donationTotal > 0 && <div className="flex items-center gap-1.5"><DollarSign size={14} className="text-amber-400" /><span className="font-bold text-sm">${donationTotal.toFixed(0)}</span><span className="text-xs text-muted-foreground">raised</span></div>}
-          </div>
-        </div>
-
-        {/* Live ticker */}
-        <div className="mb-6">
-          <LiveTicker campaignId={track.id} />
-        </div>
-
         {/* Stats grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
           {[
@@ -344,15 +306,6 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
               {cpmPer1M ? `Submit video — earn ${cpmPer1M}/1M views` : 'Submit video →'}
             </button>
 
-            {/* Secondary: Support this campaign */}
-            <Link href={`/checkout?type=donation&campaignId=${track.id}`}
-              className="block w-full py-3.5 text-sm font-semibold rounded-xl border border-white/[0.12] bg-white/[0.02] text-muted-foreground
-                hover:text-white hover:bg-white/[0.05] hover:border-[#4338CA]/30 active:scale-[0.98] transition-all
-                flex items-center justify-center gap-2">
-              <Heart size={16} className="text-[#4338CA]/60" />
-              Support this track
-            </Link>
-
             {/* Trust bar */}
             <div className="flex flex-wrap gap-1.5">
               {[
@@ -371,21 +324,6 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
           </div>
 
           <div className="md:col-span-2 space-y-3">
-            {/* Supporter avatars */}
-            {supporters.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex -space-x-2">
-                  {supporters.slice(0, 8).map((s: any, i: number) => (
-                    <div key={i} className="w-7 h-7 rounded-full border-2 border-[#0F0F23] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0"
-                      title={`${s.donor_name || 'Anonymous'}${s.amount_cents ? ` · ${(s.amount_cents / 100).toFixed(2)}` : ''}`}>
-                      {(s.donor_name || '?')[0].toUpperCase()}
-                    </div>
-                  ))}
-                </div>
-                <span className="text-xs text-muted-foreground"><strong className="text-white font-semibold">{supporters.length}</strong> supporter{supporters.length !== 1 ? 's' : ''}</span>
-              </div>
-            )}
-
             {/* Streaming links */}
             {streamingLinks.length > 0 && (
               <div>
@@ -404,13 +342,6 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
             {/* Save to collection */}
             <SaveToCollection trackId={track.id} trackTitle={trackTitle} artistName={artistName} />
 
-            {/* Share button */}
-            <button onClick={() => setShareOpen(true)}
-              className="flex items-center justify-center gap-1.5 w-full p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground">
-              <Share2 size={14} />
-              Share this track
-            </button>
-
             {/* Back to artist */}
             <Link href={`/artist/${slug}`}
               className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground">
@@ -426,36 +357,6 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
           <p>"{trackTitle}" is a track by {artistName} available on Selah.fm. Creators can make short-form videos featuring this track and earn per verified view.</p>
           {cpmPer1M && <p>At the current CPM rate of ${cpm.toFixed(2)} per 1,000 views, creators can earn {cpmPer1M} for every 1 million verified views their video receives.</p>}
           {submissions > 0 && <p>{submissions} creator{submissions !== 1 ? 's have' : ' has'} already submitted videos for this track, generating {views?.toLocaleString() || '0'} verified views.</p>}
-        </section>
-
-        {/* FAQ */}
-        <section className="mt-16">
-          <h2 className="text-lg font-semibold mb-4">Frequently asked questions</h2>
-          <div className="space-y-2">
-            {[
-              { q: 'How do I earn money promoting this track?', a: `Create a short video (15-60 seconds) featuring the track on TikTok, Instagram Reels, or YouTube Shorts. Submit your video to this campaign. If the artist approves it, you earn per verified view.` },
-              { q: 'How much will I actually earn?', a: `Your earnings depend on the CPM rate and how many verified views your video gets. You keep 80% of the earnings. Use the calculator above to estimate.` },
-              { q: 'Do I need a following to participate?', a: 'No. CPM-based promotion pays per view, not per follower. Quality content earns more than follower count.' },
-              { q: 'How do I get paid?', a: 'Connect your Stripe account to Selah.fm. Earnings are automatically deposited when your video is approved and views are verified.' },
-            ].map((faq, i) => (
-              <details key={i} className="group rounded-xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
-                <summary className="flex items-center justify-between w-full p-4 text-left text-sm font-medium hover:bg-white/[0.02] transition-colors cursor-pointer list-none">
-                  <span>{faq.q}</span>
-                  <ChevronDown size={16} className="text-muted-foreground shrink-0 ml-3 transition-transform group-open:rotate-180" />
-                </summary>
-                <p className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
-              </details>
-            
-                <div key={i} className="rounded-xl bg-white/[0.02] border border-white/[0.06] overflow-hidden">
-                  <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-4 text-left text-sm font-medium hover:bg-white/[0.02] transition-colors">
-                    <span>{faq.q}</span>
-                    <ChevronDown size={16} className={`text-muted-foreground shrink-0 ml-3 transition-transform ${open ? 'rotate-180' : ''}`} />
-                  </button>
-                  {open && <p className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed">{faq.a}</p>}
-                </div>
-              );
-            })}
-          </div>
         </section>
 
         {/* Related tracks carousel */}
@@ -487,80 +388,6 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
           </section>
         )}
       </main>
-
-      {/* ════════════════════════════════════════════════ */}
-      {/* FLOATING DESKTOP CTA */}
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: scrollY.current > 400 ? 0 : 100, opacity: scrollY.current > 400 ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="hidden md:flex fixed bottom-6 right-6 z-40 bg-[#0F0F23]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl p-4 items-center gap-4"
-      >
-        <div className="min-w-0 max-w-[200px]">
-          <p className="text-xs font-semibold truncate">{trackTitle}</p>
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span>{artistName}</span>
-            {submissions > 0 && <><span className="text-muted-foreground/30">·</span><span className="text-indigo-400">{submissions} sub</span></>}
-          </div>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <Link href={`/checkout?type=donation&campaignId=${track.id}`}
-            className="px-3.5 py-2 text-[11px] font-semibold rounded-xl border border-white/[0.12] bg-white/[0.02] text-muted-foreground hover:text-white transition-all flex items-center gap-1.5 active:scale-95">
-            <Heart size={12} className="text-indigo-400/60" /> Support
-          </Link>
-          <button onClick={() => setJoinOpen(true)}
-            className="px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white active:scale-95 transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
-            <Sparkles size={13} />
-            {cpmPer1M ? `Earn ${cpmPer1M}/1M` : 'Submit video'}
-          </button>
-        </div>
-      </motion.div>
-
-      {/* ════════════════════════════════════════════════ */}
-      {/* SHARE MODAL */}
-      {/* ════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {shareOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setShareOpen(false)}>
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
-            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-              className="relative z-10 w-full sm:max-w-md max-h-[85vh] sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl overflow-y-auto"
-              onClick={e => e.stopPropagation()}>
-              <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-10 h-1 rounded-full bg-white/20" /></div>
-              <div className="p-6 space-y-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">Share this track</h3>
-                  <button onClick={() => setShareOpen(false)} className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"><X size={20} className="text-muted-foreground" /></button>
-                </div>
-                <div className="grid grid-cols-4 gap-3">
-                  {[
-                    { name: 'Copy Link', icon: '📋', action: () => { navigator.clipboard.writeText(window.location.href); } },
-                    { name: 'X', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`"${trackTitle}" by ${artistName} on Selah.fm`)}&url=${encodeURIComponent(window.location.href)}` },
-                    { name: 'WhatsApp', href: `https://wa.me/?text=${encodeURIComponent(`"${trackTitle}" by ${artistName} - ${window.location.href}`)}` },
-                  ].map((opt, i) => {
-                    if (opt.action) return (
-                      <button key={i} onClick={() => { opt.action(); setShareOpen(false); }}
-                        className="flex flex-col items-center gap-2 py-3 rounded-xl hover:bg-white/[0.04] transition-colors active:scale-[0.95]">
-                        <div className="w-12 h-12 rounded-full bg-white/[0.06] flex items-center justify-center text-xl">{opt.icon}</div>
-                        <span className="text-[10px] text-muted-foreground">{opt.name}</span>
-                      </button>
-                    );
-                    return (
-                      <a key={i} href={opt.href} target="_blank" rel="noopener noreferrer"
-                        className="flex flex-col items-center gap-2 py-3 rounded-xl hover:bg-white/[0.04] transition-colors active:scale-[0.95]">
-                        <div className="w-12 h-12 rounded-full bg-white/[0.06] flex items-center justify-center text-xl">{opt.icon}</div>
-                        <span className="text-[10px] text-muted-foreground">{opt.name}</span>
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ════════════════════════════════════════════════ */}
       {/* STICKY MOBILE BAR */}
