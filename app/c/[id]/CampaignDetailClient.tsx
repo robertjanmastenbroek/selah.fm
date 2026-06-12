@@ -535,7 +535,7 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
   count: number; submissions: any[];
 }) {
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['About', 'Requirements', 'Submissions', 'FAQ'];
+  const tabs = ['About', 'Requirements', 'FAQ'];
 
   return (
     <div className="w-full">
@@ -665,11 +665,9 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
           </div>
         )}
 
-        {activeTab === 2 && (
-          <SubmissionsFeed campaignId={campaign.id} count={count} />
-        )}
+        {/* Submissions tab removed — individual subs hidden */}
 
-        {activeTab === 3 && (
+        {activeTab === 2 && (
           <FAQAccordion />
         )}
       </div>
