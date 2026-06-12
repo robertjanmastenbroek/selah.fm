@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { fetcher, swrConfig } from '@/lib/swr-config';
-import { LayoutDashboard, Banknote, Settings, LogOut, Search, Menu, MessageCircle, Sparkles, Mail, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Banknote, Settings, LogOut, Search, Menu, MessageCircle, Sparkles, Mail, TrendingUp, LifeBuoy } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 
 export default function Header() {
@@ -133,6 +133,7 @@ export default function Header() {
                   <div className="py-1">
                     <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={() => setOpen(false)} />
                     <NavItem href="/messages" icon={MessageCircle} label="Messages" onClick={() => setOpen(false)} />
+                    <NavItem href="/faq" icon={LifeBuoy} label="Support" onClick={() => setOpen(false)} />
                     <NavItem href="/earnings" icon={Banknote} label="Leaderboard" onClick={() => setOpen(false)} />
                   </div>
 
