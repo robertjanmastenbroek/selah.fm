@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const [tiktok, setTikTok] = useState('');
   const [instagram, setInstagram] = useState('');
   const [youtube, setYouTube] = useState('');
-  const [facebook, setFacebook] = useState('');
+  // Facebook removed — focusing on 3 platforms
   const [profileImage, setProfileImage] = useState('');
   const [isArtistAlso, setIsArtistAlso] = useState(true);
   const [isCreatorAlso, setIsCreatorAlso] = useState(true);
@@ -46,7 +46,7 @@ export default function SettingsPage() {
     setTikTok(profile.tiktok_handle || '');
     setInstagram(profile.instagram_handle || '');
     setYouTube(profile.youtube_handle || '');
-    setFacebook(profile.facebook_handle || '');
+    // Facebook removed
     setProfileImage(profile.profile_image_url || '');
     setIsArtistAlso(profile.is_artist ?? (profile.type === 'artist'));
     setIsCreatorAlso(profile.is_creator ?? (profile.type === 'creator'));
@@ -80,7 +80,7 @@ export default function SettingsPage() {
         method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, bio, genres, preferredCpm: cpm,
-          tiktok_handle: tiktok||null, instagram_handle: instagram||null, youtube_handle: youtube||null, facebook_handle: facebook||null,
+          tiktok_handle: tiktok||null, instagram_handle: instagram||null, youtube_handle: youtube||null,
           profile_image_url: profileImage||null,
           is_artist: isArtistAlso, is_creator: isCreatorAlso }),
       });
@@ -98,7 +98,7 @@ export default function SettingsPage() {
     { key: 'tiktok', value: tiktok, set: setTikTok, label: 'TikTok', icon: TikTok, color: 'text-[#ff0050]', bg: 'bg-[#ff0050]/5' },
     { key: 'instagram', value: instagram, set: setInstagram, label: 'Instagram', icon: Instagram, color: 'text-[#E1306C]', bg: 'bg-[#E1306C]/5' },
     { key: 'youtube', value: youtube, set: setYouTube, label: 'YouTube', icon: YouTube, color: 'text-[#FF0000]', bg: 'bg-[#FF0000]/5' },
-    { key: 'facebook', value: facebook, set: setFacebook, label: 'Facebook', icon: null, color: 'text-blue-400', bg: 'bg-blue-500/5' },
+    // Facebook removed — focusing on 3 platforms
   ];
   const connectedCount = socials.filter(s=>s.value).length;
 
@@ -289,7 +289,7 @@ export default function SettingsPage() {
                   { name:'TikTok', status:!!tiktok, color:'text-[#ff0050]', bg:'bg-[#ff0050]/10', icon:TikTok },
                   { name:'Instagram', status:!!instagram, color:'text-[#E1306C]', bg:'bg-[#E1306C]/10', icon:Instagram },
                   { name:'YouTube', status:!!youtube, color:'text-[#FF0000]', bg:'bg-[#FF0000]/10', icon:YouTube },
-                  { name:'Facebook', status:!!facebook, color:'text-blue-400', bg:'bg-blue-500/10' },
+                  // Facebook removed
                 ].map(p=>{const Icon=p.icon;return(
                   <div key={p.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
