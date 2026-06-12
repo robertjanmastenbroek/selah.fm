@@ -455,7 +455,7 @@ function SocialProofBar({ submissions, views }: {
           <div key={i} className="flex items-center gap-1.5">
             <span className={s.color}>{s.icon}</span>
             <span className="font-bold text-sm">
-              <AnimatedCounter value={s.value} prefix={s.prefix || ''} />
+              <AnimatedCounter value={s.value} />
             </span>
             <span className="text-xs text-muted-foreground">{s.label}</span>
           </div>
@@ -983,7 +983,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
 
             {/* Supporter grid (mobile) */}
             <div className="sm:hidden mt-3">
-              <SupporterGrid supporters={supporters} totalCount={supporters.length} />
+              {/* SupporterGrid removed */}
             </div>
 
             {/* Spacer */}
