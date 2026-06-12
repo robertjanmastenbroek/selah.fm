@@ -1019,12 +1019,9 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 }).catch(() => {});
                 setJoinOpen(true);
               }}
-                className="w-full py-4 text-base font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                  active:scale-[0.98] transition-all hover:shadow-[0_0_24px_rgba(67,56,202,0.4)] shadow-lg shadow-indigo-500/20
-                  flex items-center justify-center gap-2 group"
-              >
-                <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                Join campaign — earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+                className="w-full py-4 text-base font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500
+                  active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20">
+                Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
               </button>
 
               {/* Secondary: Support */}
@@ -1169,12 +1166,8 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         transition={{ duration: 0.3 }}
         className="hidden md:flex fixed bottom-6 right-6 z-40 bg-[#0F0F23]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl p-4 items-center gap-3"
       >
-        <Link href={`/checkout?type=donation&campaignId=${id}`}
-          className="px-4 py-2.5 text-xs font-semibold rounded-xl border border-white/[0.15] text-muted-foreground hover:text-white hover:bg-white/[0.05] transition-all active:scale-[0.98]">
-          Support
-        </Link>
         <button onClick={() => setJoinOpen(true)}
-          className="px-5 py-2.5 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20">
+          className="px-6 py-3 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20">
           Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
         </button>
       </motion.div>
@@ -1187,16 +1180,10 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         animate={{ y: 0 }}
         className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3"
       >
-        <div className="flex gap-3">
-          <Link href={`/checkout?type=donation&campaignId=${id}`}
-            className="flex-1 py-3 text-sm font-semibold rounded-xl border border-white/[0.15] text-muted-foreground hover:text-white hover:bg-white/[0.05] transition-all active:scale-[0.98] text-center">
-            Support
-          </Link>
-          <button onClick={() => setJoinOpen(true)}
-            className="flex-[2] py-3 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20">
-            Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
-          </button>
-        </div>
+        <button onClick={() => setJoinOpen(true)}
+          className="w-full py-3.5 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20">
+          Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+        </button>
       </motion.div>
 
       {/* MODALS */}
