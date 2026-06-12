@@ -1040,12 +1040,6 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                   <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">campaign budget</p>
                 </div>
               )}
-              {spent > 0 && (
-                <div>
-                  <p className="text-2xl font-bold text-rose-400">${spent.toFixed(0)}</p>
-                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">paid to creators</p>
-                </div>
-              )}
             </div>
 
             {/* Supporter grid (mobile) */}
