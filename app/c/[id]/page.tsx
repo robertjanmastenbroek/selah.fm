@@ -236,16 +236,7 @@ export default async function CampaignPage({ params }: Props) {
         </ol>
       </div>
 
-      {/* Visible breadcrumb — matches BreadcrumbList JSON-LD */}
-      <nav aria-label="Breadcrumb" className="max-w-7xl mx-auto px-4 pt-4 pb-0">
-        <ol className="flex items-center gap-1.5 text-[11px] text-muted-foreground/40">
-          <li><a href="/" className="hover:text-muted-foreground transition-colors">Selah.fm</a></li>
-          <li className="text-muted-foreground/20">/</li>
-          <li><a href="/browse" className="hover:text-muted-foreground transition-colors">Browse</a></li>
-          <li className="text-muted-foreground/20">/</li>
-          <li className="text-muted-foreground/60 truncate max-w-[200px]">{displayTitle}</li>
-        </ol>
-      </nav>
+      {/* Breadcrumb moved to CampaignDetailClient — below Header */}
 
       {/* Artist profile link */}
       {campaign?.artist_slug && (

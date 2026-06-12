@@ -840,6 +840,17 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
     <div className="min-h-screen bg-[#0F0F23]">
       <Header />
 
+      {/* Breadcrumb */}
+      <nav aria-label="Breadcrumb" className="max-w-7xl mx-auto px-4 pt-4 pb-0">
+        <ol className="flex items-center gap-1.5 text-[11px] text-muted-foreground/40">
+          <li><a href="/" className="hover:text-muted-foreground transition-colors">Selah.fm</a></li>
+          <li className="text-muted-foreground/20">/</li>
+          <li><a href="/browse" className="hover:text-muted-foreground transition-colors">Browse</a></li>
+          <li className="text-muted-foreground/20">/</li>
+          <li className="text-muted-foreground/60 truncate max-w-[200px]">{displayTitle}</li>
+        </ol>
+      </nav>
+
       {/* ════════════════════════════════════════════════════════ */}
       {/* HERO — Two-column */}
       {/* ════════════════════════════════════════════════════════ */}
