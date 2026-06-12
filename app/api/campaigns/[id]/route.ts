@@ -153,6 +153,7 @@ export async function PATCH(
 
     const galleryImages = body.galleryImages !== undefined ? JSON.stringify(body.galleryImages) : null;
     const hasGalleryImages = body.galleryImages !== undefined;
+    const socialLinks = body.socialLinks !== undefined ? String(body.socialLinks) : null;
 
     // For nullable fields where "keep" vs "set to null" matters, use separate flags
     const hasCoverArt = body.coverArtUrl !== undefined;
@@ -198,6 +199,7 @@ export async function PATCH(
         platforms = COALESCE(ARRAY(SELECT * FROM jsonb_array_elements_text(${platforms}::jsonb)), platforms),
         youtube_video_url = CASE WHEN ${hasYoutubeUrl} THEN ${youtubeVideoUrl} ELSE youtube_video_url END,
         gallery_images = CASE WHEN ${hasGalleryImages} THEN ${galleryImages}::jsonb ELSE gallery_images END,
+        social_links = COALESCE(${socialLinks}, social_links),
         status = COALESCE(${updateStatus}, status),
         updated_at = NOW()
       WHERE id = ${campaignId}

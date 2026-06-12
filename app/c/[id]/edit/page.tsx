@@ -11,7 +11,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [campaign, setCampaign] = useState<any>(null);
-  const [form, setForm] = useState({ title: '', track_title: '', requirements: '', cpm_rate_cents: 0, total_budget_cents: 0, caption_requirements: '', required_hashtags: '' });
+  const [form, setForm] = useState({ title: '', track_title: '', requirements: '', cpm_rate_cents: 0, total_budget_cents: 0, caption_requirements: '', required_hashtags: '', cover_art_url: '', track_url: '', youtube_video_url: '', spotify_url: '', apple_music_url: '', deezer_url: '' });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -20,6 +20,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
       .then(d => {
         if (d && d.id) {
           setCampaign(d);
+          const social = typeof d.social_links === 'string' ? JSON.parse(d.social_links) : (d.social_links || {});
           setForm({
             title: d.title || '',
             track_title: d.track_title || '',
@@ -28,6 +29,12 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
             total_budget_cents: d.total_budget_cents || 0,
             caption_requirements: d.caption_requirements || '',
             required_hashtags: d.required_hashtags || '',
+            cover_art_url: d.cover_art_url || '',
+            track_url: d.track_url || '',
+            youtube_video_url: d.youtube_video_url || '',
+            spotify_url: social.spotify || '',
+            apple_music_url: social.apple_music || '',
+            deezer_url: social.deezer || '',
           });
         }
         setLoading(false);
@@ -48,6 +55,10 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
           cpmRate: (form.cpm_rate_cents / 100).toFixed(2),
           captionRequirements: form.caption_requirements,
           hashtags: form.required_hashtags,
+          coverArtUrl: form.cover_art_url || null,
+          trackUrl: form.track_url || null,
+          youtubeVideoUrl: form.youtube_video_url || null,
+          socialLinks: JSON.stringify({ spotify: form.spotify_url, apple_music: form.apple_music_url, deezer: form.deezer_url }),
         }),
       });
       if (res.ok) { setMessage('Saved!'); setTimeout(() => setMessage(''), 2000); }
@@ -108,6 +119,51 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
             <input value={form.required_hashtags} onChange={e => setForm(f => ({ ...f, required_hashtags: e.target.value }))}
               placeholder="#selahfm @artist"
               className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground focus:border-primary/30 focus:outline-none" />
+          </div>
+
+          <div className="border-t border-white/[0.06] pt-4 mt-6">
+            <h2 className="text-xs font-semibold mb-3 text-muted-foreground">Media & Links</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Cover art URL</label>
+                <input value={form.cover_art_url} onChange={e => setForm(f => ({ ...f, cover_art_url: e.target.value }))}
+                  placeholder="https://example.com/cover.jpg"
+                  className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+                {form.cover_art_url && <img src={form.cover_art_url} alt="" className="mt-2 w-20 h-20 rounded-lg object-cover" />}
+              </div>
+              <div>
+                <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Track audio URL (where to listen)</label>
+                <input value={form.track_url} onChange={e => setForm(f => ({ ...f, track_url: e.target.value }))}
+                  placeholder="https://open.spotify.com/track/..."
+                  className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+              </div>
+              <div>
+                <label className="text-[10px] font-medium mb-1 block text-muted-foreground">YouTube video (promo or music video)</label>
+                <input value={form.youtube_video_url} onChange={e => setForm(f => ({ ...f, youtube_video_url: e.target.value }))}
+                  placeholder="https://youtube.com/watch?v=..."
+                  className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Spotify</label>
+                  <input value={form.spotify_url} onChange={e => setForm(f => ({ ...f, spotify_url: e.target.value }))}
+                    placeholder="https://open.spotify.com/..."
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Apple Music</label>
+                  <input value={form.apple_music_url} onChange={e => setForm(f => ({ ...f, apple_music_url: e.target.value }))}
+                    placeholder="https://music.apple.com/..."
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Deezer</label>
+                  <input value={form.deezer_url} onChange={e => setForm(f => ({ ...f, deezer_url: e.target.value }))}
+                    placeholder="https://deezer.com/track/..."
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+                </div>
+              </div>
+            </div>
           </div>
 
           <button onClick={save} disabled={saving}
