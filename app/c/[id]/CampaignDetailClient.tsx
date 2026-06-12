@@ -948,8 +948,8 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 )}
               </div>
 
-              {/* Artist badge */}
-              <div className="absolute top-4 right-4">
+              {/* Artist badge — moved below cover on mobile */}
+              <div className="absolute bottom-4 left-4">
                 <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/[0.08]">
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0 overflow-hidden">
                     {campaign.artist_avatar
@@ -1167,32 +1167,16 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: scrollY > 400 ? 0 : 100, opacity: scrollY > 400 ? 1 : 0 }}
         transition={{ duration: 0.3 }}
-        className="hidden md:flex fixed bottom-6 right-6 z-40 bg-[#0F0F23]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl p-4 items-center gap-4"
+        className="hidden md:flex fixed bottom-6 right-6 z-40 bg-[#0F0F23]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl p-4 items-center gap-3"
       >
-        <div className="min-w-0 max-w-[200px]">
-          <p className="text-xs font-semibold truncate">{displayTitle}</p>
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-            <span>{artistName}</span>
-            {submissionCount > 0 && (
-              <>
-                <span className="text-muted-foreground/30">·</span>
-                <span className="text-indigo-400">{submissionCount} sub{submissionCount !== 1 ? 's' : ''}</span>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <Link href={`/checkout?type=donation&campaignId=${id}`}
-            className="px-3.5 py-2 text-[11px] font-semibold rounded-xl border border-white/[0.12] bg-white/[0.02] text-muted-foreground hover:text-white hover:bg-white/[0.05] hover:border-indigo-500/30 transition-all flex items-center gap-1.5 active:scale-95">
-            <Heart size={12} className="text-indigo-400/60" />
-            Support
-          </Link>
-          <button onClick={() => setJoinOpen(true)}
-            className="px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white active:scale-95 transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
-            <Sparkles size={13} />
-            Join — earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M
-          </button>
-        </div>
+        <Link href={`/checkout?type=donation&campaignId=${id}`}
+          className="px-4 py-2.5 text-xs font-semibold rounded-xl border border-white/[0.15] text-muted-foreground hover:text-white hover:bg-white/[0.05] transition-all active:scale-[0.98]">
+          Support
+        </Link>
+        <button onClick={() => setJoinOpen(true)}
+          className="px-5 py-2.5 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20">
+          Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+        </button>
       </motion.div>
 
       {/* ════════════════════════════════════════════════════════ */}
@@ -1203,36 +1187,15 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         animate={{ y: 0 }}
         className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3"
       >
-        <div className="flex items-center justify-between">
-          <div className="min-w-0 flex-1 mr-3">
-            <p className="text-xs font-semibold truncate font-display">{displayTitle}</p>
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <span>${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M</span>
-              <span className="text-muted-foreground/30">·</span>
-              <span>{artistName}</span>
-              {submissionCount > 0 && (
-                <>
-                  <span className="text-muted-foreground/30">·</span>
-                  <span className="text-indigo-400">{submissionCount} sub{submissionCount !== 1 ? 's' : ''}</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <Link href={`/checkout?type=donation&campaignId=${id}`}
-              className="px-4 py-2.5 text-xs font-semibold rounded-xl border border-white/[0.12] bg-white/[0.02] text-muted-foreground
-                hover:text-white hover:bg-white/[0.05] hover:border-[#4338CA]/30 active:scale-[0.98] transition-all
-                flex items-center gap-1.5">
-              <Heart size={13} className="text-[#4338CA]/60" />
-              Support
-            </Link>
-            <button onClick={() => setJoinOpen(true)}
-              className="px-5 py-2.5 text-sm font-bold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-white
-                active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-1.5">
-              <Sparkles size={14} />
-              Join
-            </button>
-          </div>
+        <div className="flex gap-3">
+          <Link href={`/checkout?type=donation&campaignId=${id}`}
+            className="flex-1 py-3 text-sm font-semibold rounded-xl border border-white/[0.15] text-muted-foreground hover:text-white hover:bg-white/[0.05] transition-all active:scale-[0.98] text-center">
+            Support
+          </Link>
+          <button onClick={() => setJoinOpen(true)}
+            className="flex-[2] py-3 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20">
+            Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+          </button>
         </div>
       </motion.div>
 
