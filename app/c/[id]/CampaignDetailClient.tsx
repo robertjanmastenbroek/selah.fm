@@ -616,7 +616,7 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
                   <strong style={{ color: '#F4F1EA' }}>2. Tag the artist + #selahfm</strong> — your video must 
                   include <code style={{ color: '#D6A85F', background: 'rgba(214,168,95,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>#selahfm</code> in the caption and tag{' '}
                   <code style={{ color: '#D6A85F', background: 'rgba(214,168,95,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>@{campaign.artist_username || 'the artist'}</code> 
-                  in the video or description so we can verify it.
+                  in the video description so we can verify it.
                 </p>
               </div>
             </div>

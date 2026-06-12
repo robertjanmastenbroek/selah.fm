@@ -73,7 +73,7 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
 1. The song must be clearly audible as the primary audio in your video.
    If you sing, rap, or talk over the track, your submission won't qualify
    unless it's a remix or cover of the song itself.
-2. Tag @theartist + #selahfm in your caption or video.
+2. Tag @theartist + #selahfm in your video description.
 
 🎵 Use the official audio — no screen recordings or re-uploads
 
