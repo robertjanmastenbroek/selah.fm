@@ -305,26 +305,45 @@ function ShareModal({ open, onClose, url, title, artistName, cpmDollars, trackTi
   const encodedUrl = encodeURIComponent(url);
   const artistLine = artistName ? `${artistName} — ` : '';
   const shareTitle = `${artistLine}"${trackTitle || title}" on Selah.fm`;
-  const shareBody = cpmDollars
-    ? `Join to earn $${(cpmDollars * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} per 1M verified views. Selah.fm — music meets creators.`
-    : 'Join a campaign, create content, and earn per verified view on Selah.fm';
+  const earnLine = cpmDollars ? `Earn $${(cpmDollars * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views` : 'Earn per verified view';
+  const shareBody = `Join to ${earnLine.toLowerCase()}. Selah.fm — music meets creators.`;
   const fullShareText = `${shareTitle}\n\n${shareBody}\n\n${url}`;
   const encodedShare = encodeURIComponent(fullShareText);
 
   const [copied, setCopied] = useState(false);
 
-  const options = [
+  const platforms = [
     { name: 'Copy Link', action: async () => {
       try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
       catch {}
-    }, color: '#6366F1', bg: 'bg-indigo-500/10', icon: copied ? <Check size={20} className="text-emerald-400" /> : <Copy size={20} /> },
-    { name: 'X', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareTitle}\n\n${url}`)}`, color: '#fff', bg: 'bg-white/10',
+    }, color: '#6366F1', icon: copied ?
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg> :
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> },
+    { name: 'Instagram', href: `https://www.instagram.com/`, color: '#E4405F',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="#fff"/></svg> },
+    { name: 'TikTok', href: `https://www.tiktok.com/`, color: '#fff',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.45-1.04 1.16-1.18 1.89-.07.35-.13.82-.07 1.17.19 1.14 1.21 2.1 2.39 1.99.76-.04 1.47-.45 1.87-1.1.14-.23.23-.49.24-.76.05-1.52.02-3.04.03-4.56z"/></svg> },
+    { name: 'X', href: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${shareTitle}\n\n${url}`)}`, color: '#fff',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
-    { name: 'WhatsApp', href: `https://wa.me/?text=${encodedShare}`, color: '#25D366', bg: 'bg-green-500/10',
+    { name: 'WhatsApp', href: `https://wa.me/?text=${encodedShare}`, color: '#25D366',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg> },
-    { name: 'Telegram', href: `https://t.me/share/url?url=${encodedUrl}&text=${encodeURIComponent(shareTitle)}`, color: '#0088cc', bg: 'bg-blue-500/10',
+    { name: 'Telegram', href: `https://t.me/share/url?url=${encodedUrl}&text=${encodeURIComponent(shareTitle)}`, color: '#0088cc',
       icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg> },
+    { name: 'Messenger', href: `https://www.messenger.com/share?link=${encodedUrl}`, color: '#00B2FF',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M0 11.64C0 4.95 5.34 0 12 0s12 4.95 12 11.64c0 3.12-1.44 5.95-3.78 7.86V24l-3.48-1.92c-.93.26-1.92.42-2.94.42-6.66 0-12-4.95-12-11.64zM10.2 9.6L5.4 15.6l5.4-3 2.4 3 4.8-6-5.4 3-2.4-3z"/></svg> },
+    { name: 'SMS', href: `sms:?body=${encodedShare}`, color: '#34B7F1',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg> },
+    { name: 'Email', href: `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodedShare}`, color: '#EA4335',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg> },
+    { name: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, color: '#0A66C2',
+      icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg> },
   ];
+
+  // Native share on mobile if available
+  const [showNative, setShowNative] = useState(false);
+  useEffect(() => {
+    setShowNative(typeof navigator !== 'undefined' && 'share' in navigator);
+  }, []);
 
   return (
     <AnimatePresence>
@@ -334,29 +353,106 @@ function ShareModal({ open, onClose, url, title, artistName, cpmDollars, trackTi
           <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            className="relative z-10 w-full sm:max-w-md max-h-[85vh] sm:rounded-3xl rounded-t-3xl bg-[#0F0F23] border border-white/[0.08] shadow-2xl overflow-y-auto"
+            className="relative z-10 w-full sm:max-w-md max-h-[85vh] sm:rounded-3xl rounded-t-3xl bg-[#141414] border border-white/[0.08] shadow-2xl overflow-y-auto"
             onClick={e => e.stopPropagation()}>
-            <div className="flex justify-center pt-3 pb-1 sm:hidden"><div className="w-10 h-1 rounded-full bg-white/20" /></div>
-            <div className="p-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-lg font-display">Share this promotion</h3>
-                <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"><X size={20} className="text-muted-foreground" /></button>
+            {/* Drag handle for mobile */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden sticky top-0 z-10 bg-[#141414]">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+
+            <div className="px-6 pb-6 pt-2 space-y-5">
+              {/* Header with preview */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-bold" style={{ color: '#F4F1EA' }}>Share</h3>
+                  <p className="text-xs mt-0.5" style={{ color: '#6B6760' }}>
+                    {earnLine}
+                  </p>
+                </div>
+                <button onClick={onClose}
+                  className="p-2 rounded-xl hover:bg-white/[0.06] transition-all active:scale-90"
+                  style={{ background: 'rgba(255,255,255,0.04)' }}>
+                  <X size={18} style={{ color: '#6B6760' }} />
+                </button>
               </div>
-              <p className="text-sm text-muted-foreground/60 truncate">{fullShareText}</p>
-              <div className="grid grid-cols-4 gap-3">
-                {options.map(opt => {
-                  const isAction = !!opt.action;
+
+              {/* Preview card */}
+              <div className="rounded-2xl overflow-hidden border border-white/[0.06]"
+                style={{ background: 'rgba(255,255,255,0.02)' }}>
+                <div className="px-4 py-3 border-b border-white/[0.04]">
+                  <p className="text-[11px] font-medium truncate" style={{ color: '#A09B92' }}>
+                    👋 {artistName || 'Artist'} is promoting on Selah.fm
+                  </p>
+                  <p className="text-xs mt-0.5 line-clamp-2" style={{ color: '#6B6760' }}>
+                    {shareBody}
+                  </p>
+                </div>
+                {cpmDollars && (
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <span className="text-[10px]" style={{ color: '#6B6760' }}>Earn up to</span>
+                    <span className="text-sm font-bold" style={{ color: '#22C55E' }}>
+                      ${(cpmDollars * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Native share button (mobile) */}
+              {showNative && (
+                <button onClick={async () => {
+                  try { await navigator.share({ title: shareTitle, text: shareBody, url }); }
+                  catch {}
+                }}
+                  className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                  Share with native sharing
+                </button>
+              )}
+
+              {/* Platform grid */}
+              <div className="grid grid-cols-4 gap-2">
+                {platforms.map((p, i) => {
+                  const isAction = !!p.action;
                   const Comp: any = isAction ? 'button' : 'a';
+                  const isCopy = p.name === 'Copy Link';
                   return (
-                    <Comp key={opt.name} href={isAction ? undefined : opt.href} target={isAction ? undefined : '_blank'}
+                    <Comp key={i}
+                      href={isAction ? undefined : p.href}
+                      target={isAction ? undefined : '_blank'}
                       rel={isAction ? undefined : 'noopener noreferrer'}
-                      onClick={isAction ? (e: any) => { e.preventDefault(); opt.action!(); } : undefined}
-                      className="flex flex-col items-center gap-2 py-3 rounded-xl hover:bg-white/[0.04] transition-colors active:scale-[0.95]">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${opt.bg}`} style={{ color: opt.color }}>{opt.icon}</div>
-                      <span className="text-[10px] text-muted-foreground">{opt.name}</span>
+                      onClick={isAction ? (e: any) => { e.preventDefault(); p.action!(); } : undefined}
+                      className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl transition-all active:scale-90 hover:bg-white/[0.03] group"
+                      title={p.name}>
+                      <div className="w-11 h-11 rounded-full flex items-center justify-center transition-all group-hover:scale-110"
+                        style={{ background: `${p.color}12`, color: p.color }}>
+                        {isCopy && copied ? (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+                        ) : (
+                          p.icon
+                        )}
+                      </div>
+                      <span className="text-[9px] font-medium truncate max-w-full" style={{ color: '#6B6760' }}>
+                        {isCopy && copied ? 'Copied!' : p.name}
+                      </span>
                     </Comp>
                   );
                 })}
+              </div>
+
+              {/* URL copy field */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+                <input type="text" value={url} readOnly
+                  className="flex-1 bg-transparent text-[11px] text-muted-foreground/70 truncate focus:outline-none"
+                  onClick={e => (e.target as HTMLInputElement).select()} />
+                <button onClick={async () => {
+                  try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+                  catch {}
+                }}
+                  className="shrink-0 text-[10px] font-semibold px-2 py-1 rounded-lg transition-all"
+                  style={{ color: copied ? '#22C55E' : '#D6A85F', background: copied ? 'rgba(34,197,94,0.1)' : 'rgba(214,168,95,0.1)' }}>
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
               </div>
             </div>
           </motion.div>
