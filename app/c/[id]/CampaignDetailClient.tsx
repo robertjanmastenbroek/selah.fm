@@ -907,55 +907,15 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               )}
 
               {/* Floating stat badges */}
-              <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                {submissionCount > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/[0.1] text-white text-[10px] font-medium"
-                  >
-                    <Film size={11} className="text-indigo-400" />
-                    <AnimatedCounter value={submissionCount} /> submission{submissionCount !== 1 ? 's' : ''}
-                  </motion.div>
-                )}
-                {views > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/[0.1] text-white text-[10px] font-medium"
-                  >
-                    <Eye size={11} className="text-emerald-400" />
-                    {views >= 1000000
-                      ? `${(views / 1000000).toFixed(1)}M`
-                      : views >= 1000
-                      ? `${(views / 1000).toFixed(1)}K`
-                      : views} views
-                  </motion.div>
-                )}
-                {budget > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/[0.1] text-white text-[10px] font-medium"
-                  >
-                    <DollarSign size={11} className="text-amber-400" />
-                    ${budget.toFixed(0)} budget
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Artist badge — moved below cover on mobile */}
-              <div className="absolute bottom-4 left-4">
-                <div className="flex items-center gap-2 bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/[0.08]">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white shrink-0 overflow-hidden">
+              {/* Artist badge — top left, only tag */}
+              <div className="absolute top-4 left-4">
+                <div className="flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/[0.1]">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0 overflow-hidden">
                     {campaign.artist_avatar
                       ? <img src={campaign.artist_avatar} alt="" className="w-full h-full object-cover" />
                       : artistName[0]?.toUpperCase()}
                   </div>
-                  <span className="text-[11px] font-medium text-white">{artistName}</span>
+                  <span className="text-xs font-medium text-white">{artistName}</span>
                 </div>
               </div>
 
@@ -985,6 +945,28 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               submissions={submissionCount}
               views={views}
             />
+
+            {/* Big stats */}
+            <div className="flex items-center gap-8 px-1 py-2">
+              {views > 0 && (
+                <div>
+                  <p className="text-2xl font-bold text-white">
+                    {views >= 1000000
+                      ? `${(views / 1000000).toFixed(1)}M`
+                      : views >= 1000
+                      ? `${(views / 1000).toFixed(1)}K`
+                      : views.toLocaleString()}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Verified views</p>
+                </div>
+              )}
+              {budget > 0 && (
+                <div>
+                  <p className="text-2xl font-bold text-amber-400">${budget.toFixed(0)}</p>
+                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Campaign budget</p>
+                </div>
+              )}
+            </div>
 
             {/* Live ticker */}
             <div className="mt-3">
