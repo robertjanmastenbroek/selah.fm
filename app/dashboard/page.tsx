@@ -249,7 +249,7 @@ function DashboardContent() {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Campaigns' : 'Submissions', icon: Megaphone, badge: isArtist && activeCount > 0 ? activeCount : undefined },
     { id: 'profile', label: 'Profile', icon: User },
-    { id: 'earnings', label: 'Earnings', icon: DollarSign },
+    { id: 'earnings', label: 'Balance', icon: DollarSign },
     ...(isArtist ? [{ id: 'kanban' as const, label: 'Board' as const, icon: ChartBar }] : []),
   ];
 
