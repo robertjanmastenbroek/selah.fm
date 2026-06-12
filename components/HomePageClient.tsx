@@ -145,7 +145,7 @@ export default function RootPage() {
     fetch('/api/stats').then(r => r.json()).then(d => {
       setStats(d);
     }).catch(() => {});
-    fetch('/api/campaigns?limit=6&sort=recent').then(r => r.json()).then(d => {
+    fetch('/api/campaigns?limit=6&sort=recent', { credentials: 'omit' }).then(r => r.json()).then(d => {
       if (Array.isArray(d.campaigns)) setFeaturedCampaigns(d.campaigns);
     }).catch(() => {});
   }, []);
