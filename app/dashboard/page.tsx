@@ -697,22 +697,20 @@ function TracksTab({
                         <div className="flex items-center gap-2 shrink-0">
                           <button onClick={async (e) => {
                             e.stopPropagation();
-                            if (!confirm('Remove this track from your dashboard?')) return;
+                            const nextStatus = c.status === 'active' ? 'cancelled' : 'active';
                             try {
-                              const res = await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled' }) });
-                              if (!res.ok) {
-                                const err = await res.json();
-                                alert('Failed: ' + (err.error || 'Unknown error'));
-                                return;
-                              }
-                              reloadCampaigns();
-                            } catch (err: any) {
-                              alert('Network error: ' + (err?.message || 'Unknown'));
-                            }
+                              const res = await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: nextStatus }) });
+                              if (res.ok) reloadCampaigns();
+                            } catch {}
                           }}
-                            className="text-[9px] px-2 py-1 rounded-md transition-colors hover:bg-rose-500/10 hover:text-rose-400"
+                            className="text-[9px] px-2 py-1 rounded-md transition-all"
+                            style={{ color: c.status === 'active' ? '#EF4444' : '#22C55E' }}>
+                            {c.status === 'active' ? 'Pause' : 'Activate'}
+                          </button>
+                          <button onClick={e => { e.stopPropagation(); window.location.href = `/c/${c.slug || c.id}/edit`; }}
+                            className="text-[9px] px-2 py-1 rounded-md transition-all"
                             style={{ color: '#6B6760' }}>
-                            Remove
+                            Edit
                           </button>
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                             c.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/[0.04] text-muted-foreground'
