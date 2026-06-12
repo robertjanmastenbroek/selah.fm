@@ -524,13 +524,9 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
       <div className="pt-6">
         {activeTab === 0 && (
           <div className="space-y-4">
-            {/* About this track — story section */}
+            {/* Description — no redundant heading */}
               {campaign.description && campaign.description.length > 50 && (
                 <section className="mb-6">
-                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                    <Music2 size={14} className="text-primary/60" />
-                    About this track
-                  </h3>
                   <div className="rounded-2xl bg-gradient-to-br from-white/[0.02] to-white/[0.01] border border-white/[0.06] p-5">
                     <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                       {campaign.description}
@@ -541,20 +537,54 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
 
               
 
-            {/* Listen links */}
+            {/* Listen links — full-width platform cards */}
             {listenLinks.length > 0 && (
               <div className="pt-4">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/40 mb-2">Listen on</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {listenLinks.map((link, i) => (
-                    <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] 
-                               text-[11px] text-muted-foreground hover:text-white hover:bg-white/[0.06] hover:border-white/[0.12] 
-                               transition-all active:scale-[0.96]">
-                      <span className="text-xs">{link.icon}</span>
-                      {link.platform}
-                    </a>
-                  ))}
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground/40 mb-3">Listen on</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {listenLinks.map((link, i) => {
+                    const platform = link.platform.toLowerCase();
+                    const brandColor = platform === 'deezer' ? '#A238FF' :
+                      platform === 'spotify' ? '#1DB954' :
+                      platform === 'youtube' ? '#FF0000' :
+                      platform === 'bandcamp' ? '#629AA9' :
+                      platform === 'applemusic' ? '#FA2D48' :
+                      platform.includes('apple') ? '#FA2D48' :
+                      platform === 'soundcloud' ? '#FF7700' :
+                      platform === 'tidal' ? '#000000' : '#6B6760';
+                    
+                    const svgIcon = platform === 'deezer' ?
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.81 4.16v3.33H14.8V4.16h4.01zm-4.64 0v3.33H9.35V4.16h4.82zM9.6 4.16v3.33H5.58V4.16H9.6zM5.34 4.16v3.33H1.33V4.16h4.01zm13.47 4.63v3.33h-4.01V8.79h4.01zm-4.64 0v3.33H9.35V8.79h4.82zM9.6 8.79v3.33H5.58V8.79H9.6zM5.34 8.79v3.33H1.33V8.79h4.01zm13.47 4.63v3.33h-4.01v-3.33h4.01zm-4.64 0v3.33H9.35v-3.33h4.82zM9.6 13.42v3.33H5.58v-3.33H9.6zM5.34 13.42v3.33H1.33v-3.33h4.01z"/></svg>
+                    : platform === 'spotify' ?
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+                    : platform === 'youtube' ?
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    : platform.includes('apple') ?
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                    : platform === 'soundcloud' ?
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.56 8.87v8.47h10.64c1.1 0 1.99-.96 2.1-2.17.11-1.2-.59-2.18-1.65-2.45.48-.71.75-1.54.75-2.41 0-2.44-1.92-4.42-4.29-4.42-1.2 0-2.29.5-3.08 1.3-.78.8-1.25 1.88-1.25 3.08?M2.27 12.53h.96v4.47h-.96zm-2.27 0h.96v4.47H0zm3.03 0h.96v4.47H3.03zm3.04 0h.96v4.47h-.96zm3.04 0h.96v4.47h-.96z"/></svg>
+                    : platform === 'bandcamp' ?
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M0 18.75l7.437-13.5H24l-7.438 13.5H0z"/></svg>
+                    : platform === 'tidal' ?
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.012 3.992L8.008 7.996 4.004 3.992 0 7.996 4.004 12l4.004-4.004L12.012 3.992zM16.016 7.996l-4.004-4.004-4.004 4.004-4.004-4.004 4.004-4.004zM8.008 20.008l4.004-4.004 4.004 4.004-4.004 4.004z"/></svg>
+                    : null;
+                    
+                    return (
+                      <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all active:scale-[0.97] hover:-translate-y-0.5"
+                        style={{ borderColor: `${brandColor}20`, background: `${brandColor}08` }}
+                        title={`Listen on ${link.platform}`}>
+                        <span className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ background: `${brandColor}18`, color: brandColor }}>
+                          {svgIcon}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate" style={{ color: '#F4F1EA' }}>{link.platform}</p>
+                          <p className="text-[10px] truncate" style={{ color: '#6B6760' }}>{link.url?.replace(/^https?:\/\//, '').slice(0, 30)}</p>
+                        </div>
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             )}
