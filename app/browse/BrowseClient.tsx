@@ -47,7 +47,7 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
           focused ? 'border-primary/40 ring-1 ring-primary/30' : 'border-white/[0.06]'
         }`}>
         {/* Cover */}
-        <div className="aspect-video bg-gradient-to-br from-primary/10 to-emerald-500/5 relative overflow-hidden">
+        <div className="aspect-[4/5] bg-gradient-to-br from-primary/10 to-emerald-500/5 relative overflow-hidden">
           {track.cover_art_url ? (
             <img src={track.cover_art_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
           ) : (
@@ -96,8 +96,8 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
 
 function BrowseSkeleton() {
   return (
-    <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+    <div className="grid gap-5 grid-cols-1 lg:grid-cols-3 max-w-5xl mx-auto">
+      {[1, 2, 3, 4, 5, 6].map(i => (
         <div key={i} className="rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden animate-pulse">
           <div className="aspect-video bg-white/[0.04]" />
           <div className="p-4 space-y-3">
@@ -263,7 +263,7 @@ export default function BrowseClient() {
                 description={selectedGenre || searchQuery ? 'Try different filters or browse all genres.' : 'No active campaigns yet. Artists can create campaigns from their dashboard.'} />
             </div>
           ) : (
-            <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-5 grid-cols-1 lg:grid-cols-3 max-w-5xl mx-auto">
               {campaigns.map((c: any, i: number) => (
                 <CampaignCard key={c.slug || c.id} track={c} index={i} focused={focusedIndex === i} />
               ))}
