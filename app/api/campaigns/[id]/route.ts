@@ -160,6 +160,11 @@ export async function PATCH(
     const hasCaptionReq = body.captionRequirements !== undefined;
     const hasMinVideoLength = body.minVideoLength !== undefined;
 
+    // ── Status update (archive/draft) ──────────────────────────
+    const newStatus = body.status !== undefined ? String(body.status) : null;
+    const validStatuses = ['active', 'draft', 'paused', 'completed', 'archived'];
+    const updateStatus = newStatus && validStatuses.includes(newStatus) ? newStatus : null;
+
     // Convert base64 cover art to DB-stored image (survives deploys)
     let finalCoverArt = coverArtUrl;
     let patchImageBuffer: Buffer | null = null;
@@ -193,6 +198,7 @@ export async function PATCH(
         platforms = COALESCE(ARRAY(SELECT * FROM jsonb_array_elements_text(${platforms}::jsonb)), platforms),
         youtube_video_url = CASE WHEN ${hasYoutubeUrl} THEN ${youtubeVideoUrl} ELSE youtube_video_url END,
         gallery_images = CASE WHEN ${hasGalleryImages} THEN ${galleryImages}::jsonb ELSE gallery_images END,
+        status = COALESCE(${updateStatus}, status),
         updated_at = NOW()
       WHERE id = ${campaignId}
       RETURNING *

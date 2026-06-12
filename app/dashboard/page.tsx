@@ -689,11 +689,25 @@ function TracksTab({
                             ${((c.cpm_rate_cents || 0) / 100).toFixed(2)} CPM · ${((c.total_budget_cents || 0) / 100).toFixed(0)} budget
                           </p>
                         </div>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                          c.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/[0.04] text-muted-foreground'
-                        }`}>
-                          {c.status === 'active' ? 'Live' : c.status}
-                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!confirm('Remove this track from your dashboard?')) return;
+                            try {
+                              await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'archived' }) });
+                              reloadCampaigns();
+                            } catch {}
+                          }}
+                            className="text-[9px] px-2 py-1 rounded-md transition-colors hover:bg-rose-500/10 hover:text-rose-400"
+                            style={{ color: '#6B6760' }}>
+                            Remove
+                          </button>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            c.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/[0.04] text-muted-foreground'
+                          }`}>
+                            {c.status === 'active' ? 'Live' : c.status}
+                          </span>
+                        </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3 text-center text-xs">
                         <div><p className="font-bold text-sm">{c.approved_submissions || 0}</p><span className="text-[9px] text-muted-foreground/50">subs</span></div>
