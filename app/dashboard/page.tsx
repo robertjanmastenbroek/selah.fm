@@ -694,9 +694,16 @@ function TracksTab({
                             e.stopPropagation();
                             if (!confirm('Remove this track from your dashboard?')) return;
                             try {
-                              await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'archived' }) });
+                              const res = await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'archived' }) });
+                              if (!res.ok) {
+                                const err = await res.json();
+                                alert('Failed: ' + (err.error || 'Unknown error'));
+                                return;
+                              }
                               reloadCampaigns();
-                            } catch {}
+                            } catch (err: any) {
+                              alert('Network error: ' + (err?.message || 'Unknown'));
+                            }
                           }}
                             className="text-[9px] px-2 py-1 rounded-md transition-colors hover:bg-rose-500/10 hover:text-rose-400"
                             style={{ color: '#6B6760' }}>
