@@ -370,26 +370,7 @@ function ShareModal({ open, onClose, url, title, artistName, cpmDollars, trackTi
 // TRUST BADGES
 // ════════════════════════════════════════════════════════════════
 
-function TrustBar() {
-  const badges = [
-    { icon: <DollarSign size={14} />, text: 'You earn 80%' },
-    { icon: <Check size={14} />, text: 'Paid via Stripe' },
-    { icon: <Eye size={14} />, text: 'Verified views only' },
-  ];
-
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {badges.map((b, i) => (
-        <span key={i}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] 
-            text-[10px] text-muted-foreground/70 font-medium">
-          <span className="text-indigo-400/70">{b.icon}</span>
-          {b.text}
-        </span>
-      ))}
-    </div>
-  );
-}
+/* TrustBar replaced — now inline in the actions section */
 
 // ════════════════════════════════════════════════════════════════
 // ARTIST CREDIBILITY
@@ -1027,14 +1008,31 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
 
               {/* Activity Timeline */}
               <ActivityTimeline campaign={campaign} />
-              {/* Trust bar + actions */}
-              <div className="mt-6 space-y-3">
-                <TrustBar />
-                <div className="flex items-center gap-3 pt-1">
+              {/* Trust + Actions */}
+              <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+                {/* Trust badges row */}
+                <div className="flex items-center gap-0.5 px-4 py-3 border-b border-white/[0.04]">
+                  {[
+                    { icon: <DollarSign size={12} />, text: 'You earn 80%', color: '#22C55E' },
+                    { icon: <Check size={12} />, text: 'Paid via Stripe', color: '#6366F1' },
+                    { icon: <Eye size={12} />, text: 'Verified views only', color: '#D6A85F' },
+                  ].map((b, i) => (
+                    <span key={i}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium"
+                      style={{ color: b.color, background: `${b.color}10` }}>
+                      <span style={{ opacity: 0.8 }}>{b.icon}</span>
+                      {b.text}
+                    </span>
+                  ))}
+                </div>
+                {/* Actions row */}
+                <div className="flex items-center">
                   <button onClick={() => setShareOpen(true)}
-                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors active:scale-95">
-                    <Share2 size={14} /> Share
+                    className="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold transition-all hover:bg-white/[0.04] active:scale-[0.98]"
+                    style={{ color: '#6B6760' }}>
+                    <Share2 size={14} /> Share campaign
                   </button>
+                  <div className="w-px h-5 bg-white/[0.06]" />
                   <button onClick={async () => {
                     try {
                       const auth = await fetch('/api/auth/me', { credentials: 'include' });
@@ -1044,9 +1042,10 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                       setSaved(d.saved);
                     } catch {}
                   }}
-                    className="flex items-center gap-1.5 text-xs transition-colors active:scale-95">
-                    <Bookmark size={14} className={saved ? 'text-amber-400 fill-amber-400' : 'text-muted-foreground hover:text-white'} />
-                    <span className={saved ? 'text-amber-400' : 'text-muted-foreground hover:text-white'}>{saved ? 'Saved' : 'Save'}</span>
+                    className="flex-1 flex items-center justify-center gap-2 py-3 text-xs font-semibold transition-all hover:bg-white/[0.04] active:scale-[0.98]"
+                    style={{ color: saved ? '#D6A85F' : '#6B6760' }}>
+                    <Bookmark size={14} className={saved ? 'fill-amber-400' : ''} style={{ color: saved ? '#D6A85F' : '' }} />
+                    {saved ? 'Saved' : 'Save'}
                   </button>
                 </div>
               </div>
