@@ -28,7 +28,7 @@ import type { TabDef } from '@/components/DashboardSidebar';
 import AnimatedKPICard from '@/components/AnimatedKPICard';
 import ViewsChart from '@/components/ViewsChart';
 
-type TabId = 'overview' | 'tracks' | 'submissions' | 'profile' | 'earnings' | 'kanban';
+type TabId = 'overview' | 'tracks' | 'submissions' | 'profile' | 'earnings';
 
 export default function DashboardPage() {
   return (
@@ -250,7 +250,7 @@ function DashboardContent() {
     { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Campaigns' : 'Submissions', icon: Megaphone, badge: isArtist && activeCount > 0 ? activeCount : undefined },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'earnings', label: 'Balance', icon: DollarSign },
-    ...(isArtist ? [{ id: 'kanban' as const, label: 'Board' as const, icon: ChartBar }] : []),
+    // Board tab removed — no function
   ];
 
   // Sparkline data for KPIs (weekly breakdown)
@@ -520,7 +520,7 @@ function DashboardContent() {
                 />
               )}
 
-              {tab === 'kanban' && <KanbanTab campaigns={rawCampaigns} />}
+              {/* Kanban tab removed */}
 
               {tab === 'profile' && (
                 <ProfileTab
@@ -789,31 +789,7 @@ function TracksTab({
   );
 }
 
-function KanbanTab({ campaigns }: { campaigns: any[] }) {
-  const cols = ['active', 'draft', 'completed'];
-  const labels = ['Live', 'Drafts', 'Completed'];
-  return (
-    <div className="space-y-4">
-      <h3 className="font-semibold text-sm">Track Board</h3>
-      <div className="grid grid-cols-3 gap-3 min-h-[200px]">
-        {cols.map((status, i) => (
-          <div key={status} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
-            <p className="text-xs font-semibold mb-3">{labels[i]}</p>
-            {campaigns.filter((c: any) => (c.status || 'draft') === status).map((c: any) => (
-              <div key={c.id} className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3 mb-2">
-                <p className="text-xs font-medium truncate">{c.track_title || c.title}</p>
-                <p className="text-[9px] text-muted-foreground/50 mt-1">${((c.cpm_rate_cents || 0) / 100).toFixed(2)} CPM</p>
-              </div>
-            ))}
-            {campaigns.filter((c: any) => (c.status || 'draft') === status).length === 0 && (
-              <p className="text-[10px] text-muted-foreground/40 text-center py-6">None</p>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+/* KanbanTab removed */
 
 function ProfileTab({
   isArtist, artistProfile, displayName, artistSlug,
