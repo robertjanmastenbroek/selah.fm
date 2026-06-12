@@ -247,7 +247,7 @@ function DashboardContent() {
   // ─── Tabs ────────────────────────────────────────────────────
   const tabs: TabDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Tracks' : 'Submissions', icon: Megaphone, badge: isArtist && activeCount > 0 ? activeCount : undefined },
+    { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Campaigns' : 'Submissions', icon: Megaphone, badge: isArtist && activeCount > 0 ? activeCount : undefined },
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'earnings', label: 'Earnings', icon: DollarSign },
     ...(isArtist ? [{ id: 'kanban' as const, label: 'Board' as const, icon: ChartBar }] : []),
@@ -324,7 +324,7 @@ function DashboardContent() {
                     {isArtist ? (
                       <>
                         <AnimatedKPICard
-                          icon={Music} label="Tracks" value={String(artistTracks.length || activeCount)}
+                          icon={Music} label="Active campaigns" value={String(activeCount)}
                           color="primary" trend={activeCount > 0 ? `${activeCount} active` : undefined}
                           trendDirection={activeCount > 0 ? 'up' : 'neutral'}
                           sparkline={viewSparklines}
@@ -378,7 +378,7 @@ function DashboardContent() {
                             <p className="font-semibold text-sm">
                               {isArtist
                                 ? artistTracks.length > 0
-                                  ? `${artistTracks.length} track${artistTracks.length > 1 ? 's' : ''} in your catalog`
+                                  ? `${activeCount} campaign${activeCount !== 1 ? 's' : ''} in your catalog`
                                   : 'Add your first track to get started'
                                 : 'Browse artists and start creating content'}
                             </p>
@@ -661,8 +661,8 @@ function TracksTab({
           ) : campaigns.length === 0 ? (
             <Card><CardContent className="p-12 text-center">
               <Megaphone size={32} className="mx-auto mb-3 text-muted-foreground/20" />
-              <p className="text-sm font-medium mb-1">No tracks yet</p>
-              <p className="text-xs text-muted-foreground mb-4">Import your tracks from Spotify, Bandcamp, or add them manually.</p>
+              <p className="text-sm font-medium mb-1">No campaigns yet</p>
+              <p className="text-xs text-muted-foreground mb-4">Create your first campaign to start promoting your music.</p>
               <Button onClick={() => onSwitchTab('profile')} size="sm"><Plus size={14} className="mr-1" /> Import tracks</Button>
             </CardContent></Card>
           ) : (
