@@ -285,7 +285,7 @@ export default function MessagesPage() {
   return (
     <div className="min-h-screen" style={{background:'#0F0F23'}}>
       <Header />
-      <div className="max-w-5xl mx-auto h-[calc(100dvh-56px)] flex overflow-hidden">
+      <div className="w-full h-[calc(100vh-56px)] flex overflow-hidden">
         {/* ── Left: List ── */}
         <AnimatePresence>
           {(selectedUser ? !isMobile : true) && (
