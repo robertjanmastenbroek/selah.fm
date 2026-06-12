@@ -71,7 +71,7 @@ function DashboardContent() {
 
   useEffect(() => {
     const t = searchParams.get('tab') as TabId | null;
-    if (t && ['overview', 'tracks', 'profile', 'earnings'].includes(t)) setTab(t);
+    if (t && ['overview', 'tracks', 'earnings'].includes(t)) setTab(t);
   }, [searchParams]);
 
   const switchTab = (t: TabId) => {
@@ -306,7 +306,7 @@ function DashboardContent() {
             </div>
             {isArtist && (
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button onClick={() => switchTab('profile')} size="sm" className="shadow-lg shadow-primary/20">
+                <Button onClick={() => window.location.href = '/settings'} size="sm" className="shadow-lg shadow-primary/20">
                   <Plus size={16} className="mr-1" /> Import track
                 </Button>
               </motion.div>
@@ -395,7 +395,7 @@ function DashboardContent() {
                           </div>
                         </div>
                         {isArtist && artistTracks.length === 0 && (
-                          <Button size="sm" onClick={() => switchTab('profile')} className="shrink-0 ml-3">Add tracks</Button>
+                          <Button size="sm" onClick={() => window.location.href = '/settings'} className="shrink-0 ml-3">Add tracks</Button>
                         )}
                         {!isArtist && (
                           <a href="/browse"><Button size="sm" className="shrink-0 ml-3">Browse artists</Button></a>
@@ -580,7 +580,7 @@ function TracksTab({
                   <p className="text-xs font-medium">{step.label}</p>
                   <p className="text-[9px] text-muted-foreground/50">{step.desc}</p>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => onSwitchTab('profile')}
+                <Button size="sm" variant="outline" onClick={() => window.location.href = '/settings'}
                   className="text-[10px] h-7 px-3">
                   {i === 0 ? 'Import' : 'Add funds'}
                 </Button>
@@ -637,7 +637,7 @@ function TracksTab({
               <Megaphone size={32} className="mx-auto mb-3 text-muted-foreground/20" />
               <p className="text-sm font-medium mb-1">No campaigns yet</p>
               <p className="text-xs text-muted-foreground mb-4">Create your first campaign to start promoting your music.</p>
-              <Button onClick={() => onSwitchTab('profile')} size="sm"><Plus size={14} className="mr-1" /> Import tracks</Button>
+              <Button onClick={() => window.location.href = '/settings'} size="sm"><Plus size={14} className="mr-1" /> Import tracks</Button>
             </CardContent></Card>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
