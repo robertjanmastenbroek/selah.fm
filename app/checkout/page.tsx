@@ -133,7 +133,7 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
             Processing...
           </span>
         ) : type === 'donation' ? (
-          <span className="flex items-center justify-center gap-2"><Heart size={18} /> Donate ${amount}</span>
+          <span className="flex items-center justify-center gap-2"><Heart size={18} /> Boost ${amount}</span>
         ) : (
           <span className="flex items-center justify-center gap-2"><Zap size={18} /> Deposit ${amount}</span>
         )}
@@ -431,7 +431,7 @@ export default function CheckoutPage() {
               </div>
             ) : effectiveAmount < 5 ? (
               <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center">
-                <p className="text-sm text-white/40">Minimum donation is $5</p>
+                <p className="text-sm text-white/40">Minimum boost is $5</p>
               </div>
             ) : gettingSecret ? (
               <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-8 flex items-center justify-center">

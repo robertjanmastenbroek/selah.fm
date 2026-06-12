@@ -68,7 +68,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
       },
       {
         q: 'Can fans support my track?',
-        a: 'Yes. Every track page has a crowdfunding section where fans can donate to your promotion budget. Share your track link and let your fans help you get discovered.',
+        a: 'Yes. Fans can boost your campaign directly. Share your track link and let your fans help you get discovered.',
         section: 'For Artists',
       },
     ],
