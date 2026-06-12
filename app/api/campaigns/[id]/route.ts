@@ -104,11 +104,16 @@ export async function PATCH(
       return NextResponse.json({ error: 'Not your campaign' }, { status: 403 });
     }
 
-    // ── CPM lock: reject cpmRate changes if submissions exist ──
+    // ── CPM lock: only reject if the value actually changed ──
     if (body.cpmRate !== undefined) {
-      const subCount = await sql`SELECT COUNT(*)::int as c FROM submissions WHERE campaign_id = ${campaignId}`;
-      if (subCount[0].c > 0) {
-        return NextResponse.json({ error: 'CPM rate is locked once submissions exist. Create a new campaign to change your rate.' }, { status: 400 });
+      const [campaign] = await sql`SELECT cpm_rate_cents FROM campaigns WHERE id = ${campaignId}`;
+      const requestedCpm = Math.round(parseFloat(body.cpmRate) * 100);
+      const currentCpm = campaign?.cpm_rate_cents || 0;
+      if (requestedCpm !== currentCpm) {
+        const subCount = await sql`SELECT COUNT(*)::int as c FROM submissions WHERE campaign_id = ${campaignId}`;
+        if (subCount[0].c > 0) {
+          return NextResponse.json({ error: 'CPM rate is locked once submissions exist. Create a new campaign to change your rate.' }, { status: 400 });
+        }
       }
     }
 
