@@ -618,6 +618,11 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
                   <code style={{ color: '#D6A85F', background: 'rgba(214,168,95,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>@{campaign.artist_username || 'the artist'}</code> 
                   in the video description so we can verify it.
                 </p>
+                <p>
+                  <strong style={{ color: '#F4F1EA' }}>3. Max payout: $500 per video</strong> — even if your video gets millions 
+                  of views, the payout is capped at $500.00 per submission. No limit on how many 
+                  videos you can submit.
+                </p>
               </div>
             </div>
 

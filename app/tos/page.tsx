@@ -74,7 +74,15 @@ export default function TosPage() {
             use not covered by this license.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">6. CPM Rate Lock</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">6. Maximum Payout Per Submission</h2>
+          <p>
+            The maximum payout for a single submission is $500.00 (five hundred US dollars). 
+            If a Creator&rsquo;s video earns more than this amount based on the campaign&rsquo;s CPM rate 
+            and verified views, the payout is capped at $500.00 per video. This cap applies 
+            regardless of the total views a single video accumulates.
+          </p>
+
+          <h2 className="text-foreground font-semibold text-lg mt-8">7. CPM Rate Lock</h2>
           <p>
             The CPM rate for a campaign is locked once the campaign receives its first Creator submission. 
             Once locked, the rate cannot be changed for that campaign. 
@@ -82,7 +90,7 @@ export default function TosPage() {
             Tracks with zero submissions may have their CPM rate adjusted at any time.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">7. Payout Timing</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">8. Payout Timing</h2>
           <p>
             Creators are paid through Stripe Connect. 
             Payouts are typically processed within 1–3 business days after the Artist approves a submission 
@@ -91,7 +99,7 @@ export default function TosPage() {
             Selah.fm is not responsible for delays caused by banking institutions or Stripe.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">8. Dispute Resolution</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">9. Dispute Resolution</h2>
           <p>
             Artists may reject Creator submissions before payout if the submission does not meet 
             the campaign requirements or violates these Terms. 
@@ -102,7 +110,7 @@ export default function TosPage() {
             All decisions made by Selah.fm in dispute resolution are final.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">9. Platform Liability</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">10. Platform Liability</h2>
           <p>
             Selah.fm is a marketplace that connects Artists and Creators. 
             We are not a party to any transaction between Artists and Creators except for payment processing 

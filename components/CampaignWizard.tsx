@@ -77,6 +77,8 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
 
 🎵 Use the official audio — no screen recordings or re-uploads
 
+💰 Max payout per video: $500.00
+
 📱 Video format
 • 15–60 seconds recommended
 • Vertical (9:16) for TikTok/Reels/Shorts
