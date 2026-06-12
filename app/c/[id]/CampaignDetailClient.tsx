@@ -836,7 +836,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
   const donations = campaign.donations || { totalCents: 0, count: 0, supporters: [] };
   const views = parseInt(campaign.total_verified_views || '0');
   const submissionCount = parseInt(campaign.approved_submissions || '0');
-  const totalRaised = (donations.totalCents || 0) / 100;
+  const totalRaised = (campaign.total_budget_cents || donations.totalCents || 0) / 100;
   const supporters = donations.supporters || [];
   const artistName = campaign.artist_name || 'Artist';
   const displayTitle = campaign.title || campaign.track_title;
