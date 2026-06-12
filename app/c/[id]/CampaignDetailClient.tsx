@@ -603,6 +603,24 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
 
         {activeTab === 1 && (
           <div className="space-y-4">
+            {/* ── Permanent license & tagging requirements ── */}
+            <div className="rounded-xl border border-amber-500/15 p-4 space-y-3" style={{ background: 'rgba(214,168,95,0.04)' }}>
+              <p className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: '#D6A85F' }}>Required for all submissions</p>
+              <div className="space-y-2 text-sm leading-relaxed" style={{ color: '#A09B92' }}>
+                <p>
+                  <strong style={{ color: '#F4F1EA' }}>1. The song must be clearly audible</strong> — the track 
+                  must be the main audio in your video. If you sing, rap, or talk over the track, your 
+                  submission won't qualify unless it's a remix or cover of the song itself.
+                </p>
+                <p>
+                  <strong style={{ color: '#F4F1EA' }}>2. Tag the artist + #selahfm</strong> — your video must 
+                  include <code style={{ color: '#D6A85F', background: 'rgba(214,168,95,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>#selahfm</code> in the caption and tag{' '}
+                  <code style={{ color: '#D6A85F', background: 'rgba(214,168,95,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>@{campaign.artist_username || 'the artist'}</code> 
+                  in the video or description so we can verify it.
+                </p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               {campaign.platforms_needed?.length > 0 && (
                 <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">

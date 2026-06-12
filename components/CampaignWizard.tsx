@@ -69,7 +69,13 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
     setRequirements('');
   };
 
-  const getRequirementsTemplate = () => `🎵 Use the official audio — no screen recordings or re-uploads
+  const getRequirementsTemplate = () => `📌 LICENSE REQUIREMENTS (all submissions must follow):
+1. The song must be clearly audible as the primary audio in your video.
+   If you sing, rap, or talk over the track, your submission won't qualify
+   unless it's a remix or cover of the song itself.
+2. Tag @${artistSlug || 'artist'} + #selahfm in your caption or video.
+
+🎵 Use the official audio — no screen recordings or re-uploads
 
 📱 Video format
 • 15–60 seconds recommended
