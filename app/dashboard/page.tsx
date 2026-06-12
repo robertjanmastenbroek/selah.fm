@@ -672,13 +672,13 @@ function TracksTab({
                               if (res.ok) reloadCampaigns();
                             } catch {}
                           }}
-                            className="text-[9px] px-2 py-1 rounded-md transition-all"
-                            style={{ color: c.status === 'active' ? '#EF4444' : '#22C55E' }}>
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all active:scale-95 hover:brightness-125 border"
+                            style={{ color: c.status === 'active' ? '#EF4444' : '#22C55E', background: c.status === 'active' ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)', borderColor: c.status === 'active' ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)' }}>
                             {c.status === 'active' ? 'Pause' : 'Activate'}
                           </button>
                           <button onClick={e => { e.stopPropagation(); window.location.href = `/c/${c.slug || c.id}/edit`; }}
-                            className="text-[9px] px-2 py-1 rounded-md transition-all hover:text-amber-400"
-                            style={{ color: '#8B887E' }}>
+                            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all active:scale-95 hover:bg-white/[0.08] border border-white/[0.08]"
+                            style={{ color: '#A09B92' }}>
                             Edit
                           </button>
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
