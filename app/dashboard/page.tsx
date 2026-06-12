@@ -708,8 +708,8 @@ function TracksTab({
                             {c.status === 'active' ? 'Pause' : 'Activate'}
                           </button>
                           <button onClick={e => { e.stopPropagation(); window.location.href = `/c/${c.slug || c.id}/edit`; }}
-                            className="text-[9px] px-2 py-1 rounded-md transition-all"
-                            style={{ color: '#6B6760' }}>
+                            className="text-[9px] px-2 py-1 rounded-md transition-all hover:text-amber-400"
+                            style={{ color: '#8B887E' }}>
                             Edit
                           </button>
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${

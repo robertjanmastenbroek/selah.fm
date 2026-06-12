@@ -18,16 +18,16 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
     fetch(`/api/campaigns/${params.id}`)
       .then(r => r.json())
       .then(d => {
-        if (d.campaign) {
-          setCampaign(d.campaign);
+        if (d && d.id) {
+          setCampaign(d);
           setForm({
-            title: d.campaign.title || '',
-            track_title: d.campaign.track_title || '',
-            requirements: d.campaign.requirements || '',
-            cpm_rate_cents: d.campaign.cpm_rate_cents || 0,
-            total_budget_cents: d.campaign.total_budget_cents || 0,
-            caption_requirements: d.campaign.caption_requirements || '',
-            required_hashtags: d.campaign.required_hashtags || '',
+            title: d.title || '',
+            track_title: d.track_title || '',
+            requirements: d.requirements || '',
+            cpm_rate_cents: d.cpm_rate_cents || 0,
+            total_budget_cents: d.total_budget_cents || 0,
+            caption_requirements: d.caption_requirements || '',
+            required_hashtags: d.required_hashtags || '',
           });
         }
         setLoading(false);
