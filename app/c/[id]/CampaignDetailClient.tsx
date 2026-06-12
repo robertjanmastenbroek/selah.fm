@@ -440,13 +440,12 @@ function ArtistCredibility({ campaign, artistSlug }: { campaign: any; artistSlug
 // SOCIAL PROOF HEADER BAR
 // ════════════════════════════════════════════════════════════════
 
-function SocialProofBar({ submissions, views, totalRaised, supporters }: {
-  submissions: number; views: number; totalRaised: number; supporters: any[];
+function SocialProofBar({ submissions, views }: {
+  submissions: number; views: number;
 }) {
   const stats = [
     { icon: <Film size={14} />, value: submissions, label: 'submissions', color: 'text-indigo-400' },
     { icon: <Eye size={14} />, value: views, label: 'views', color: 'text-emerald-400' },
-    { icon: <DollarSign size={14} />, value: totalRaised, label: 'raised', color: 'text-amber-400', prefix: '$' },
   ];
 
   return (
@@ -461,9 +460,6 @@ function SocialProofBar({ submissions, views, totalRaised, supporters }: {
             <span className="text-xs text-muted-foreground">{s.label}</span>
           </div>
         ))}
-        <div className="hidden sm:flex items-center ml-auto">
-          <SupporterGrid supporters={supporters} totalCount={supporters?.length || 0} />
-        </div>
       </div>
     </div>
   );
@@ -978,8 +974,6 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
             <SocialProofBar
               submissions={submissionCount}
               views={views}
-              totalRaised={totalRaised}
-              supporters={supporters}
             />
 
             {/* Live ticker */}
