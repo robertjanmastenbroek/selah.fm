@@ -192,6 +192,16 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
                     </div>
                   )}
 
+                  {/* Requirements reminder */}
+                  <p className="text-[10px] text-muted-foreground/50 text-center leading-relaxed">
+                    By submitting, you confirm your video follows the{' '}
+                    <a href={`/c/${selectedTrack?.campaign_slug || selectedTrack?.id || ''}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-primary hover:underline">
+                      campaign requirements
+                    </a>.
+                  </p>
+
                   {/* Submit */}
                   <Button onClick={handleSubmit}
                     disabled={sending || !selectedTrack || !contentUrl.trim() || success}
