@@ -18,9 +18,7 @@ export default function SettingsPage() {
   const { data: profileData, isLoading: profileLoading } = useSWR('/api/auth/me', fetcher, swrConfig);
   const profile = profileData?.user || null;
   const [name, setName] = useState('');
-  const [bio, setBio] = useState('');
-  const [genres, setGenres] = useState('');
-  const [cpm, setCpm] = useState('');
+  // Bio, genres, CPM removed
   const [tiktok, setTikTok] = useState('');
   const [instagram, setInstagram] = useState('');
   const [youtube, setYouTube] = useState('');
@@ -40,9 +38,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!profile) return;
     setName(profile.name || '');
-    setBio(profile.bio || '');
-    setGenres(profile.genres || '');
-    setCpm(profile.preferred_cpm_cents ? (profile.preferred_cpm_cents / 100).toFixed(0) : '');
+    // Bio, genres, CPM removed
     setTikTok(profile.tiktok_handle || '');
     setInstagram(profile.instagram_handle || '');
     setYouTube(profile.youtube_handle || '');
@@ -79,7 +75,7 @@ export default function SettingsPage() {
       const res = await fetch('/api/auth/me', {
         method: 'PATCH', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, bio, genres, preferredCpm: cpm,
+        body: JSON.stringify({ name,
           tiktok_handle: tiktok||null, instagram_handle: instagram||null, youtube_handle: youtube||null,
           profile_image_url: profileImage||null,
           is_artist: isArtistAlso, is_creator: isCreatorAlso }),
@@ -156,20 +152,7 @@ export default function SettingsPage() {
                   <label className="text-[11px] text-muted-foreground mb-1 block">Display name</label>
                   <input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" className="w-full rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"/>
                 </div>
-                <div>
-                  <label className="text-[11px] text-muted-foreground mb-1 block">Bio</label>
-                  <input value={bio} onChange={e=>setBio(e.target.value)} placeholder="Tell others about yourself..." className="w-full rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"/>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] text-muted-foreground mb-1 block flex items-center gap-1"><Music4 size={10}/>Genres</label>
-                    <input value={genres} onChange={e=>setGenres(e.target.value)} placeholder="pop, electronic..." className="w-full rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"/>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-muted-foreground mb-1 block flex items-center gap-1"><DollarSign size={10}/>CPM rate</label>
-                    <input type="number" value={cpm} onChange={e=>setCpm(e.target.value)} placeholder="2" className="w-full rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"/>
-                  </div>
-                </div>
+                {/* Bio, genres, CPM removed */}
               </div>
             </div>
           </motion.div>
