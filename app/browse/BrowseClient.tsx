@@ -251,27 +251,12 @@ export default function BrowseClient() {
           </div>
         </div>
 
-        {/* ── FILTER BAR ── */}
-        <div className="mb-6 space-y-3">
-          <div className="flex flex-wrap gap-1.5">
-            <button onClick={() => setSelectedGenre('')}
-              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium border transition-all active:scale-95 ${
-                selectedGenre === '' ? 'border-primary bg-primary/[0.08] text-primary' : 'border-white/[0.06] text-muted-foreground hover:text-foreground hover:border-white/[0.12]'
-              }`}>All</button>
-            {GENRES.slice(0, 10).map(g => (
-              <button key={g} onClick={() => setSelectedGenre(g === selectedGenre ? '' : g)}
-                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-medium border transition-all active:scale-95 ${
-                  selectedGenre === g ? 'border-primary bg-primary/[0.08] text-primary' : 'border-white/[0.06] text-muted-foreground/60 hover:text-foreground hover:border-white/[0.12]'
-                }`}>{g.charAt(0).toUpperCase() + g.slice(1)}</button>
-            ))}
-          </div>
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="text-[10px] text-muted-foreground/40 font-medium">
-              {loading ? 'Loading...' : `${total} campaign${total !== 1 ? 's' : ''}`}
-              {selectedGenre && <span className="text-primary"> · {selectedGenre}</span>}
-              {searchQuery && <span className="text-primary"> · &quot;{searchQuery}&quot;</span>}
-            </span>
-          </div>
+        {/* ── COUNT BAR ── */}
+        <div className="mb-6">
+          <span className="text-[10px] text-muted-foreground/40 font-medium">
+            {loading ? 'Loading...' : `${total} campaign${total !== 1 ? 's' : ''}`}
+            {searchQuery && <span className="text-primary"> · &quot;{searchQuery}&quot;</span>}
+          </span>
         </div>
 
         {/* ── GRID ── */}
