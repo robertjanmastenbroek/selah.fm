@@ -133,7 +133,7 @@ export default function Header() {
                   <div className="py-1">
                     <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={() => setOpen(false)} />
                     <NavItem href="/messages" icon={MessageCircle} label="Messages" onClick={() => setOpen(false)} />
-                    <NavItem href="/earnings" icon={Banknote} label="Earnings" onClick={() => setOpen(false)} />
+                    <NavItem href="/earnings" icon={Banknote} label="Balance" onClick={() => setOpen(false)} />
                   </div>
 
                   <div className="border-t border-white/[0.05] py-1">
