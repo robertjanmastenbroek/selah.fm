@@ -28,7 +28,7 @@ import type { TabDef } from '@/components/DashboardSidebar';
 import AnimatedKPICard from '@/components/AnimatedKPICard';
 import ViewsChart from '@/components/ViewsChart';
 
-type TabId = 'overview' | 'tracks' | 'submissions' | 'profile' | 'earnings';
+type TabId = 'overview' | 'tracks' | 'submissions' | 'earnings';
 
 export default function DashboardPage() {
   return (
@@ -253,7 +253,7 @@ function DashboardContent() {
   const tabs: TabDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Campaigns' : 'Submissions', icon: Megaphone, badge: isArtist && activeCount > 0 ? activeCount : undefined },
-    { id: 'profile', label: 'Profile', icon: User },
+    // Profile tab removed — moved to /settings
     { id: 'earnings', label: 'Balance', icon: DollarSign },
     // Board tab removed — no function
   ];
@@ -527,8 +527,8 @@ function DashboardContent() {
 
               {/* Kanban tab removed */}
 
-              {tab === 'profile' && (
-                <ProfileTab
+              {/* Profile tab removed — moved to /settings */}
+              {false && <ProfileTab
                   isArtist={isArtist}
                   artistProfile={artistProfile}
                   displayName={displayName}

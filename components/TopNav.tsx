@@ -99,8 +99,8 @@ export default function Header() {
                         <p className="text-sm font-medium truncate">{profile.name || 'User'}</p>
                         <p className="text-[10px] text-muted-foreground truncate">{profile.email}</p>
                       </div>
-                      <Link href="/settings" onClick={() => setOpen(false)} className="shrink-0 p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors">
-                        <Settings size={15} className="text-muted-foreground hover:text-foreground" />
+                      <Link href="/settings" onClick={() => setOpen(false)} className="shrink-0 p-2 rounded-xl hover:bg-white/[0.06] transition-colors">
+                        <Settings size={18} className="text-muted-foreground hover:text-foreground" />
                       </Link>
                     </div>
                   </div>
@@ -135,6 +135,7 @@ export default function Header() {
                     <NavItem href="/messages" icon={MessageCircle} label="Messages" onClick={() => setOpen(false)} />
                     <NavItem href="/faq" icon={LifeBuoy} label="Support" onClick={() => setOpen(false)} />
                     <NavItem href="/earnings" icon={Banknote} label="Leaderboard" onClick={() => setOpen(false)} />
+                    <NavItem href="/settings" icon={Settings} label="Settings" onClick={() => setOpen(false)} />
                   </div>
 
                   <div className="border-t border-white/[0.05] py-1">
