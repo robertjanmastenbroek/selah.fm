@@ -37,7 +37,7 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
   const [requireFtc, setRequireFtc] = useState(false);
   const [minVideoLength, setMinVideoLength] = useState('');
   const [captionReq, setCaptionReq] = useState('');
-  const [platforms, setPlatforms] = useState<string[]>(['tiktok', 'instagram', 'youtube', 'facebook']);
+  const [platforms, setPlatforms] = useState<string[]>(['tiktok', 'instagram', 'youtube']);
   const [requirements, setRequirements] = useState('');
 
   const togglePlatform = (p: string) => {
@@ -48,7 +48,7 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
     { id: 'tiktok', label: 'TikTok' },
     { id: 'instagram', label: 'Reels' },
     { id: 'youtube', label: 'Shorts' },
-    { id: 'facebook', label: 'Facebook' },
+    // { id: 'facebook', label: 'Facebook' }, — removed: focusing on 3 platforms
   ];
 
   const reset = () => {
@@ -65,7 +65,7 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
     setRequireFtc(false);
     setMinVideoLength('');
     setCaptionReq('');
-    setPlatforms(['tiktok', 'instagram', 'youtube', 'facebook']);
+    setPlatforms(['tiktok', 'instagram', 'youtube']);
     setRequirements('');
   };
 

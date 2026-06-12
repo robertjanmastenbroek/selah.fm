@@ -43,7 +43,7 @@ export default function SubmitVideoModal({ open, onClose, tracks, artistSlug, ar
     if (url.includes('tiktok.com')) setPlatform('tiktok');
     else if (url.includes('instagram.com') || url.includes('reels')) setPlatform('instagram');
     else if (url.includes('youtube.com') || url.includes('youtu.be')) setPlatform('youtube');
-    else if (url.includes('facebook.com')) setPlatform('facebook');
+    // Facebook removed — focusing on 3 platforms
   };
 
   const handleSubmit = async () => {
