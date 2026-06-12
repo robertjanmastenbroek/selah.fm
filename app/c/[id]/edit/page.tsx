@@ -85,9 +85,13 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
           </div>
           <div>
             <label className="text-[10px] font-medium mb-1 block text-muted-foreground">CPM rate ($ per 1,000 views)</label>
-            <input type="number" value={Number(form.cpm_rate_cents / 100).toFixed(2)} onChange={e => setForm(f => ({ ...f, cpm_rate_cents: Math.round(parseFloat(e.target.value || '0') * 100) }))}
+            <input type="number" value={Number(form.cpm_rate_cents / 100).toFixed(2)}
               step="0.01" min="0.01" placeholder="0.10"
-              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+              disabled={parseInt(campaign?.approved_submissions || '0') > 0}
+              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed" />
+            {parseInt(campaign?.approved_submissions || '0') > 0 && (
+              <p className="text-[9px] text-muted-foreground/50 mt-1">Locked — submissions exist for this campaign.</p>
+            )}
           </div>
           <div>
             <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Requirements & instructions</label>
