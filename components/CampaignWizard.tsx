@@ -245,7 +245,13 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
                 </div>
 
                 <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags (optional)" />
-                <Input value={requiredHashtags} onChange={e => setRequiredHashtags(e.target.value)} placeholder="Required hashtags" />
+                <div className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                  <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#D6A85F' }}>#selahfm</span>
+                  <span className="text-[10px]" style={{ color: '#6B6760' }}>+</span>
+                  <input value={requiredHashtags.replace('#selahfm', '').trim()} onChange={e => setRequiredHashtags('#selahfm ' + e.target.value)}
+                    placeholder="@artist additional tags"
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none" />
+                </div>
 
                 <div className="flex items-center gap-3">
                   <input type="checkbox" id="wiz-ftc" checked={requireFtc} onChange={e => setRequireFtc(e.target.checked)} className="rounded" />

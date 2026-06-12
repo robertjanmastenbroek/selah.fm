@@ -127,7 +127,15 @@ export async function PATCH(
     
     // Fields that can be explicitly set to null (distinguish "clear" from "keep")
     const coverArtUrl = body.coverArtUrl !== undefined ? (body.coverArtUrl || null) : null;
-    const requiredHashtags = body.requiredHashtags !== undefined ? (body.requiredHashtags || null) : null;
+    // Always ensure #selahfm is in required hashtags — enforced server-side
+    let requiredHashtags: string | null = null;
+    if (body.requiredHashtags !== undefined) {
+      requiredHashtags = (body.requiredHashtags || '');
+      if (!requiredHashtags.includes('#selahfm') && !requiredHashtags.includes('selahfm')) {
+        requiredHashtags = '#selahfm ' + requiredHashtags;
+      }
+      requiredHashtags = requiredHashtags.slice(0, 500) || null;
+    }
     const captionRequirements = body.captionRequirements !== undefined ? (body.captionRequirements || null) : null;
     const contentAssetsUrl = body.contentAssetsUrl !== undefined ? (body.contentAssetsUrl || '') : null;
 

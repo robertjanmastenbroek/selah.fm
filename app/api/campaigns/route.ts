@@ -204,7 +204,11 @@ export async function POST(request: Request) {
     }
 
     const { trackTitle, trackUrl, cpmRate, budget, maxPayout, requirements, driveUrl, hashtags, coverArtUrl } = validation.sanitized!;
-    const { requiredHashtags, requireFtc, minVideoLength, captionRequirements } = body;
+    // Always ensure #selahfm is in required hashtags
+    const rawRequiredHashtags = body.requiredHashtags || '';
+    const requiredHashtags = (rawRequiredHashtags.includes('#selahfm') || rawRequiredHashtags.includes('selahfm'))
+      ? rawRequiredHashtags : '#selahfm ' + rawRequiredHashtags;
+    const { requireFtc, minVideoLength, captionRequirements } = body;
 
     const session = await getSession(request);
     if (!session) {

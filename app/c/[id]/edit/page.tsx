@@ -123,10 +123,14 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
               className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground focus:border-primary/30 focus:outline-none resize-y" />
           </div>
           <div>
-            <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Required hashtags</label>
-            <input value={form.required_hashtags} onChange={e => setForm(f => ({ ...f, required_hashtags: e.target.value }))}
-              placeholder="#selahfm @artist"
-              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground focus:border-primary/30 focus:outline-none" />
+            <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Required hashtags <span className="text-amber-400">(read-only)</span></label>
+            <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+              <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#D6A85F' }}>#selahfm</span>
+              <span className="text-[10px]" style={{ color: '#6B6760' }}>+</span>
+              <input value={form.required_hashtags.replace('#selahfm', '').trim()} onChange={e => setForm(f => ({ ...f, required_hashtags: '#selahfm ' + e.target.value }))}
+                placeholder="@artist additional tags"
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none" />
+            </div>
           </div>
 
           <div className="border-t border-white/[0.06] pt-4 mt-6">
