@@ -192,11 +192,7 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
 
 function SupporterGrid({ supporters, totalCount }: { supporters: any[]; totalCount: number }) {
   if (!supporters || supporters.length === 0) {
-    return (
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="text-muted-foreground/50">Be the first to support this campaign</span>
-      </div>
-    );
+    return null; // Don't show 'be first' — campaign may have funding from other sources
   }
 
   const visible = supporters.slice(0, 8);
