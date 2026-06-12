@@ -130,11 +130,11 @@ export async function PATCH(
     // Always ensure #selahfm is in required hashtags — enforced server-side
     let requiredHashtags: string | null = null;
     if (body.requiredHashtags !== undefined) {
-      requiredHashtags = (body.requiredHashtags || '');
-      if (!requiredHashtags.includes('#selahfm') && !requiredHashtags.includes('selahfm')) {
+      requiredHashtags = (body.requiredHashtags || '').trim();
+      if (requiredHashtags && !requiredHashtags.includes('#selahfm') && !requiredHashtags.includes('selahfm')) {
         requiredHashtags = '#selahfm ' + requiredHashtags;
       }
-      requiredHashtags = requiredHashtags.slice(0, 500) || null;
+      if (requiredHashtags) requiredHashtags = requiredHashtags.slice(0, 500);
     }
     const captionRequirements = body.captionRequirements !== undefined ? (body.captionRequirements || null) : null;
     const contentAssetsUrl = body.contentAssetsUrl !== undefined ? (body.contentAssetsUrl || '') : null;

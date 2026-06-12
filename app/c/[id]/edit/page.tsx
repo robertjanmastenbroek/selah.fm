@@ -63,9 +63,9 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
           socialLinks: JSON.stringify({ spotify: form.spotify_url, apple_music: form.apple_music_url, deezer: form.deezer_url }),
         }),
       });
-      if (res.ok) { setMessage('Saved!'); setTimeout(() => setMessage(''), 2000); }
-      else { const e = await res.json(); setMessage('Error: ' + (e.error || 'Unknown')); }
-    } catch { setMessage('Network error'); }
+      if (res.ok) { setMessage('Changes saved successfully'); }
+      else { const e = await res.json(); setMessage(e.error || 'Something went wrong'); }
+    } catch { setMessage('Network error — check your connection'); }
     setSaving(false);
   };
 
@@ -80,8 +80,21 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
         <h1 className="text-xl font-bold mb-6">Edit Campaign</h1>
 
         {message && (
-          <div className={`mb-4 px-4 py-3 rounded-xl text-sm ${message === 'Saved!' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-            {message}
+          <div className="flex items-center justify-between px-5 py-3 rounded-xl border text-sm font-medium sticky top-0 z-10 shadow-xl"
+            style={message.includes('successfully')
+              ? { background: 'rgba(34,197,94,0.12)', borderColor: 'rgba(34,197,94,0.25)', color: '#22C55E' }
+              : { background: 'rgba(239,68,68,0.12)', borderColor: 'rgba(239,68,68,0.25)', color: '#EF4444' }}>
+            <div className="flex items-center gap-2">
+              {message.includes('successfully') ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              )}
+              {message}
+            </div>
+            <button onClick={() => setMessage('')} className="p-1 rounded-lg hover:bg-white/[0.06] transition-all active:scale-90">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
         )}
 
