@@ -1030,9 +1030,9 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               {/* Activity Timeline */}
               <ActivityTimeline campaign={campaign} />
               {/* Trust bar + actions */}
-              <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
+              <div className="mt-6 space-y-3">
                 <TrustBar />
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 pt-1">
                   <button onClick={() => setShareOpen(true)}
                     className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors active:scale-95">
                     <Share2 size={14} /> Share
