@@ -528,37 +528,6 @@ function DashboardContent() {
               {/* Kanban tab removed */}
 
               {/* Profile tab removed — moved to /settings */}
-              {false && <ProfileTab
-                  isArtist={isArtist}
-                  artistProfile={artistProfile}
-                  displayName={displayName}
-                  artistSlug={artistSlug}
-                  editBio={editBio}
-                  setEditBio={setEditBio}
-                  editInstagram={editInstagram}
-                  setEditInstagram={setEditInstagram}
-                  editTiktok={editTiktok}
-                  setEditTiktok={setEditTiktok}
-                  editGenres={editGenres}
-                  setEditGenres={setEditGenres}
-                  bioChanged={bioChanged}
-                  setBioChanged={setBioChanged}
-                  saving={saving}
-                  saveProfile={saveProfile}
-                  importUrl={importUrl}
-                  setImportUrl={setImportUrl}
-                  importing={importing}
-                  importResult={importResult}
-                  handleImport={handleImport}
-                  manualTitle={manualTitle}
-                  setManualTitle={setManualTitle}
-                  manualUrl={manualUrl}
-                  setManualUrl={setManualUrl}
-                  manualAdding={manualAdding}
-                  handleAddManualTrack={handleAddManualTrack}
-                  profile={profile}
-                />
-              )}
 
               {tab === 'earnings' && (
                 <EarningsTab
