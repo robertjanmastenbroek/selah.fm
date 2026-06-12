@@ -264,11 +264,13 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                       }
                     </Button>
 
-                    {/* Trust */}
+                    {/* Trust — creator-focused */}
                     <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/40">
-                      <span className="flex items-center gap-1"><Shield size={10} /> You approve before paying</span>
+                      <span className="flex items-center gap-1"><DollarSign size={10} /> You earn 80%</span>
                       <span>·</span>
-                      <span>Paid via Stripe</span>
+                      <span className="flex items-center gap-1"><Check size={10} /> Paid via Stripe</span>
+                      <span>·</span>
+                      <span className="flex items-center gap-1"><Eye size={10} /> Verified views only</span>
                     </div>
                   </div>
                 </>
