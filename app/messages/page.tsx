@@ -300,7 +300,7 @@ export default function MessagesPage() {
                   <NewMessageButton onStart={loadConversations} />
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto">
+              <div className={`flex-1 overflow-y-auto ${isMobile && selectedUser ? 'w-full' : ''}`}>
                 {loading ? [1,2,3].map(i => (
                   <div key={i} className="flex items-center gap-3 p-4 animate-pulse"><div className="w-10 h-10 rounded-full bg-white/[0.04]" /><div className="flex-1 space-y-2"><div className="h-3 w-24 bg-white/[0.04] rounded" /><div className="h-2 w-40 bg-white/[0.02] rounded" /></div></div>
                 )) : conversations.length===0 ? (
@@ -355,8 +355,8 @@ export default function MessagesPage() {
                     <div key={m.id}>
                       {label && <div className="flex items-center gap-3 py-2"><div className="flex-1 h-px bg-white/[0.04]" /><span className="text-[10px] text-muted-foreground/40 font-medium shrink-0">{label}</span><div className="flex-1 h-px bg-white/[0.04]" /></div>}
                       <div className={`flex ${isMe?'justify-end':'justify-start'}`}>
-                        <div className="group relative max-w-[75%]">
-                          <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isMe ? 'bg-primary text-white rounded-br-md' : 'bg-white/[0.04] text-foreground rounded-bl-md'}`}>
+                        <div className="group relative max-w-[85%] sm:max-w-[70%]">
+                          <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed break-words whitespace-pre-wrap ${isMe ? 'bg-primary text-white rounded-br-md' : 'bg-white/[0.04] text-foreground rounded-bl-md'}`}>
                             {m.content}
                           </div>
                           {/* Status */}
