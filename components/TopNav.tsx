@@ -105,29 +105,7 @@ export default function Header() {
                     </div>
                   </div>
 
-                  {/* Messages preview */}
-                  {unreadMessages > 0 && (
-                    <div className="border-b border-white/[0.04]">
-                      <Link href="/dashboard" onClick={() => setOpen(false)}
-                        className="flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.03] transition-colors">
-                        <span className="text-xs font-semibold flex items-center gap-1.5">
-                          <MessageCircle size={12} className="text-primary" />
-                          Messages
-                          <span className="text-[10px] text-white px-1.5 py-0.5 rounded-full" style={{ background: 'linear-gradient(135deg, #4338CA, #5B7FFF)' }}>{unreadMessages}</span>
-                        </span>
-                        <span className="text-[10px] text-primary font-medium">View</span>
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* No alerts state */}
-                  {totalUnread === 0 && (
-                    <div className="px-4 py-3 border-b border-white/[0.04] text-center">
-                      <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1.5">
-                        <Sparkles size={11} className="text-accent/40" /> No new alerts
-                      </p>
-                    </div>
-                  )}
+                  {/* Notifications moved to bell icon only */}
 
                   {/* Navigation links */}
                   <div className="py-1">
