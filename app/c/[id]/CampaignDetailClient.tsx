@@ -1163,7 +1163,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: scrollY > 400 ? 0 : 100, opacity: scrollY > 400 ? 1 : 0 }}
         transition={{ duration: 0.3 }}
-        className="hidden md:flex fixed bottom-6 right-6 z-40 bg-[#0F0F23]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl p-4 items-center gap-3"
+        className="hidden md:flex fixed bottom-0 inset-x-0 z-40 bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3 items-center justify-center"
       >
         <button onClick={() => setJoinOpen(true)}
           className="px-6 py-3 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20">
