@@ -155,7 +155,13 @@ export default function BrowseClient() {
       if (searchQuery) p.set('search', searchQuery);
       p.set('limit', '50');
       const res = await fetch(`/api/campaigns?${p.toString()}`, { credentials: 'omit' });
-      if (res.ok) { const d = await res.json(); setCampaigns(d.campaigns || []); setTotal(d.total || 0); }
+      if (res.ok) {
+        const d = await res.json();
+        const items = d.campaigns || [];
+        setCampaigns(items);
+        setTotal(d.total || 0);
+        if (items.length < 50) setHasMore(false); // Nothing left to load
+      }
     } catch {} finally { setLoading(false); }
   };
 
@@ -288,7 +294,7 @@ export default function BrowseClient() {
             </div>
           )}
 
-          <div ref={sentinelRef} className="h-4 w-full" />
+          {hasMore && <div ref={sentinelRef} className="h-4 w-full" />}
           {loadingMore && <div className="flex justify-center py-6"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>}
           {!hasMore && campaigns.length > 0 && <p className="text-center text-[10px] text-muted-foreground/30 py-6">All campaigns loaded</p>}
         </div>
