@@ -220,7 +220,12 @@ function DashboardContent() {
   const totalSubmissions = rawCampaigns.reduce((s: number, c: any) => s + parseInt(c.approved_submissions || '0'), 0);
   const activeCount = rawCampaigns.filter((c: any) => c.status === 'active').length;
 
-  const formatViews = (v: number) => v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v);
+  const formatViews = (v: number) => {
+    if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
+    return String(v);
+  };
   const formatDollars = (c: number) => `$${(c / 100).toFixed(0)}`;
 
   // ─── CSV Export ──────────────────────────────────────────────

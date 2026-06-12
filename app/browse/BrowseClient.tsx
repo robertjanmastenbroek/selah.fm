@@ -15,7 +15,12 @@ import {
 
 const GENRES = ['pop', 'rock', 'hip-hop', 'electronic', 'r&b', 'country', 'latin', 'jazz', 'classical', 'indie', 'folk', 'metal', 'punk', 'reggae', 'blues', 'soul', 'funk', 'world', 'alternative', 'dance'];
 
-function formatViews(v: number) { return v >= 1000 ? `${(v / 1000).toFixed(1)}K` : String(v); }
+function formatViews(v: number) {
+  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
+  return String(v);
+}
 function formatDollars(c: number) { return `$${(c / 100).toFixed(0)}`; }
 
 // ── CAMPAIGN CARD ─────────────────────────────────────────────
