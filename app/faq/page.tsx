@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
 import { ChevronDown } from 'lucide-react';
+import SupportWidget from '@/components/SupportWidget';
 
 interface FAQItem { q: string; a: string; section: string; }
 
@@ -286,6 +287,7 @@ export default function FAQPage() {
             Email us at <a href="mailto:support@selah.fm" className="text-primary hover:underline">support@selah.fm</a> or use the chat widget in the bottom-right corner.
           </p>
         </motion.div>
+        <SupportWidget />
       </main>
     </div>
   );

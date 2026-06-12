@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { ToastProvider } from '@/components/Toast';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PageTransition from '@/components/PageTransition';
-import SupportWidget from '@/components/SupportWidget';
+// SupportWidget removed from layout — only on /faq page
 import CookieBanner from '@/components/CookieBanner';
 import NewsletterSignup from '@/components/NewsletterSignup';
 import { Poppins, Righteous } from "next/font/google";
@@ -129,7 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Analytics />
         </Suspense>
         <Suspense fallback={null}>
-          <SupportWidget />
+          {/* SupportWidget moved to /faq page */}
         </Suspense>
         <Suspense fallback={null}>
           <CookieBanner />
