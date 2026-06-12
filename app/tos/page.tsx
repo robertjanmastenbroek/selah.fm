@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Terms of Service — Selah.fm',
-  description: 'Marketplace terms for Selah.fm — payment terms, refund policy, content ownership, dispute resolution, and platform liability for artists and creators.',
+  description: 'Terms of Service for Selah.fm — audio usage requirements, CPM rate lock, payment terms, and content ownership. Artists and creators agree to these terms.',
 };
 
 export default function TosPage() {
@@ -55,7 +55,7 @@ export default function TosPage() {
             Refund requests must be submitted in writing to contact@selah.fm.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">5. Content Ownership</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">5. Content Ownership &amp; License Terms</h2>
           <p>
             Creators retain full ownership of the videos they create and submit. 
             Artists retain full ownership of their music, including the audio tracks used in promotional content. 
@@ -64,6 +64,14 @@ export default function TosPage() {
             the video on social media for promotional purposes. 
             Artists grant Creators a limited, non-exclusive license to use the Artist&rsquo;s music 
             solely for creating promotional content on approved Platforms.
+          </p>
+          <p className="mt-4">
+            <strong>5.1 Audio Usage Requirement.</strong> The licensed song must be clearly audible as a primary audio element 
+            in the Creator&rsquo;s video. If any other vocal performance (singing, rapping, spoken word) is present 
+            in the video alongside or in place of the licensed song, this license is void unless that vocal 
+            performance is explicitly derived from or remixing the licensed song. For the avoidance of doubt, 
+            adding an independent vocal, rap, or spoken-word track over the licensed song constitutes a separate 
+            use not covered by this license.
           </p>
 
           <h2 className="text-foreground font-semibold text-lg mt-8">6. CPM Rate Lock</h2>
