@@ -831,7 +831,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
   const totalRaised = (campaign.total_budget_cents || donations.totalCents || 0) / 100;
   const supporters = donations.supporters || [];
   const artistName = campaign.artist_name || 'Artist';
-  const displayTitle = campaign.title || campaign.track_title;
+  const displayTitle = campaign.title || campaign.track_title || campaign.campaign_title || 'Campaign';
   const trackTitle = campaign.track_title || '';
   const isUnclaimed = campaign.is_unclaimed && !campaign.claimed_by_user_id;
   const claimCode = campaign.claim_code;

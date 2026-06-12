@@ -157,7 +157,7 @@ export default async function CampaignPage({ params }: Props) {
 
   const lightweightCampaign = stripBase64Images(campaign);
 
-  const displayTitle = campaign?.title || campaign?.track_title || 'Untitled';
+  const displayTitle = campaign?.title || campaign?.track_title || campaign?.campaign_title || 'Campaign';
   const artistName = campaign?.artist_name || 'an artist';
   const trackTitle = campaign?.track_title || '';
   const imageUrl = absoluteUrl(campaign?.cover_art_url);
