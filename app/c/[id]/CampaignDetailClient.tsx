@@ -373,7 +373,6 @@ function ShareModal({ open, onClose, url, title, artistName, cpmDollars, trackTi
 
 function TrustBar() {
   const badges = [
-    { icon: <Shield size={14} />, text: 'Free to start' },
     { icon: <DollarSign size={14} />, text: 'You earn 80%' },
     { icon: <Check size={14} />, text: 'Paid via Stripe' },
     { icon: <Eye size={14} />, text: 'Verified views only' },
