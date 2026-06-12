@@ -13,7 +13,7 @@ import {
   X, Sparkles,
 } from 'lucide-react';
 
-const GENRES = ['pop', 'rock', 'hip-hop', 'electronic', 'r&b', 'country', 'latin', 'jazz', 'classical', 'indie', 'folk', 'metal', 'punk', 'reggae', 'blues', 'soul', 'funk', 'world', 'alternative', 'dance'];
+// GENRES removed — focusing on campaigns
 
 function formatViews(v: number) {
   if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
@@ -239,15 +239,6 @@ export default function BrowseClient() {
                 className="w-full rounded-xl bg-white/[0.06] border border-white/[0.06] pl-9 pr-8 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary/30 focus:bg-white/[0.08] transition-all" />
               {searchInput && <button onClick={clearSearch} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-foreground"><X size={14} /></button>}
             </div>
-          </div>
-          {/* Quick genre pills */}
-          <div className="flex flex-wrap gap-2 mt-5 relative z-10">
-            {['pop', 'electronic', 'hip-hop', 'indie', 'r&b'].map(g => (
-              <button key={g} onClick={() => { setSelectedGenre(g === selectedGenre ? '' : g); }}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-medium border transition-all active:scale-95 ${
-                  selectedGenre === g ? 'border-primary bg-primary/[0.08] text-primary' : 'border-white/[0.06] text-muted-foreground/60 hover:text-foreground hover:border-white/[0.12]'
-                }`}>{g.charAt(0).toUpperCase() + g.slice(1)}</button>
-            ))}
           </div>
         </div>
 
