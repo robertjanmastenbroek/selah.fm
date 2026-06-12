@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/TopNav';
-import LiveTicker from '@/components/LiveTicker';
 import { useToast } from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -439,30 +438,7 @@ function ArtistCredibility({ campaign, artistSlug }: { campaign: any; artistSlug
 // SOCIAL PROOF HEADER BAR
 // ════════════════════════════════════════════════════════════════
 
-function SocialProofBar({ submissions, views }: {
-  submissions: number; views: number;
-}) {
-  const stats = [
-    { icon: <Film size={14} />, value: submissions, label: 'submissions', color: 'text-indigo-400' },
-    { icon: <Eye size={14} />, value: views, label: 'views', color: 'text-emerald-400' },
-  ];
-
-  return (
-    <div className="rounded-2xl bg-gradient-to-r from-white/[0.03] to-indigo-500/[0.02] border border-white/[0.06] p-4">
-      <div className="flex items-center gap-4 flex-wrap">
-        {stats.map((s, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <span className={s.color}>{s.icon}</span>
-            <span className="font-bold text-sm">
-              <AnimatedCounter value={s.value} />
-            </span>
-            <span className="text-xs text-muted-foreground">{s.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+/* SocialProofBar removed — stats now in unified stat bar */
 
 // ════════════════════════════════════════════════════════════════
 // SUBMISSION GALLERY (visual thumbnails)
@@ -931,37 +907,38 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
           <div className="md:w-[40%] px-5 py-6 md:py-8 md:flex md:flex-col md:justify-center md:border-l md:border-white/[0.06]">
             <div className="border-t border-white/06 mb-5 md:hidden" />
 
-            {/* Social proof bar */}
-            <SocialProofBar
-              submissions={submissionCount}
-              views={views}
-            />
-
-            {/* Big stats */}
-            <div className="flex items-center gap-8 px-1 py-2">
+            {/* Unified stat bar — single source of truth */}
+            <div className="flex flex-wrap items-center gap-5 px-1 py-2">
+              {submissionCount > 0 && (
+                <div>
+                  <p className="text-2xl font-bold text-white"><AnimatedCounter value={submissionCount} /></p>
+                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">submissions</p>
+                </div>
+              )}
               {views > 0 && (
                 <div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className="text-2xl font-bold text-emerald-400">
                     {views >= 1000000
                       ? `${(views / 1000000).toFixed(1)}M`
                       : views >= 1000
                       ? `${(views / 1000).toFixed(1)}K`
                       : views.toLocaleString()}
                   </p>
-                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Verified views</p>
+                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">verified views</p>
                 </div>
               )}
               {budget > 0 && (
                 <div>
                   <p className="text-2xl font-bold text-amber-400">${budget.toFixed(0)}</p>
-                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">Campaign budget</p>
+                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">campaign budget</p>
                 </div>
               )}
-            </div>
-
-            {/* Live ticker */}
-            <div className="mt-3">
-              <LiveTicker campaignId={id} />
+              {spent > 0 && (
+                <div>
+                  <p className="text-2xl font-bold text-rose-400">${spent.toFixed(0)}</p>
+                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">paid to creators</p>
+                </div>
+              )}
             </div>
 
             {/* Supporter grid (mobile) */}

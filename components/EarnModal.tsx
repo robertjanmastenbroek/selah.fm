@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/Toast';
 import { trackSubmitContent } from '@/lib/analytics';
-import { Camera, DollarSign, ArrowLeft, Check, Shield, Music4, Download, Film, Banknote } from 'lucide-react';
+import { Camera, DollarSign, ArrowLeft, Check, Shield, Music4, Download, Film, Banknote, Eye } from 'lucide-react';
 
 interface EarnModalProps {
   open: boolean;
