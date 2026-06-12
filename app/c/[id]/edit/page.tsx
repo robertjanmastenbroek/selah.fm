@@ -124,12 +124,48 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
           <div className="border-t border-white/[0.06] pt-4 mt-6">
             <h2 className="text-xs font-semibold mb-3 text-muted-foreground">Media & Links</h2>
             <div className="space-y-3">
+              {/* ── Cover Art Editor ── */}
               <div>
-                <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Cover art URL</label>
-                <input value={form.cover_art_url} onChange={e => setForm(f => ({ ...f, cover_art_url: e.target.value }))}
-                  placeholder="https://example.com/cover.jpg"
-                  className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
-                {form.cover_art_url && <img src={form.cover_art_url} alt="" className="mt-2 w-20 h-20 rounded-lg object-cover" />}
+                <label className="text-[10px] font-medium mb-2 block text-muted-foreground">Cover art</label>
+                {/* Drop zone */}
+                <div
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('image/')) { const r = new FileReader(); r.onload = () => setForm(prev => ({ ...prev, cover_art_url: r.result as string })); r.readAsDataURL(f); } }}
+                  className="relative rounded-xl border-2 border-dashed border-white/[0.08] hover:border-primary/30 transition-all cursor-pointer overflow-hidden group"
+                  style={{ background: form.cover_art_url ? 'transparent' : 'rgba(255,255,255,0.02)', minHeight: 180 }}>
+                  {form.cover_art_url ? (
+                    <>
+                      <img src={form.cover_art_url} alt="Cover" className="w-full h-48 object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <label className="px-3 py-1.5 rounded-lg text-[10px] font-semibold cursor-pointer bg-white/10 text-white hover:bg-white/20 transition-all">
+                          Change image
+                          <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                            onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setForm(prev => ({ ...prev, cover_art_url: r.result as string })); r.readAsDataURL(f); } }} />
+                        </label>
+                        <button onClick={() => setForm(prev => ({ ...prev, cover_art_url: '' }))}
+                          className="px-3 py-1.5 rounded-lg text-[10px] font-semibold bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 transition-all">Remove</button>
+                      </div>
+                    </>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-48 cursor-pointer">
+                      <div className="w-10 h-10 rounded-full bg-white/[0.04] flex items-center justify-center mb-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground/40">
+                          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                      </div>
+                      <p className="text-xs text-muted-foreground/50 mb-1">Drop an image or click to upload</p>
+                      <p className="text-[9px] text-muted-foreground/30">JPG, PNG, WebP</p>
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+                        onChange={e => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = () => setForm(prev => ({ ...prev, cover_art_url: r.result as string })); r.readAsDataURL(f); } }} />
+                    </label>
+                  )}
+                </div>
+                {/* URL fallback */}
+                <div className="mt-2">
+                  <input value={form.cover_art_url || ''} onChange={e => setForm(f => ({ ...f, cover_art_url: e.target.value }))}
+                    placeholder="Or paste an image URL..."
+                    className="w-full rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-1.5 text-[11px] text-foreground placeholder:text-muted-foreground/30 focus:border-primary/30 focus:outline-none" />
+                </div>
               </div>
               <div>
                 <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Track audio URL (where to listen)</label>
