@@ -694,7 +694,7 @@ function TracksTab({
                             e.stopPropagation();
                             if (!confirm('Remove this track from your dashboard?')) return;
                             try {
-                              const res = await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'archived' }) });
+                              const res = await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled' }) });
                               if (!res.ok) {
                                 const err = await res.json();
                                 alert('Failed: ' + (err.error || 'Unknown error'));

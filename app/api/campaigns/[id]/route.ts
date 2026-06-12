@@ -162,7 +162,7 @@ export async function PATCH(
 
     // ── Status update (archive/draft) ──────────────────────────
     const newStatus = body.status !== undefined ? String(body.status) : null;
-    const validStatuses = ['active', 'draft', 'paused', 'completed', 'archived'];
+    const validStatuses = ['active', 'draft', 'paused', 'completed', 'cancelled'];
     const updateStatus = newStatus && validStatuses.includes(newStatus) ? newStatus : null;
 
     // Convert base64 cover art to DB-stored image (survives deploys)
