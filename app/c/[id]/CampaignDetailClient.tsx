@@ -841,6 +841,19 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
   const { addToast } = useToast();
   const router = useRouter();
   const scrollY = useScrollPosition();
+  const [nearBottom, setNearBottom] = useState(false);
+
+  // Track if we're near the bottom of the page — hide CTA so footer is visible
+  useEffect(() => {
+    const check = () => {
+      const scrollBottom = window.scrollY + window.innerHeight;
+      const pageHeight = document.documentElement.scrollHeight;
+      setNearBottom(scrollBottom >= pageHeight - 120);
+    };
+    window.addEventListener('scroll', check, { passive: true });
+    check();
+    return () => window.removeEventListener('scroll', check);
+  }, []);
   const heroRef = useRef<HTMLDivElement>(null);
 
   const [shareOpen, setShareOpen] = useState(false);
@@ -1230,7 +1243,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       {/* ════════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ y: 100, opacity: 0 }}
-        animate={{ y: scrollY > 400 ? 0 : 100, opacity: scrollY > 400 ? 1 : 0 }}
+        animate={{ y: scrollY > 400 && !nearBottom ? 0 : 100, opacity: scrollY > 400 && !nearBottom ? 1 : 0 }}
         transition={{ duration: 0.3 }}
         className="hidden md:flex fixed bottom-0 inset-x-0 z-40 bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3 items-center justify-center"
       >
@@ -1245,7 +1258,8 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       {/* ════════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ y: 100 }}
-        animate={{ y: 0 }}
+        animate={{ y: nearBottom ? 100 : 0 }}
+        transition={{ duration: 0.3 }}
         className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3"
       >
         <button onClick={() => setJoinOpen(true)}
