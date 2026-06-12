@@ -18,7 +18,7 @@ async function getCampaign(id: string) {
             da.social_links, da.artist_name as da_artist_name,
             NULL as audit_youtube_url,
             NULL as spotify_embed_url,
-            ap.slug as artist_slug,
+            ap.slug as artist_slug
           FROM campaigns c
           LEFT JOIN campaign_stats v ON v.id = c.id
           LEFT JOIN users u ON u.id = c.artist_id
@@ -34,7 +34,7 @@ async function getCampaign(id: string) {
             da.social_links, da.artist_name as da_artist_name,
             NULL as audit_youtube_url,
             NULL as spotify_embed_url,
-            ap.slug as artist_slug,
+            ap.slug as artist_slug
           FROM campaigns c
           LEFT JOIN campaign_stats v ON v.id = c.id
           LEFT JOIN users u ON u.id = c.artist_id
