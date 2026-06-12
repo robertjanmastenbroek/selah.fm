@@ -11,7 +11,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [campaign, setCampaign] = useState<any>(null);
-  const [form, setForm] = useState({ title: '', track_title: '', requirements: '', cpm_rate_cents: 0, total_budget_cents: 0, caption_requirements: '', required_hashtags: '', cover_art_url: '', track_url: '', youtube_video_url: '', spotify_url: '', apple_music_url: '', deezer_url: '' });
+  const [form, setForm] = useState({ title: '', track_title: '', description: '', requirements: '', cpm_rate_cents: 0, total_budget_cents: 0, caption_requirements: '', required_hashtags: '', cover_art_url: '', track_url: '', youtube_video_url: '', spotify_url: '', apple_music_url: '', deezer_url: '' });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -24,6 +24,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
           setForm({
             title: d.title || '',
             track_title: d.track_title || '',
+            description: d.description || '',
             requirements: d.requirements || '',
             cpm_rate_cents: d.cpm_rate_cents || 0,
             total_budget_cents: d.total_budget_cents || 0,
@@ -51,6 +52,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
         body: JSON.stringify({
           title: form.title,
           trackTitle: form.track_title,
+          description: form.description,
           requirements: form.requirements,
           cpmRate: (form.cpm_rate_cents / 100).toFixed(2),
           captionRequirements: form.caption_requirements,
@@ -103,6 +105,12 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
             {parseInt(campaign?.approved_submissions || '0') > 0 && (
               <p className="text-[9px] text-muted-foreground/50 mt-1">Locked — submissions exist for this campaign.</p>
             )}
+          </div>
+          <div>
+            <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Description (shown on campaign page)</label>
+            <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4}
+              placeholder="Tell creators what this campaign is about..."
+              className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none resize-y" />
           </div>
           <div>
             <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Requirements & instructions</label>

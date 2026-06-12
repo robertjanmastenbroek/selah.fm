@@ -527,7 +527,7 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
   count: number; submissions: any[];
 }) {
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['About', 'Requirements', 'FAQ'];
+  const tabs = ['Description', 'Requirements', 'FAQ'];
 
   return (
     <div className="w-full">

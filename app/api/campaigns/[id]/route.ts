@@ -114,6 +114,7 @@ export async function PATCH(
 
     // ── Prepare update values ──────────────────────────────────
     const trackTitle = body.trackTitle !== undefined ? String(body.trackTitle).slice(0, 200) : null;
+    const description = body.description !== undefined ? String(body.description).slice(0, 5000) : null;
     const title = body.title !== undefined ? (body.title ? String(body.title).slice(0, 300) : null) : null;
     const trackUrl = body.trackUrl !== undefined ? String(body.trackUrl).slice(0, 2048) : null;
     const requirements = body.requirements !== undefined ? String(body.requirements).slice(0, 2000) : null;
@@ -184,6 +185,7 @@ export async function PATCH(
     const result = await sql`
       UPDATE campaigns SET
         track_title = COALESCE(${trackTitle}, track_title),
+        description = COALESCE(${description}, description),
         title = CASE WHEN ${body.title !== undefined} THEN ${title} ELSE title END,
         track_url = COALESCE(${trackUrl}, track_url),
         cover_art_url = CASE WHEN ${hasCoverArt} THEN ${finalCoverArt} ELSE cover_art_url END,
