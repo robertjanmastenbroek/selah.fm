@@ -54,12 +54,12 @@ export async function GET() {
       totalDonatedCents = Number(donors?.total || 0);
     } catch { /* table may not exist */ }
 
-    // Total deposited/funded (campaign budgets)
+    // Total deposited/funded (active campaigns only)
     let totalDepositedCents = 0;
     try {
       const [deposits] = await sql`
         SELECT COALESCE(SUM(total_budget_cents)::bigint, 0) as total
-        FROM campaigns WHERE total_budget_cents > 0
+        FROM campaigns WHERE total_budget_cents > 0 AND status = 'active'
       `;
       totalDepositedCents = Number(deposits?.total || 0);
     } catch (e: any) { console.error('Unhandled error in api/stats/route.ts:', e); }

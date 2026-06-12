@@ -19,7 +19,7 @@ function formatCount(n: number): string {
 
 function formatMoney(cents: number): string {
   if (cents >= 100_000_000) return '$' + (cents / 100_000_000).toFixed(1) + 'M';
-  if (cents >= 100_000) return '$' + Math.floor(cents / 100_000) + 'K';
+  if (cents >= 100_000) return '$' + (cents / 100_000).toFixed(1) + 'K';
   return '$' + Math.max(0, Math.floor(cents / 100));
 }
 
@@ -233,7 +233,7 @@ export default function RootPage() {
               {stats.activeCampaigns > 0 && (
                 <div className="text-center">
                   <div className="text-[32px] md:text-[40px] font-bold text-white tracking-tight">{formatCount(stats.activeCampaigns)}</div>
-                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Funded tracks</div>
+                  <div className="text-[10px] text-white/30 mt-1 uppercase tracking-[0.15em] font-medium">Active campaigns</div>
                 </div>
               )}
               {stats.artists > 0 && (
