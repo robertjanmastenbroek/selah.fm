@@ -18,6 +18,7 @@ interface EarnModalProps {
   cpmCents: number;
   coverArtUrl?: string;
   contentAssetsUrl?: string;
+  tiktokSoundUrl?: string;
 }
 
 // ── Platform config ──
@@ -29,7 +30,7 @@ const PLATFORMS = [
 
 function platformName(id: string) { return PLATFORMS.find(p => p.id === id)?.label || id; }
 
-export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCents, coverArtUrl, contentAssetsUrl }: EarnModalProps) {
+export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCents, coverArtUrl, contentAssetsUrl, tiktokSoundUrl }: EarnModalProps) {
   const [platform, setPlatform] = useState('tiktok');
   const [url, setUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -257,6 +258,14 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                               `Search "${trackTitle}" on TikTok`
                             )}. Use the official audio — no screen recordings.
                           </p>
+                          {(tiktokSoundUrl || trackTitle) && (
+                            <a href={tiktokSoundUrl || `https://www.tiktok.com/search?q=${encodeURIComponent(trackTitle)}`} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-semibold transition-all hover:opacity-80"
+                              style={{color: '#D6A85F'}}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.45-1.04 1.16-1.18 1.89-.07.35-.13.82-.07 1.17.19 1.14 1.21 2.1 2.39 1.99.76-.04 1.47-.45 1.87-1.1.14-.23.23-.49.24-.76.05-1.52.02-3.04.03-4.56z"/></svg>
+                              {tiktokSoundUrl ? 'Use sound on TikTok' : 'Search on TikTok'}
+                            </a>
+                          )}
                         </div>
                       </div>
                       {/* Step 2 */}

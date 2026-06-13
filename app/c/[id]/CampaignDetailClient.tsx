@@ -1276,6 +1276,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         onClose={() => setJoinOpen(false)}
         trackTitle={trackTitle}
         cpmCents={campaign.cpm_rate_cents || 0}
+        tiktokSoundUrl={campaign.tiktok_sound_url}
       />
     </div>
   );
