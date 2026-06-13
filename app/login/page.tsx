@@ -132,7 +132,7 @@ function LoginForm() {
     setTiktokLoading(true);
     try {
       await supabase.auth.signInWithOAuth({
-        provider: 'tiktok',
+        provider: 'tiktok' as any,
         options: { redirectTo: buildRedirectUrl() },
       });
     } catch {
