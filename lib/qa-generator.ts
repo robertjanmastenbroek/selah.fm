@@ -77,13 +77,18 @@ export async function runQAGenerator(
     batchId = batch.id;
   }
 
-  // Pick unused questions — favor uncategorized ones that haven't been used as blog posts
+  // Pick unused questions — skip ones already used as blog posts or Q&A pages.
+  // Questions that were interviewed but never produced a blog post are fair game.
   const questions = await sql`
     SELECT bq.id, bq.raw_question, bq.category
     FROM batch_questions bq
     WHERE bq.batch_id = ${batchId}
       AND NOT EXISTS (SELECT 1 FROM used_questions uq WHERE uq.normalized_text = LOWER(REGEXP_REPLACE(bq.raw_question, '[^a-z0-9\\s]', '', 'g')))
-      AND NOT EXISTS (SELECT 1 FROM batch_interviews bi WHERE bi.source_question_id = bq.id)
+      AND NOT EXISTS (
+        SELECT 1 FROM batch_interviews bi
+        WHERE bi.source_question_id = bq.id
+          AND EXISTS (SELECT 1 FROM blog_posts bp WHERE bp.interview_id = bi.id)
+      )
       AND NOT EXISTS (SELECT 1 FROM qa_pages qp WHERE qp.source_question_id = bq.id)
     ORDER BY random()
     LIMIT ${QUESTIONS_PER_RUN}
