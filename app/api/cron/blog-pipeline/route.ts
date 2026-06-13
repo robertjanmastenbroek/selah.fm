@@ -182,12 +182,23 @@ export async function GET(request: Request) {
 
     // Step 2: Generate interviews — process 6 at a time to clear backlog faster
     const qs = await sql`
-      SELECT bq.id, bq.raw_question FROM batch_questions bq
+      SELECT bq.id, bq.raw_question, bq.category FROM batch_questions bq
       WHERE bq.batch_id = ${batchId}
         AND NOT EXISTS (SELECT 1 FROM batch_interviews bi WHERE bi.source_question_id = bq.id)
-      LIMIT 6
+      ORDER BY random()
+      LIMIT 12
     `;
-    for (const q of qs) {
+    // Category rotation: max 3 interviews from same category per run
+    const catCount = new Map<string, number>();
+    const cappedQs = qs.filter((q: any) => {
+      const cat = q.category || 'other';
+      const count = catCount.get(cat) || 0;
+      if (count >= 3) return false;
+      catCount.set(cat, count + 1);
+      return true;
+    });
+
+    for (const q of cappedQs) {
       try {
         const generatedQs = await generateInterviewQuestions(q.raw_question);
         if (generatedQs?.length) {

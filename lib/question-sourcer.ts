@@ -10,13 +10,17 @@ import sql from '@/lib/db';
 const ARTIST_SUBREDDITS = [
   'musicmarketing', 'WeAreTheMusicMakers', 'indiemusic', 'musicpromotion',
   'independentmusic', 'MusicInTheMaking', 'musicians', 'makinghiphop',
-  'bedroomproducers', 'Songwriting',
+  'bedroomproducers', 'Songwriting', 'edmproduction', 'audioengineering',
+  'SpotifyArtists', 'bandcamp', 'musicindustry', 'Music',
+  'LofiHipHop', 'IndieMusicFeedback',
 ];
 
 const CREATOR_SUBREDDITS = [
   'TikTokMarketing', 'TikTokTips', 'content_marketing', 'PartneredYoutube',
   'smallbusiness', 'socialmedia', 'digital_marketing', 'AffiliateMarket',
-  'NewTubers', 'SocialMediaMarketing',
+  'NewTubers', 'SocialMediaMarketing', 'Entrepreneur', 'sidehustle',
+  'WorkOnline', 'beermoney', 'passive_income', 'freelance',
+  'DigitalMarketing', 'SEO', 'Blogging', 'YouTubeCreators',
 ];
 
 interface RedditPost {
