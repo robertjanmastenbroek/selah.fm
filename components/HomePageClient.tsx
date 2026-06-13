@@ -517,40 +517,7 @@ export default function RootPage() {
         </section>
       )}
 
-      {/* ═══════════════ FAQ ═══════════════ */}
-      <section className="relative z-10 px-4 py-28 max-w-3xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-          <p className="text-[11px] tracking-[0.2em] uppercase text-white/25 font-semibold mb-2 text-center">FAQ</p>
-          <h2 className="text-3xl md:text-4xl font-heading tracking-tight mb-10 text-center">Common questions</h2>
-
-          <div className="space-y-3">
-            {[
-              { q: 'How does pricing work?', a: 'Artists set their own CPM rate (cost per 1,000 verified views). Creators earn 80% of the CPM rate. Selah.fm takes a 20% platform fee. There are no upfront costs — you only pay for verified views you approve.' },
-              { q: 'Do I need to pay upfront?', a: 'No. You only pay when you approve a creator\'s video. You deposit funds to your campaign budget, and payments are deducted per approved view.' },
-              { q: 'Who are the creators?', a: 'Our creators are vetted music content makers on TikTok, Instagram Reels, and YouTube Shorts. They apply to your campaign, and you approve only the videos you like.' },
-              { q: 'How do creators get paid?', a: 'When you approve a submission, the creator earns their CPM rate per 1,000 verified views. Payouts are processed via Stripe within 2-3 business days.' },
-              { q: 'Can I promote any genre?', a: 'Absolutely. Selah.fm supports all music genres. Creators browse campaigns by genre to find tracks that match their style.' },
-            ].map((item, i) => (
-              <details key={i} className="group rounded-xl border border-white/[0.04] bg-white/[0.01] overflow-hidden">
-                <summary className="flex items-center justify-between px-5 py-4 cursor-pointer text-sm font-medium text-white/70 hover:text-white transition-colors">
-                  {item.q}
-                  <ChevronDown size={14} className="text-white/20 group-open:rotate-180 transition-transform shrink-0 ml-3" />
-                </summary>
-                <div className="px-5 pb-4 text-xs text-white/30 leading-relaxed">
-                  {item.a}
-                </div>
-              </details>
-            ))}
-          </div>
-
-          <p className="text-center mt-8">
-            <Link href="/faq" className="text-xs text-[#818CF8] hover:text-[#A5B4FC] transition-colors">
-              Read all FAQs →
-            </Link>
-          </p>
-        </motion.div>
-      </section>
+      {/* First FAQ section removed — duplicate. Using the detailed one below. */}
 
       {/* ═══════════════ FAQ SECTION ═══════════════ */}
       <section className="relative z-10 px-4 py-28 max-w-4xl mx-auto">
