@@ -1163,47 +1163,18 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
                 </div>
               </div>
 
-              {/* Connected Platforms — moved to dedicated TikTok tab */}
-
-              {artistData?.transactions?.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground font-medium mt-4 mb-2">Recent transactions</p>
-                  {artistData.transactions.slice(0, 10).map((t: any) => (
-                    <div key={t.id} className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className={`shrink-0 ${t.type === 'deposit' ? 'text-emerald-400' : 'text-red-400'}`}>{t.type === 'deposit' ? '+' : '-'}</span>
-                        <span className="truncate text-muted-foreground">{t.description || t.type}</span>
-                      </div>
-                      <span className="font-medium shrink-0 ml-2">{t.type === 'deposit' ? '+' : '-'}${(Math.abs(t.amount_cents) / 100).toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="grid grid-cols-4 gap-2 pt-2">
+              <div className="grid grid-cols-3 gap-2 pt-2">
                 {[
-                  { label: 'Total deposited', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.total_budget_cents || 0), 0)) },
-                  { label: 'Spent', value: formatDollars(totalSpent) },
-                  { label: 'Remaining', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.budget_remaining_cents || 0), 0)) },
-                  { label: 'Platform fees', value: formatDollars(Math.round(totalSpent * 0.1667)) },
+                  { label: 'Balance', value: formatDollars(artistData?.balance_cents || 0), color: '#F4F1EA' },
+                  { label: 'Spent', value: formatDollars(totalSpent), color: '#EF4444' },
+                  { label: 'Remaining', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.budget_remaining_cents || 0), 0)), color: '#22C55E' },
                 ].map(s => (
                   <div key={s.label} className="text-center">
-                    <p className="text-lg font-bold">{s.value}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">{s.label}</p>
+                    <p className="text-lg font-bold" style={{color: s.color}}>{s.value}</p>
+                    <p className="text-[10px] uppercase" style={{color: '#6B6760'}}>{s.label}</p>
                   </div>
                 ))}
               </div>
-
-              {rawCampaigns.length > 0 && (
-                <div className="space-y-2 pt-2">
-                  {rawCampaigns.map((c: any) => (
-                    <div key={c.id} className="flex items-center justify-between text-xs p-3 rounded-lg bg-white/[0.02]">
-                      <span className="truncate">{c.track_title}</span>
-                      <span className="text-muted-foreground shrink-0 ml-2">{formatDollars(c.total_budget_cents || 0)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           ) : (
             <div className="space-y-4">
