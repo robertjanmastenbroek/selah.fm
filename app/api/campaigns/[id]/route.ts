@@ -130,12 +130,10 @@ export async function PATCH(
     // Always ensure #selahfm and #paidpartner are in required hashtags
     let requiredHashtags: string | null = null;
     if (body.requiredHashtags !== undefined) {
-      requiredHashtags = (body.requiredHashtags || '').trim();
-      const hasSelah = requiredHashtags.includes('#selahfm') || requiredHashtags.includes('selahfm');
-      const hasPaid = requiredHashtags.includes('#paidpartner') || requiredHashtags.includes('paidpartner');
-      if (!hasSelah || !hasPaid) {
-        requiredHashtags = `${hasSelah ? '' : '#selahfm '}${hasPaid ? '' : '#paidpartner '}${requiredHashtags}`.trim();
-      }
+      const raw = (body.requiredHashtags || '').trim();
+      const hasSelah = raw.includes('#selahfm') || raw.includes('selahfm');
+      const hasPaid = raw.includes('#paidpartner') || raw.includes('paidpartner');
+      requiredHashtags = (!hasSelah || !hasPaid) ? `${hasSelah ? '' : '#selahfm '}${hasPaid ? '' : '#paidpartner '}${raw}`.trim() : raw;
       if (requiredHashtags) requiredHashtags = requiredHashtags.slice(0, 500);
     }
     const captionRequirements = body.captionRequirements !== undefined ? (body.captionRequirements || null) : null;
