@@ -145,7 +145,7 @@ function LoginForm() {
     { icon: Shield, text: 'No bots·Real creators only' },
     { icon: TrendingUp, text: 'You set the CPM & approve every video' },
     { icon: Check, text: 'Only pay for verified views' },
-    { icon: DollarSign, text: 'Free to start·Keep 80%' },
+    { icon: DollarSign, text: 'Free to start·Full CPM' },
     { icon: BadgeCheck, text: 'Third-party view verification' },
   ];
 

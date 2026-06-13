@@ -151,7 +151,7 @@ export default function WelcomeCreatorsPage() {
             <div className="flex items-end justify-center gap-3 mb-6">
               <div className="w-36 h-36 rounded-2xl flex items-center justify-center text-black text-4xl font-bold" style={{ background: 'linear-gradient(135deg, #22C55E, #4ADE80)' }}>100%</div>
             </div>
-            <p className="text-sm">Creators earn the full CPM rate. The 20% platform fee is added on the artist's side — you keep every cent.</p>
+            <p className="text-sm">Creators earn the full CPM rate. The 20% platform premium is added on deposits — you keep every cent of your earnings.</p>
             <p className="text-xs text-muted-foreground mt-3">Connect Stripe in under 2 minutes. Payouts process automatically.</p>
           </div>
         </div>

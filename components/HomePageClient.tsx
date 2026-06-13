@@ -80,7 +80,7 @@ function CalculatorSection() {
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <div className="p-4 rounded-xl bg-white/[0.04] border border-white/[0.06] text-center">
-          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Platform fee (20%)</p>
+          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Platform premium</p>
           <p className="text-lg font-bold text-amber-400">${((grossEarnings - earnings).toFixed(2))}</p>
         </div>
         <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 text-center">
@@ -94,7 +94,7 @@ function CalculatorSection() {
           $10/1K views
         </span>
         <span className="text-[9px] px-2 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/20">
-          80% creator share
+          Full CPM rate
         </span>
         <span className="text-[9px] px-2 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/20">
           Verified views only
@@ -388,7 +388,7 @@ export default function RootPage() {
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2, duration: 0.5 }}>
           {[
             { icon: DollarSign, label: 'Free to start', sub: 'No upfront cost. No hidden fees.' },
-            { icon: Shield, label: 'You keep 80%', sub: 'Artists keep 100% of unspent budget.' },
+            { icon: Shield, label: 'Full CPM', sub: 'Artists keep 100% of unspent budget.' },
             { icon: BadgeCheck, label: 'Verified views', sub: 'Third-party view verification.' },
             { icon: Heart, label: 'You stay in control', sub: 'Approve every video before it\'s live.' },
           ].map((item, i) => (
@@ -540,7 +540,7 @@ export default function RootPage() {
             },
             {
               q: 'How much do content creators earn promoting music?',
-              a: "On Selah.fm, creators earn whatever CPM the artist sets — typically $5–30 per 1,000 verified views. That's 100–1,000x more than traditional platform funds (TikTok Creator Fund pays $0.02–0.04 per 1,000 views). Creators keep 80% of the CPM; the platform takes 20% for payment processing, verification, and fraud detection.",
+              a: "On Selah.fm, creators earn whatever CPM the artist sets — typically $5–30 per 1,000 verified views. That's 100–1,000x more than traditional platform funds (TikTok Creator Fund pays $0.02–0.04 per 1,000 views). Creators earn the full CPM rate — platform premium is added on deposits, not deducted from your earnings.",
             },
             {
               q: 'Is CPM-based promotion better than playlist placements?',

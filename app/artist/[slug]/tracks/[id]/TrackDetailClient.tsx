@@ -62,14 +62,14 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
 
       <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/[0.06]">
         <div>
-          <p className="text-xs text-muted-foreground">Your earnings (80%)</p>
+          <p className="text-xs text-muted-foreground">Your earnings</p>
           <p className="text-2xl font-bold text-emerald-400">
             ${earnings >= 1 ? earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : earnings.toFixed(2)}
           </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">At ${cpmDollars.toFixed(2)} CPM</p>
-          <p className="text-[10px] text-muted-foreground/50">Platform fee: 20%</p>
+          {/* Platform fee: now on deposits, not deducted from creator earnings */}
         </div>
       </div>
 
@@ -320,7 +320,7 @@ export default function TrackDetailClient({ track, slug }: TrackDetailProps) {
             <div className="flex flex-wrap gap-1.5">
               {[
                 { text: 'Free to start' },
-                { text: 'You earn 80%' },
+                { text: 'Full CPM rate' },
                 { text: 'Verified views only' },
               ].map((b, i) => (
                 <span key={i}

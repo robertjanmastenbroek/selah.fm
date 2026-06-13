@@ -235,7 +235,7 @@ const FAQ_DATA = [
   },
   {
     q: 'How much will I actually earn?',
-    a: 'Use the calculator above. Your earnings depend on the CPM rate the artist set and how many verified views your video gets. You keep 80% of the earnings (platform fee is 20%). Payouts are automatic via Stripe Connect.',
+    a: 'Use the calculator above. Your earnings depend on the CPM rate the artist set and how many verified views your video gets. You earn the full CPM rate — no deductions. Payouts are automatic via Stripe Connect.',
   },
   {
     q: 'Do I need a following to participate?',

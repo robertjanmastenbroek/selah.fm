@@ -595,7 +595,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                     Create
                   </button>
                 </div>
-                <p className="text-[9px] text-muted-foreground/40">No upfront cost · 80% creator payout</p>
+                <p className="text-[9px] text-muted-foreground/40">No upfront cost · Full CPM rate</p>
               </div>
 
               {/* Similar Artists — compact */}

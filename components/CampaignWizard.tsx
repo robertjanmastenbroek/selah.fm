@@ -245,7 +245,7 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
                 </div>
 
                 <Card className="bg-white/[0.02]"><CardContent className="p-4 text-sm text-muted-foreground">
-                  Creators earn your full CPM rate. A 20% platform fee is added on top.
+                  Creators earn your full CPM rate. A 20% platform premium is added on deposits.
                 </CardContent></Card>
 
                 <div className="flex gap-3 pt-2">
