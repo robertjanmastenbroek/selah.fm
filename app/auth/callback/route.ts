@@ -106,7 +106,13 @@ export async function GET(request: Request) {
         }
         
         // New user or never completed onboarding → onboarding flow with role
-        if (isNewUser && next === '/browse') {
+        // Only redirect if user is truly new (created within last hour),
+        // not existing accounts that predate the onboarding system.
+        const userCreatedAt = user.created_at ? new Date(user.created_at).getTime() : 0;
+        const accountAgeMs = Date.now() - userCreatedAt;
+        const isTrulyNewUser = isNewUser && accountAgeMs < 3600000; // < 1 hour old
+        
+        if (isTrulyNewUser && next === '/browse') {
           const userType = user.user_metadata?.user_type || user.user_metadata?.is_artist ? 'artist' : 'creator';
           finalUrl = new URL(`/onboarding?role=${userType}`, origin);
         }
