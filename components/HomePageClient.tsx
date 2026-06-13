@@ -269,9 +269,10 @@ export default function RootPage() {
             </motion.div>
           )}
 
-          {/* Primary CTA — one button */}
+          {/* Primary CTAs — artist + creator */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+            className="flex flex-col sm:flex-row items-center gap-3">
             <Link href="/welcome-artists"
               className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-[15px] font-bold text-white
                          transition-all duration-200 shadow-lg shadow-[#4338CA]/20
@@ -280,8 +281,18 @@ export default function RootPage() {
                          active:scale-[0.97]">
               Promote your music <ArrowRight size={16} />
             </Link>
-            <p className="text-[11px] text-white/20 mt-3">No upfront cost · Free to start</p>
+            <Link href="/browse"
+              className="inline-flex items-center gap-2.5 px-6 py-4 rounded-xl text-[13px] font-semibold
+                         transition-all duration-200 border active:scale-[0.97]"
+              style={{ borderColor: 'rgba(214,168,95,0.3)', color: '#D6A85F' }}>
+              Browse campaigns <ArrowRight size={14} />
+            </Link>
           </motion.div>
+          <div className="flex items-center gap-4 mt-3 text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            <span>No upfront cost</span>
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span>Free to start</span>
+          </div>
         </motion.div>
       </section>
 
