@@ -447,15 +447,33 @@ function DashboardContent() {
 
                   {/* Payout setup — creators without Stripe Connect */}
                   {!isArtist && profile && !profile?.stripe_connect_id && (
-                    <div className="rounded-2xl bg-gradient-to-br from-emerald-500/[0.04] to-green-500/[0.02] border border-emerald-500/10 p-5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-semibold flex items-center gap-2">
-                            <Wallet size={14} className="text-emerald-400" />
-                            Set up payouts
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">Connect your bank account to receive earnings from approved videos.</p>
+                    <div className="rounded-2xl border overflow-hidden" style={{borderColor: 'rgba(214,168,95,0.15)', background: 'rgba(214,168,95,0.03)'}}>
+                      <div className="p-6 space-y-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0" style={{background: 'rgba(255,255,255,0.04)'}}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F4F1EA" strokeWidth="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M7 15h.01M12 15h.01M17 15h.01"/></svg>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm" style={{color: '#F4F1EA'}}>Set up payouts</p>
+                            <p className="text-[10px]" style={{color: '#6B6760'}}>Receive earnings from approved videos</p>
+                          </div>
                         </div>
+
+                        <div className="space-y-2 text-xs" style={{color: '#8B887E'}}>
+                          <div className="flex items-center gap-2">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+                            Get paid automatically for approved submissions
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+                            Funds deposited directly to your bank account
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+                            Secure setup via Stripe — works in 40+ countries
+                          </div>
+                        </div>
+
                         <button onClick={async () => {
                           try {
                             const res = await fetch('/api/stripe/connect', { method: 'POST', credentials: 'include' });
@@ -463,9 +481,14 @@ function DashboardContent() {
                             if (d.url) window.location.href = d.url;
                           } catch {}
                         }}
-                          className="text-[10px] px-3 py-2 rounded-lg bg-primary text-white font-semibold shrink-0 hover:opacity-90 transition-all">
-                          Set up payouts
+                          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98] hover:-translate-y-0.5"
+                          style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)'}}>
+                          <Wallet size={16} /> Set up payouts
                         </button>
+
+                        <p className="text-[10px] text-center" style={{color: '#6B6760', opacity: 0.5}}>
+                          Your bank details are handled by Stripe — we never see them.
+                        </p>
                       </div>
                     </div>
                   )}
