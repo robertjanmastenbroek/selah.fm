@@ -39,7 +39,7 @@ export function generateRequirements(trackTitle: string, genres?: string): strin
 }
 
 export function generateHashtags(trackTitle: string, genres?: string): string {
-  const tags: string[] = ['#selahfm'];
+  const tags: string[] = ['#selahfm', '#paidpartner'];
   
   // Add track name words as hashtags (max 3)
   const words = trackTitle

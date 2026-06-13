@@ -686,8 +686,8 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
                   submission won't qualify unless it's a remix or cover of the song itself.
                 </p>
                 <p>
-                  <strong style={{ color: '#F4F1EA' }}>2. Tag the artist + #selahfm</strong> — your video must 
-                  include <code style={{ color: '#D6A85F', background: 'rgba(214,168,95,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>#selahfm</code> in the caption and tag{' '}
+                  <strong style={{ color: '#F4F1EA' }}>2. Tag the artist + required hashtags</strong> — your video must 
+                  include <code style={{ color: '#D6A85F', background: 'rgba(214,168,95,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>#selahfm</code> and <code style={{ color: '#EF4444', background: 'rgba(239,68,68,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>#paidpartner</code> (FTC required) in the caption and tag{' '}
                   <code style={{ color: '#D6A85F', background: 'rgba(214,168,95,0.08)', padding: '1px 4px', borderRadius: 3, fontSize: 11 }}>@{campaign.artist_username || 'the artist'}</code> 
                   in the video description so we can verify it.
                 </p>

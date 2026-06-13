@@ -210,10 +210,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Minimum budget is $50. Please increase your campaign budget.' }, { status: 400 });
     }
 
-    // Always ensure #selahfm is in required hashtags
+    // Always ensure #selahfm and #paidpartner are in required hashtags
     const rawRequiredHashtags = body.requiredHashtags || '';
-    const requiredHashtags = (rawRequiredHashtags.includes('#selahfm') || rawRequiredHashtags.includes('selahfm'))
-      ? rawRequiredHashtags : '#selahfm ' + rawRequiredHashtags;
+    const hasSelah = rawRequiredHashtags.includes('#selahfm') || rawRequiredHashtags.includes('selahfm');
+    const hasPaid = rawRequiredHashtags.includes('#paidpartner') || rawRequiredHashtags.includes('paidpartner');
+    const requiredHashtags = `${hasSelah ? '' : '#selahfm '}${hasPaid ? '' : '#paidpartner '}${rawRequiredHashtags}`.trim();
     const { requireFtc, minVideoLength, captionRequirements } = body;
 
     const session = await getSession(request);

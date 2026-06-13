@@ -68,7 +68,7 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
 1. The song must be clearly audible as the primary audio in your video.
    If you sing, rap, or talk over the track, your submission won't qualify
    unless it's a remix or cover of the song itself.
-2. Tag @theartist + #selahfm in your video description.
+2. Tag @theartist + #selahfm #paidpartner in your video description (FTC required).
 
 🎵 Use the official audio — no screen recordings or re-uploads
 
@@ -223,9 +223,10 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
 
                 <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags (optional)" />
                 <div className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                  <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#D6A85F' }}>#selahfm</span>
+                  <span className="text-xs font-semibold whitespace-nowrap" style={{ color: '#D6A85F' }}>#selahfm</span>
+                  <span className="text-[10px] font-semibold" style={{ color: '#EF4444' }}>#paidpartner</span>
                   <span className="text-[10px]" style={{ color: '#6B6760' }}>+</span>
-                  <input value={requiredHashtags.replace('#selahfm', '').trim()} onChange={e => setRequiredHashtags('#selahfm ' + e.target.value)}
+                  <input value={requiredHashtags.replace('#selahfm', '').replace('#paidpartner', '').trim()} onChange={e => setRequiredHashtags('#selahfm #paidpartner ' + e.target.value)}
                     placeholder="@artist additional tags"
                     className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none" />
                 </div>

@@ -140,9 +140,10 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
           <div>
             <label className="text-[10px] font-medium mb-1 block text-muted-foreground">Required hashtags <span className="text-amber-400">(read-only)</span></label>
             <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-              <span className="text-sm font-semibold whitespace-nowrap" style={{ color: '#D6A85F' }}>#selahfm</span>
+              <span className="text-xs font-semibold whitespace-nowrap" style={{ color: '#D6A85F' }}>#selahfm</span>
+              <span className="text-[10px] font-semibold" style={{ color: '#EF4444' }}>#paidpartner</span>
               <span className="text-[10px]" style={{ color: '#6B6760' }}>+</span>
-              <input value={form.required_hashtags.replace('#selahfm', '').trim()} onChange={e => setForm(f => ({ ...f, required_hashtags: '#selahfm ' + e.target.value }))}
+              <input value={form.required_hashtags.replace('#selahfm', '').replace('#paidpartner', '').trim()} onChange={e => setForm(f => ({ ...f, required_hashtags: '#selahfm #paidpartner ' + e.target.value }))}
                 placeholder="@artist additional tags"
                 className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none" />
             </div>

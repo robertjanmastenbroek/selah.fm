@@ -127,12 +127,14 @@ export async function PATCH(
     
     // Fields that can be explicitly set to null (distinguish "clear" from "keep")
     const coverArtUrl = body.coverArtUrl !== undefined ? (body.coverArtUrl || null) : null;
-    // Always ensure #selahfm is in required hashtags — enforced server-side
+    // Always ensure #selahfm and #paidpartner are in required hashtags
     let requiredHashtags: string | null = null;
     if (body.requiredHashtags !== undefined) {
       requiredHashtags = (body.requiredHashtags || '').trim();
-      if (requiredHashtags && !requiredHashtags.includes('#selahfm') && !requiredHashtags.includes('selahfm')) {
-        requiredHashtags = '#selahfm ' + requiredHashtags;
+      const hasSelah = requiredHashtags.includes('#selahfm') || requiredHashtags.includes('selahfm');
+      const hasPaid = requiredHashtags.includes('#paidpartner') || requiredHashtags.includes('paidpartner');
+      if (!hasSelah || !hasPaid) {
+        requiredHashtags = `${hasSelah ? '' : '#selahfm '}${hasPaid ? '' : '#paidpartner '}${requiredHashtags}`.trim();
       }
       if (requiredHashtags) requiredHashtags = requiredHashtags.slice(0, 500);
     }
