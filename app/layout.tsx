@@ -7,10 +7,16 @@ import PageTransition from '@/components/PageTransition';
 // SupportWidget removed from layout — only on /faq page
 import CookieBanner from '@/components/CookieBanner';
 import NewsletterSignup from '@/components/NewsletterSignup';
+import { startBlogPublisher } from '@/lib/blog-publisher';
 import { Poppins, Righteous } from "next/font/google";
 import Analytics from '@/components/Analytics';
 import CommandPalette from '@/components/CommandPalette';
 import { cn } from "@/lib/utils";
+
+// Start background blog publisher (server-side only)
+if (typeof globalThis !== 'undefined' && typeof window === 'undefined') {
+  startBlogPublisher();
+}
 
 const poppins = Poppins({subsets:['latin'],weight:['300','400','500','600','700'],variable:'--font-sans',display:'swap',preload:true});
 const righteous = Righteous({subsets:['latin'],weight:'400',variable:'--font-heading',display:'swap',preload:true});

@@ -1253,9 +1253,9 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
 
               <div className="grid grid-cols-3 gap-2 pt-2">
                 {[
-                  { label: 'Available', value: formatDollars(artistData?.balance_cents || 0), color: '#22C55E' },
+                  { label: 'Available', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.budget_remaining_cents || 0), 0)), color: '#22C55E' },
                   { label: 'Spent', value: formatDollars(totalSpent), color: '#EF4444' },
-                  { label: 'Remaining', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.budget_remaining_cents || 0), 0)), color: '#6B6760' },
+                  { label: 'Total budget', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.total_budget_cents || 0), 0)), color: '#6B6760' },
                 ].map(s => (
                   <div key={s.label} className="text-center">
                     <p className="text-lg font-bold" style={{color: s.color}}>{s.value}</p>
