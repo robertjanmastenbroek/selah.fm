@@ -108,7 +108,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         filters: { video_ids: [videoId] },
-        fields: ['id', 'view_count', 'create_time', 'share_url', 'embed_link'],
+        fields: ['id', 'title', 'view_count', 'create_time', 'share_url', 'embed_link'],
       }),
     });
 

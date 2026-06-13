@@ -1278,6 +1278,8 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         trackTitle={trackTitle}
         cpmCents={campaign.cpm_rate_cents || 0}
         tiktokSoundUrl={campaign.tiktok_sound_url}
+        requiredHashtags={campaign.required_hashtags}
+        artistHandle={artistName}
       />
     </div>
   );

@@ -19,6 +19,8 @@ interface EarnModalProps {
   coverArtUrl?: string;
   contentAssetsUrl?: string;
   tiktokSoundUrl?: string;
+  requiredHashtags?: string;
+  artistHandle?: string;
 }
 
 // ── Platform config ──
@@ -30,11 +32,12 @@ const PLATFORMS = [
 
 function platformName(id: string) { return PLATFORMS.find(p => p.id === id)?.label || id; }
 
-export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCents, coverArtUrl, contentAssetsUrl, tiktokSoundUrl }: EarnModalProps) {
+export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCents, coverArtUrl, contentAssetsUrl, tiktokSoundUrl, requiredHashtags, artistHandle }: EarnModalProps) {
   const [platform, setPlatform] = useState('tiktok');
   const [url, setUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [captionCheck, setCaptionCheck] = useState<{ ok: boolean; missing: string[] } | null>(null);
   const startTracked = useRef(false);
   const { addToast } = useToast();
   const router = useRouter();
@@ -65,8 +68,9 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
     if (!url.startsWith('https://')) { addToast('Paste a valid HTTPS link', 'error'); return; }
     setSubmitting(true);
 
-    // Real-time TikTok view verification
+    // Real-time TikTok view verification + caption compliance check
     let verifiedViews: number | null = null;
+    let videoTitle = '';
     if (platform === 'tiktok') {
       try {
         const verifyRes = await fetch('/api/tiktok/verify-video', {
@@ -76,8 +80,31 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
         if (verifyRes.ok) {
           const verifyData = await verifyRes.json();
           verifiedViews = verifyData.viewCount;
+          videoTitle = verifyData.title || '';
         }
       } catch { /* verification is optional — submission still works */ }
+    }
+
+    // Compliance check: verify caption contains required hashtags and handle
+    if (videoTitle && (requiredHashtags || artistHandle)) {
+      const missing: string[] = [];
+      if (requiredHashtags) {
+        // Check each hashtag (comma-separated or space-separated)
+        const tags = requiredHashtags.split(',').map(t => t.trim()).filter(Boolean);
+        for (const tag of tags) {
+          if (!videoTitle.toLowerCase().includes(tag.toLowerCase())) {
+            missing.push(tag);
+          }
+        }
+      }
+      if (artistHandle && !videoTitle.toLowerCase().includes(artistHandle.toLowerCase().replace('@', ''))) {
+        missing.push(`@${artistHandle.replace('@', '')}`);
+      }
+      if (missing.length > 0) {
+        setCaptionCheck({ ok: false, missing });
+      } else {
+        setCaptionCheck({ ok: true, missing: [] });
+      }
     }
 
     try {
@@ -323,10 +350,29 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                     {/* URL input */}
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Paste your video link</label>
-                      <Input value={url} onChange={e => { setUrl(e.target.value); if (!startTracked.current && e.target.value.includes('https://')) { startTracked.current = true; fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'video_submit_start', path: window.location.pathname, metadata: { campaign_id: campaignId, platform } }) }).catch(()=>{}); } }}
+                      <Input value={url} onChange={e => { setUrl(e.target.value); setCaptionCheck(null); if (!startTracked.current && e.target.value.includes('https://')) { startTracked.current = true; fetch('/api/analytics/event', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: 'video_submit_start', path: window.location.pathname, metadata: { campaign_id: campaignId, platform } }) }).catch(()=>{}); } }}
                         placeholder={`https://www.${platform === 'facebook' ? 'facebook' : platform}.com/...`}
                         className="text-sm py-5 rounded-xl" autoFocus />
                     </div>
+
+                    {/* Caption compliance check */}
+                    {captionCheck && !captionCheck.ok && (
+                      <div className="rounded-xl p-3 text-xs space-y-1.5" style={{background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)'}}>
+                        <p className="font-semibold" style={{color: '#FBBF24'}}>⚠️ Your video caption might be missing:</p>
+                        {captionCheck.missing.map((item, i) => (
+                          <p key={i} className="flex items-center gap-1.5" style={{color: '#A09B92'}}>
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{background: '#FBBF24'}} />
+                            <code className="text-xs font-mono" style={{color: '#FBBF24'}}>{item}</code>
+                          </p>
+                        ))}
+                        <p className="text-[10px] pt-1" style={{color: '#6B6760'}}>You can still submit — the artist will review regardless.</p>
+                      </div>
+                    )}
+                    {captionCheck && captionCheck.ok && (
+                      <div className="rounded-xl p-3 text-xs" style={{background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)'}}>
+                        <p style={{color: '#22C55E'}}>✓ Caption looks good — all required tags found.</p>
+                      </div>
+                    )}
 
                     {/* Submit */}
                     <Button onClick={handleSubmit} disabled={!url || submitting}
