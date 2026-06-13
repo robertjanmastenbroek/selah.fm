@@ -841,19 +841,6 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
   const { addToast } = useToast();
   const router = useRouter();
   const scrollY = useScrollPosition();
-  const [nearBottom, setNearBottom] = useState(false);
-
-  // Track if we're near the bottom of the page — hide CTA so footer is visible
-  useEffect(() => {
-    const check = () => {
-      const scrollBottom = window.scrollY + window.innerHeight;
-      const pageHeight = document.documentElement.scrollHeight;
-      setNearBottom(scrollBottom >= pageHeight - 120);
-    };
-    window.addEventListener('scroll', check, { passive: true });
-    check();
-    return () => window.removeEventListener('scroll', check);
-  }, []);
   const heroRef = useRef<HTMLDivElement>(null);
 
   const [shareOpen, setShareOpen] = useState(false);
@@ -1183,7 +1170,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       {/* ════════════════════════════════════════════════════════ */}
       {/* 3-STEP HOW IT WORKS */}
       {/* ════════════════════════════════════════════════════════ */}
-      <div className="max-w-5xl mx-auto px-4 pt-8">
+      <div className="max-w-5xl mx-auto px-4 pt-8 pb-20 md:pb-24">
         <div className="rounded-2xl bg-gradient-to-br from-indigo-500/[0.04] to-transparent border border-indigo-500/10 p-5 md:p-6 relative overflow-hidden">
           <div className="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/[0.04] rounded-full blur-3xl pointer-events-none" />
           <h3 className="text-sm font-bold mb-4 flex items-center gap-2 relative z-10">
@@ -1253,7 +1240,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       {/* ════════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ y: 100, opacity: 0 }}
-        animate={{ y: scrollY > 400 && !nearBottom ? 0 : 100, opacity: scrollY > 400 && !nearBottom ? 1 : 0 }}
+        animate={{ y: scrollY > 400 ? 0 : 100, opacity: scrollY > 400 ? 1 : 0 }}
         transition={{ duration: 0.3 }}
         className="hidden md:flex fixed bottom-0 inset-x-0 z-40 bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3 items-center justify-center"
       >
@@ -1268,7 +1255,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       {/* ════════════════════════════════════════════════════════ */}
       <motion.div
         initial={{ y: 100 }}
-        animate={{ y: nearBottom ? 100 : 0 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.3 }}
         className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3"
       >
