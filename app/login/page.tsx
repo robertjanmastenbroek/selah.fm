@@ -19,7 +19,6 @@ function LoginForm() {
   const [role, setRole] = useState<'artist'|'creator'|'fan'>('creator');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [tiktokLoading, setTiktokLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showEmailForm, setShowEmailForm] = useState(false);
@@ -128,17 +127,8 @@ function LoginForm() {
     }
   };
 
-  const handleTikTokSignIn = async () => {
-    setTiktokLoading(true);
-    try {
-      await supabase.auth.signInWithOAuth({
-        provider: 'tiktok' as any,
-        options: { redirectTo: buildRedirectUrl() },
-      });
-    } catch {
-      setTiktokLoading(false);
-    }
-  };
+  // TikTok login removed — TikTok is for creator verification, not identity.
+  // Users sign up with Google or email, then connect TikTok on the dashboard.
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,18 +268,7 @@ function LoginForm() {
               )}
             </button>
 
-            {/* TikTok — secondary social */}
-            <button onClick={handleTikTokSignIn} disabled={tiktokLoading}
-              className="flex items-center justify-center gap-3 w-full h-12 rounded-xl border border-white/[0.08] bg-white/[0.02] text-sm font-semibold text-white hover:bg-white/[0.04] transition-all active:scale-[0.98] disabled:opacity-70">
-              {tiktokLoading ? (
-                <div className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Connecting...</div>
-              ) : (
-                <>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.45-1.04 1.16-1.18 1.89-.07.35-.13.82-.07 1.17.19 1.14 1.21 2.1 2.39 1.99.76-.04 1.47-.45 1.87-1.1.14-.23.23-.49.24-.76.05-1.52.02-3.04.03-4.56z"/></svg>
-                  Continue with TikTok
-                </>
-              )}
-            </button>
+            {/* TikTok removed — TikTok is for creator verification, not identity */}
 
             {/* Divider */}
             <div className="flex items-center gap-3 py-1">
