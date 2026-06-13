@@ -134,17 +134,64 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                   <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                 </div>
               ) : !session ? (
-                <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center space-y-4">
-                  <Camera size={36} className="mx-auto text-primary/30" />
-                  <div>
-                    <h3 className="font-semibold" style={{color: '#F4F1EA'}}>Sign in to submit</h3>
-                    <p className="text-xs mt-1" style={{color: '#6B6760'}}>Create an account (free, 30 seconds) to start earning.</p>
+                <div className="space-y-5">
+                  {/* Earnings preview — shows value before auth */}
+                  <div className="rounded-2xl bg-gradient-to-br from-emerald-500/[0.08] to-transparent border border-emerald-500/15 p-5 text-center">
+                    <p className="text-sm font-medium mb-1" style={{color: '#8B887E'}}>You could earn</p>
+                    <p className="text-4xl font-bold tracking-tight" style={{color: '#22C55E'}}>
+                      ${(parseFloat(creatorEarnings) * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    </p>
+                    <p className="text-xs mt-1" style={{color: '#6B6760'}}>per 1M verified views · paid via Stripe</p>
                   </div>
-                  <button onClick={() => setLoginOpen(true)}
-                    className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98]"
-                    style={{ background: 'linear-gradient(135deg, #D6A85F, #C9974D)' }}>
-                    Sign in &amp; join
-                  </button>
+
+                  {/* Auth section */}
+                  <div className="rounded-2xl border border-white/[0.06] overflow-hidden" style={{background: 'rgba(255,255,255,0.02)'}}>
+                    <div className="p-5 space-y-4">
+                      <div className="text-center">
+                        <h3 className="font-semibold" style={{color: '#F4F1EA'}}>Create &amp; earn</h3>
+                        <p className="text-xs mt-1" style={{color: '#6B6760'}}>Sign up free · 30 seconds · no credit card</p>
+                      </div>
+
+                      {/* Google OAuth — primary CTA */}
+                      <button onClick={async () => {
+                        const { createClient } = await import('@/lib/supabase/client');
+                        const supabase = createClient();
+                        supabase.auth.signInWithOAuth({
+                          provider: 'google',
+                          options: { redirectTo: `${window.location.origin}/api/auth/callback?next=/c/${campaignId}` },
+                        });
+                      }}
+                        className="w-full flex items-center justify-center gap-3 py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] hover:-translate-y-0.5"
+                        style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F4F1EA'}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                        Continue with Google
+                      </button>
+
+                      {/* Divider */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-px" style={{background: 'rgba(255,255,255,0.06)'}} />
+                        <span className="text-[11px]" style={{color: '#6B6760'}}>or</span>
+                        <div className="flex-1 h-px" style={{background: 'rgba(255,255,255,0.06)'}} />
+                      </div>
+
+                      {/* Email option */}
+                      <button onClick={() => setLoginOpen(true)}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98]"
+                        style={{background: 'rgba(214,168,95,0.08)', border: '1px solid rgba(214,168,95,0.2)', color: '#D6A85F'}}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4l-10 8L2 4"/></svg>
+                        Continue with email
+                      </button>
+
+                      {/* Trust badges */}
+                      <div className="flex items-center justify-center gap-3 text-[10px]" style={{color: '#6B6760', opacity: 0.5}}>
+                        <span>Free to join</span>
+                        <span>·</span>
+                        <span>No credit card</span>
+                        <span>·</span>
+                        <span>Stripe payouts</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : !session.is_creator && session.type !== 'creator' ? (
                 <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center space-y-4">
