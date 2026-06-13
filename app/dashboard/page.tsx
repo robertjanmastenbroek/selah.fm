@@ -391,7 +391,7 @@ function DashboardContent() {
                               {isArtist
                                 ? artistTracks.length > 0
                                   ? `${activeCount} campaign${activeCount !== 1 ? 's' : ''} in your catalog`
-                                  : 'Add your first track to get started'
+                                  : 'Add your first campaign to get started'
                                 : 'Browse artists and start creating content'}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
@@ -637,14 +637,14 @@ function TracksTab({
             <div className="grid md:grid-cols-2 gap-4">{[1, 2].map(i => <Skeleton key={i} className="h-48 rounded-2xl" />)}</div>
           ) : campaignsErr ? (
             <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">
-              Failed to load tracks. <button onClick={() => reloadCampaigns()} className="text-primary hover:underline">Retry</button>
+              Failed to load campaigns. <button onClick={() => reloadCampaigns()} className="text-primary hover:underline">Retry</button>
             </CardContent></Card>
           ) : campaigns.length === 0 ? (
             <Card><CardContent className="p-12 text-center">
               <Megaphone size={32} className="mx-auto mb-3 text-muted-foreground/20" />
               <p className="text-sm font-medium mb-1">No campaigns yet</p>
               <p className="text-xs text-muted-foreground mb-4">Create your first campaign to start promoting your music.</p>
-              <Button onClick={() => window.location.href = '/settings'} size="sm"><Plus size={14} className="mr-1" /> Import tracks</Button>
+              <Button onClick={() => window.location.href = '/settings'} size="sm"><Plus size={14} className="mr-1" /> Import music</Button>
             </CardContent></Card>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
