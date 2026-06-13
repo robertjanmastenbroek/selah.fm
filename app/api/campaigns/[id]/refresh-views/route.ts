@@ -25,7 +25,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       SELECT id, views_at_submit, views_verified, reviewed_at, payout_status
       FROM submissions
       WHERE campaign_id = ${params.id}
-        AND review_status = 'approved'
+        AND review_status IN ('approved', 'pending')
         AND (payout_status IS NULL OR payout_status = 'pending')
       ORDER BY reviewed_at
     `;
@@ -105,7 +105,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
         const [campaignData] = await sql`SELECT cpm_rate_cents FROM campaigns WHERE id = ${params.id}`;
         const cpmDollars = (campaignData?.cpm_rate_cents || 0) / 100;
         
-        if (growth >= 5000) {
+        {
           const rawPayout = Math.round((growth / 1000) * cpmDollars * 100);
           const payoutCents = Math.min(rawPayout, 50000);
           

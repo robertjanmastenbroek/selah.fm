@@ -68,6 +68,7 @@ function DashboardContent() {
   // Tab state from URL or default
   const tabFromUrl = searchParams.get('tab') as TabId | null;
   const [tab, setTab] = useState<TabId>(tabFromUrl || 'overview');
+  const [loadingMsg, setLoadingMsg] = useState('');
 
   useEffect(() => {
     const t = searchParams.get('tab') as TabId | null;
@@ -305,6 +306,14 @@ function DashboardContent() {
             </div>
             {/* Header button removed — use Create campaign card below */}
           </motion.div>
+
+          {/* Loading message toast */}
+          {loadingMsg && (
+            <div className="fixed top-20 right-4 z-50 px-4 py-2.5 rounded-xl text-xs font-medium shadow-xl animate-in fade-in slide-in-from-top-2"
+              style={{background: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', color: '#A09B92'}}>
+              {loadingMsg}
+            </div>
+          )}
 
           {/* ── Animating content area ─────────────────────── */}
           <AnimatePresence mode="wait">
@@ -729,10 +738,22 @@ function TracksTab({
                           </button>
                           <button onClick={async (e) => {
                             e.stopPropagation();
+                            setLoadingMsg('Refreshing views...');
                             try {
                               const res = await fetch(`/api/campaigns/${c.id}/refresh-views`, { method: 'POST', credentials: 'include' });
-                              if (res.ok) { reloadCampaigns(); }
-                            } catch {}
+                              const data = await res.json();
+                              if (data.ok) { 
+                                setLoadingMsg(data.message || 'Views refreshed');
+                                setTimeout(() => setLoadingMsg(''), 3000);
+                                reloadCampaigns();
+                              } else {
+                                setLoadingMsg(data.error || 'Refresh failed');
+                                setTimeout(() => setLoadingMsg(''), 3000);
+                              }
+                            } catch {
+                              setLoadingMsg('Network error');
+                              setTimeout(() => setLoadingMsg(''), 3000);
+                            }
                           }}
                             className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all active:scale-95 hover:bg-white/[0.08] border border-white/[0.08]"
                             style={{ color: '#A09B92' }}>
