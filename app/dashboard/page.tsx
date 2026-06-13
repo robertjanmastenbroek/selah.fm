@@ -973,7 +973,7 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
               {/* Connected Platforms */}
               <div className="rounded-xl border border-white/[0.06] p-4 space-y-3">
                 <p className="text-xs font-semibold" style={{color: '#F4F1EA'}}>Connected Platforms</p>
-                <p className="text-[10px]" style={{color: '#6B6760'}}>Connect TikTok to auto-verify your video views and display your follower count.</p>
+                <p className="text-[10px]" style={{color: '#6B6760'}}>Connect your TikTok account to auto-verify your video views and show your follower count on your profile.</p>
                 <a href="/api/auth/tiktok/connect"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all hover:-translate-y-0.5 active:scale-[0.98]"
                   style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F4F1EA'}}>

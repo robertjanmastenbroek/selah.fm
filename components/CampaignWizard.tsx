@@ -37,19 +37,14 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
   const [requireFtc, setRequireFtc] = useState(false);
   const [minVideoLength, setMinVideoLength] = useState('');
   const [captionReq, setCaptionReq] = useState('');
-  const [platforms, setPlatforms] = useState<string[]>(['tiktok', 'instagram', 'youtube']);
+  const [platforms, setPlatforms] = useState<string[]>(['tiktok']);
   const [requirements, setRequirements] = useState('');
 
   const togglePlatform = (p: string) => {
     setPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
   };
 
-  const platformOptions = [
-    { id: 'tiktok', label: 'TikTok' },
-    { id: 'instagram', label: 'Reels' },
-    { id: 'youtube', label: 'Shorts' },
-    // { id: 'facebook', label: 'Facebook' }, — removed: focusing on 3 platforms
-  ];
+  // TikTok only — platform selector removed
 
   const reset = () => {
     setStep(1);
@@ -223,26 +218,8 @@ export default function CampaignWizard({ open, onClose, onCreated }: Props) {
                   </div>
                 </div>
 
-                {/* Platforms */}
-                <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">Accepted platforms</label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {platformOptions.map(p => {
-                      const active = platforms.includes(p.id);
-                      return (
-                        <button key={p.id} type="button" onClick={() => togglePlatform(p.id)}
-                          className={`flex items-center gap-1.5 p-2 rounded-lg border text-xs font-medium transition-all ${
-                            active ? 'border-primary/40 bg-primary/[0.06]' : 'border-white/[0.06] bg-white/[0.02] text-muted-foreground'
-                          }`}>
-                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${active ? 'border-primary bg-primary' : 'border-white/[0.12]'}`}>
-                            {active && <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
-                          </div>
-                          {p.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                {/* TikTok only — platform selector removed */}
+                <input type="hidden" name="platforms" value="tiktok" />
 
                 <Input value={hashtags} onChange={e => setHashtags(e.target.value)} placeholder="Recommended hashtags (optional)" />
                 <div className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">

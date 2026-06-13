@@ -221,7 +221,7 @@ export default function RootPage() {
             </h1>
 
             <p className="text-white/50 text-lg md:text-xl max-w-xl mx-auto leading-relaxed font-light">
-              Vetted creators make TikToks, Reels, and Shorts with your track.
+              Vetted creators make TikTok videos featuring your track.
               You approve every video. You only pay for verified views.
             </p>
           </motion.div>
@@ -532,7 +532,7 @@ export default function RootPage() {
           {[
             {
               q: 'How do independent artists promote music without a label?',
-              a: 'Independent artists promote music by working directly with content creators on TikTok, Instagram Reels, and YouTube Shorts. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views — no label required. You approve every video before it goes live.',
+              a: 'Independent artists promote music by working directly with content creators on TikTok. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views — no label required. You approve every video before it goes live.',
             },
             {
               q: "What's the most cost-effective way to promote a new single?",
@@ -579,7 +579,7 @@ export default function RootPage() {
               '@context': 'https://schema.org',
               '@type': 'FAQPage',
               mainEntity: [
-                { '@type': 'Question', name: 'How do independent artists promote music without a label?', acceptedAnswer: { '@type': 'Answer', text: 'Independent artists promote music by working directly with content creators on TikTok, Instagram Reels, and YouTube Shorts. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views.' } },
+                { '@type': 'Question', name: 'How do independent artists promote music without a label?', acceptedAnswer: { '@type': 'Answer', text: 'Independent artists promote music by working directly with content creators on TikTok. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views.' } },
                 { '@type': 'Question', name: "What's the most cost-effective way to promote a new single?", acceptedAnswer: { '@type': 'Answer', text: 'Creator-driven promotion on short-form video platforms is currently the most cost-effective approach. Artists set the budget and only pay for verified views.' } },
                 { '@type': 'Question', name: 'How much do content creators earn promoting music?', acceptedAnswer: { '@type': 'Answer', text: 'On Selah.fm, creators earn $5-30 CPM per 1,000 verified views. That is 100-1,000x more than platform funds like the TikTok Creator Fund.' } },
                 { '@type': 'Question', name: 'Do I need a big following to earn as a content creator?', acceptedAnswer: { '@type': 'Answer', text: 'No. CPM-based promotion pays per view, not per follower. Quality and consistency matter more than follower count.' } },

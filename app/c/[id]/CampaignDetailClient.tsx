@@ -232,7 +232,7 @@ function SupporterGrid({ supporters, totalCount }: { supporters: any[]; totalCou
 const FAQ_DATA = [
   {
     q: 'How do I earn money promoting this track?',
-    a: 'Create a short video (15-60 seconds) featuring the track on TikTok, Instagram Reels, or YouTube Shorts. Submit your video to this campaign. If the artist approves it, you earn per verified view — paid automatically via Stripe.',
+    a: 'Create a short video (15-60 seconds) featuring the track on TikTok. Submit your video to this campaign. If the artist approves it, you earn per verified view — paid automatically via Stripe.',
   },
   {
     q: 'How much will I actually earn?',
@@ -248,7 +248,7 @@ const FAQ_DATA = [
   },
   {
     q: 'What platforms are supported?',
-    a: 'TikTok, Instagram Reels, and YouTube Shorts. Post wherever your audience is — views count across all platforms as long as they use the official audio.',
+    a: 'TikTok. Post wherever your audience is — views count across all platforms as long as they use the official audio.',
   },
   {
     q: 'What if my video isn\'t approved?',
@@ -703,10 +703,10 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
             <div className="grid grid-cols-2 gap-3">
               {campaign.platforms_needed?.length > 0 && (
                 <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/40 mb-2">Platforms</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground/40 mb-2">Platform</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {(campaign.platforms_needed || []).map((p: string) => (
-                      <span key={p} className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[11px] text-white/80">{p}</span>
+                    {(campaign.platforms_needed || ['tiktok']).map((p: string) => (
+                      <span key={p} className="px-2 py-0.5 rounded-full bg-white/[0.06] text-[11px] text-white/80">{p === 'tiktok' ? 'TikTok' : p}</span>
                     ))}
                   </div>
                 </div>
@@ -1193,7 +1193,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               {
                 step: 1,
                 title: 'Find the audio',
-                desc: 'Search for this track on TikTok, Instagram, or YouTube and use the official audio in your video.',
+                desc: 'Search for this track on TikTok and use the official audio in your video.',
                 icon: <Music2 size={20} />,
               },
               {
