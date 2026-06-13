@@ -7,6 +7,7 @@
     "startCommand": "npm start",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 90,
+    "restartPolicyType": "ON_FAILURE",
     "cron": [
       { "schedule": "0 * * * *", "path": "/api/cron/dispatcher", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } }
     ]
