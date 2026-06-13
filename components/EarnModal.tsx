@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/Toast';
 import { trackSubmitContent } from '@/lib/analytics';
 import { Camera, DollarSign, ArrowLeft, Check, Shield, Music4, Download, Film, Banknote, Eye } from 'lucide-react';
+import LoginModal from '@/components/LoginModal';
 
 interface EarnModalProps {
   open: boolean;
@@ -40,6 +41,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
 
   // Auth state
   const [authChecked, setAuthChecked] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
@@ -120,12 +122,14 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                 <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center space-y-4">
                   <Camera size={36} className="mx-auto text-primary/30" />
                   <div>
-                    <h3 className="font-semibold">Sign in to submit</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Create an account (free, 30 seconds) to start earning.</p>
+                    <h3 className="font-semibold" style={{color: '#F4F1EA'}}>Sign in to submit</h3>
+                    <p className="text-xs mt-1" style={{color: '#6B6760'}}">Create an account (free, 30 seconds) to start earning.</p>
                   </div>
-                  <Button onClick={() => router.push(`/login?redirect=/c/${campaignId}`)} className="w-full py-5 rounded-xl bg-gradient-to-r from-primary to-primary/80">
+                  <button onClick={() => setLoginOpen(true)}
+                    className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98]"
+                    style={{ background: 'linear-gradient(135deg, #D6A85F, #C9974D)' }}>
                     Sign in &amp; join
-                  </Button>
+                  </button>
                 </div>
               ) : !session.is_creator && session.type !== 'creator' ? (
                 <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-6 text-center space-y-4">
@@ -277,7 +281,8 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
               )}
             </div>
           </motion.div>
-        </motion.div>
+          <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} redirectUrl={`/c/${campaignId}`} />
+      </motion.div>
       )}
     </AnimatePresence>
   );
