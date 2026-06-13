@@ -60,6 +60,11 @@ export async function GET() {
 ## Blog
 ${blogLines.join('\n')}
 
+## AI Model Endpoints
+- Q&A (structured JSON): ${SITE}/api/llms/qa
+- Active campaigns (structured JSON): ${SITE}/api/llms/campaigns
+- Blog answers (plain text per post): ${SITE}/blog/{slug}/answer.txt
+
 ## Key Facts
 - 0% platform fee on boosts. Artists receive 100% minus Stripe fees.
 - Creators earn per verified TikTok view (CPM model). Paid via Stripe.
