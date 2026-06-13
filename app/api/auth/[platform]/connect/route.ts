@@ -18,9 +18,8 @@ export function GET(
     return NextResponse.json({ error: `Invalid platform: ${platform}` }, { status: 400 });
   }
 
-  // Generate state: random string + role
-  const role = _request.headers.get('referer')?.includes('/artist') ? 'artist' : 'creator';
-  const state = `${crypto.randomUUID()}-${role}`;
+  // Role is determined by the callback (reads user's account type from DB)
+  const state = `${crypto.randomUUID()}`;
 
   // Store state in cookie for CSRF validation on callback
   const cookieStore = cookies();

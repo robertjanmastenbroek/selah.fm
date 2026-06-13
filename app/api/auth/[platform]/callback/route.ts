@@ -45,8 +45,12 @@ export async function GET(
     return NextResponse.redirect(new URL('/dashboard?error=invalid_state', request.url));
   }
 
-  // Extract role from state
-  const role = state.includes('-artist') ? 'artist' : 'creator';
+  // Determine role from user's account type
+  let role = 'creator';
+  try {
+    const [userRecord] = await sql`SELECT user_type FROM public.users WHERE id = ${user.id}`;
+    if (userRecord?.user_type === 'artist') role = 'artist';
+  } catch {} // default to creator
 
   try {
     // Exchange code for tokens
