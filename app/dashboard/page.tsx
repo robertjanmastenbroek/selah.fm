@@ -254,7 +254,6 @@ function DashboardContent() {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Campaigns' : 'Submissions', icon: Megaphone, badge: isArtist && activeCount > 0 ? activeCount : undefined },
     // Profile tab removed — moved to /settings
-    { id: 'tiktok', label: 'TikTok', icon: Music2 },
     { id: 'earnings', label: 'Balance', icon: DollarSign },
   ];
 
@@ -322,6 +321,11 @@ function DashboardContent() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
+              {/* TikTok connection banner — always visible at the top */}
+              <div className="mb-6">
+                <TikTokTab />
+              </div>
+
               {tab === 'overview' && (
                 <div className="space-y-6">
                   {/* KPI Grid */}
@@ -529,7 +533,6 @@ function DashboardContent() {
 
               {/* Profile tab removed — moved to /settings */}
 
-              {tab === 'tiktok' && <TikTokTab />}
               {tab === 'earnings' && (
                 <EarningsTab
                   isArtist={isArtist}
@@ -975,12 +978,7 @@ function TikTokTab() {
   }
 
   return (
-    <div className="max-w-lg space-y-6">
-      <div>
-        <h2 className="text-xl font-bold" style={{color: '#F4F1EA'}}>TikTok</h2>
-        <p className="text-xs mt-0.5" style={{color: '#6B6760'}}>Connect your TikTok account to verify your identity and unlock platform features.</p>
-      </div>
-
+    <div className="space-y-4">
       {connection ? (
         /* ── Connected state ── */
         <div className="rounded-2xl border overflow-hidden" style={{borderColor: 'rgba(34,197,94,0.15)', background: 'rgba(34,197,94,0.03)'}}>
@@ -1049,11 +1047,7 @@ function TikTokTab() {
         </div>
       )}
 
-      {/* Info box */}
-      <div className="rounded-xl p-4 text-xs leading-relaxed" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', color: '#8B887E'}}>
-        <p className="font-semibold mb-1" style={{color: '#A09B92'}}>Why connect TikTok?</p>
-        <p>75% of TikTok users discover new music through the platform. Connecting your TikTok account lets us verify your identity, display your follower count on your profile, and — for creators — automatically verify your video views so you get paid faster.</p>
-      </div>
+      {/* Info box removed — this is a banner now */}
     </div>
   );
 }
