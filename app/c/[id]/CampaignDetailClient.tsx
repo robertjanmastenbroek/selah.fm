@@ -78,7 +78,7 @@ function AnimatedCounter({ value, suffix = '', prefix = '', decimals = 0 }: { va
 function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
   const cpmDollars = cpmCents / 100;
   const [views, setViews] = useState(10000);
-  const earnings = (views / 1000) * cpmDollars * 0.8; // 80% creator share
+  const earnings = (views / 1000) * cpmDollars; // Full CPM — no platform fee deducted
 
   const presets = [
     { label: '1K', value: 1000 },
@@ -152,14 +152,13 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
       {/* Earnings result */}
       <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/[0.06]">
         <div>
-          <p className="text-xs text-muted-foreground">Your earnings (80%)</p>
+          <p className="text-xs text-muted-foreground">Your earnings</p>
           <p className="text-2xl font-bold font-display text-emerald-400">
             ${earnings >= 1 ? earnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : earnings.toFixed(2)}
           </p>
         </div>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">At ${cpmDollars.toFixed(2)} CPM</p>
-          <p className="text-[10px] text-muted-foreground/50">Platform fee: 20%</p>
         </div>
       </div>
 
@@ -1104,7 +1103,6 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 {/* Trust badges row */}
                 <div className="flex items-center gap-0.5 px-4 py-3 border-b border-white/[0.04]">
                   {[
-                    { icon: <DollarSign size={12} />, text: 'You earn 80%', color: '#22C55E' },
                     { icon: <Check size={12} />, text: 'Paid via Stripe', color: '#6366F1' },
                     { icon: <Eye size={12} />, text: 'Verified views only', color: '#D6A85F' },
                   ].map((b, i) => (

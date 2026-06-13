@@ -184,8 +184,6 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
 
                       {/* Trust badges — creator focused */}
                       <div className="flex items-center justify-center gap-3 text-[10px]" style={{color: '#6B6760', opacity: 0.5}}>
-                        <span className="flex items-center gap-1"><DollarSign size={10} /> You earn 80%</span>
-                        <span>·</span>
                         <span className="flex items-center gap-1"><Check size={10} /> Paid via Stripe</span>
                         <span>·</span>
                         <span className="flex items-center gap-1"><Eye size={10} /> Verified views</span>
