@@ -126,7 +126,29 @@ Robert-Jan Mastenbroek is the founder of Selah.fm. His story:
 
 TONE: Warm, wise, a little rough around the edges. Like a friend who's been through hell and came out the other side with clarity. Mixes spiritual depth (faith, purpose) with hard-earned practical advice (business, marketing). Never preachy — just real.`;
 
-const ARTICLE_PROMPT = `You are Robert-Jan Mastenbroek, founder of Selah.fm, a CPM marketplace where artists set budgets and creators earn per verified view. Write an authentic, practical blog post based on an interview transcript.
+// ── Post length/angle variety — randomly selected per post ──
+const LENGTHS = [
+  { label: 'Quick', words: 500, tokenMax: 3000, sections: '2-3 concise sections. No fluff.' },
+  { label: 'Standard', words: 1000, tokenMax: 5000, sections: '3-4 sections with mixed paragraph lengths.' },
+  { label: 'Deep', words: 1800, tokenMax: 8000, sections: '4-6 sections with detailed examples and stories.' },
+  { label: 'Ultimate', words: 3000, tokenMax: 10000, sections: '6-8 sections. Comprehensive guide.' },
+];
+const STRUCTURES = [
+  'Open with a punchy line → alternate story sections with advice → end with a challenge.',
+  'Lead with the problem → walk through how you solved it → apply to reader → close short.',
+  'Start with a vulnerable admission → use lists for action items → end with a bold statement.',
+  'Listicle format with numbered items. Each item gets story + advice paragraphs.',
+  'Q&A: Start with the question, answer directly, unpack reasoning with a personal story.',
+];
+const OPENERS = [
+  'Open with a direct question.', 'Open with a confession.', 'Open with a specific remembered moment.',
+  'Open with the conclusion first.', 'Open with a contrarian take.',
+];
+const POST_LENGTH = LENGTHS[Math.floor(Math.random() * LENGTHS.length)];
+const POST_STRUCTURE = STRUCTURES[Math.floor(Math.random() * STRUCTURES.length)];
+const POST_OPENER = OPENERS[Math.floor(Math.random() * OPENERS.length)];
+
+const ARTICLE_PROMPT = `You are Robert-Jan Mastenbroek, founder of Selah.fm. Write an authentic blog post based on an interview transcript.
 
 YOUR BACKSTORY (use naturally, don't force it):
 ${FOUNDER_BACKSTORY}
@@ -213,7 +235,7 @@ PARAGRAPH VARIETY:
 
 THE ULTIMATE TEST: After writing, ask yourself: could a human tell this was written by AI? If the answer might be yes, rewrite those sections. The goal is not "good enough to fool a detector" — it's "so human it never gets flagged in the first place."
 
-CONTENT STRUCTURE (follow this exact template):
+CONTENT STRUCTURE (${POST_LENGTH.label} — target ${POST_LENGTH.words} words):
 
 1. START DIRECTLY (no intro hook — the direct answer blockquote is already at the top of the page):
    - Begin with your first body section. No throat-clearing, no "Let me tell you a story..."
@@ -292,7 +314,7 @@ Return ONLY a JSON object with these fields:
   "internal_links": [{"url": "/page", "anchor": "descriptive keyword-rich anchor text"}],
   "faq_schema": [{"question": "FAQ question?", "answer": "Concise answer"}],
   "image_suggestions": [{"type": "featured", "description": "Description of ideal featured image"}],
-  "word_count_estimate": 1800
+  "word_count_estimate": ${POST_LENGTH.words}
 }`;
 
 export async function generateArticle(
@@ -349,7 +371,7 @@ export async function generateArticle(
     },
   ], { 
     temperature: 0.85, 
-    max_tokens: 4000, 
+    max_tokens: POST_LENGTH.tokenMax, 
     frequency_penalty: 0.3,
     presence_penalty: 0.2,
     top_p: 0.92,
