@@ -791,7 +791,10 @@ function TracksTab({
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3 text-center text-xs">
-                        <div><p className="font-bold text-sm">{c.approved_submissions || 0}</p><span className="text-[9px] text-muted-foreground/50">subs</span></div>
+                        <div>
+                          <p className="font-bold text-sm">{c.approved_submissions || 0}</p>
+                          <span className="text-[9px] text-muted-foreground/50">approved</span>
+                        </div>
                         <div><p className="font-bold text-sm">{formatViews(parseInt(c.total_verified_views || '0'))}</p><span className="text-[9px] text-muted-foreground/50">views</span></div>
                         <div><p className="font-bold text-sm">{formatDollars((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0))}</p><span className="text-[9px] text-muted-foreground/50">spent</span></div>
                       </div>
