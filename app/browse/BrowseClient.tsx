@@ -54,13 +54,13 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
             <div className="w-full h-full flex items-center justify-center"><Film size={28} className="text-white/10" /></div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F23]/40 to-transparent" />
-          {cpm && (
-            <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] font-semibold border" style={{color: '#D6A85F', borderColor: 'rgba(214,168,95,0.2)'}}>
-              ${(parseFloat(cpm) * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+          <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm max-w-[70%]">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-[7px] font-bold text-white shrink-0 overflow-hidden">
+              {track.artist_avatar
+                ? <img src={track.artist_avatar} alt="" className="w-full h-full object-cover" />
+                : (track.artist_name || 'A')[0]?.toUpperCase()}
             </div>
-          )}
-          <div className="absolute bottom-2 left-3 text-[10px] text-white/60 truncate max-w-[70%]">
-            {track.artist_name || 'Artist'}
+            <span className="text-[10px] font-medium text-white truncate">{track.artist_name || 'Artist'}</span>
           </div>
         </div>
 
@@ -76,7 +76,7 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
                   <span className="text-lg font-bold" style={{color: budgetUsed > 0 ? '#22C55E' : '#F4F1EA'}}>
                     {budgetUsed > 0 ? `${budgetUsed}%` : '$0'}
                   </span>
-                  <p className="text-[10px] leading-none mt-1" style={{color: '#6B6760'}}>paid out</p>
+                  <p className="text-[9px] leading-none mt-1 uppercase tracking-wider" style={{color: '#6B6760'}}>PAID OUT</p>
                 </div>
                 {cpm && (
                   <div className="text-right">
