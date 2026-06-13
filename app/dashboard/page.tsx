@@ -407,39 +407,30 @@ function DashboardContent() {
                     )}
                   </div>
 
-                  {/* Quick action card */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                  >
-                    <Card className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent overflow-hidden relative">
-                      <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
-                      <CardContent className="p-5 flex items-center justify-between relative z-10">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary/[0.08] flex items-center justify-center">
-                            <Sparkles size={18} className="text-primary" />
+                  {/* Quick action card — artists only see Create campaign card above */}
+                  {!isArtist && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
+                    >
+                      <Card className="border-primary/10 bg-gradient-to-br from-primary/[0.03] to-transparent overflow-hidden relative">
+                        <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/[0.04] rounded-full blur-3xl pointer-events-none" />
+                        <CardContent className="p-5 flex items-center justify-between relative z-10">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/[0.08] flex items-center justify-center">
+                              <Sparkles size={18} className="text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm">Browse artists and start creating content</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">Find artists that match your style and earn per verified view</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-semibold text-sm">
-                              {isArtist
-                                ? `${activeCount} active campaign${activeCount !== 1 ? 's' : ''}`
-                                : 'Browse artists and start creating content'}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {isArtist
-                                ? 'Promote your music to content creators on TikTok'
-                                : 'Find artists that match your style and earn per verified view'}
-                            </p>
-                          </div>
-                        </div>
-                        {/* Add tracks button removed — use Create campaign card */}
-                        {!isArtist && (
                           <a href="/browse"><Button size="sm" className="shrink-0 ml-3">Browse artists</Button></a>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
 
                   {/* Views chart + funnel */}
                   <ViewsChart
@@ -582,6 +573,7 @@ function DashboardContent() {
                   onSwitchTab={switchTab}
                   router={router}
                   exportCSV={exportCSV}
+                  setLoadingMsg={setLoadingMsg}
                 />
               )}
 
@@ -616,7 +608,7 @@ function DashboardContent() {
 function TracksTab({
   isArtist, campaigns, campaignsLoading, campaignsErr, reloadCampaigns,
   earningsData, formatViews, formatDollars, activeCount, totalViews,
-  totalSubmissions, totalSpent, onSwitchTab, router, exportCSV,
+  totalSubmissions, totalSpent, onSwitchTab, router, exportCSV, setLoadingMsg,
 }: any) {
   return (
     <div className="space-y-4">
