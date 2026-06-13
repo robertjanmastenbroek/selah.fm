@@ -990,7 +990,7 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
                   { label: 'Total deposited', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.total_budget_cents || 0), 0)) },
                   { label: 'Spent', value: formatDollars(totalSpent) },
                   { label: 'Remaining', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.budget_remaining_cents || 0), 0)) },
-                  { label: 'Platform fees', value: `$${Math.round(totalSpent * 0.1667)}` },
+                  { label: 'Platform fees', value: formatDollars(Math.round(totalSpent * 0.1667)) },
                 ].map(s => (
                   <div key={s.label} className="text-center">
                     <p className="text-lg font-bold">{s.value}</p>
