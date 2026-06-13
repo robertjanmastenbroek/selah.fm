@@ -1253,9 +1253,9 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
 
               <div className="grid grid-cols-3 gap-2 pt-2">
                 {[
-                  { label: 'Balance', value: formatDollars(artistData?.balance_cents || 0), color: '#F4F1EA' },
+                  { label: 'Available', value: formatDollars(artistData?.balance_cents || 0), color: '#22C55E' },
                   { label: 'Spent', value: formatDollars(totalSpent), color: '#EF4444' },
-                  { label: 'Remaining', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.budget_remaining_cents || 0), 0)), color: '#22C55E' },
+                  { label: 'Remaining', value: formatDollars(rawCampaigns.reduce((s: number, c: any) => s + (c.budget_remaining_cents || 0), 0)), color: '#6B6760' },
                 ].map(s => (
                   <div key={s.label} className="text-center">
                     <p className="text-lg font-bold" style={{color: s.color}}>{s.value}</p>
@@ -1269,10 +1269,10 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
               <h3 className="font-semibold text-sm">Your earnings</h3>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: 'Total earned', value: formatDollars(earningsData?.totalEarned || 0) },
+                  { label: 'Available', value: formatDollars((earningsData?.totalEarned || 0) - (earningsData?.totalPaid || 0)) },
                   { label: 'Paid out', value: formatDollars(earningsData?.totalPaid || 0) },
                   { label: 'Pending', value: formatDollars(earningsData?.totalPending || 0) },
-                  { label: 'Monthly projection', value: formatDollars((earningsData?.totalEarned || 0) > 0 ? Math.round((earningsData.totalEarned || 0) * 2) : 0) },
+                  { label: 'Total earned', value: formatDollars(earningsData?.totalEarned || 0) },
                 ].map(s => (
                   <div key={s.label} className="text-center p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                     <p className="text-lg font-bold">{s.value}</p>
