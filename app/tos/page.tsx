@@ -110,7 +110,25 @@ export default function TosPage() {
             All decisions made by Selah.fm in dispute resolution are final.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">10. Platform Liability</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">10. TikTok Compliance</h2>
+          <p>
+            Selah.fm integrates with TikTok&rsquo;s Login Kit and APIs for creator view verification. 
+            By connecting a TikTok account to Selah.fm, you agree to comply with TikTok&rsquo;s 
+            Terms of Service and Developer Terms of Service. Specifically:
+          </p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>TikTok data accessed through our platform is used exclusively for identity verification and view verification purposes</li>
+            <li>You may not use TikTok data accessed via Selah.fm for any competitive analysis, advertising, or AI training purposes</li>
+            <li>You must comply with all applicable TikTok Developer Policies and Platform Guidelines</li>
+            <li>Selah.fm reserves the right to revoke TikTok access for any user who violates TikTok&rsquo;s terms</li>
+            <li>Creators retain all rights to their TikTok content — Selah.fm claims no ownership over user-generated content on TikTok</li>
+          </ul>
+          <p className="mt-2">
+            If you believe a Selah.fm user is violating TikTok&rsquo;s terms through our platform, 
+            please report them to contact@selah.fm.
+          </p>
+
+          <h2 className="text-foreground font-semibold text-lg mt-8">11. Platform Liability</h2>
           <p>
             Selah.fm is a marketplace that connects Artists and Creators. 
             We are not a party to any transaction between Artists and Creators except for payment processing 
@@ -119,7 +137,7 @@ export default function TosPage() {
             We provide the platform &ldquo;as is&rdquo; without warranties of any kind, express or implied.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">10. Prohibited Conduct</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">12. Prohibited Conduct</h2>
           <p>
             The following are strictly prohibited on Selah.fm: fake views, bots, or artificial engagement; 
             spam, harassment, or abusive behavior; infringing content that violates third-party intellectual 
@@ -128,7 +146,7 @@ export default function TosPage() {
             appropriate action against any account that violates these Terms.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">11. Account Termination</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">13. Account Termination</h2>
           <p>
             We reserve the right to suspend or terminate any account for fraud, abuse, violation of these Terms, 
             or any other reason at our sole discretion. Upon termination, any remaining unspent campaign budget 
@@ -137,7 +155,7 @@ export default function TosPage() {
             of any outstanding obligations under these Terms.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">12. Limitation of Liability</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">14. Limitation of Liability</h2>
           <p>
             To the fullest extent permitted by law, Selah.fm and its officers, directors, employees, 
             and affiliates shall not be liable for any indirect, incidental, special, consequential, 
@@ -146,21 +164,21 @@ export default function TosPage() {
             12 months preceding the claim, or (b) $100 USD.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">13. Governing Law</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">15. Governing Law</h2>
           <p>
             These Terms are governed by and construed in accordance with the laws of the Netherlands. 
             Any disputes arising from these Terms or your use of Selah.fm shall be subject to the 
             exclusive jurisdiction of the courts of Amsterdam, the Netherlands.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">14. Changes to Terms</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">16. Changes to Terms</h2>
           <p>
             We may update these Terms from time to time. We will notify users of material changes 
             via email or through the platform. Continued use of Selah.fm after changes become effective 
             constitutes acceptance of the updated Terms.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">15. Contact</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">17. Contact</h2>
           <p>
             Questions about these Terms? Contact us at{' '}
             <a href="mailto:contact@selah.fm" className="underline hover:text-foreground transition-colors">
