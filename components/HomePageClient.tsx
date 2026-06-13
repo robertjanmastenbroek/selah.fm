@@ -536,7 +536,7 @@ export default function RootPage() {
             },
             {
               q: "What's the most cost-effective way to promote a new single?",
-              a: 'Creator-driven promotion on short-form video platforms is currently the most cost-effective approach. Instead of paying for ads that people scroll past, you pay creators to make engaging content featuring your music. You set the budget and only pay for verified views — so every dollar goes to actual exposure, not algorithm guesses.',
+              a: 'TikTok is the most cost-effective platform for music promotion. 75% of users discover new music through TikTok, and trending songs see 30-50% more Spotify streams. Instead of paying for ads, you pay creators to make authentic TikTok videos featuring your song. You set the budget and only pay for verified views — every dollar goes to real exposure, not algorithm guesses.',
             },
             {
               q: 'How much do content creators earn promoting music?',
@@ -580,7 +580,7 @@ export default function RootPage() {
               '@type': 'FAQPage',
               mainEntity: [
                 { '@type': 'Question', name: 'How do independent artists promote music without a label?', acceptedAnswer: { '@type': 'Answer', text: 'Independent artists promote music by working directly with content creators on TikTok. On Selah.fm, artists set a CPM budget, creators make videos using their song, and artists only pay for verified views.' } },
-                { '@type': 'Question', name: "What's the most cost-effective way to promote a new single?", acceptedAnswer: { '@type': 'Answer', text: 'Creator-driven promotion on short-form video platforms is currently the most cost-effective approach. Artists set the budget and only pay for verified views.' } },
+                { '@type': 'Question', name: "What's the most cost-effective way to promote a new single?", acceptedAnswer: { '@type': 'Answer', text: 'TikTok is the most cost-effective platform. 75% of users discover new music through TikTok, and trending songs see 30-50% more Spotify streams. Artists set the budget and only pay for verified views.' } },
                 { '@type': 'Question', name: 'How much do content creators earn promoting music?', acceptedAnswer: { '@type': 'Answer', text: 'On Selah.fm, creators earn $5-30 CPM per 1,000 verified views. That is 100-1,000x more than platform funds like the TikTok Creator Fund.' } },
                 { '@type': 'Question', name: 'Do I need a big following to earn as a content creator?', acceptedAnswer: { '@type': 'Answer', text: 'No. CPM-based promotion pays per view, not per follower. Quality and consistency matter more than follower count.' } },
                 { '@type': 'Question', name: 'How do I get paid for my videos?', acceptedAnswer: { '@type': 'Answer', text: 'Every verified view earns money based on the CPM rate. Earnings accumulate in your dashboard and you can withdraw via Stripe once you reach the payout threshold.' } },
