@@ -106,8 +106,10 @@ async function processStripeEvent(event: Stripe.Event, stripe: Stripe) {
   // Stripe fee requires an async API call and the types don't match between SDK versions.
   // Set to 0 for now — reconciliation cron will calculate actual fees.
   const stripeFeeCents = 0;
-  const platformFeeCents = Math.round(grossCents * 0.20); // 20% platform fee
-  const netToArtistCents = grossCents - platformFeeCents - stripeFeeCents;
+  // 20% premium on deposits: $100 deposit → $120 charged, $100 net, $20 platform fee
+  // net = total / 1.2, fee = total - net
+  const netToArtistCents = Math.round(grossCents / 1.2);
+  const platformFeeCents = grossCents - netToArtistCents - stripeFeeCents;
 
   // ── Artist donation: credit artist balance ────────────────
   if (type === 'artist_donation' && artistId) {

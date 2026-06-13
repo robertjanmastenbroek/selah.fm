@@ -113,10 +113,17 @@ function CheckoutForm({ clientSecret, amount, type, onSuccess, onError }: {
 
       <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3 text-xs space-y-1.5">
         <div className="flex justify-between">
-          <span className="text-white/60">You pay</span>
+          <span className="text-white/60">Goes to campaign</span>
           <span className="font-semibold text-white">${amount.toFixed(2)}</span>
         </div>
-        {/* Net to campaign removed — only show total charge */}
+        <div className="flex justify-between text-emerald-400">
+          <span className="flex items-center gap-1"><Check size={10} /> Platform fee (20%)</span>
+          <span>+${(amount * 0.2).toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between pt-1 border-t border-white/[0.06]">
+          <span className="text-white/80 font-medium">Total charged</span>
+          <span className="font-bold text-white">${(amount * 1.2).toFixed(2)}</span>
+        </div>
       </div>
 
       <Button type="submit" disabled={!stripe || processing}

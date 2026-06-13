@@ -29,7 +29,8 @@ export async function POST(
 
     const campaign = campaigns[0];
     const campaignId = campaign.id; // always UUID — never slug
-    const amountCents = Math.round(donationAmount * 100);
+    const depositCents = Math.round(donationAmount * 100);
+    const amountCents = Math.round(depositCents * 1.2); // +20% platform premium
     const session = await getSession(request);
 
     const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
