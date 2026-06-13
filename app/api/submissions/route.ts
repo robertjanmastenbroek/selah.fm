@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     `;
 
     // Server-side GA tracking
-    trackSubmitContent(platform, creatorId).catch((e: any) => console.error('Async error in api/submissions/route.ts:', e));
+    try { trackSubmitContent(platform, creatorId); } catch (e: any) { console.error('Async error in api/submissions/route.ts:', e); }
 
     // Live ticker event
     const creatorName = session.name || 'Someone';
