@@ -235,7 +235,7 @@ const FAQ_DATA = [
   },
   {
     q: 'How much will I actually earn?',
-    a: 'Use the calculator above. Your earnings depend on the CPM rate the artist set and how many verified views your video gets. You earn the full CPM rate — no deductions. Payouts are automatic via Stripe Connect.',
+    a: 'Use the calculator below. Your earnings depend on the CPM rate the artist set and how many verified views your video gets. You earn the full CPM rate — no deductions. Payouts are automatic via Stripe Connect.',
   },
   {
     q: 'Do I need a following to participate?',
@@ -255,7 +255,7 @@ const FAQ_DATA = [
   },
 ];
 
-function FAQAccordion() {
+function FAQAccordion({ cpmCents }: { cpmCents: number }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
@@ -283,7 +283,8 @@ function FAQAccordion() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <p className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                <p className="px-4 pb-2 text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                {i === 1 && <div className="px-4 pb-4"><EarningsCalculator cpmCents={cpmCents} /></div>}
               </motion.div>
             )}
           </AnimatePresence>
@@ -741,7 +742,7 @@ function CampaignTabs({ campaign, listenLinks, count, submissions }: {
         {/* Submissions tab removed — individual subs hidden */}
 
         {activeTab === 2 && (
-          <FAQAccordion />
+          <FAQAccordion cpmCents={campaign.cpm_rate_cents || 0} />
         )}
       </div>
     </div>
