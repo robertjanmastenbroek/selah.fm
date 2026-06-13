@@ -11,7 +11,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [campaign, setCampaign] = useState<any>(null);
-  const [form, setForm] = useState({ title: '', track_title: '', description: '', requirements: '', cpm_rate_cents: 0, total_budget_cents: 0, caption_requirements: '', required_hashtags: '', cover_art_url: '', track_url: '', youtube_video_url: '', spotify_url: '', apple_music_url: '', deezer_url: '' });
+  const [form, setForm] = useState({ title: '', track_title: '', description: '', requirements: '', cpm_rate_cents: 0, total_budget_cents: 0, caption_requirements: '', required_hashtags: '', cover_art_url: '', track_url: '', youtube_video_url: '', spotify_url: '', apple_music_url: '', deezer_url: '', tiktok_sound_url: '' });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -32,6 +32,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
             required_hashtags: d.required_hashtags || '',
             cover_art_url: d.cover_art_url || '',
             track_url: d.track_url || '',
+            tiktok_sound_url: d.tiktok_sound_url || '',
             youtube_video_url: d.youtube_video_url || '',
             spotify_url: social.spotify || '',
             apple_music_url: social.apple_music || '',
@@ -60,6 +61,7 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
           coverArtUrl: form.cover_art_url || null,
           trackUrl: form.track_url || null,
           youtubeVideoUrl: form.youtube_video_url || null,
+          tiktokSoundUrl: form.tiktok_sound_url || null,
           socialLinks: JSON.stringify({ spotify: form.spotify_url, apple_music: form.apple_music_url, deezer: form.deezer_url }),
         }),
       });
@@ -228,6 +230,16 @@ export default function EditCampaignPage({ params }: { params: { id: string } })
                   <input value={form.deezer_url} onChange={e => setForm(f => ({ ...f, deezer_url: e.target.value }))}
                     placeholder="https://deezer.com/track/..."
                     className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-[10px] font-medium mb-1 flex items-center gap-1.5 text-muted-foreground">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.45-1.04 1.16-1.18 1.89-.07.35-.13.82-.07 1.17.19 1.14 1.21 2.1 2.39 1.99.76-.04 1.47-.45 1.87-1.1.14-.23.23-.49.24-.76.05-1.52.02-3.04.03-4.56z"/></svg>
+                    TikTok Sound Link
+                  </label>
+                  <input value={form.tiktok_sound_url} onChange={e => setForm(f => ({ ...f, tiktok_sound_url: e.target.value }))}
+                    placeholder="https://www.tiktok.com/music/Merhav-Yah-123456789..."
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-primary/30 focus:outline-none" />
+                  <p className="text-[9px] mt-1" style={{color: '#6B6760'}}>Creators will be linked directly to this TikTok sound page instead of searching.</p>
                 </div>
               </div>
             </div>

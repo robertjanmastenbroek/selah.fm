@@ -164,6 +164,8 @@ export async function PATCH(
 
     const youtubeVideoUrl = body.youtubeVideoUrl !== undefined ? (body.youtubeVideoUrl || null) : null;
     const hasYoutubeUrl = body.youtubeVideoUrl !== undefined;
+    const tiktokSoundUrl = body.tiktokSoundUrl !== undefined ? (body.tiktokSoundUrl || null) : null;
+    const hasTiktokSound = body.tiktokSoundUrl !== undefined;
 
     const galleryImages = body.galleryImages !== undefined ? JSON.stringify(body.galleryImages) : null;
     const hasGalleryImages = body.galleryImages !== undefined;
@@ -213,6 +215,7 @@ export async function PATCH(
         content_assets_url = COALESCE(${contentAssetsUrl}, content_assets_url),
         platforms = COALESCE(ARRAY(SELECT * FROM jsonb_array_elements_text(${platforms}::jsonb)), platforms),
         youtube_video_url = CASE WHEN ${hasYoutubeUrl} THEN ${youtubeVideoUrl} ELSE youtube_video_url END,
+        tiktok_sound_url = CASE WHEN ${hasTiktokSound} THEN ${tiktokSoundUrl} ELSE tiktok_sound_url END,
         gallery_images = CASE WHEN ${hasGalleryImages} THEN ${galleryImages}::jsonb ELSE gallery_images END,
         social_links = COALESCE(${socialLinks}, social_links),
         status = COALESCE(${updateStatus}, status),
