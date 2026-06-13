@@ -272,7 +272,7 @@ export default function RootPage() {
           {/* Primary CTAs — artist + creator */}
           <motion.div
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-            className="flex flex-col sm:flex-row items-center gap-3">
+            className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link href="/login"
               className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-[15px] font-bold text-white
                          transition-all duration-200 shadow-lg shadow-[#4338CA]/20
@@ -288,7 +288,7 @@ export default function RootPage() {
               Browse campaigns <ArrowRight size={14} />
             </Link>
           </motion.div>
-          <div className="flex items-center gap-4 mt-3 text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
+          <div className="flex items-center justify-center gap-4 mt-3 text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
             <span>No upfront cost</span>
             <span className="w-1 h-1 rounded-full bg-white/20" />
             <span>Free to start</span>
