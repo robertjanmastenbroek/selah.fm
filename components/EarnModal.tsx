@@ -123,7 +123,7 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                   <Camera size={36} className="mx-auto text-primary/30" />
                   <div>
                     <h3 className="font-semibold" style={{color: '#F4F1EA'}}>Sign in to submit</h3>
-                    <p className="text-xs mt-1" style={{color: '#6B6760'}}">Create an account (free, 30 seconds) to start earning.</p>
+                    <p className="text-xs mt-1" style={{color: '#6B6760'}}>Create an account (free, 30 seconds) to start earning.</p>
                   </div>
                   <button onClick={() => setLoginOpen(true)}
                     className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98]"
