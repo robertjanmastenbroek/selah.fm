@@ -21,28 +21,30 @@ export async function GET(
   const state = searchParams.get('state');
   const error = searchParams.get('error');
 
+  const BASE = 'https://selah.fm';
+
   if (!VALID_PLATFORMS.includes(platform)) {
-    return NextResponse.redirect(new URL('/dashboard?error=invalid_platform', request.url));
+    return NextResponse.redirect(new URL('/dashboard?error=invalid_platform', BASE));
   }
   if (error) {
-    return NextResponse.redirect(new URL(`/dashboard?error=${error}&platform=${platform}`, request.url));
+    return NextResponse.redirect(new URL(`/dashboard?error=${error}&platform=${platform}`, BASE));
   }
   if (!code || !state) {
-    return NextResponse.redirect(new URL('/dashboard?error=missing_params', request.url));
+    return NextResponse.redirect(new URL('/dashboard?error=missing_params', BASE));
   }
 
   // Get user session
   const { getUser } = await import('@/lib/supabase/server');
   const user = await getUser();
   if (!user) {
-    return NextResponse.redirect(new URL('/login?redirect=/dashboard', request.url));
+    return NextResponse.redirect(new URL('/login?redirect=/dashboard', BASE));
   }
 
   // Validate state (CSRF)
   const cookieStore = cookies();
   const storedState = cookieStore.get(`oauth_state_${platform}`)?.value;
   if (!storedState || !state.startsWith(storedState.split('-')[0])) {
-    return NextResponse.redirect(new URL('/dashboard?error=invalid_state', request.url));
+    return NextResponse.redirect(new URL('/dashboard?error=invalid_state', BASE));
   }
 
   // Determine role from user's account type
@@ -88,9 +90,9 @@ export async function GET(
     // Clear state cookie
     cookieStore.delete(`oauth_state_${platform}`);
 
-    return NextResponse.redirect(new URL(`/dashboard?connected=${platform}&role=${role}`, request.url));
+    return NextResponse.redirect(new URL(`/dashboard?connected=${platform}&role=${role}`, BASE));
   } catch (e: any) {
     console.error(`[OAuth] ${platform} callback error:`, e.message);
-    return NextResponse.redirect(new URL(`/dashboard?error=${encodeURIComponent(e.message)}`, request.url));
+    return NextResponse.redirect(new URL(`/dashboard?error=${encodeURIComponent(e.message)}`, BASE));
   }
 }
