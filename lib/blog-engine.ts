@@ -194,7 +194,7 @@ WORD CHOICE:
 
 THE HONESTY RULE: If the interview doesn't have a specific answer for something, don't invent one. Say "I don't have a perfect answer for this" or "every artist's situation is different" or "honestly, it depends." Real humans admit uncertainty.
 
-PLATFORM CONTEXT: Selah.fm is a fan-to-artist boost platform. Fans discover new songs and boost them directly (0% fee). The Selah Score (0-100) measures genuine belief in a song. Artists connect Stripe to withdraw. Creators make TikTok videos promoting songs and earn per verified view (CPM model, paid via Stripe). ${platformContext}
+PLATFORM CONTEXT: Selah.fm is a fan-to-artist boost platform. Fans discover new songs and boost them directly (0% fee). The Selah Score (0-100) measures genuine belief in a song. Artists connect Stripe to withdraw. Creators make TikTok videos promoting songs and earn per verified view (CPM model, paid via Stripe).
 
 WRITE IT NOW. One post. Your voice. The interview transcript is below.
 - Use em-dashes for mid-thought interruptions — like this — in the middle of sentences
