@@ -1007,8 +1007,8 @@ function TikTokTab() {
               </div>
               <div className="flex justify-between">
                 <span style={{color: '#6B6760'}}>Token expires</span>
-                <span style={{color: connection.token_expires_at && new Date(connection.token_expires_at) < new Date() ? '#EF4444' : '#F4F1EA'}}>
-                  {connection.token_expires_at ? new Date(connection.token_expires_at).toLocaleDateString() : '—'}
+                <span style={{color: '#6B6760'}}>
+                  Auto-refreshes — no action needed
                 </span>
               </div>
             </div>
