@@ -162,19 +162,18 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
         </div>
       </div>
 
-      {/* Quick reference table */}
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {[10000, 100000, 1000000].map((v) => {
-          const earn = (v / 1000) * cpmDollars;
+      {/* Quick reference table — sync with presets */}
+      <div className="mt-3 grid grid-cols-4 gap-2">
+        {presets.map((p) => {
+          const earn = (p.value / 1000) * cpmDollars;
+          const isClosest = closestPreset.value === p.value;
           return (
-            <div key={v} className={`text-center p-2 rounded-lg border transition-all ${
-              views >= v * 0.5 && views <= v * 1.5
+            <div key={p.label} className={`text-center p-2 rounded-lg border transition-all ${
+              isClosest
                 ? 'border-indigo-500/30 bg-indigo-500/10'
                 : 'border-white/[0.04] bg-white/[0.02]'
             }`}>
-              <p className="text-[10px] text-muted-foreground/70">
-                {v >= 1000000 ? `${(v / 1000000).toFixed(0)}M` : `${(v / 1000).toFixed(0)}K`}
-              </p>
+              <p className="text-[10px] text-muted-foreground/70">{p.label}</p>
               <p className="text-xs font-bold text-emerald-400/90">${earn.toFixed(2)}</p>
             </div>
           );
