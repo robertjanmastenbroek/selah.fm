@@ -1085,7 +1085,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 }).catch(() => {});
                 setJoinOpen(true);
               }}
-                className="w-full py-4 text-base font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}">
+                className="w-full py-4 text-base font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}>
                 Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
               </button>
 
@@ -1258,7 +1258,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         className="hidden md:flex fixed bottom-0 inset-x-0 z-40 bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3 items-center justify-center"
       >
         <button onClick={() => setJoinOpen(true)}
-          className="px-6 py-3 text-sm font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}">
+          className="px-6 py-3 text-sm font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}>
           Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
         </button>
       </motion.div>
@@ -1273,7 +1273,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
         className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3"
       >
         <button onClick={() => setJoinOpen(true)}
-          className="w-full py-3.5 text-sm font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}">
+          className="w-full py-3.5 text-sm font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}>
           Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
         </button>
       </motion.div>
