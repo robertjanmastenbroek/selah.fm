@@ -64,11 +64,27 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
     if (!url || !session) return;
     if (!url.startsWith('https://')) { addToast('Paste a valid HTTPS link', 'error'); return; }
     setSubmitting(true);
+
+    // Real-time TikTok view verification
+    let verifiedViews: number | null = null;
+    if (platform === 'tiktok') {
+      try {
+        const verifyRes = await fetch('/api/tiktok/verify-video', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+        if (verifyRes.ok) {
+          const verifyData = await verifyRes.json();
+          verifiedViews = verifyData.viewCount;
+        }
+      } catch { /* verification is optional — submission still works */ }
+    }
+
     try {
       const res = await fetch('/api/submissions', {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ campaignId, contentUrl: url, platform }),
+        body: JSON.stringify({ campaignId, contentUrl: url, platform, viewsVerified: verifiedViews }),
       });
       const data = await res.json();
       if (res.ok) {
