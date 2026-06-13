@@ -165,7 +165,7 @@ function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
       {/* Quick reference table */}
       <div className="mt-3 grid grid-cols-3 gap-2">
         {[10000, 100000, 1000000].map((v) => {
-          const earn = (v / 1000) * cpmDollars * 0.8;
+          const earn = (v / 1000) * cpmDollars;
           return (
             <div key={v} className={`text-center p-2 rounded-lg border transition-all ${
               views >= v * 0.5 && views <= v * 1.5
