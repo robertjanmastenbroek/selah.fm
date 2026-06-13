@@ -73,7 +73,7 @@ function LoginForm() {
   const supabase = createClient();
 
   const buildRedirectUrl = () => {
-    let next = redirect || (role === 'fan' ? '/browse?welcome=fan' : role === 'artist' ? '/onboarding?role=artist' : '/onboarding?role=creator');
+    let next = redirect || (role === 'fan' ? '/browse?welcome=fan' : role === 'artist' ? '/onboarding?role=artist' : '/dashboard');
     return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}${refCode ? "&ref="+refCode : ""}`;
   };
 

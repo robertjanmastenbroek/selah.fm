@@ -112,7 +112,10 @@ export async function GET(request: Request) {
         const accountAgeMs = Date.now() - userCreatedAt;
         const isTrulyNewUser = isNewUser && accountAgeMs < 3600000; // < 1 hour old
         
-        if (isTrulyNewUser && next === '/browse') {
+        // Never redirect existing users to onboarding, regardless of next param
+        if (next.includes('/onboarding') && !isTrulyNewUser) {
+          finalUrl = new URL('/dashboard', origin);
+        } else if (isTrulyNewUser && next === '/browse') {
           const userType = user.user_metadata?.user_type || user.user_metadata?.is_artist ? 'artist' : 'creator';
           finalUrl = new URL(`/onboarding?role=${userType}`, origin);
         }
