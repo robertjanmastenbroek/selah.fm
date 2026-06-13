@@ -8,7 +8,7 @@ const ENV = {
   tiktok: {
     clientKey: process.env.TIKTOK_CLIENT_KEY || '',
     clientSecret: process.env.TIKTOK_CLIENT_SECRET || '',
-    redirect: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm'}/api/auth/tiktok/callback`,
+    redirect: `https://selah.fm/api/auth/tiktok/callback`,
   },
   youtube: {
     clientId: process.env.YOUTUBE_CLIENT_ID || '',
