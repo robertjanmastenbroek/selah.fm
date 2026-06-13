@@ -55,8 +55,8 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0F0F23]/40 to-transparent" />
           {cpm && (
-            <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
-              ${(parseFloat(cpm) * 1000).toFixed(0)}/1M
+            <div className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] font-semibold border" style={{color: '#D6A85F', borderColor: 'rgba(214,168,95,0.2)'}}>
+              ${(parseFloat(cpm) * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
             </div>
           )}
           <div className="absolute bottom-2 left-3 text-[10px] text-white/60 truncate max-w-[70%]">
@@ -69,19 +69,28 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
             {track.title || track.track_title || 'Untitled'}
           </p>
           {track.total_budget_cents > 0 && (
-            <div className="space-y-1">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold" style={{color: budgetUsed > 0 ? '#22C55E' : '#F4F1EA'}}>
+                  {budgetUsed > 0 ? `${budgetUsed}%` : '$0'}
+                </span>
+                {cpm && (
+                  <span className="text-xs font-semibold" style={{color: '#D6A85F'}}>
+                    ${(parseFloat(cpm) * 1000).toFixed(0)} per 1M views
+                  </span>
+                )}
+              </div>
+              <p className="text-[9px]" style={{color: '#6B6760'}}>
+                {budgetUsed > 0 ? 'paid out' : 'campaign budget'}
+              </p>
               <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
                 <motion.div initial={{ width: 0 }} animate={{ width: `${budgetUsed}%` }} transition={{ duration: 0.8, delay: 0.3 }}
                   className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400" />
               </div>
-              <div className="flex justify-between text-[9px] text-muted-foreground/40">
-                <span>{budgetUsed}% used</span>
-                {budget && <span>${budget} budget</span>}
-              </div>
             </div>
           )}
           {(subs > 0 || views > 0) && (
-            <div className="flex items-center gap-3 text-[9px] text-muted-foreground/50 pt-1 border-t border-white/[0.04]">
+            <div className="flex items-center gap-3 text-[9px]" style={{color: '#6B6760', opacity: 0.5}}>
               {subs > 0 && <span className="flex items-center gap-1"><Film size={10} /> {subs} sub{subs !== 1 ? 's' : ''}</span>}
               {views > 0 && <span className="flex items-center gap-1"><Eye size={10} /> {formatViews(views)} views</span>}
             </div>
