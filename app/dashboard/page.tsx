@@ -658,7 +658,7 @@ function TracksTab({
                   whileTap={{ scale: 0.99 }}
                 >
                   <Card className="overflow-hidden cursor-pointer hover:border-primary/20 transition-colors group"
-                    onClick={() => router.push(`/c/${c.slug || c.id}`)}>
+                    onClick={() => router.push(`/c/${c.slug || c.id}/edit`)}>
                     <CardContent className="p-5 space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
@@ -683,10 +683,10 @@ function TracksTab({
                             style={{ color: c.status === 'active' ? '#EF4444' : '#22C55E', background: c.status === 'active' ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)', borderColor: c.status === 'active' ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)' }}>
                             {c.status === 'active' ? 'Pause' : 'Activate'}
                           </button>
-                          <button onClick={e => { e.stopPropagation(); window.location.href = `/c/${c.slug || c.id}/edit`; }}
+                          <button onClick={e => { e.stopPropagation(); window.open(`/c/${c.slug || c.id}`, '_blank'); }}
                             className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all active:scale-95 hover:bg-white/[0.08] border border-white/[0.08]"
                             style={{ color: '#A09B92' }}>
-                            Edit
+                            <ExternalLink size={12} className="inline mr-1" /> View
                           </button>
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                             c.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/[0.04] text-muted-foreground'
