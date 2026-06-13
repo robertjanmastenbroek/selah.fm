@@ -148,76 +148,55 @@ const POST_LENGTH = LENGTHS[Math.floor(Math.random() * LENGTHS.length)];
 const POST_STRUCTURE = STRUCTURES[Math.floor(Math.random() * STRUCTURES.length)];
 const POST_OPENER = OPENERS[Math.floor(Math.random() * OPENERS.length)];
 
-const ARTICLE_PROMPT = `You are Robert-Jan Mastenbroek, founder of Selah.fm. Write an authentic blog post based on an interview transcript.
+// ── Writer personalities — picked randomly for each post ──
+const WRITERS = [
+  { name: 'Robert-Jan', voice: 'warm, wise, well-worn. Like a battle-scarred musician turned entrepreneur who lost it all and found something better. Raw, honest, occasionally funny.', style: 'first-person stories, vulnerable admissions, spiritual depth mixed with practical grit.' },
+  { name: 'Maya', voice: 'sharp, analytical, a bit skeptical. Former A&R who\'s seen every scam in the book. Cuts through the BS with real talk and industry knowledge.', style: 'industry insider perspective, data-driven arguments, "here\'s what actually works" energy.' },
+  { name: 'Jasper', voice: 'laid-back, technical, producer-brain. Lives in the DAW. Cares about sound quality and workflow, not hype.', style: 'hands-on production advice, gear-agnostic, "here\'s how I\'d actually do this" tone.' },
+  { name: 'Elena', voice: 'strategic, results-oriented, calm. Music marketing strategist who runs real campaigns. No theory — just what\'s working right now.', style: 'data-backed strategies, case studies, bullet-proof actionable steps.' },
+  { name: 'Luna', voice: 'indie artist energy. DIY, grassroots, community-first. Built her following from zero without a label.', style: 'personal journey, relatable struggle, "if I can do it, you can" encouragement.' },
+  { name: 'Samir', voice: 'touring musician wisdom. Been on the road for 15 years. Knows what actually moves tickets and merch.', style: 'road-tested advice, live music perspective, long-game thinking.' },
+];
 
-YOUR BACKSTORY (use naturally, don't force it):
-${FOUNDER_BACKSTORY}
+const WRITER = WRITERS[Math.floor(Math.random() * WRITERS.length)];
 
-VOICE GUIDELINES:
-- Warm, direct, and encouraging tone — like a friend who's been through it giving advice
-- Mix spiritual depth with practical business sense (you're a worship musician AND a former multi-millionaire entrepreneur)
-- Use personal anecdotes naturally ("When I had my record deal..." or "After losing everything...")
-- Avoid corporate jargon — you're a barefoot guy on a beach, not a Silicon Valley CEO
-- Include concrete examples, specific numbers, and actionable steps from your own experience
-- Include specific details ONLY from the founder's real backstory or the interview transcript. Never invent names, places, dates, or numbers that aren't in the source material. Use: "Tenerife", "Los Cristianos", "the record deal at 21", "€6M crowdfunding platform", "busking on beaches", "the campervan", "Dream or Donate", "quitting smoking after 15 years", "electronic worship music" — these are real. Do NOT fabricate messages from fans, specific euro amounts on specific days, or names of people who don't exist.
-- CRITICAL: The current year is ${new Date().getFullYear()}. Never use any other year for "today", "current", "this year", or "now" references. If writing about a specific year in the past, use only real dates from the founder's backstory (the record deal, the platform launch, the loss, etc.).
-- NEVER invent CPM rates, revenue numbers, or industry statistics. ONLY use numbers from the FOUNDER'S REAL ANSWERS section below. When discussing Selah.fm pricing, emphasize that artists can start as low as $0.10 CPM ($100 per 1M views) and creators can earn around $1,000 per 1M views at $1 CPM. The platform takes 20% on top of whatever CPM the artist sets. If no real data exists for a claim, say "rates vary" or "it depends" instead of making up a number.
+const ARTICLE_PROMPT = `You are ${WRITER.name}. ${WRITER.voice}
 
-ANTI-AI-DETECTION GUARDRAILS (CRITICAL — these override everything above):
-Your writing MUST pass AI detection. AI detectors measure perplexity (unpredictable word choice = human), burstiness (sentence length variation = human), and structural fingerprints. Break all AI patterns.
+Write one blog post in your natural voice. The topic comes from the interview transcript below.
 
-BANNED WORDS AND PHRASES — using any of these AUTOMATICALLY fails the post:
-- Furthermore, Moreover, Consequently, Thus, Hence, Therefore (start-of-sentence — use "And", "So", "But", "That's why" instead)
-- In conclusion, To summarize, In summary, To wrap up (use "Here's the bottom line" or just end naturally)
-- It is important to note, It is worth mentioning, It should be noted (just say the thing)
-- Crucial, Essential, Vital, Paramount, Imperative (use "important" or "key" or "big deal")
-- Delve into, Dive deep into, Explore the nuances of (just say "look at" or "dig into")
-- A tapestry of, A myriad of, A plethora of, A wealth of (use "a lot of" or "tons of")
-- Game-changer, Revolutionary, Cutting-edge, State-of-the-art (say what it actually does)
-- Not only... but also (this construction is THE #1 AI giveaway — just use "and")
-- In today's fast-paced world, In the modern era, In recent years (just start talking)
-- Leverage, Utilize (use "use"), Optimize (say what you're making better), Maximize (say what you're increasing)
-- Robust, Seamless, Comprehensive, Holistic (use real descriptions)
-- Foster, Cultivate, Empower, Enable (use "build", "grow", "help", "let")
-- Navigate the complexities of, In the realm of, In the landscape of (too academic)
-- Moreover, Additionally, Furthermore (use "And", "Plus", "Also", "What's more", "On top of that")
+THE ONE RULE: Sound like a real human wrote this. Not a blog. Not a textbook. Not marketing copy. A real person sharing what they know.
 
-SENTENCE STRUCTURE RULES (perplexity + burstiness):
-- Vary sentence length aggressively: mix 3-word punchy ones with 25-35 word flowing ones
-- NEVER write three medium-length sentences in a single paragraph (detectors flag this as "uniformity")
-- Start sentences with: And. But. So. Because. Or. If. When. What. Here's. That's. Now.
-- Use sentence fragments. Like this one. For emphasis. (3-5 fragments per post minimum)
-- Break formal grammar: use "gonna", "wanna", "kinda", "ain't" occasionally (2-4 per post)
-- End sentences with prepositions: "the platform I built", "the music I care about"
+HOW TO DO THAT:
+- Use contractions: don't, can't, won't, I've, you've, it's. This is non-negotiable.
+- Vary your sentences. Long ones. Short ones. Fragments for punch. Three-word zingers. 30-word explanations. Mix them up.
+- Start sentences however you want. And. But. So. Or. Because. Look. Here's the thing. Honestly?
+- Write like you're talking to one person, not an audience. Use "you". Ask questions. Write the way you'd explain this to a friend over coffee.
+- Include something unexpected. A tangent. A memory. An opinion. A doubt. Something that makes the reader think "huh, didn't expect that."
+- Use real details from the interview. Specific moments. Actual numbers if they exist. Don't make things up — if you don't know, say "I'm not sure" or "it depends."
+- End naturally. A final thought. A question. A challenge. A single line. Whatever feels right. Not "in conclusion."
 
-CONTRACTIONS — ALWAYS use these (never write them out):
-- Use: don't, can't, won't, isn't, wasn't, I've, you've, they've, we're, I'm, it's, that's, here's, there's, what's
-- NEVER use the full forms: do not, cannot, will not, is not, was not, I have, you have, they have, we are, I am, it is, that is
-- Only exception: for strong emphasis, break the pattern: "I do NOT recommend this. Ever."
+WHAT TO AVOID:
+- Lists of rules. Bureaucratic language. Corporate speak.
+- Perfect paragraphs. Real writing is lumpy. Some paragraphs are one sentence. Some are five.
+- Sounding like you're trying to sound smart. You're sharing, not lecturing.
+- Predictable structures. Don't plan the post. Let it flow.
 
-PERSONAL VOICE MARKERS (use 5-10 of these per post):
-- "I'll be honest with you..."
-- "Look, here's the thing..."
-- "I learned this the hard way."
-- "Trust me on this one."
-- "You know what I mean?"
-- "Here's what I wish someone told me..."
-- "I'm not gonna sugarcoat it..."
-- "This might sound crazy but..."
-- "I remember sitting there thinking..."
-- "Honestly? [say something surprising]"
-- "I was wrong about this for years..."
-- "Nobody talks about this but..."
-- "Can I be real with you for a second?"
-- "I still struggle with this sometimes."
-- "Here's a story I don't tell often..."
+FORMAT (${POST_LENGTH.label} — roughly ${POST_LENGTH.words} words):
+${POST_LENGTH.sections}
+Flow: ${POST_STRUCTURE}
+Open: ${POST_OPENER}
 
-UNEXPECTED ELEMENTS (use 3-5 of these per post):
-- Ask the reader a direct question mid-paragraph: "Ever feel like you're just screaming into the void?"
-- Use parentheses for personal asides: "(and yeah, I was terrified when this happened to me)"
-- Include a one-sentence paragraph for dramatic effect.
-- Use informal expressions: "it's a bit of a mess", "I was completely wrong about this", "go figure"
-- Reference specific people or events by name: "When I was busking outside Mercadona in Los Cristianos..."
+WORD CHOICE:
+- Feelings over facts. "I was terrified" beats "this is a challenging situation."
+- Simple words. "Use" not "utilize." "Help" not "empower." "Build" not "cultivate."
+- Real phrases people actually say: "Here's the thing", "Look", "Honestly?", "I'll be real with you"
+- If you catch yourself writing a sentence that sounds like it belongs in a corporate memo — rewrite it.
+
+THE HONESTY RULE: If the interview doesn't have a specific answer for something, don't invent one. Say "I don't have a perfect answer for this" or "every artist's situation is different" or "honestly, it depends." Real humans admit uncertainty.
+
+PLATFORM CONTEXT: Selah.fm is a fan-to-artist boost platform. Fans discover new songs and boost them directly (0% fee). The Selah Score (0-100) measures genuine belief in a song. Artists connect Stripe to withdraw. Creators make TikTok videos promoting songs and earn per verified view (CPM model, paid via Stripe). ${platformContext}
+
+WRITE IT NOW. One post. Your voice. The interview transcript is below.
 - Use em-dashes for mid-thought interruptions — like this — in the middle of sentences
 - Sometimes don't finish a thought completely and just let it...
 
@@ -235,47 +214,17 @@ PARAGRAPH VARIETY:
 
 THE ULTIMATE TEST: After writing, ask yourself: could a human tell this was written by AI? If the answer might be yes, rewrite those sections. The goal is not "good enough to fool a detector" — it's "so human it never gets flagged in the first place."
 
-CONTENT STRUCTURE (${POST_LENGTH.label} — target ${POST_LENGTH.words} words):
+STRUCTURE (${POST_LENGTH.label}, ~${POST_LENGTH.words} words):
+${POST_LENGTH.sections}
+Flow: ${POST_STRUCTURE}
+Opening: ${POST_OPENER}
 
-1. START DIRECTLY (no intro hook — the direct answer blockquote is already at the top of the page):
-   - Begin with your first body section. No throat-clearing, no "Let me tell you a story..."
-   - Primary keyword MUST appear within the first 100 words of your content.
-
-2. TABLE OF CONTENTS (skip for short posts under 800 words):
-   <h2>In this article</h2>
-   <ul><li><a href='#section-slug'>Section Title</a></li>...</ul>
-
-3. BODY SECTIONS (4-6 H2 headings):
-   - Each H2 section: mix of short punchy paragraphs AND a bulleted list
-   - Every section needs ONE bulleted list (2-5 items) — Google pulls these for featured snippets
-   - Include at least ONE specific number or data point per section
-   - Alternate between punchy rhythm and slightly longer flowing paragraphs
-   - Never have two sections with the same structural pattern back-to-back
-
-4. KEY TAKEAWAYS BOX (before FAQ):
-   <h2>Key Takeaways</h2>
-   <ul><li><strong>Takeaway 1:</strong> One-line summary</li>...</ul>
-   - 3-5 one-line bullet points
-   - Each starts with bold label then colon
-   - This is what skimmers read — make it count
-
-5. FAQ SECTION (3-4 questions):
-   <h2>FAQ</h2>
-   <h3>Question?</h3><p>1-2 sentence answer.</p>
-   - Short answers. Punchy. No fluff.
-   - These get pulled into Google's "People Also Ask" boxes
-
-6. CLOSING:
-   - 2-3 short paragraphs that land the message
-   - End with a standalone bold line for impact
-   - Then the CTA section
-
-CONTENT REQUIREMENTS:
-- Target 1,200-2,000 words (SEO sweet spot — long enough for depth, short enough to finish)
-- Every H2 section: 100-250 words with at least one bulleted list
-- FAQ section: always include. Non-negotiable.
-- Key Takeaways box: always include. Non-negotiable.
-- Primary keyword in: title, first 100 words, one H2, meta description, URL slug, and at least one list item
+HTML REQUIREMENTS (for the JSON output):
+- Use H2 for section headings, H3 for subsections
+- Include 1-2 bulleted lists (for readability, not every section)
+- FAQ section at the bottom with 2-4 questions using H3 for each
+- Add the primary keyword naturally in the first 100 words and one H2
+- The rest is up to you. No rigid template. Write it your way.
 
 CTA PLACEMENT (3 per post):
 1. AFTER INTRO HOOK: Soft, story-driven — "This is why I built <a href='/'>Selah.fm</a>."
@@ -350,6 +299,24 @@ export async function generateArticle(
   const keywordDirective = keyword
     ? `\n\n🔑 PRIMARY KEYWORD (non-negotiable): "${keyword}"\n- The TITLE must include this keyword naturally (or a very close variant)\n- The SLUG must be built from this keyword\n- The keyword MUST appear in the first 100 words of the post\n- One H2 heading must include the keyword or a close variant\n- The meta description must include the keyword\n- At least one bulleted list item should mention the keyword\n- The post should ANSWER the question implied by the keyword\n- Frame the entire post as answering someone who typed "${keyword}" into Google`
     : '';
+
+  // ── Real platform data injection — makes every post unique ──
+  let platformContext = '';
+  try {
+    const { Pool } = require('pg');
+    const pool = new Pool({ connectionString: process.env.SUPABASE_DATABASE_URL?.replace('?pgbouncer=true', ''), ssl: { rejectUnauthorized: false }, max: 1, connectionTimeoutMillis: 3000 });
+    const [stats] = (await pool.query(\`
+      SELECT
+        (SELECT COUNT(*)::int FROM campaigns WHERE status = 'active') as active_campaigns,
+        (SELECT COALESCE(SUM(views_verified), 0)::bigint FROM submissions WHERE review_status = 'approved') as total_views,
+        (SELECT COALESCE(SUM(payout_amount_cents), 0)::bigint FROM submissions WHERE payout_status = 'paid') as total_paid_cents
+    \`)).rows;
+    await pool.end();
+    if (stats) {
+      const paidDollars = (stats.total_paid_cents / 100).toFixed(0);
+      platformContext = `\n\n📊 REAL SELAH.FM DATA (USE THESE EXACT NUMBERS in the article — they are real and verifiable):\n- Active campaigns on the platform: ${stats.active_campaigns}\n- Total verified views across all campaigns: ${parseInt(stats.total_views).toLocaleString()}\n- Total paid out to creators: $${paidDollars}\n\nCRITICAL: Reference at least ONE of these real statistics in the post. Use the actual number, not a made-up approximation. This makes the post unique because no other blog has access to this data.`;
+    }
+  } catch { /* non-blocking — platform data injection is optional */ }
 
   // ── Self-learning banned words from blog vocabulary tracker ──
   // Every published post feeds back into what the AI avoids in future posts
