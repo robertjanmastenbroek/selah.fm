@@ -230,11 +230,11 @@ function SupporterGrid({ supporters, totalCount }: { supporters: any[]; totalCou
 const FAQ_DATA = [
   {
     q: 'How do I earn money promoting this track?',
-    a: 'Create a short video (15-60 seconds) featuring the track on TikTok. Submit your video to this campaign. If the artist approves it, you earn per verified view — paid automatically via Stripe.',
+    a: 'Create a short video (15-60 seconds) featuring the track on TikTok. Submit your video link to this campaign. We immediately capture your video\'s current view count. If the artist approves, we track view growth for 7 days and pay you based on views gained after submission.',
   },
   {
     q: 'How much will I actually earn?',
-    a: 'Use the calculator below. Your earnings depend on the CPM rate the artist set and how many verified views your video gets. You earn the full CPM rate — no deductions. Payouts are automatic via Stripe Connect.',
+    a: 'Use the calculator below. Your earnings depend on the CPM rate the artist set and how many views your video gets after you submit it. We capture your view count at submission time, then track growth for 7 days after the artist approves. Your payout is based on views gained — not total views. You earn the full CPM rate — no deductions.',
   },
   {
     q: 'Do I need a following to participate?',
@@ -242,7 +242,7 @@ const FAQ_DATA = [
   },
   {
     q: 'How do I get paid?',
-    a: 'Connect your Stripe account to Selah.fm. When your video is approved and views are verified, earnings are automatically deposited. No invoices. No manual requests.',
+    a: 'Connect your Stripe account to Selah.fm. After the artist approves your video, we track view growth for 7 days. Once the growth period ends, the payout is automatically calculated and deposited via Stripe. No invoices. No manual requests.',
   },
   {
     q: 'Why TikTok?',
@@ -1038,6 +1038,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                     style={{background: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', color: '#8B887E'}}>
                     <p className="mb-1">Rate: <strong style={{color: '#D6A85F'}}>${cpm.toFixed(2)} cpm</strong>. Earn <strong style={{color: '#22C55E'}}>${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> per 1M views.</p>
                     <p>Each post must reach a minimum of <strong style={{color: '#F4F1EA'}}>5,000 views</strong> to be eligible for payout.</p>
+                    <p>Views are tracked from submission time. Payout is calculated based on views gained during the 7-day growth period after approval.</p>
                     <p className="mt-1">Max earnings per post: <strong style={{color: '#22C55E'}}>$1,000</strong>.</p>
                   </div>
                 </div>
@@ -1191,7 +1192,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               {
                 step: 3,
                 title: 'Submit & earn',
-                desc: `Submit your public video link. If approved, you earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} per 1M verified views — paid via Stripe.`,
+                desc: `Submit your public video link. If the artist approves, we track view growth for 7 days and pay you based on views gained after submission.`,
                 icon: <DollarSign size={20} />,
               },
             ].map((s, i) => (

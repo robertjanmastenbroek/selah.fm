@@ -67,7 +67,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { url } = await request.json();
+    const body = await request.json();
+    const { url, submissionId } = body;
     if (!url) {
       return NextResponse.json({ error: 'Video URL required' }, { status: 400 });
     }
@@ -131,6 +132,26 @@ export async function POST(request: Request) {
 
     const viewCount = parseInt(video.view_count || '0');
     
+    // If a submissionId was provided, update the submission record
+    if (submissionId) {
+      const [existing] = await sql`SELECT views_at_submission, views_verified FROM submissions WHERE id = ${body.submissionId}`;
+      if (existing) {
+        const growth = existing.views_at_submission > 0 ? viewCount - existing.views_at_submission : 0;
+        await sql`
+          UPDATE submissions SET 
+            views_verified = ${viewCount},
+            views_last_checked = NOW(),
+            views_check_count = views_check_count + 1
+          WHERE id = ${body.submissionId}
+        `;
+        return NextResponse.json({
+          ok: true, viewCount, videoId: video.id, verified: true,
+          viewsAtSubmission: existing.views_at_submission,
+          viewsGrowth: Math.max(0, growth),
+        });
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       viewCount,

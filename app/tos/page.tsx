@@ -90,12 +90,21 @@ export default function TosPage() {
             Tracks with zero submissions may have their CPM rate adjusted at any time.
           </p>
 
-          <h2 className="text-foreground font-semibold text-lg mt-8">8. Payout Timing</h2>
+          <h2 className="text-foreground font-semibold text-lg mt-8">8. Payout Timing &amp; View Tracking</h2>
           <p>
-            Creators are paid through Stripe Connect. 
-            Payouts are typically processed within 1–3 business days after the Artist approves a submission 
-            and view verification is complete. 
-            Actual timing depends on the Creator&rsquo;s bank and Stripe&rsquo;s processing schedule. 
+            When a Creator submits a video URL, Selah.fm immediately captures the video&rsquo;s current view count 
+            as the baseline (&ldquo;views at submission&rdquo;). If the Artist approves the submission, Selah.fm tracks 
+            the video&rsquo;s view growth for a period of 7 days following approval. The payout is calculated 
+            based on the number of views gained during this 7-day period, not the total view count.
+          </p>
+          <p className="mt-3">
+            After the 7-day tracking period ends, the payout is automatically finalized and sent via Stripe 
+            Connect. Payouts are typically processed within 1&ndash;3 business days after finalization. 
+            If a Creator&rsquo;s video receives fewer than 5,000 views during the tracking period, the 
+            submission may not qualify for payout at the Artist&rsquo;s discretion.
+          </p>
+          <p className="mt-3">
+            The maximum payout per single submission is $500.00, regardless of total views gained. 
             Selah.fm is not responsible for delays caused by banking institutions or Stripe.
           </p>
 

@@ -210,8 +210,8 @@ export default function EarnModal({ open, onClose, campaignId, trackTitle, cpmCe
                   <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-left space-y-2.5">
                     {[
                       { emoji: '👀', text: 'The artist reviews your video (usually within 48 hours).' },
-                      { emoji: '✅', text: 'Once approved, we start tracking verified views.' },
-                      { emoji: '💰', text: `You earn $${(parseFloat(creatorEarnings) * 1000).toFixed(0)} per 1M verified views — paid via Stripe.` },
+                      { emoji: '✅', text: 'Artist approves → we track view growth for 7 days.' },
+                      { emoji: '💰', text: `You earn $${(parseFloat(creatorEarnings) * 1000).toFixed(0)} per 1M views gained after submission — paid via Stripe.` },
                     ].map((s, i) => (
                       <div key={i} className="flex gap-2.5 text-[11px]"><span className="shrink-0">{s.emoji}</span><span className="text-muted-foreground leading-relaxed">{s.text}</span></div>
                     ))}
