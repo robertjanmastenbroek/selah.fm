@@ -273,7 +273,7 @@ export default function RootPage() {
           <motion.div
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
             className="flex flex-col sm:flex-row items-center gap-3">
-            <Link href="/welcome-artists"
+            <Link href="/login"
               className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl text-[15px] font-bold text-white
                          transition-all duration-200 shadow-lg shadow-[#4338CA]/20
                          bg-gradient-to-b from-[#4338CA] to-[#3730A3]
