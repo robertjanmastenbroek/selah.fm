@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import SubmissionsFeed from '@/components/SubmissionsFeed';
 import EarnModal from '@/components/EarnModal';
 import {
-  Heart, X, Play, Copy, Check, Music2, ChartBar,
+  X, Play, Copy, Check, Music2, ChartBar,
   ChevronRight, Sparkles, Share2, TrendingUp, DollarSign,
   Film, ChevronDown, Shield, Eye, Bookmark, ExternalLink
 } from 'lucide-react';
@@ -305,7 +305,7 @@ function ShareModal({ open, onClose, url, title, artistName, cpmDollars, trackTi
   const encodedUrl = encodeURIComponent(url);
   const artistLine = artistName ? `${artistName} — ` : '';
   const shareTitle = `${artistLine}"${trackTitle || title}" on Selah.fm`;
-  const earnLine = cpmDollars ? `Earn $${(cpmDollars * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views` : 'Earn per verified view';
+  const earnLine = cpmDollars ? `Earn $${(cpmDollars * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} Per 1M Views` : 'Earn per verified view';
   const shareBody = `Join to ${earnLine.toLowerCase()}. Selah.fm — music meets creators.`;
   const fullShareText = `${shareTitle}\n\n${shareBody}\n\n${url}`;
   const encodedShare = encodeURIComponent(fullShareText);
@@ -391,7 +391,7 @@ function ShareModal({ open, onClose, url, title, artistName, cpmDollars, trackTi
                   <div className="flex items-center justify-between px-4 py-3">
                     <span className="text-[10px]" style={{ color: '#6B6760' }}>Earn up to</span>
                     <span className="text-sm font-bold" style={{ color: '#22C55E' }}>
-                      ${(cpmDollars * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+                      ${(cpmDollars * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} Per 1M Views
                     </span>
                   </div>
                 )}
@@ -1073,7 +1073,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 setJoinOpen(true);
               }}
                 className="w-full py-4 text-base font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}>
-                Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+                Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} Per 1M Views
               </button>
 
               {/* Secondary: Support */}
@@ -1081,7 +1081,6 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                 className="mt-3 w-full py-3.5 text-sm font-semibold rounded-xl border border-white/[0.12] bg-white/[0.02] text-muted-foreground
                   hover:text-white hover:bg-white/[0.05] hover:border-[#4338CA]/30 active:scale-[0.98] transition-all
                   flex items-center justify-center gap-2">
-                <Heart size={16} className="text-[#4338CA]/60" />
                 Support this campaign
               </Link>
 
@@ -1246,7 +1245,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       >
         <button onClick={() => setJoinOpen(true)}
           className="px-6 py-3 text-sm font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}>
-          Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+          Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} Per 1M Views
         </button>
       </motion.div>
 
@@ -1261,7 +1260,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
       >
         <button onClick={() => setJoinOpen(true)}
           className="w-full py-3.5 text-sm font-bold rounded-xl text-white shadow-lg" style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)', boxShadow: '0 10px 20px -5px rgba(214,168,95,0.3)'}}>
-          Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}/1M views
+          Submit Video - Earn ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} Per 1M Views
         </button>
       </motion.div>
 
