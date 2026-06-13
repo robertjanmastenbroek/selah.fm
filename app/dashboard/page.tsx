@@ -724,18 +724,37 @@ function TracksTab({
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <button onClick={async (e) => {
-                            e.stopPropagation();
-                            const nextStatus = c.status === 'active' ? 'cancelled' : 'active';
-                            try {
-                              const res = await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: nextStatus }) });
-                              if (res.ok) reloadCampaigns();
-                            } catch {}
-                          }}
-                            className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all active:scale-95 hover:brightness-125 border"
-                            style={{ color: c.status === 'active' ? '#EF4444' : '#22C55E', background: c.status === 'active' ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)', borderColor: c.status === 'active' ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)' }}>
-                            {c.status === 'active' ? 'Pause' : 'Activate'}
-                          </button>
+                          <div className="relative group/tooltip">
+                            {(() => {
+                              const hasSubs = parseInt(c.approved_submissions || '0') > 0;
+                              const hasBudget = (c.budget_remaining_cents || 0) > 0;
+                              const pauseLocked = c.status === 'active' && hasSubs && hasBudget;
+                              return (
+                                <>
+                                  <button onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (pauseLocked) return;
+                                    const nextStatus = c.status === 'active' ? 'cancelled' : 'active';
+                                    try {
+                                      const res = await fetch(`/api/campaigns/${c.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: nextStatus }) });
+                                      if (res.ok) reloadCampaigns();
+                                    } catch {}
+                                  }}
+                                    disabled={pauseLocked}
+                                    className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all border disabled:cursor-not-allowed"
+                                    style={{ color: pauseLocked ? '#6B6760' : (c.status === 'active' ? '#EF4444' : '#22C55E'), background: pauseLocked ? 'rgba(255,255,255,0.03)' : (c.status === 'active' ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)'), borderColor: pauseLocked ? 'rgba(255,255,255,0.04)' : (c.status === 'active' ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)') }}>
+                                    {c.status === 'active' ? 'Pause' : 'Activate'}
+                                  </button>
+                                  {pauseLocked && (
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg text-[10px] whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl"
+                                      style={{background: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', color: '#A09B92'}}>
+                                      Has active submissions with budget — complete payouts first
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
                           <button onClick={async (e) => {
                             e.stopPropagation();
                             setLoadingMsg('Refreshing views...');
