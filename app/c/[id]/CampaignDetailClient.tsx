@@ -1027,30 +1027,32 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
           <div className="md:w-[40%] px-5 py-6 md:py-8 md:flex md:flex-col md:justify-center md:border-l md:border-white/[0.06]">
             <div className="border-t border-white/06 mb-5 md:hidden" />
 
-            {/* Unified stat bar — single source of truth */}
-            <div className="flex flex-wrap items-center gap-5 px-1 py-2">
-              {submissionCount > 0 && (
-                <div>
-                  <p className="text-2xl font-bold text-white"><AnimatedCounter value={submissionCount} /></p>
-                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">submissions</p>
-                </div>
-              )}
-              {views > 0 && (
-                <div>
-                  <p className="text-2xl font-bold text-emerald-400">
-                    {views >= 1000000
-                      ? `${(views / 1000000).toFixed(1)}M`
-                      : views >= 1000
-                      ? `${(views / 1000).toFixed(1)}K`
-                      : views.toLocaleString()}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">verified views</p>
-                </div>
-              )}
+            {/* Stat: % Paid Out + Payout CPM */}
+            <div className="flex flex-wrap items-center gap-8 px-1 py-2">
               {budget > 0 && (
                 <div>
-                  <p className="text-2xl font-bold text-amber-400">${budget.toFixed(0)}</p>
-                  <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider font-medium">campaign budget</p>
+                  <p className="text-3xl font-bold tracking-tight" style={{color: progress > 0 ? '#22C55E' : '#F4F1EA'}}>
+                    {progress > 0 ? `${progress.toFixed(1)}%` : '$0'}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-wider font-medium" style={{color: '#6B6760'}}>
+                    {progress > 0 ? 'paid out' : 'campaign budget'}
+                  </p>
+                </div>
+              )}
+              {(budget > 0 || cpm > 0) && (
+                <div className="relative group">
+                  <p className="text-3xl font-bold tracking-tight" style={{color: '#D6A85F'}}>${cpm.toFixed(2)}</p>
+                  <p className="text-[10px] uppercase tracking-wider font-medium flex items-center gap-1 cursor-help" style={{color: '#6B6760'}}>
+                    payout / 1K
+                    <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[8px] font-bold" style={{background: 'rgba(255,255,255,0.06)', color: '#6B6760'}}>?</span>
+                  </p>
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-0 mb-2 w-64 p-3 rounded-xl text-xs leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl"
+                    style={{background: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', color: '#8B887E'}}>
+                    <p className="mb-1">Earn <strong style={{color: '#D6A85F'}}>${cpm.toFixed(2)}</strong> for every 1,000 views your approved posts generate.</p>
+                    <p>Each post must reach a minimum of <strong style={{color: '#F4F1EA'}}>5,000 views</strong> to be eligible for payout.</p>
+                    <p className="mt-1">Max earnings per post: <strong style={{color: '#22C55E'}}>$1,000</strong>.</p>
+                  </div>
                 </div>
               )}
             </div>
