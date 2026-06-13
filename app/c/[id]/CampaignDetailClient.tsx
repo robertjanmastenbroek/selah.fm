@@ -77,7 +77,7 @@ function AnimatedCounter({ value, suffix = '', prefix = '', decimals = 0 }: { va
 
 function EarningsCalculator({ cpmCents }: { cpmCents: number }) {
   const cpmDollars = cpmCents / 100;
-  const [views, setViews] = useState(10000);
+  const [views, setViews] = useState(1500000);
   const earnings = (views / 1000) * cpmDollars; // Full CPM — no platform fee deducted
 
   const presets = [

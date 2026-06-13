@@ -25,7 +25,7 @@ function formatMoney(cents: number): string {
 
 /* ─── INTERACTIVE CPM CALCULATOR ────────────────────────────── */
 function CalculatorSection() {
-  const [views, setViews] = useState(10000);
+  const [views, setViews] = useState(1500000);
   const [cpmDollars] = useState(10); // Default $10 CPM
   const earnings = (views / 1000) * cpmDollars * 0.8;
   const grossEarnings = (views / 1000) * cpmDollars;

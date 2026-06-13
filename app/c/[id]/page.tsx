@@ -234,16 +234,6 @@ export default async function CampaignPage({ params }: Props) {
 
       {/* Breadcrumb moved to CampaignDetailClient — below Header */}
 
-      {/* Artist profile link */}
-      {campaign?.artist_slug && (
-        <div className="max-w-7xl mx-auto px-4 pt-2 pb-0">
-          <a href={`/artist/${campaign.artist_slug}`}
-            className="inline-flex items-center gap-1.5 text-[11px] text-primary/60 hover:text-primary transition-colors">
-            View {artistName}'s full catalog →
-          </a>
-        </div>
-      )}
-
       <CampaignDetailClient id={campaign?.id || params.id} initialCampaign={lightweightCampaign} listenLinks={buildListenLinks(campaign)} artistSlug={campaign?.artist_slug || null} submissions={submissions} />
 
       {/* Server-rendered related tracks — crawlable by Google, visible to users */}
