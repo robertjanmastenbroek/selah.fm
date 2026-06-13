@@ -303,13 +303,7 @@ function DashboardContent() {
                 )}
               </div>
             </div>
-            {isArtist && (
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button onClick={() => window.location.href = '/settings'} size="sm" className="shadow-lg shadow-primary/20">
-                  <Plus size={16} className="mr-1" /> Import track
-                </Button>
-              </motion.div>
-            )}
+            {/* Header button removed — use Create campaign card below */}
           </motion.div>
 
           {/* ── Animating content area ─────────────────────── */}
@@ -325,6 +319,37 @@ function DashboardContent() {
               <div className="mb-6">
                 <TikTokTab />
               </div>
+
+              {/* Create new campaign — for artists, prominent card */}
+              {isArtist && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="mb-6"
+                >
+                  <div className="rounded-2xl overflow-hidden cursor-pointer hover:-translate-y-0.5 transition-all active:scale-[0.99] group"
+                    style={{ background: 'rgba(214,168,95,0.04)', border: '1px solid rgba(214,168,95,0.12)' }}
+                    onClick={() => setWizardOpen(true)}>
+                    <div className="p-6 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ background: 'rgba(214,168,95,0.1)' }}>
+                          <Plus size={22} style={{ color: '#D6A85F' }} />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm" style={{ color: '#F4F1EA' }}>Create new campaign</p>
+                          <p className="text-xs mt-0.5" style={{ color: '#6B6760' }}>Set a budget, choose your CPM, and start reaching creators</p>
+                        </div>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-1 text-xs font-medium px-4 py-2 rounded-lg transition-all group-hover:-translate-y-0.5"
+                        style={{ background: 'linear-gradient(135deg, #D6A85F, #C9974D)', color: 'white' }}>
+                        <Plus size={14} /> New
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Creator stats — for creator-type accounts, above tabs */}
               {!isArtist && <CreatorStats />}
@@ -389,21 +414,17 @@ function DashboardContent() {
                           <div>
                             <p className="font-semibold text-sm">
                               {isArtist
-                                ? artistTracks.length > 0
-                                  ? `${activeCount} campaign${activeCount !== 1 ? 's' : ''} in your catalog`
-                                  : 'Add your first campaign to get started'
+                                ? `${activeCount} active campaign${activeCount !== 1 ? 's' : ''}`
                                 : 'Browse artists and start creating content'}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {isArtist
-                                ? 'Import more tracks from Spotify, Bandcamp, or Deezer'
+                                ? 'Promote your music to content creators on TikTok'
                                 : 'Find artists that match your style and earn per verified view'}
                             </p>
                           </div>
                         </div>
-                        {isArtist && artistTracks.length === 0 && (
-                          <Button size="sm" onClick={() => window.location.href = '/settings'} className="shrink-0 ml-3">Add tracks</Button>
-                        )}
+                        {/* Add tracks button removed — use Create campaign card */}
                         {!isArtist && (
                           <a href="/browse"><Button size="sm" className="shrink-0 ml-3">Browse artists</Button></a>
                         )}
