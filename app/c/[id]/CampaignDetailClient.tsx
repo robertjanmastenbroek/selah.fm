@@ -1041,15 +1041,16 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               )}
               {(budget > 0 || cpm > 0) && (
                 <div className="relative group">
-                  <p className="text-3xl font-bold tracking-tight" style={{color: '#D6A85F'}}>${cpm.toFixed(2)}</p>
+                  <p className="text-3xl font-bold tracking-tight" style={{color: '#D6A85F'}}>
+                    ${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</p>
                   <p className="text-[10px] uppercase tracking-wider font-medium flex items-center gap-1 cursor-help" style={{color: '#6B6760'}}>
-                    payout / 1K
+                    per 1M views
                     <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full text-[8px] font-bold" style={{background: 'rgba(255,255,255,0.06)', color: '#6B6760'}}>?</span>
                   </p>
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-0 mb-2 w-64 p-3 rounded-xl text-xs leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl"
                     style={{background: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', color: '#8B887E'}}>
-                    <p className="mb-1">Earn <strong style={{color: '#D6A85F'}}>${cpm.toFixed(2)}</strong> for every 1,000 views your approved posts generate.</p>
+                    <p className="mb-1">Rate: <strong style={{color: '#D6A85F'}}>${cpm.toFixed(2)} cpm</strong>. Earn <strong style={{color: '#22C55E'}}>${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> per 1M views.</p>
                     <p>Each post must reach a minimum of <strong style={{color: '#F4F1EA'}}>5,000 views</strong> to be eligible for payout.</p>
                     <p className="mt-1">Max earnings per post: <strong style={{color: '#22C55E'}}>$1,000</strong>.</p>
                   </div>
