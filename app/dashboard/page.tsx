@@ -28,7 +28,7 @@ import type { TabDef } from '@/components/DashboardSidebar';
 import AnimatedKPICard from '@/components/AnimatedKPICard';
 import ViewsChart from '@/components/ViewsChart';
 
-type TabId = 'overview' | 'tracks' | 'submissions' | 'earnings';
+type TabId = 'overview' | 'tracks' | 'submissions' | 'earnings' | 'tiktok';
 
 export default function DashboardPage() {
   return (
@@ -254,8 +254,8 @@ function DashboardContent() {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
     { id: isArtist ? 'tracks' : 'submissions', label: isArtist ? 'Campaigns' : 'Submissions', icon: Megaphone, badge: isArtist && activeCount > 0 ? activeCount : undefined },
     // Profile tab removed — moved to /settings
+    { id: 'tiktok', label: 'TikTok', icon: Music2 },
     { id: 'earnings', label: 'Balance', icon: DollarSign },
-    // Board tab removed — no function
   ];
 
   // Sparkline data for KPIs (weekly breakdown)
@@ -529,6 +529,7 @@ function DashboardContent() {
 
               {/* Profile tab removed — moved to /settings */}
 
+              {tab === 'tiktok' && <TikTokTab />}
               {tab === 'earnings' && (
                 <EarningsTab
                   isArtist={isArtist}
@@ -931,6 +932,147 @@ function ProfileTab({
   );
 }
 
+// ═══════════════════════════════════════════════════════════
+// TIKTOK TAB
+// ═══════════════════════════════════════════════════════════
+function TikTokTab() {
+  const [connection, setConnection] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [disconnecting, setDisconnecting] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/platform/connections', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => {
+        const tiktok = d.connections?.find((c: any) => c.platform === 'tiktok');
+        setConnection(tiktok || null);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const disconnect = async () => {
+    if (!confirm('Disconnect your TikTok account?')) return;
+    setDisconnecting(true);
+    try {
+      await fetch('/api/platform/connections', {
+        method: 'DELETE', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform: 'tiktok' }),
+      });
+      setConnection(null);
+    } catch {}
+    setDisconnecting(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4 max-w-lg">
+        <div className="h-8 w-40 rounded-xl bg-white/[0.03]" />
+        <div className="h-48 rounded-2xl bg-white/[0.02]" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-lg space-y-6">
+      <div>
+        <h2 className="text-xl font-bold" style={{color: '#F4F1EA'}}>TikTok</h2>
+        <p className="text-xs mt-0.5" style={{color: '#6B6760'}}>Connect your TikTok account to verify your identity and unlock platform features.</p>
+      </div>
+
+      {connection ? (
+        /* ── Connected state ── */
+        <div className="rounded-2xl border overflow-hidden" style={{borderColor: 'rgba(34,197,94,0.15)', background: 'rgba(34,197,94,0.03)'}}>
+          <div className="p-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                style={{background: 'rgba(34,197,94,0.1)'}}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#22C55E"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.45-1.04 1.16-1.18 1.89-.07.35-.13.82-.07 1.17.19 1.14 1.21 2.1 2.39 1.99.76-.04 1.47-.45 1.87-1.1.14-.23.23-.49.24-.76.05-1.52.02-3.04.03-4.56z"/></svg>
+              </div>
+              <div>
+                <p className="font-semibold text-sm" style={{color: '#F4F1EA'}}>{connection.platform_username || 'Connected'}</p>
+                <p className="text-[10px]" style={{color: '#22C55E'}}>✓ Verified · {connection.role === 'artist' ? 'Artist' : 'Creator'}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl p-3 text-xs space-y-2" style={{background: 'rgba(255,255,255,0.03)'}}>
+              <div className="flex justify-between">
+                <span style={{color: '#6B6760'}}>Account type</span>
+                <span style={{color: '#F4F1EA'}}>{connection.role === 'artist' ? 'Artist' : 'Creator'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{color: '#6B6760'}}>Connected since</span>
+                <span style={{color: '#F4F1EA'}}>{new Date(connection.created_at).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{color: '#6B6760'}}>Token expires</span>
+                <span style={{color: connection.token_expires_at && new Date(connection.token_expires_at) < new Date() ? '#EF4444' : '#F4F1EA'}}>
+                  {connection.token_expires_at ? new Date(connection.token_expires_at).toLocaleDateString() : '—'}
+                </span>
+              </div>
+            </div>
+
+            <button onClick={disconnect} disabled={disconnecting}
+              className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]"
+              style={{background: 'rgba(239,68,68,0.08)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.15)'}}>
+              {disconnecting ? 'Disconnecting...' : 'Disconnect TikTok'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* ── Not connected — prominent CTA ── */
+        <div className="rounded-2xl border overflow-hidden" style={{borderColor: 'rgba(214,168,95,0.15)', background: 'rgba(214,168,95,0.03)'}}>
+          <div className="p-6 space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+                style={{background: 'rgba(255,255,255,0.04)'}}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.45-1.04 1.16-1.18 1.89-.07.35-.13.82-.07 1.17.19 1.14 1.21 2.1 2.39 1.99.76-.04 1.47-.45 1.87-1.1.14-.23.23-.49.24-.76.05-1.52.02-3.04.03-4.56z"/></svg>
+              </div>
+              <div>
+                <p className="font-semibold text-sm" style={{color: '#F4F1EA'}}>Connect your TikTok</p>
+                <p className="text-[10px]" style={{color: '#6B6760'}}>One click · Read-only · We never post</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs" style={{color: '#8B887E'}}>
+              <div className="flex items-center gap-2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+                Verify your identity as the real artist or creator
+              </div>
+              <div className="flex items-center gap-2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+                Auto-verify video views for accurate payouts
+              </div>
+              <div className="flex items-center gap-2">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+                Show your follower count and TikTok profile link
+              </div>
+            </div>
+
+            <a href="/api/auth/tiktok/connect"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold text-white transition-all active:scale-[0.98] hover:-translate-y-0.5"
+              style={{background: 'linear-gradient(135deg, #D6A85F, #C9974D)'}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.45-1.04 1.16-1.18 1.89-.07.35-.13.82-.07 1.17.19 1.14 1.21 2.1 2.39 1.99.76-.04 1.47-.45 1.87-1.1.14-.23.23-.49.24-.76.05-1.52.02-3.04.03-4.56z"/></svg>
+              Connect TikTok
+            </a>
+
+            <p className="text-[10px] text-center" style={{color: '#6B6760', opacity: 0.5}}>
+              We only request read access. We never post content.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Info box */}
+      <div className="rounded-xl p-4 text-xs leading-relaxed" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', color: '#8B887E'}}>
+        <p className="font-semibold mb-1" style={{color: '#A09B92'}}>Why connect TikTok?</p>
+        <p>75% of TikTok users discover new music through the platform. Connecting your TikTok account lets us verify your identity, display your follower count on your profile, and — for creators — automatically verify your video views so you get paid faster.</p>
+      </div>
+    </div>
+  );
+}
+
 function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampaigns, totalSpent, earningsData, exportCSV }: any) {
   return (
     <div className="max-w-2xl space-y-6">
@@ -970,17 +1112,7 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
                 </div>
               </div>
 
-              {/* Connected Platforms */}
-              <div className="rounded-xl border border-white/[0.06] p-4 space-y-3">
-                <p className="text-xs font-semibold" style={{color: '#F4F1EA'}}>Connected Platforms</p>
-                <p className="text-[10px]" style={{color: '#6B6760'}}>Connect your TikTok account to auto-verify your video views, show your follower count, and link to your official sound page on TikTok.</p>
-                <a href="/api/auth/tiktok/connect"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all hover:-translate-y-0.5 active:scale-[0.98]"
-                  style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: '#F4F1EA'}}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.45-1.04 1.16-1.18 1.89-.07.35-.13.82-.07 1.17.19 1.14 1.21 2.1 2.39 1.99.76-.04 1.47-.45 1.87-1.1.14-.23.23-.49.24-.76.05-1.52.02-3.04.03-4.56z"/></svg>
-                  Connect TikTok
-                </a>
-              </div>
+              {/* Connected Platforms — moved to dedicated TikTok tab */}
 
               {artistData?.transactions?.length > 0 && (
                 <div className="space-y-1">
