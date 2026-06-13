@@ -326,6 +326,9 @@ function DashboardContent() {
                 <TikTokTab />
               </div>
 
+              {/* Creator stats — for creator-type accounts, above tabs */}
+              {!isArtist && <CreatorStats />}
+
               {tab === 'overview' && (
                 <div className="space-y-6">
                   {/* KPI Grid */}
@@ -938,6 +941,54 @@ function ProfileTab({
 // ═══════════════════════════════════════════════════════════
 // TIKTOK TAB
 // ═══════════════════════════════════════════════════════════
+function CreatorStats() {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/creator/stats', { credentials: 'include' })
+      .then(r => r.json())
+      .then(d => { setStats(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mb-6 animate-pulse">
+        <div className="h-24 rounded-2xl bg-white/[0.02]" />
+      </div>
+    );
+  }
+  if (!stats) return null;
+
+  const items = [
+    { label: 'Connected', value: stats.connections.toString(), suffix: 'account' + (stats.connections !== 1 ? 's' : '') },
+    { label: 'Followers', value: stats.followerCount >= 1000 ? (stats.followerCount / 1000).toFixed(0) + 'K' : stats.followerCount.toString(), suffix: 'followers' },
+    { label: 'Posts', value: stats.totalPosts.toString(), suffix: 'post' + (stats.totalPosts !== 1 ? 's' : '') },
+    { label: 'Views', value: stats.totalViews >= 1000 ? (stats.totalViews / 1000).toFixed(1) + 'K' : stats.totalViews.toString(), suffix: 'views' },
+    { label: 'Avg views', value: stats.avgViews >= 1000 ? (stats.avgViews / 1000).toFixed(0) + 'K' : stats.avgViews.toString(), suffix: 'per post' },
+  ];
+
+  return (
+    <div className="mb-6 rounded-2xl overflow-hidden" style={{background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)'}}>
+      <div className="p-5">
+        <h3 className="text-sm font-semibold mb-4" style={{color: '#F4F1EA'}}>My stats</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          {items.map(item => (
+            <div key={item.label} className="text-center">
+              <p className="text-2xl font-bold" style={{color: '#F4F1EA'}}>{item.value}</p>
+              <p className="text-xs mt-0.5" style={{color: '#6B6760'}}>
+                {item.label}
+                <span className="text-[9px] ml-1" style={{color: '#6B6760', opacity: 0.5}}>{item.suffix}</span>
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TikTokTab() {
   const [connection, setConnection] = useState<any>(null);
   const [loading, setLoading] = useState(true);
