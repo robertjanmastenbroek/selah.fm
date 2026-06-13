@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: 'Browse — Selah.fm | Artists & Tracks',
-    description: 'Discover independent artists and music promotion campaigns on Selah.fm. Browse by genre, make videos, earn per view, or donate to support musicians.',
+    title: 'Browse Campaigns — Selah.fm | Songs Worth Believing In',
+    description: 'Browse music promotion campaigns on Selah.fm. Discover new songs, boost artists directly (0% fee), or earn as a creator making TikTok videos per verified view.',
     openGraph: {
-      title: 'Browse — Selah.fm | Artists & Tracks',
-      description: 'Discover independent artists and campaigns on Selah.fm. Earn per verified view making content.',
+      title: 'Browse Campaigns — Selah.fm',
+      description: 'Browse songs worth believing in. Discover new music, boost artists, or earn per verified TikTok view.',
       url: 'https://selah.fm/browse',
       type: 'website',
       images: [{ url: 'https://selah.fm/images/og-image.jpg', width: 1200, height: 630 }],

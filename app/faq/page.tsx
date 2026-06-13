@@ -14,7 +14,7 @@ const faqs: { section: string; items: FAQItem[] }[] = [
     items: [
       {
         q: 'What is Selah.fm?',
-        a: 'Selah.fm is an open-source CPM marketplace for music promotion. Artists add tracks with budgets, set CPM (cost per 1,000 views) rates, and deposit funds via Stripe. Creators browse campaigns, make TikToks, Reels, or YouTube Shorts, and submit their videos. Artists review and approve submissions — creators get paid only for verified views.',
+        a: 'Selah.fm is a fan-to-artist boost platform. Fans discover new songs and boost them directly with real money — artists receive 100% (minus Stripe fees). Creators earn per verified view making TikTok videos. 0% platform fee. Every cent goes to the artist.',
         section: 'About Selah.fm',
       },
       {

@@ -14,7 +14,7 @@ export function startBlogPublisher(): void {
   if ((globalThis as any)[KEY]) return;
   (globalThis as any)[KEY] = true;
 
-  if (typeof process === 'undefined' || process.env.NODE_ENV === 'development') {
+  if (typeof process === 'undefined' || process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
     return;
   }
 

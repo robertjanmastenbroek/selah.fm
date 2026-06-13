@@ -29,11 +29,11 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Selah.fm — Open Source Music Promotion Marketplace | Pay Creators for TikTok, Reels & Shorts',
-  description: 'Open source CPM marketplace for music promotion. Artists set budgets, creators make TikToks/Reels/Shorts, artists approve and pay for verified views. MIT licensed.',
+  title: 'Selah.fm — Boost the Music You Believe In | 0% Fee Fan-to-Artist',
+  description: 'Selah.fm is a fan-to-artist boost platform. Discover new music and support artists directly — every cent goes to the artist. Creators earn per verified TikTok view. 0% platform fee.',
   icons: { icon: '/favicon.svg?v=2' },
   openGraph: {
-    title: 'Selah.fm — Open Source Music Promotion Marketplace',
+    title: 'Selah.fm — Boost the Music You Believe In',
     description: 'Set your CPM rate, approve every video, pay only for verified views. Fully open source under MIT license. Star us on GitHub.',
     type: 'website',
     siteName: 'Selah.fm',
