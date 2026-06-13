@@ -996,22 +996,7 @@ function TikTokTab() {
               </div>
             </div>
 
-            <div className="rounded-xl p-3 text-xs space-y-2" style={{background: 'rgba(255,255,255,0.03)'}}>
-              <div className="flex justify-between">
-                <span style={{color: '#6B6760'}}>Account type</span>
-                <span style={{color: '#F4F1EA'}}>{connection.role === 'artist' ? 'Artist' : 'Creator'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{color: '#6B6760'}}>Connected since</span>
-                <span style={{color: '#F4F1EA'}}>{new Date(connection.created_at).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{color: '#6B6760'}}>Token expires</span>
-                <span style={{color: '#6B6760'}}>
-                  Auto-refreshes — no action needed
-                </span>
-              </div>
-            </div>
+            <p className="text-[10px]" style={{color: '#6B6760'}}>Connected. Your TikTok account is linked and automatically stays verified.</p>
 
             <button onClick={disconnect} disabled={disconnecting}
               className="w-full py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]"
