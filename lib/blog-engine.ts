@@ -305,12 +305,12 @@ export async function generateArticle(
   try {
     const { Pool } = require('pg');
     const pool = new Pool({ connectionString: process.env.SUPABASE_DATABASE_URL?.replace('?pgbouncer=true', ''), ssl: { rejectUnauthorized: false }, max: 1, connectionTimeoutMillis: 3000 });
-    const [stats] = (await pool.query(\`
+    const [stats] = (await pool.query(`
       SELECT
         (SELECT COUNT(*)::int FROM campaigns WHERE status = 'active') as active_campaigns,
         (SELECT COALESCE(SUM(views_verified), 0)::bigint FROM submissions WHERE review_status = 'approved') as total_views,
         (SELECT COALESCE(SUM(payout_amount_cents), 0)::bigint FROM submissions WHERE payout_status = 'paid') as total_paid_cents
-    \`)).rows;
+    `)).rows;
     await pool.end();
     if (stats) {
       const paidDollars = (stats.total_paid_cents / 100).toFixed(0);
