@@ -69,21 +69,26 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
             {track.title || track.track_title || 'Untitled'}
           </p>
           {track.total_budget_cents > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
+              {/* Top row: paid out (left) + earnings (right) */}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold" style={{color: budgetUsed > 0 ? '#22C55E' : '#F4F1EA'}}>
-                  {budgetUsed > 0 ? `${budgetUsed}%` : '$0'}
-                </span>
-                {cpm && (
-                  <span className="text-xs font-semibold" style={{color: '#D6A85F'}}>
-                    ${(parseFloat(cpm) * 1000).toFixed(0)} per 1M views
+                <div>
+                  <span className="text-lg font-bold" style={{color: budgetUsed > 0 ? '#22C55E' : '#F4F1EA'}}>
+                    {budgetUsed > 0 ? `${budgetUsed}%` : '$0'}
                   </span>
+                  <p className="text-[10px] leading-none mt-1" style={{color: '#6B6760'}}>paid out</p>
+                </div>
+                {cpm && (
+                  <div className="text-right">
+                    <span className="text-xl font-bold" style={{color: '#D6A85F'}}>
+                      ${(parseFloat(cpm) * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    </span>
+                    <p className="text-[9px] leading-none mt-1 uppercase tracking-wider" style={{color: '#6B6760'}}>PER 1M VIEWS</p>
+                  </div>
                 )}
               </div>
-              <p className="text-[9px]" style={{color: '#6B6760'}}>
-                paid out
-              </p>
-              <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+              {/* Progress bar */}
+              <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                 <motion.div initial={{ width: 0 }} animate={{ width: `${budgetUsed}%` }} transition={{ duration: 0.8, delay: 0.3 }}
                   className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400" />
               </div>
