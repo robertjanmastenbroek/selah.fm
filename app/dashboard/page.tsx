@@ -1125,6 +1125,7 @@ function TikTokTab() {
 }
 
 function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampaigns, totalSpent, earningsData, exportCSV }: any) {
+  const [fundingCampaign, setFundingCampaign] = useState('');
   return (
     <div className="max-w-2xl space-y-6">
       <Card>
@@ -1156,10 +1157,28 @@ function EarningsTab({ isArtist, artistData, formatDollars, artistSlug, rawCampa
                 <p className="text-xs text-muted-foreground mt-1 relative z-10">
                   {artistData?.pending_payouts_cents > 0 ? `${formatDollars(artistData.pending_payouts_cents)} pending in submissions` : 'Available for creator payouts'}
                 </p>
-                <div className="flex items-center justify-center gap-3 mt-4 relative z-10">
-                  <Link href={`/checkout?type=donation&artistSlug=${artistSlug}`}>
-                    <Button size="sm"><Plus size={14} className="mr-1" /> Add funds</Button>
-                  </Link>
+                <div className="mt-4 space-y-3 relative z-10">
+                  <p className="text-[10px] font-medium" style={{color: '#6B6760'}}>Select a campaign to fund</p>
+                  <div className="flex gap-2">
+                    <select
+                      value={fundingCampaign}
+                      onChange={e => setFundingCampaign(e.target.value)}
+                      className="flex-1 rounded-lg bg-white/[0.04] border border-white/[0.08] px-3 py-2 text-xs text-foreground focus:outline-none focus:border-[#D6A85F]/40 cursor-pointer appearance-none"
+                      style={{backgroundImage: 'url(\"data:image/svg+xml,%3Csvg width=\'10\' height=\'6\' viewBox=\'0 0 10 6\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M1 1L5 5L9 1\' stroke=\'%236B6760\' stroke-width=\'1.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E\")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', paddingRight: '32px'}}>
+                      <option value="">Choose a campaign…</option>
+                      {rawCampaigns.map((c: any) => (
+                        <option key={c.id} value={c.id}>
+                          {c.track_title} (${((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0) > 0 ? ((c.total_budget_cents || 0) - (c.budget_remaining_cents || 0)) : 0) / 100} spent)
+                        </option>
+                      ))}
+                    </select>
+                    <Link
+                      href={fundingCampaign ? `/checkout?type=donation&campaignId=${fundingCampaign}` : '#'}
+                      className={`inline-flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-semibold text-white transition-all active:scale-[0.97] ${fundingCampaign ? 'hover:-translate-y-0.5' : 'opacity-40 pointer-events-none'}`}
+                      style={{ background: fundingCampaign ? 'linear-gradient(135deg, #D6A85F, #C9974D)' : '#3A3A38' }}>
+                      <Plus size={14} /> Add funds
+                    </Link>
+                  </div>
                 </div>
               </div>
 
