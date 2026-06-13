@@ -6,22 +6,9 @@
   "deploy": {
     "startCommand": "npm start",
     "healthcheckPath": "/",
-    "healthcheckTimeout": 30,
+    "healthcheckTimeout": 90,
     "cron": [
       { "schedule": "0 * * * *", "path": "/api/cron/dispatcher", "headers": { "X-Cron-Secret": "${{CRON_SECRET}}" } }
     ]
-  },
-  "services": {
-    "postgres": {
-      "image": "postgres:16",
-      "volumes": { "pgdata": "/var/lib/postgresql/data" }
-    },
-    "crawl4ai": {
-      "image": "unclecode/crawl4ai:latest",
-      "port": 8000,
-      "env": {
-        "CRAWL4AI_API_TOKEN": "${{CRAWL4AI_API_TOKEN}}"
-      }
-    }
   }
 }
