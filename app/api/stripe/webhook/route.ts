@@ -149,11 +149,11 @@ async function processStripeEvent(event: Stripe.Event, stripe: Stripe) {
     if (existing.length > 0) return;
   }
 
-  // ── Always add full amount to campaign budget (fees handled at payout) ──
+  // ── Add net amount to campaign budget (platform premium excluded) ──
   await sql`
     UPDATE campaigns 
-    SET total_budget_cents = total_budget_cents + ${grossCents},
-        budget_remaining_cents = budget_remaining_cents + ${grossCents},
+    SET total_budget_cents = total_budget_cents + ${netToArtistCents},
+        budget_remaining_cents = budget_remaining_cents + ${netToArtistCents},
         status = CASE WHEN status = 'draft' THEN 'active' ELSE status END,
         updated_at = NOW()
     WHERE id = ${resolvedCampaignId}
