@@ -26,19 +26,6 @@ async function finalizePayout(submission: any): Promise<{ finalized: boolean; pa
     const currentViews = submission.views_verified || 0;
     const growth = Math.max(0, currentViews - viewsAtSubmit);
 
-    // Minimum 5K views to qualify
-    if (growth < 5000) {
-      await sql`
-        UPDATE submissions SET 
-          payout_status = 'failed', 
-          payout_finalized_at = NOW(),
-          payout_eligible_views = ${growth},
-          payout_amount_cents = 0
-        WHERE id = ${submission.id}
-      `;
-      return { finalized: true, payout: 0, growth, error: `Only ${growth.toLocaleString()} views gained — minimum 5,000 required` };
-    }
-
     // Calculate payout: (growth / 1000) × CPM, capped at $500
     const rawPayout = Math.round((growth / 1000) * cpmDollars * 100);
     const payoutCents = Math.min(rawPayout, 50000); // $500 max

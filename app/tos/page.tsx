@@ -99,9 +99,7 @@ export default function TosPage() {
           </p>
           <p className="mt-3">
             After the 7-day tracking period ends, the payout is automatically finalized and sent via Stripe 
-            Connect. Payouts are typically processed within 1&ndash;3 business days after finalization. 
-            If a Creator&rsquo;s video receives fewer than 5,000 views during the tracking period, the 
-            submission may not qualify for payout at the Artist&rsquo;s discretion.
+            Connect. Payouts are typically processed within 1&ndash;3 business days after finalization.
           </p>
           <p className="mt-3">
             The maximum payout per single submission is $500.00, regardless of total views gained. 

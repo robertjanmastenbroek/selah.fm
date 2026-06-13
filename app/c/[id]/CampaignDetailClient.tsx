@@ -1037,7 +1037,6 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                   <div className="absolute top-full left-0 mt-2 w-64 p-3 rounded-xl text-xs leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl"
                     style={{background: '#1A1A1A', border: '1px solid rgba(255,255,255,0.08)', color: '#8B887E'}}>
                     <p className="mb-1">Rate: <strong style={{color: '#D6A85F'}}>${cpm.toFixed(2)} cpm</strong>. Earn <strong style={{color: '#22C55E'}}>${(cpm * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> per 1M views.</p>
-                    <p>Each post must reach a minimum of <strong style={{color: '#F4F1EA'}}>5,000 views</strong> to be eligible for payout.</p>
                     <p>Views are tracked from submission time. Payout is calculated based on views gained during the 7-day growth period after approval.</p>
                     <p className="mt-1">Max earnings per post: <strong style={{color: '#22C55E'}}>$1,000</strong>.</p>
                   </div>
