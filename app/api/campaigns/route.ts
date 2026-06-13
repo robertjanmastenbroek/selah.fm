@@ -204,6 +204,12 @@ export async function POST(request: Request) {
     }
 
     const { trackTitle, trackUrl, cpmRate, budget, maxPayout, requirements, driveUrl, hashtags, coverArtUrl } = validation.sanitized!;
+
+    // Minimum $50 budget required
+    if (!budget || budget < 50) {
+      return NextResponse.json({ error: 'Minimum budget is $50. Please increase your campaign budget.' }, { status: 400 });
+    }
+
     // Always ensure #selahfm is in required hashtags
     const rawRequiredHashtags = body.requiredHashtags || '';
     const requiredHashtags = (rawRequiredHashtags.includes('#selahfm') || rawRequiredHashtags.includes('selahfm'))
