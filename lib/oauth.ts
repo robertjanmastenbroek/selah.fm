@@ -24,7 +24,7 @@ const ENV = {
 
 // ── Scopes ──────────────────────────────────────────────
 const SCOPES = {
-  tiktok: ['user.info.basic', 'video.list'],
+  tiktok: ['user.info.profile', 'user.info.stats', 'video.list'],
   youtube: ['https://www.googleapis.com/auth/youtube.readonly', 'https://www.googleapis.com/auth/userinfo.profile'],
   instagram: ['user_profile', 'user_media'],
 };
