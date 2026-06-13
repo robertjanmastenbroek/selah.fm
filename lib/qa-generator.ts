@@ -10,7 +10,7 @@
  */
 import sql from '@/lib/db';
 
-const QUESTIONS_PER_RUN = 6;
+const QUESTIONS_PER_RUN = 50;
 const ANSWER_TOKENS = 500;
 const PROMPT_TOKENS = 2000;
 

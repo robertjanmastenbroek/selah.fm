@@ -9,6 +9,7 @@
 
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { getInternalUrl } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm';
+    const siteUrl = getInternalUrl();
 
     // Process with concurrency of 5 — faster than cron's 3 since this is one-time
     const concurrency = 5;

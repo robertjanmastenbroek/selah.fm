@@ -7,6 +7,7 @@
 
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { getInternalUrl } from '@/lib/constants';
 import { getUser } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     // Call the bio generation endpoint
-    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm';
+    const origin = getInternalUrl();
     const res = await fetch(`${origin}/api/artist/bio`, {
       method: 'POST',
       headers: {

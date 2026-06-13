@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { getInternalUrl } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
 
 async function generateBioForArtist(artistId: string, artistName: string): Promise<{ artist: string; score: number; words: number; status: string }> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://selah.fm'}/api/artist/bio`, {
+    const res = await fetch(`${getInternalUrl()}/api/artist/bio`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getInternalUrl } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 600;
@@ -7,6 +8,11 @@ export const maxDuration = 600;
  * Cron dispatcher — single Railway cron entry at 0 * * * * routes to all workers.
  * Railway does not support interval or comma-separated cron hours, and limits entries.
  * This dispatcher solves both: 1 entry → 10 workers.
+ *
+ * Uses INTERNAL_URL (localhost) for self-referencing HTTP calls instead of the
+ * public domain. Routing through the public load balancer during deployment
+ * transitions can hit stale containers, causing 502s and leaving Railway's
+ * "Network" health check stuck.
  */
 
 const WORKERS: Record<number, { path: string; params?: string }[]> = {
@@ -43,7 +49,7 @@ export async function GET(request: Request) {
   const workers = WORKERS[utcHour] || [];
   const results: { path: string; status: number; response?: any; error?: string }[] = [];
 
-  const origin = 'https://selah.fm';
+  const origin = getInternalUrl();
 
   for (const w of workers) {
     const url = w.params 

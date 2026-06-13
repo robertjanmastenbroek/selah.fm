@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { getInternalUrl } from '@/lib/constants';
 import { getSession } from '@/lib/auth';
 import { trackApproveSubmission } from '@/lib/analytics-server';
 import { ADMIN_EMAILS } from '@/lib/constants';
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
       // Attempt auto-payout via Stripe
       let payoutNote: string | null = null;
       try {
-        const payoutRes = await fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/stripe/payout`, {
+        const payoutRes = await fetch(`${getInternalUrl()}/api/stripe/payout`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ submissionId }),
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
                 const name = creatorData[0].display_name || 'Creator';
                 const earnings = (creatorEarnsCents / 100).toFixed(2);
                 // Fire-and-forget: send Stripe setup email via Resend
-                fetch(`${process.env.NEXTAUTH_URL || 'https://selah.fm'}/api/email/send`, {
+                fetch(`${getInternalUrl()}/api/email/send`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
