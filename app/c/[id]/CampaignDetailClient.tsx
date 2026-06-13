@@ -1035,7 +1035,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
                     {progress > 0 ? `${progress.toFixed(1)}%` : '$0'}
                   </p>
                   <p className="text-[10px] uppercase tracking-wider font-medium" style={{color: '#6B6760'}}>
-                    {progress > 0 ? 'paid out' : 'campaign budget'}
+                    paid out
                   </p>
                 </div>
               )}

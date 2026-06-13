@@ -81,7 +81,7 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
                 )}
               </div>
               <p className="text-[9px]" style={{color: '#6B6760'}}>
-                {budgetUsed > 0 ? 'paid out' : 'campaign budget'}
+                paid out
               </p>
               <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
                 <motion.div initial={{ width: 0 }} animate={{ width: `${budgetUsed}%` }} transition={{ duration: 0.8, delay: 0.3 }}
