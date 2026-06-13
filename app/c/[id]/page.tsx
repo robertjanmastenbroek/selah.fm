@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const artistSlug = campaign.artist_slug;
   const hasTrackUrl = artistSlug && trackTitle;
   const canonicalUrl = hasTrackUrl
-    ? `https://selah.fm/artist/${artistSlug}/tracks/${trackSlug}`
+    ? `https://selah.fm/c/${campaign.slug}`
     : `https://selah.fm/c/${campaign.slug || params.id}`;
 
   const cpmPer1M = cpm ? `$${(parseFloat(cpm) * 1000).toFixed(0)}` : null;
@@ -149,11 +149,7 @@ function buildListenLinks(campaign: any): ListenLink[] {
 export default async function CampaignPage({ params }: Props) {
   const campaign = await getCampaign(params.id);
 
-  // Redirect to SEO-friendly track page when possible
-  if (campaign?.artist_slug && campaign?.track_title) {
-    const trackSlug = campaign.track_title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
-    redirect(`/artist/${campaign.artist_slug}/tracks/${trackSlug}`);
-  }
+  // Track page redirect removed — campaigns are at /c/{slug}
 
   const lightweightCampaign = stripBase64Images(campaign);
 

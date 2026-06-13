@@ -111,7 +111,7 @@ export default function CollectionDetailClient({ id }: { id: string }) {
               const cpm = item.cpm_rate_cents ? `$${((item.cpm_rate_cents / 100) * 1000).toFixed(0)}/1M` : null;
               return (
                 <div key={item.id} className="group relative rounded-2xl bg-white/[0.03] border border-white/[0.06] overflow-hidden hover:border-primary/20 transition-all">
-                  <Link href={`/artist/${item.artist_slug}/tracks/${item.track_id}`}
+                  <Link href={`/c/${item.campaign_id}`}
                     className="block aspect-square bg-black/30 relative overflow-hidden">
                     {item.cover_art_url ? (
                       <img src={item.cover_art_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -132,7 +132,7 @@ export default function CollectionDetailClient({ id }: { id: string }) {
                     </div>
                   </Link>
                   <div className="p-3">
-                    <Link href={`/artist/${item.artist_slug}/tracks/${item.track_id}`}
+                    <Link href={`/c/${item.campaign_id}`}
                       className="text-xs font-semibold truncate block hover:text-primary transition-colors">
                       {item.title}
                     </Link>

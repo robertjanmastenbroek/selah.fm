@@ -24,7 +24,7 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
   const budget = track.total_budget_cents ? (track.total_budget_cents / 100).toFixed(0) : null;
   const budgetUsed = track.total_budget_cents > 0 ? Math.min(100, Math.round((((track.total_budget_cents || 0) - (track.budget_remaining_cents || 0)) / track.total_budget_cents) * 100)) : 0;
   const slug = (track.track_title || track.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || track.id;
-  const url = track.artist_slug ? `/artist/${track.artist_slug}/tracks/${slug}` : `/c/${track.slug || track.id}`;
+  const url = `/c/${track.slug || track.id}`;
 
   return (
     <motion.div

@@ -445,8 +445,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                           <div key={track.id}
                             className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.04] hover:border-primary/15 transition-all group">
                             {/* Track cover art — links to track page */}
-                            <Link href={`/artist/${slug}/tracks/${trackSlug(track.track_title || track.title || '')}`}
-                              className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0 relative group/thumb">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0 relative group/thumb cursor-default">
                               {track.cover_art_url ? (
                                 <img src={track.cover_art_url} alt={track.track_title} className="w-full h-full object-cover" />
                               ) : (
@@ -455,18 +454,17 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                               <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
                                 <ExternalLink size={14} className="text-white" />
                               </div>
-                            </Link>
+                            </div>
                             <div className="flex-1 min-w-0">
-                              {/* Track title — links to track page */}
-                              <Link href={`/artist/${slug}/tracks/${trackSlug(track.track_title || track.title || '')}`}
-                                className="text-sm font-semibold truncate hover:text-primary transition-colors block">
+                              {/* Track title — displayed as text (track pages removed) */}
+                              <span className="text-sm font-semibold truncate block">
                                 {track.track_title}
                                 {hasActiveCampaign && (
                                   <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                                     Active budget
                                   </span>
                                 )}
-                              </Link>
+                              </span>
                               <p className="text-[10px] text-muted-foreground/60 mt-0.5">
                                 <span className="text-emerald-400 font-medium">${(parseFloat(cpm) * 1000).toFixed(0)}/1M views</span>
                                 {track.submissions_count > 0 && <span className="ml-2">· {track.submissions_count} submissions</span>}
@@ -474,12 +472,10 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                               </p>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              {/* Track page link */}
-                              <Link href={`/artist/${slug}/tracks/${trackSlug(track.track_title || track.title || '')}`}
-                                className="w-8 h-8 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-[9px] text-muted-foreground/50 hover:text-primary hover:border-primary/20 hover:bg-primary/[0.04] transition-all"
-                                title="View track details">
+                              {/* Track page link removed */}
+                              <div className="w-8 h-8">
                                 <ExternalLink size={12} />
-                              </Link>
+                              </div>
                               {/* Submit / Create CTA */}
                               {hasActiveCampaign ? (
                                 <Link href={`/c/${campaigns.find((c: any) => c.track_title?.toLowerCase() === track.track_title?.toLowerCase())?.slug || track.track_title}`}

@@ -1143,7 +1143,7 @@ export default function CampaignDetailClient({ id, initialCampaign, listenLinks 
               {artistSlug && trackTitle && (
                 <div className="mt-3">
                   <Link
-                    href={`/artist/${artistSlug}/tracks/${trackTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60)}`}
+                    href={`/c/${campaign?.slug || campaign?.id || id}`}
                     className="flex items-center gap-2 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] transition-all text-xs text-muted-foreground hover:text-foreground"
                   >
                     <ExternalLink size={12} className="text-muted-foreground/50" />
