@@ -23,6 +23,9 @@ export async function POST(request: Request) {
   try {
     const { amount, campaignId } = await request.json();
     const depositAmount = parseInt(amount);
+    
+    // 20% platform premium on deposits
+    const totalAmount = Math.round(depositAmount * 1.2);
     if (!depositAmount || depositAmount < 5) return NextResponse.json({ error: 'Minimum deposit is $5' }, { status: 400 });
 
     // Verify campaign ownership
@@ -33,7 +36,7 @@ export async function POST(request: Request) {
     const stripe = new Stripe(key, { apiVersion: '2024-06-20' as any });
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: depositAmount * 100,
+      amount: totalAmount, // already in cents with premium included
       currency: 'usd',
       automatic_payment_methods: { enabled: true },
       metadata: {
