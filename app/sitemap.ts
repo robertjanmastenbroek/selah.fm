@@ -46,6 +46,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch { /* skip */ }
 
+  // Q&A pages (AI-optimized short answers)
+  let qaPages: MetadataRoute.Sitemap = [];
+  try {
+    const qa = await sql`SELECT slug, published_at FROM qa_pages WHERE status = 'published' ORDER BY published_at DESC LIMIT 200`;
+    qaPages = qa.map((q: any) => ({
+      url: `${baseUrl}/qa/${q.slug}`,
+      lastModified: new Date(q.published_at),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    }));
+  } catch { /* skip */ }
+
   // Active campaign pages
   let campaignPages: MetadataRoute.Sitemap = [];
   try {
@@ -63,5 +75,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch { /* skip */ }
 
-  return [...staticPages, ...toolPages, ...blogPages, ...campaignPages];
+  return [...staticPages, ...toolPages, ...blogPages, ...qaPages, ...campaignPages];
 }

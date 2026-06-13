@@ -60,6 +60,11 @@ export async function GET() {
 ## Blog
 ${blogLines.join('\n')}
 
+## Q&A Pages (AI-optimized answers)
+- All Q&A pages are available as structured JSON: ${SITE}/api/qa/posts
+- Individual Q&A plain text: ${SITE}/qa/{slug}/answer.txt
+- Q&A generation cron runs daily at hour 6
+
 ## AI Model Endpoints
 - Q&A (structured JSON): ${SITE}/api/llms/qa
 - Active campaigns (structured JSON): ${SITE}/api/llms/campaigns
