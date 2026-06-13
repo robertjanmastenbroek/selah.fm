@@ -8,19 +8,13 @@ import OnboardingBanner from '@/components/OnboardingBanner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/States';
 import {
-  Search, Megaphone, Film, DollarSign, Eye,
+  Search, Megaphone, Film, DollarSign,
   Music, TrendingUp, ChevronUp, ArrowUpRight,
   X, Sparkles,
 } from 'lucide-react';
 
 // GENRES removed — focusing on campaigns
 
-function formatViews(v: number) {
-  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}B`;
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(1)}K`;
-  return String(v);
-}
 function formatDollars(c: number) { return `$${(c / 100).toFixed(0)}`; }
 
 // ── CAMPAIGN CARD ─────────────────────────────────────────────
@@ -28,8 +22,6 @@ function formatDollars(c: number) { return `$${(c / 100).toFixed(0)}`; }
 function CampaignCard({ track, index, focused }: { track: any; index: number; focused: boolean }) {
   const cpm = track.cpm_rate_cents ? (track.cpm_rate_cents / 100).toFixed(2) : null;
   const budget = track.total_budget_cents ? (track.total_budget_cents / 100).toFixed(0) : null;
-  const subs = parseInt(track.approved_submissions || '0');
-  const views = parseInt(track.total_verified_views || '0');
   const budgetUsed = track.total_budget_cents > 0 ? Math.min(100, Math.round((((track.total_budget_cents || 0) - (track.budget_remaining_cents || 0)) / track.total_budget_cents) * 100)) : 0;
   const slug = (track.track_title || track.title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || track.id;
   const url = track.artist_slug ? `/artist/${track.artist_slug}/tracks/${slug}` : `/c/${track.slug || track.id}`;
@@ -94,12 +86,7 @@ function CampaignCard({ track, index, focused }: { track: any; index: number; fo
               </div>
             </div>
           )}
-          {(subs > 0 || views > 0) && (
-            <div className="flex items-center gap-3 text-[9px]" style={{color: '#6B6760', opacity: 0.5}}>
-              {subs > 0 && <span className="flex items-center gap-1"><Film size={10} /> {subs} sub{subs !== 1 ? 's' : ''}</span>}
-              {views > 0 && <span className="flex items-center gap-1"><Eye size={10} /> {formatViews(views)} views</span>}
-            </div>
-          )}
+          {/* Submissions & views removed — not public */}
         </div>
       </Link>
     </motion.div>
