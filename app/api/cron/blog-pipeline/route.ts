@@ -80,6 +80,15 @@ export async function GET(request: Request) {
   }
 
   const log: string[] = [];
+  // Daily cap: max 12 published posts per day (3 per pipeline run × 4 runs/day)
+  const [todayCount] = await sql`
+    SELECT COUNT(*)::int as c FROM blog_posts
+    WHERE status = 'published' AND published_at >= CURRENT_DATE
+  `;
+  if (todayCount?.c >= 12) {
+    return NextResponse.json({ ok: true, message: 'Daily publish limit reached (12/day)', published_today: todayCount.c, results: { questions: 0, interviews: 0, answered: 0, posts: 0, scheduled: 0 } });
+  }
+
   const results = { questions: 0, interviews: 0, answered: 0, posts: 0, scheduled: 0 };
 
   try {
