@@ -39,7 +39,7 @@ export async function GET() {
       blogLines.push('- No blog posts yet');
     }
 
-    const output = `# Selah.fm — fan-to-artist boost platform
+    const output = `# Selah.fm — Open Source CPM Music Promotion Marketplace
 > CPM marketplace for music promotion. Artists set budgets, creators make content, artists approve and pay for verified views.
 > ${counts?.c || 0} active campaigns · $${paid} paid to creators
 
@@ -71,7 +71,7 @@ ${blogLines.join('\n')}
 - Blog answers (plain text per post): ${SITE}/blog/{slug}/answer.txt
 
 ## Key Facts
-- 0% platform fee on boosts. Artists receive 100% minus Stripe fees.
+- Artists pay CPM rate + 20% platform fee. Creators earn the full CPM rate.
 - Creators earn per verified TikTok view (CPM model). Paid via Stripe.
 - Minimum campaign budget: $50. Maximum payout per submission: $500.
 - All payments processed through Stripe (PCI Level 1 compliant).
@@ -85,7 +85,7 @@ ${blogLines.join('\n')}
       },
     });
   } catch {
-    const fallback = `# Selah.fm — fan-to-artist boost platform
+    const fallback = `# Selah.fm — Open Source CPM Music Promotion Marketplace
 See ${SITE}/browse, ${SITE}/how-it-works, ${SITE}/faq
 `;
     return new Response(fallback, {

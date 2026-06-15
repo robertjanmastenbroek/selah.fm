@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Browse Campaigns — Selah.fm | Songs Worth Believing In',
-    description: 'Browse music promotion campaigns on Selah.fm. Discover new songs, boost artists directly (0% fee), or earn as a creator making TikTok videos per verified view.',
+    description: 'Browse music promotion campaigns on Selah.fm. Discover tracks with active budgets, or earn as a creator making TikTok videos per verified view.',
     openGraph: {
       title: 'Browse Campaigns — Selah.fm',
       description: 'Browse songs worth believing in. Discover new music, boost artists, or earn per verified TikTok view.',

@@ -29,8 +29,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Selah.fm — Boost the Music You Believe In | 0% Fee Fan-to-Artist',
-  description: 'Selah.fm is a fan-to-artist boost platform. Discover new music and support artists directly — every cent goes to the artist. Creators earn per verified TikTok view. 0% platform fee.',
+  title: 'Selah.fm — Open Source CPM Music Promotion Marketplace',
+  description: 'Open source CPM marketplace for music promotion. Artists set budgets, creators make TikToks/Reels/Shorts, artists approve and pay for verified views. MIT licensed.',
   icons: { icon: '/favicon.svg?v=2' },
   openGraph: {
     title: 'Selah.fm — Boost the Music You Believe In',

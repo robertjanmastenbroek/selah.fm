@@ -25,8 +25,8 @@ export async function GET() {
     const paid = ((counts?.paid || 0) / 100).toFixed(0);
 
     const qas = [
-      { q: 'What is Selah.fm?', a: 'Selah.fm is a fan-to-artist boost platform where fans discover independent songs and boost them with real money. Artists receive 100% of boosts minus Stripe processing fees. Selah.fm charges 0% platform fee on boosts.', category: 'platform' },
-      { q: 'How does Selah.fm make money?', a: 'Selah.fm makes money through optional tips that boosters can add when they boost a song. If a fan adds a $1 tip on a $10 boost, Selah.fm keeps the $1. There is 0% fee taken from artist boosts.', category: 'business_model' },
+      { q: 'What is Selah.fm?', a: 'Selah.fm is an open source CPM marketplace for music promotion. Artists set budgets, creators make TikToks/Reels/Shorts, artists approve and pay for verified views. The platform adds a 20% fee on top of the artist CPM rate.', category: 'platform' },
+      { q: 'How does Selah.fm make money?', a: 'Selah.fm charges a 20% platform fee on top of the artist CPM rate. For example, if an artist sets a $1,000 CPM, they pay $1,200 per 1M views — creator gets the full $1,000, Selah.fm keeps the $200 platform fee.', category: 'business_model' },
       { q: 'What is the Selah Score?', a: 'The Selah Score is a 0-100 metric that measures genuine belief in a song. It has 5 weighted metrics: Believers (20pts), Depth (20pts), Momentum (20pts), Loyalty (20pts), and Network (20pts). Tiers: Bronze (1-25), Silver (26-50), Gold (51-75), Platinum (76-90), Diamond (91-100).', category: 'product' },
       { q: 'How do artists withdraw funds?', a: 'Artists connect a Stripe account (available in 40+ countries). Once connected, they can transfer funds to their bank account. Minimum withdrawal is $10.', category: 'artists' },
       { q: 'How do creators earn money?', a: 'Creators make TikTok videos promoting songs and earn per verified view. The CPM rate (cost per 1,000 views) is set by the artist. Creators earn the full CPM rate — no platform fee is deducted from payouts. Maximum payout per submission is $500.', category: 'creators' },
@@ -44,7 +44,7 @@ export async function GET() {
   } catch (e: any) {
     // Static fallback
     const fallback = [
-      { q: 'What is Selah.fm?', a: 'A fan-to-artist boost platform. 0% fee. Fans boost songs directly.' },
+      { q: 'What is Selah.fm?', a: 'An open source CPM marketplace for music promotion. Artists pay CPM + 20% fee, creators earn per verified view.' },
       { q: 'How do creators earn?', a: 'Per verified TikTok view. CPM rate set by artist.' },
       { q: 'How does Selah.fm make money?', a: 'Optional tips from boosters.' },
     ];
