@@ -1,8 +1,8 @@
 # Selah.fm — Living Document
 
 **Last updated:** 2026-06-15
-**Concept:** A global SEO/LLMO database of every artist — where fans donate, creators make content, and artists don't need to lift a finger.
-**Role:** Single source of truth. Replaces 40+ research, audit, and plan files. If it isn't here, it's either archived or doesn't matter right now.
+**Concept:** A CPM marketplace where artists set budgets, creators earn per verified view, and fans fund promotion — all open source under MIT.
+**Role:** Single source of truth. If it isn't here, it's either archived or doesn't matter right now.
 
 ---
 
@@ -11,37 +11,45 @@
 ### The Loop
 
 ```
-SELAH.FM ARTIST DATABASE (2,000+ artists)
+ARTIST creates campaign (track + CPM rate + budget)
          │
-         ├── SEO / LLMO crawlers index every page
-         │     → Traffic arrives at artist profiles
+         ├── CREATOR browses, picks a track, submits a video
+         │     → Artist approves ✓
+         │     → Creator earns per verified view (full CPM)
+         │     → 20% platform premium added on deposits
          │
-         ├── Fan lands on /artist/[slug]
-         │     → Donates → promotion pool
-         │     → Comments, ❤️ reacts, shares
+         ├── FAN funds the promotion budget
+         │     → Money goes to campaign → pays creators
+         │     → 20% platform premium deducted
          │
-         ├── Creator lands on /artist/[slug]
-         │     → Picks a track, makes a video, submits
-         │     → Earns per verified view from the pool
-         │     → Gets hyped by fan reactions
-         │
-         └── Artist discovers their page
-               → Claims it → controls CPM, approves videos
-               → Responds to fans, messages creators
-               → Sees "X people donated $Y, Z fans ❤️ this"
+         └── SEO / LLMO crawlers index every page
+               → Traffic arrives → loop continues
 ```
 
 ### Three User Types
 
 | User | Trigger | Action | Incentive |
 |------|---------|--------|-----------|
-| **Fan** | Searches "[artist] support" | Donates, comments, reacts, shares | Supports artists, public recognition |
-| **Creator** | Searches "earn making music videos" | Picks track, submits video, earns | Real money + fan recognition |
-| **Artist** | Searches own name, gets emailed | Claims page, sets CPM, approves | Free promotion, fan money, creator content |
+| **Artist** | Searches own name, gets emailed | Creates campaign, sets CPM, approves videos | Real promotion, pay only for verified views |
+| **Creator** | Searches "earn making music videos" | Picks track, submits video, earns per view | Real money, no algorithm dependency |
+| **Fan** | Searches "[artist] promotion" | Funds campaign budget | Helps artists they believe in |
 
 ### Core Principle
 
 The platform works **without requiring artists to participate**. Every discovered artist gets a full profile. Claiming is a value-add (control, CPM, payouts) — never a requirement.
+
+---
+
+## Business Model
+
+| Flow | What happens | Fee |
+|------|-------------|-----|
+| **Artist deposits** (campaign budget) | Artist pays $120 → $100 to campaign budget + $20 platform premium | 20% premium on top |
+| **Creator payout** | Creator earns full CPM rate per verified view | 0% deducted from creator |
+| **Fan funds promotion** | Fan pays $10 → $8 to campaign budget + $2 platform premium | 20% on fan contributions |
+| **Stripe fees** | Applied on deposits (2.9% + $0.30) and payouts ($0.25) | Pass-through |
+
+Creators earn 100% of the CPM rate. The platform premium is added on deposits — never deducted from creator earnings.
 
 ---
 
@@ -54,134 +62,142 @@ The platform works **without requiring artists to participate**. Every discovere
 | Framework | Next.js 14 (App Router), TypeScript | SSR for SEO, App Router for layouts |
 | Database | Supabase PostgreSQL (pooler) | Managed, cheap at scale, row-level security |
 | Auth | Supabase SSR (Google OAuth) | Session cookies, no JWT juggling |
-| Payments | Stripe Elements + Connect | Payouts to artists, 20% platform fee |
-| AI | DeepSeek V4 | Blog pipeline, outreach emails, support chat |
-| Email | Resend | Transactional + audience sync, free tier 100/day |
-| Styling | Tailwind CSS + shadcn/ui | Consistent design system, low CSS debt |
-| Deploy | Railway (auto on git push) | Zero-ops, built-in cron, Postgres + Crawl4AI sidecars |
+| Payments | Stripe Connect + Elements | Express accounts, destination charges |
+| AI | DeepSeek V4 | Blog pipeline, outreach emails, bios |
+| Email | Resend | Transactional + audience, 100/day free |
+| Styling | Tailwind CSS + shadcn/ui | Consistent design system |
+| Deploy | Railway (auto on git push) | Zero-ops, built-in cron, Postgres sidecar |
 
-### Key Feature Surface
+### Key Pages
 
 | Page | Purpose | Route |
 |------|---------|-------|
-| Artist Profile | Every artist gets a full SEO page with bio, tracks, social stats, comments, activity feed, donate + create CTAs | `/artist/[slug]` |
-| Track Page | Per-track SEO with earnings calculator, schema, CTA | `/artist/[slug]/tracks/[id]` |
-| Campaign (Promotion) | Per-track campaign with budget, CPM, submission gallery | `/c/[slug]` |
-| Browse | Artists + Campaigns tabs, genre/sort/search | `/browse` |
-| Checkout | Donations + deposits, Stripe Elements | `/checkout` |
+| Artist Profile | SEO page with bio, tracks, stats, CTAs | `/artist/[slug]` |
+| Campaign | Per-track campaign with budget, CPM, submission gallery | `/c/[slug]` |
+| Browse | Campaigns + Artists tabs, genre/sort/search | `/browse` |
+| Checkout | Fund campaign + deposit, Stripe Elements | `/checkout` |
 | Dashboard | 4 tabs: Profile, Tracks, Campaigns, Stats | `/dashboard` |
-| Messages | Full chat with SSE polling, edit/delete | `/messages` |
-| Admin | Money flow, review queue, analytics, user flows | `/admin` |
-| Blog | AI-generated articles, answer-first format, triple schema | `/blog/[slug]` |
+| Onboarding | Universal flow → artist or creator path | `/onboarding` |
+| Create Campaign | Step-by-step wizard (pick track → budget → launch) | `/create` |
+| Review | Submission review queue with approve/reject | `/review` |
+| Messages | Full chat with SSE polling | `/messages` |
+| Admin | Money flow, review queue, analytics | `/admin` |
+| Blog | AI-generated SEO articles, answer-first format | `/blog/[slug]` |
 
 ### Cron Infrastructure
 
-Single Railway entry at `0 * * * *` → dispatcher (`/api/cron/dispatcher`) routes to 15+ time-gated workers.
+Single Railway entry at `0 * * * *` → dispatcher (`/api/cron/dispatcher`) routes to all time-gated workers.
 
-| Worker | Schedule | Rate | Output |
-|--------|----------|------|--------|
-| Blog pipeline | 02, 08, 14, 20 UTC | 4×/day | 2 posts scheduled |
-| Blog publish | 09, 15 UTC | 2×/day | Publishes 1 post |
-| Bio generation | 00 UTC | 100/night | Unique SEO bios |
-| Wikipedia enrich | 00 UTC | 100/night | Infobox + summary data |
-| Bandcamp scrape | 01 UTC | 100/night | Track listings + emails |
-| YouTube enrich | 08 UTC | 100/night | Subscriber counts |
-| Wikidata enrich | 06 UTC | 200/night | Knowledge Graph sameAs |
-| Email outreach | 03, 09, 15, 21 UTC | 50/run | Artist emails |
-| Creator outreach | 11, 23 UTC | 13/run | Creator emails |
-| Activity archive | 01 UTC | Daily | Events >30 days archived |
-| Blog syndication | 04 UTC | Daily | Auto-post to Reddit |
-| Creator discovery | 05, 17 UTC | 2×/day | New creator sourcing |
-| Message notifications | 12 UTC | Daily | Email digests |
-| Followup emails | 10 UTC | Daily | Re-engagement |
-| Welcome sequence | 09 UTC | Daily | Onboarding |
-| Google Indexing API | 11 UTC | Daily | Submit 200 URLs for immediate indexing |
-| Re-engagement | 11 UTC | Daily | Inactive users |
-| Refresh metrics | 08 UTC | Daily | Social stats refresh |
-| IndexNow | 10 UTC | Daily | Bing/Yandex URL submission |
+| Worker | Schedule | Output |
+|--------|----------|--------|
+| Blog pipeline | 02, 08, 14, 20 UTC | 2 posts per run |
+| Blog publish | 09, 15 UTC | Publishes 1 post |
+| Bio generation | 00 UTC | 100 bios/night |
+| Wikipedia enrich | 00 UTC | 100 artists/night |
+| Bandcamp scrape | 01 UTC | 100 artists/night |
+| YouTube enrich | 08 UTC | 100 artists/night |
+| Wikidata enrich | 06 UTC | 200 artists/night |
+| Email outreach | 03, 09, 15, 21 UTC | 50 artists/run |
+| Creator outreach | 11, 23 UTC | 13 creators/run |
+| Activity archive | 01 UTC | Events >30 days |
+| Blog syndication | 04 UTC | Auto-post to Reddit |
+| Creator discovery | 05, 17 UTC | New creator sourcing |
+| Message notifications | 12 UTC | Email digests |
+| Followup emails | 10 UTC | Re-engagement |
+| Welcome sequence | 09 UTC | Onboarding sequence |
+| Re-engagement | 11 UTC | Inactive users |
+| Refresh metrics | 08 UTC | Social stats refresh |
 
 ---
 
 ## Status
 
-**Live metrics as of 2026-06-04:**
+**Live metrics as of 2026-06-15:**
 
-| Metric | Value | Δ vs yesterday |
-|--------|-------|----------------|
-| Users | 19 | +3 |
-| Onboarded users | 18 | +3 |
-| Artists in database | ~2,038 | — |
-| Artist profiles | 2,158 | — |
-| Artist tracks | 2,542 | — |
-| Active campaigns (real) | 1 | — |
-| Submissions | 24 | — |
-| Approved submissions | 2 | — |
-| Total deposited | $35 | — |
-| Total paid out | $2.08 | — |
-| Blog posts (auto) | 28+ | — |
-| Scheduled posts | 11+ (2/day through June 12) | — |
-| Page views/week | ~465 | — |
-| Total commits | ~1,130 | — |
-| React components | ~108 | — |
-| API routes | 105+ | — |
-| DB migrations | 22 | — |
-| Cron workers | 19 | — |
+| Metric | Value |
+|--------|-------|
+| Users | 19 |
+| Onboarded users | 18 |
+| Artists in database | ~2,038 |
+| Artist profiles | 2,158 |
+| Artist tracks | 2,542 |
+| Active campaigns | 1 |
+| Submissions | 24 |
+| Approved submissions | 2 |
+| Total funded | $35 |
+| Total paid to creators | $2.08 |
+| Blog posts | 28+ |
+| Page views/week | ~465 |
+| React components | ~108 |
+| API routes | 105+ |
+| DB migrations | 33 |
+| Cron workers | 17 |
 
-### Pipeline Health
+### What's Live (Working)
 
-All 17 cron workers green. Blog generates 2 posts/day, bio engine runs 100 artists/night, data enrichment cycles through all artists across Wikipedia/YouTube/Bandcamp/Wikidata.
+- Artist pages with LLMO bios, SEO schema, social stats, activity feed
+- Campaign pages with CPM display, submission gallery, breadcrumbs
+- Browse with genre filters, search, popularity-ordering
+- Checkout with Stripe Connect (fund promotion + deposit)
+- Messaging system (ChatWidget, conversations, read receipts)
+- Dashboard (profile editor, track management, campaign builder, stats)
+- Admin (money flow overview, review queue, user flows)
+- Blog pipeline (answer-first format, triple schema, Reddit syndication)
+- Bio engine (composable slots, ~37B unique combinations)
+- View scraping (YouTube API — reliable, TikTok — sandbox/scrape)
+- Review system (approve/reject, auto-payout, undo)
+- Referral system (10% bonus on first $10+ deposit)
+- Rate limiting (DB-backed, scale-across-instances)
+- PWA (service worker, manifest, offline support)
 
-### What's Live
+### In Progress
 
-- Artist pages with LLMO bios, social stats, comments, reactions, activity feed
-- Campaign pages with 7 schema types, server-rendered SEO, breadcrumbs
-- Browse with popularity-weighted random ordering, genre filters, search
-- Checkout with Stripe Connect, donations, deposits, artist wallet
-- Full messaging system with ChatWidget on every page
-- Dashboard with profile editor, track management, campaign builder, stats
-- Admin with money flow overview, review queue, analytics, user flows
-- Blog with answer-first format, triple schema (QAPage + FAQPage + Article), Reddit syndication
-- SEO tools (CPM calculator, playlist analyzer, promotion budget planner)
-- Bio engine: 8 composable slot libraries producing ~37 billion unique combinations
-- Data enrichment: Wikipedia summaries, YouTube subs, Bandcamp tracks, Wikidata knowledge graph
-- Track pages per-track with earnings calculator + MusicRecording schema
-- Fan reviews (5-star + text), public REST API, share buttons
-- Referral system with Stripe split (10% on first $10+ deposit)
-- Collections, follow feed, save/interested buttons
+- Onboarding → first campaign creation integration
+- TikTok sandbox → production API approval
+- Reconciliation cron + idempotency + dispute flow
+- Wikidata `sameAs` integration for all artists
 
-### Code Health
+---
 
-- TypeScript: `npx tsc --noEmit` passes with zero errors
-- E2E tests: Playwright suite for critical paths
-- Security: CSRF audit passed, rate limiting (DB-backed, scale-across-instances), CSP, PWA
-- Images: All stored as BYTEA in DB, served via `/api/images/` with 1-year cache
+## Core Systems Status
+
+| System | Score | Key Gaps |
+|--------|:-----:|----------|
+| **Onboarding** | 7/10 | Artist flow doesn't create first campaign. Stripe Connect skippable. |
+| **TikTok Integration** | 4/10 | Sandbox only. Page scraping is fragile. No production API. |
+| **Review/Approval** | 6/10 | No dispute flow. No creator notification on rejection. No payout retry. |
+| **Payouts** | 5/10 | No reconciliation cron. No idempotency keys. No minimum payout enforcement. No escrow. |
+| **SEO/LLMO** | 7/10 | Bios at 100/night (20 days for full coverage). No Wikidata sameAs. No genre pages. |
 
 ---
 
 ## Roadmap
 
-### Current phase: Acquisition
+### Current Phase: Core Systems to 100%
 
-The codebase is feature-complete for v1. The bottleneck has shifted from development to acquisition.
+**Focus:** Make each core system fully reliable before adding new features.
 
-**Single most important action:** Curated launch — 5 artists with real audiences + 20 creators + real budgets flowing through the system. Everything else amplifies what happens after real users generate real activity.
+1. **Onboarding → first campaign** — Universal flow creates profile + first campaign seamlessly
+2. **TikTok sandbox → production** — Sandbox works 100%, record demo video, apply for production API
+3. **Review + payout** — Dispute flow, reconciliation cron, idempotency, minimum payouts, payout retry
+4. **SEO/LLMO** — Wikidata sameAs for all artists, faster bio generation pipeline
+5. **Document consolidation** — SELAH.md as single truth, archive conflicting docs
 
-### Deferred (until post-launch)
+### Next (after core systems)
 
-| Item | Effort | Why deferred |
-|------|--------|--------------|
-| Instagram content automation (blog→IG cron) | ~2h | Needs real content first |
-| Referral in bio links (`/r/[code]`) | ~30m | Needs referrers first |
-| LLMO bios bulk completion (manual trigger) | ~$140 DeepSeek | 20 days remaining at 100/night, not blocking |
-| A/B testing infrastructure | ~4h | Needs traffic first |
-| Retargeting pixels | ~2h | Needs audience first |
+| Item | Effort | When |
+|------|--------|------|
+| Public REST API | ~8h | Post-launch |
+| Embeddable artist widget + backlink strategy | ~2h | Post-launch |
+| Genre landing pages with SEO content | ~3h | Post-launch |
+| Google Indexing API submission | ~1h | Post-launch |
+| Creator levels & badges | ~2h | Post-launch |
 
 ### Signals That Change Priorities
 
-- **If page views hit 1,000/week**: Enable retargeting, push referral flywheel
+- **If deposits hit $200/month**: Add escrow hold period
 - **If users hit 50**: Ramp creator outreach, double blog cadence
-- **If deposits hit $200/month**: Enable Instagram content automation
-- **If paid artists hit 10**: Double down on testimonial/ case study content
+- **If page views hit 1,000/week**: Enable retargeting, push referral flywheel
 
 ---
 
@@ -196,7 +212,7 @@ The codebase is feature-complete for v1. The bottleneck has shifted from develop
 - Search before building. Test before shipping. Ship the complete thing.
 - Never table something for later when the permanent solve is within reach.
 - Before every commit: `npx tsc --noEmit` must pass with zero errors.
-- Before every deploy: verify homepage, blog, campaign, and artist page load.
+- Before every deploy: verify homepage, browse, campaign, and artist page load.
 - When in doubt, ship it. The fastest way to learn what matters is to put it in front of real people.
 
 ### This Document
@@ -207,26 +223,24 @@ SELAH.md is the living source of truth. Update it when:
 - A major architectural decision is made
 - A cron worker is added or removed
 
-Don't create new `.md` files for research, audits, or plans. Update SELAH.md instead. If something isn't worth updating SELAH.md for, it probably isn't worth doing.
-
 ---
 
 ## Key Decisions
 
-### Why artist-first (not campaign-first)
-Campaigns expire. Artists are permanent. An artist page accumulates SEO value, social proof, and content forever. Every track becomes a new campaign surface.
+### Why CPM marketplace (not boosting/donations)
+CPM aligns incentives: creators earn per verified view, artists pay only for real engagement. The "boost" model (pay to promote like GoFundMe) creates misaligned incentives. CPM is transparent, fair, and scalable.
+
+### Why 20% premium on deposits (not deducted from creators)
+Creators earn the full CPM rate. The 20% premium is added on deposits — this means creators see their full earning potential, artists see the transparent markup, and the platform earns its fee without penalizing either side.
 
 ### Why no artist permission needed
 If we required artist opt-in, we'd have 0 pages instead of 2,000+. Discovery happens when fans search. A page exists whether the artist knows or not.
-
-### Why CPM model (not flat fee)
-CPM aligns incentives: creators earn per verified view, artists pay only for real engagement. Flat fees create misaligned incentives (creators get paid regardless of performance).
 
 ### Why BYTEA images (not CDN URLs)
 Railway redeploys wipe the filesystem. URL-based images break on redeploy. BYTEA in DB survives everything. 1-year cache headers make the performance cost negligible.
 
 ### Why single cron dispatcher
-Railway doesn't support `*/N` or comma-separated cron syntax. One entry at `0 * * * *` routes to all 17 workers based on the hour. Simpler, more reliable, one health-check point.
+Railway doesn't support `*/N` or comma-separated cron syntax. One entry at `0 * * * *` routes to all workers based on the hour. Simpler, more reliable, one health-check point.
 
 ### Why DeepSeek over GPT-4
 Cost: DeepSeek V4 is ~$0.14/M input tokens vs GPT-4o at ~$2.50/M. At blog pipeline volume (2 posts/day + outreach + bios), GPT-4 would cost 18× more for similar quality.
@@ -240,58 +254,16 @@ Single-prompt bio generation produces templated results that LLMO detectors flag
 ### Why noindex thin artists
 Artists with zero tracks and zero activity waste crawl budget. Noindex until they have content protects the site's overall index health.
 
+### Why open source (MIT)
+Transparency builds trust in a marketplace handling money. Open source also creates a competitive moat — no other CPM music marketplace is open source. Developers can self-host, audit the code, and contribute.
+
 ---
 
 ## Archived Documents
 
-The following files are superseded by this document. They contain historical research, audit findings, and plans that are either fully executed or no longer relevant.
+The following files are superseded by this document. They remain on disk for historical reference but are no longer maintained.
 
-### Why so many docs
-
-Selah.fm was built in rapid research-driven sprints. Each sprint started with deep competitive analysis (10-25 platforms), produced a blueprint, then executed. The docs served their purpose — they guided the build. Now they're liabilities: they create confusion, duplicate information, and make it hard to see what's actually important.
-
-### Archive (`archive/` directory)
-
-All archived files moved to `archive/`. They remain on disk for reference but are no longer maintained.
-
-- `0.0001_PLAN.md` — superseded by Roadmap section
-- `00-BLUEPRINT.md` — superseded by Architecture section
-- `A11Y_AUDIT.md` — WCAG AA audit, all critical items resolved
-- `ARTIST-CARD.md` — artist card design, shipped and live
-- `ARTIST_MODEL_PLAN.md` — artist-first pivot planning, fully built
-- `ARTIST_PAGE_RESEARCH.md` — competitor analysis, fully executed
-- `ARTIST_SEO_LLMO_PLAN.md` — 5 phases, all built
-- `ARTIST_UX_AUDIT.md` — UX audit, all gaps closed
-- `ARTIST_WALLET_RESEARCH.md` — wallet system, shipped
-- `AUTH_ONBOARDING_AUDIT.md` — auth overhaul, shipped
-- `BIO_ENGINE_DATA_RESEARCH.md` — bio quality research, all incorporated
-- `BIO_ENGINE_REFINEMENTS.md` — bio refinements, all implemented
-- `BIO_ENGINE_RESEARCH.md` — bio system research, fully built
-- `BIO_UNIQUENESS_ARCHITECTURE.md` — bio architecture doc, fully built
-- `BLUEPRINT.md` — master implementation plan, fully executed
-- `CHAT_AUDIT.md` — chat system audit, all bugs fixed
-- `CHAT_MASTER_PLAN.md` — chat research, fully rebuilt
-- `COMMUNITY_BLUEPRINT.md` — social features plan, fully built
-- `CREATOR-PIPELINE.md` — creator discovery pipeline, built
-- `CSRF_AUDIT.md` — security audit, all findings resolved
-- `DASHBOARD_AUDIT.md` — dashboard audit, fully rewritten
-- `DATA_ENRICHMENT_PLAN.md` — enrichment strategy, all pipelines live
-- `FINANCIAL_BLUEPRINT.md` — financial flow research, all built
-- `GAMIFICATION_BLUEPRINT.md` — gamification plan, referral system shipped
-- `GROWTH_AUDIT.md` — growth audit, findings incorporated in Roadmap
-- `GROWTH_BLUEPRINT.md` — growth strategy, referenced in Roadmap
-- `LAUNCH_CHECKLIST.md` — launch plan, referenced in Roadmap
-- `MARKETING.md` — marketing strategy, superseded by Roadmap
-- `OUTREACH.md` — outreach strategy, all pipelines live
-- `PHASE2_PLAN.md` — phase 2 planning, all items built
-- `RESEARCH_INDEX.md` — research index, no longer needed
-- `ROADMAP.md` — consolidated into this document
-- `SELAH_EXECUTION_PLAN.md` — execution planning, all phases built
-- `SELAH_FM_COMPETITIVE_AUDIT.md` — competitive audit, all gaps closed
-- `SELAH_ROADMAP.md` — superseded by Roadmap section
-- `STATUS.md` — consolidated into this document
-- `UX_COMPETITOR_RESEARCH.md` — 25-platform UX research, all patterns applied
-- `UX_IMPLEMENTATION_PLAN.md` — UX implementation, all phases built
-- `UX_OVERHAUL_PLAN.md` — UX overhaul, all phases executed
-- `UX_SIMPLIFICATION.md` — UX simplification research, all applied
-- `VISION.md` — consolidated into this document
+- `archive/` — all pre-consolidation research, audits, and plans (40+ files)
+- `docs/research/2026-06-15_TOP_0.0001_RESEARCH.md` — full gap analysis, incorporated into Roadmap and Core Systems Status sections
+- `ROADMAP.md` — consolidated into Roadmap section
+- `STATUS.md` — consolidated into Status section
