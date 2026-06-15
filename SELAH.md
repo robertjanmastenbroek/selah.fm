@@ -1,6 +1,6 @@
 # Selah.fm — Living Document
 
-**Last updated:** 2026-06-04
+**Last updated:** 2026-06-15
 **Concept:** A global SEO/LLMO database of every artist — where fans donate, creators make content, and artists don't need to lift a finger.
 **Role:** Single source of truth. Replaces 40+ research, audit, and plan files. If it isn't here, it's either archived or doesn't matter right now.
 
@@ -95,8 +95,10 @@ Single Railway entry at `0 * * * *` → dispatcher (`/api/cron/dispatcher`) rout
 | Message notifications | 12 UTC | Daily | Email digests |
 | Followup emails | 10 UTC | Daily | Re-engagement |
 | Welcome sequence | 09 UTC | Daily | Onboarding |
+| Google Indexing API | 11 UTC | Daily | Submit 200 URLs for immediate indexing |
 | Re-engagement | 11 UTC | Daily | Inactive users |
 | Refresh metrics | 08 UTC | Daily | Social stats refresh |
+| IndexNow | 10 UTC | Daily | Bing/Yandex URL submission |
 
 ---
 
@@ -123,7 +125,7 @@ Single Railway entry at `0 * * * *` → dispatcher (`/api/cron/dispatcher`) rout
 | React components | ~108 | — |
 | API routes | 105+ | — |
 | DB migrations | 22 | — |
-| Cron workers | 17 | — |
+| Cron workers | 19 | — |
 
 ### Pipeline Health
 
