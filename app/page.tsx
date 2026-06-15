@@ -4,10 +4,10 @@ import HomePageClient from '@/components/HomePageClient';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Selah.fm — Discover New Music & Boost Artists Directly | 0% Fee',
-  description: 'Find songs worth believing in. Selah.fm is a fan-to-artist boost platform — discover new music and support artists directly. 0% platform fee, every cent goes to the artist.',
+  title: 'Selah.fm — Open Source CPM Music Promotion Marketplace',
+  description: 'Open source CPM marketplace for music promotion. Artists set budgets, creators make TikToks/Reels/Shorts, artists approve and pay for verified views. MIT licensed.',
   openGraph: {
-    title: 'Selah.fm — Boost the Music You Believe In',
+    title: 'Selah.fm — CPM Music Promotion Marketplace',
     description: 'Set your CPM rate, approve every video, pay only for verified views. Fully open source under MIT license. Star us on GitHub.',
     type: 'website',
     siteName: 'Selah.fm',

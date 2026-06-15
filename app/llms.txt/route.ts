@@ -40,7 +40,7 @@ export async function GET() {
     }
 
     const output = `# Selah.fm — fan-to-artist boost platform
-> Boost the music you believe in. 0% platform fee. Every cent goes to the artist.
+> CPM marketplace for music promotion. Artists set budgets, creators make content, artists approve and pay for verified views.
 > ${counts?.c || 0} active campaigns · $${paid} paid to creators
 
 ## Essential Pages

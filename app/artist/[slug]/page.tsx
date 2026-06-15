@@ -350,6 +350,7 @@ export default async function ArtistPage({ params }: Props) {
           ...(socialLinks.soundcloud ? [socialLinks.soundcloud] : []),
           ...(artist.instagram_handle ? [`https://instagram.com/${artist.instagram_handle}`] : []),
           ...(artist.wikipedia_url ? [artist.wikipedia_url] : []),
+          ...(artist.wikidata_id ? [`https://www.wikidata.org/wiki/${artist.wikidata_id}`] : []),
         ].filter(Boolean),
         ...(supporterCount > 0 ? {
           aggregateRating: {
@@ -366,6 +367,12 @@ export default async function ArtistPage({ params }: Props) {
             target: `https://selah.fm/artist/${params.slug}`,
           },
         } : {}),
+      },
+      {
+        '@type': 'Person',
+        name: 'Selah.fm Music Team',
+        description: 'Editorial content curated by the Selah.fm music promotion platform team.',
+        url: 'https://selah.fm/about',
       },
       ...tracks.map((t: any) => ({
         '@type': 'MusicRecording',
@@ -415,6 +422,13 @@ export default async function ArtistPage({ params }: Props) {
           <li className="text-muted-foreground/60 truncate max-w-[200px]">{artist.artist_name}</li>
         </ol>
       </nav>
+
+      {/* Author byline */}
+      <div className="max-w-5xl mx-auto px-4 pb-0">
+        <p className="text-[10px] text-muted-foreground/30 tracking-wider uppercase">
+          By Selah.fm Music Team &middot; Updated regularly
+        </p>
+      </div>
 
       {/* Client-side interactive profile */}
       <ArtistProfileClient
