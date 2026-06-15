@@ -19,7 +19,7 @@ export default function ArtistEmbed({ artistSlug, artistName }: Props) {
   width="300" 
   height="400" 
   style="border:none;border-radius:12px;max-width:100%"
-  title="Support ${artistName} on Selah.fm">
+  title="Fund ${artistName} on Selah.fm">
 </iframe>`;
 
   const handleCopy = async () => {

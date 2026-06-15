@@ -229,7 +229,7 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
 
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 {listeners > 0 && <span className="flex items-center gap-1"><Users size={12} />{listeners >= 1000 ? `${(listeners / 1000).toFixed(1)}K` : listeners} monthly listeners</span>}
-                {supporterCount > 0 && <span className="flex items-center gap-1"><Heart size={12} className="text-red-400" />{supporterCount} supporters</span>}
+                {supporterCount > 0 && <span className="flex items-center gap-1"><Heart size={12} className="text-red-400" />{supporterCount} funded</span>}
               </div>
             </div>
 
@@ -288,17 +288,17 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
 
           {/* ── Primary CTAs ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link href={`/checkout?type=donation&artistSlug=${slug}`}
+            <Link href={`/checkout?type=fund&artistSlug=${slug}`}
               className="group rounded-2xl bg-gradient-to-br from-red-500/10 to-red-500/5 border border-red-500/15 p-5 hover:border-red-500/30 transition-all flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
                 <Heart size={24} className="text-red-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm">Support {name}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Donate to help promote their music</p>
+                <p className="font-bold text-sm">Fund promotion for {name}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Your contribution goes to the campaign budget</p>
               </div>
               <Button className="bg-red-500 hover:bg-red-600 text-white shrink-0 text-xs">
-                Donate
+                Fund
               </Button>
             </Link>
 
@@ -582,9 +582,9 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
               <div className="rounded-2xl bg-gradient-to-br from-primary/[0.04] to-primary/[0.02] border border-primary/[0.08] p-5 text-center space-y-4">
                 <h3 className="font-bold text-sm">{name}</h3>
                 <div className="space-y-2">
-                  <Link href={`/checkout?type=donation&artistSlug=${slug}`}
+                  <Link href={`/checkout?type=fund&artistSlug=${slug}`}
                     className="block w-full py-3 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold hover:shadow-[0_0_16px_rgba(239,68,68,0.3)] transition-all">
-                    Donate
+                    Fund promotion
                   </Link>
                   <button onClick={() => setShowSubmitModal(true)}
                     className="block w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs font-bold hover:shadow-[0_0_16px_rgba(34,197,94,0.3)] transition-all">
@@ -658,10 +658,10 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
       {/* ════════════════════════════════════════════════ */}
       <div className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-[#0F0F23]/95 backdrop-blur-lg border-t border-white/[0.06] px-4 py-3">
         <div className="flex items-center gap-2">
-          <Link href={`/checkout?type=donation&artistSlug=${slug}`}
+          <Link href={`/checkout?type=fund&artistSlug=${slug}`}
             className="flex-1 py-3 rounded-xl text-xs font-semibold text-center border border-white/[0.12] bg-white/[0.02] text-muted-foreground hover:text-white hover:bg-white/[0.05] transition-all flex items-center justify-center gap-1.5">
             <Heart size={14} className="text-red-400" />
-            Donate
+            Fund
           </Link>
           <button onClick={() => setShowSubmitModal(true)}
             className="flex-1 py-3 rounded-xl text-xs font-bold text-center bg-gradient-to-r from-emerald-500 to-emerald-600 text-white active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5">

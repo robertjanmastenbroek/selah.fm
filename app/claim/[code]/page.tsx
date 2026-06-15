@@ -116,7 +116,7 @@ export default async function ClaimPage({ params }: Props) {
   width="300" 
   height="400" 
   style="border:none;border-radius:12px;max-width:100%"
-  title="Support ${data.artist_name} on Selah.fm">
+  title="Fund ${data.artist_name} on Selah.fm">
 </iframe>`}
             </pre>
           </div>

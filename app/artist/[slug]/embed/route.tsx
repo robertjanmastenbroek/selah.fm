@@ -43,7 +43,7 @@ export async function GET(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Support ${name.replace(/"/g, '&quot;')} on Selah.fm</title>
+  <title>Fund ${name.replace(/"/g, '&quot;')} on Selah.fm</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
