@@ -35,7 +35,8 @@ export default function OnboardingPage() {
   // Onboarding budget & CPM
   const [onboardBudget, setOnboardBudget] = useState(100);
   const [onboardCpm, setOnboardCpm] = useState(2);
-  const [onboardImportLink, setOnboardImportLink] = useState('');
+  const [onboardTrackTitle, setOnboardTrackTitle] = useState('');
+  const [onboardTrackUrl, setOnboardTrackUrl] = useState('');
   // Connect Stripe state
   const [stripeLoading, setStripeLoading] = useState(false);
   const [stripeDone, setStripeDone] = useState(false);
@@ -111,7 +112,7 @@ export default function OnboardingPage() {
       });
       const meData = await meRes.json();
 
-      // If artist: create artist profile + on-page artist record
+      // If artist: create artist profile + first campaign
       if (role === 'artist' && name) {
         await fetch('/api/artist/claim', {
           method: 'POST', credentials: 'include',
@@ -122,6 +123,30 @@ export default function OnboardingPage() {
             userId: meData?.user?.id,
           }),
         }).catch(e => console.error('Artist claim error:', e));
+
+        // Create first campaign if track title is set
+        if (onboardTrackTitle) {
+          const campaignRes = await fetch('/api/campaigns', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              trackTitle: onboardTrackTitle,
+              trackUrl: onboardTrackUrl || null,
+              cpmRate: onboardCpm,
+              budget: onboardBudget,
+              platforms: ['tiktok', 'instagram', 'youtube'],
+            }),
+          });
+          const campaignData = await campaignRes.json();
+          if (!campaignData.error) {
+            // Redirect to the new campaign page
+            localStorage.removeItem('selah-onboarding');
+            setDone(true);
+            const redirectUrl = campaignData.slug ? `/c/${campaignData.slug}` : `/dashboard`;
+            setTimeout(() => router.push(redirectUrl), 2000);
+            return;
+          }
+        }
       }
 
       // Clear onboarding state on completion
@@ -142,8 +167,8 @@ export default function OnboardingPage() {
       {particles.map(p=><div key={p.id} className="absolute rounded-full" style={{left:`${p.x}%`,top:'50%',width:`${p.size}px`,height:`${p.size}px`,backgroundColor:p.color,animationDelay:`${p.delay}s`,opacity:0,animation:`confettiFall ${1.5+p.delay}s ease-out forwards`}}/>)}
       <motion.div className="text-center space-y-4 z-10" initial={{opacity:0,scale:0.9}} animate={{opacity:1,scale:1}} transition={{duration:0.5}}>
         <Sparkles size={48} className="mx-auto text-primary" />
-        <h2 className="text-2xl font-bold">{role==='artist'?"You're all set!":"You're ready to earn!"}</h2>
-        <p className="text-muted-foreground">{role==='artist'?'Head to your dashboard to create your first campaign.':'Browse campaigns and start creating content.'}</p>
+        <h2 className="text-2xl font-bold">{role==='artist'?"Campaign launched!":"You're ready to earn!"}</h2>
+        <p className="text-muted-foreground">{role==='artist'?'Your first campaign is live — redirecting to your campaign page.':'Browse campaigns and start creating content.'}</p>
       </motion.div>
       <style>{`@keyframes confettiFall{0%{opacity:1;transform:translateY(-50vh) rotate(0deg)}100%{opacity:0;transform:translateY(50vh) rotate(720deg)}}`}</style>
     </div>
@@ -290,44 +315,54 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {/* ── ARTIST STEP 4: Import music ──────────────────── */}
+          {/* ── ARTIST STEP 4: Track details ─────────────────── */}
           {step===4&&role==='artist'&&(
             <motion.div key="s4a" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
-              <h2 className="text-2xl font-bold">Import your music</h2>
-              <p className="text-muted-foreground text-sm">Paste your Spotify artist link to auto-import tracks with cover art.</p>
+              <h2 className="text-2xl font-bold">Your first track</h2>
+              <p className="text-muted-foreground text-sm">Tell us what song you want to promote. We'll create your first campaign automatically.</p>
               
-              <input value={onboardImportLink} onChange={e => setOnboardImportLink(e.target.value)}
-                placeholder="https://open.spotify.com/artist/..."
+              <input value={onboardTrackTitle} onChange={e => setOnboardTrackTitle(e.target.value)}
+                placeholder="Track title (e.g. 'Eclipse')"
                 className="w-full rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"
-                onKeyDown={e => e.key === 'Enter' && nextStep()}
+                autoFocus onKeyDown={e => e.key === 'Enter' && onboardTrackTitle && nextStep()}
+              />
+              <input value={onboardTrackUrl} onChange={e => setOnboardTrackUrl(e.target.value)}
+                placeholder="Spotify / Apple Music link (optional)"
+                className="w-full rounded-xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/30 focus:outline-none transition-colors"
               />
               <div className="flex gap-2">
                 <button onClick={nextStep} className="flex-1 py-3 bg-white/[0.04] text-muted-foreground rounded-xl text-sm font-medium hover:bg-white/[0.06] transition-all">
                   Skip
                 </button>
-                <button onClick={nextStep} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                  Continue <ArrowRight size={16}/>
-                </button>
+                {onboardTrackTitle && (
+                  <button onClick={nextStep} className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                    Continue <ArrowRight size={16}/>
+                  </button>
+                )}
               </div>
             </motion.div>
           )}
 
-          {/* ── ARTIST STEP 5: Done ──────────────────────────── */}
+          {/* ── ARTIST STEP 5: Launch campaign ──────────────── */}
           {step===5&&role==='artist'&&(
             <motion.div key="s5a" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.25}} className="space-y-5">
-              <h2 className="text-2xl font-bold">You're ready to go!</h2>
-              <div className="space-y-3">
-                {[
-                  {icon:Check,text:`$${onboardBudget} budget set at $${onboardCpm} CPM`},
-                  {icon:Check,text:'Artist profile created'},
-                  {icon:Sparkles,text:'Next: Import your tracks from the dashboard'},
-                ].map((item,i)=>{const I=item.icon;return(
-                  <div key={i} className="flex items-center gap-3 text-sm"><I size={16} className="text-emerald-400 shrink-0"/><span>{item.text}</span></div>
-                );})}
+              <h2 className="text-2xl font-bold">Launch your promotion</h2>
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 space-y-3">
+                {onboardTrackTitle && (
+                  <div className="flex items-center gap-3">
+                    <Music4 size={16} className="text-primary/60" />
+                    <div><p className="text-sm font-semibold">{onboardTrackTitle}</p><p className="text-[10px] text-muted-foreground">{onboardTrackUrl || 'Your track'}</p></div>
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <Sparkles size={16} className="text-emerald-400/60" />
+                  <div><p className="text-sm font-semibold">${onboardBudget} budget at ${onboardCpm} CPM</p><p className="text-[10px] text-muted-foreground">{Math.floor(onboardBudget * 1000 / (onboardCpm * 100))} expected verified views</p></div>
+                </div>
               </div>
-              <button onClick={save} disabled={saving} className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-                {saving ? 'Setting up...' : 'Go to dashboard →'}
+              <button onClick={save} disabled={saving} className="w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+                {saving ? <><LoaderCircle size={16} className="animate-spin" /> Creating campaign...</> : <><Sparkles size={16} /> Launch campaign</>}
               </button>
+              <p className="text-xs text-muted-foreground text-center">Your campaign goes live immediately</p>
             </motion.div>
           )}
 
