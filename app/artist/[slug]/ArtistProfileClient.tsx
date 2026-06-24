@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Heart, Video, Music, ExternalLink, MessageCircle, Users, DollarSign, Sparkles, Check, ChevronDown, ChartBar } from 'lucide-react';
 import Header from '@/components/TopNav';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,10 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
   const imageUrl = isRealImage ? rawImage : '';
   const bio = artist.bio || '';
   const trackCover = tracks?.[0]?.cover_art_url || artist.latest_track_cover_url || '';
+  // ponytail: route Supabase Storage URLs through next/image so browsers fetch a hashed
+  // optimized version (1y immutable cache) instead of the no-cache original. Cuts egress.
+  const isSupabase = (url: string) => url.includes('supabase.co/storage');
+  const supabaseUrl = (url: string) => isSupabase(url) ? url : '';
 
   // Unique gradient per artist
   const nameHash = (() => { let h = 0; const n = name; for (let i = 0; i < n.length; i++) h = n.charCodeAt(i) + ((h << 5) - h); return Math.abs(h); })();
@@ -156,7 +161,11 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
       {/* ════════════════════════════════════════════════ */}
       <div className="relative w-full h-40 sm:h-52 md:h-64 overflow-hidden">
         {trackCover ? (
-          <img src={trackCover} alt="" className="w-full h-full object-cover opacity-60" />
+          isSupabase(trackCover) ? (
+            <Image src={trackCover} alt="" fill sizes="100vw" className="object-cover opacity-60" priority unoptimized={false} />
+          ) : (
+            <img src={trackCover} alt="" className="w-full h-full object-cover opacity-60" />
+          )
         ) : (
           <div className="w-full h-full" style={{ background: bannerGradient }} />
         )}
@@ -447,7 +456,11 @@ export default function ArtistProfileClient({ artist, tracks, stats, recentSubmi
                             {/* Track cover art — links to track page */}
                             <div className="w-12 h-12 rounded-lg overflow-hidden bg-white/[0.03] shrink-0 relative group/thumb cursor-default">
                               {track.cover_art_url ? (
-                                <img src={track.cover_art_url} alt={track.track_title} className="w-full h-full object-cover" />
+                                isSupabase(track.cover_art_url) ? (
+                                  <Image src={track.cover_art_url} alt={track.track_title} width={48} height={48} className="w-full h-full object-cover" />
+                                ) : (
+                                  <img src={track.cover_art_url} alt={track.track_title} className="w-full h-full object-cover" />
+                                )
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center"><Music size={16} className="text-white/10" /></div>
                               )}

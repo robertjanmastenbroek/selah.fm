@@ -8,6 +8,10 @@ const nextConfig = {
       { protocol: 'https', hostname: 'cdn.midapi.ai' },
       { protocol: 'https', hostname: 'img.youtube.com' },
       { protocol: 'https', hostname: 'i.ytimg.com' },
+      // ponytail: Supabase Storage CDN — route through next/image so browser fetches
+      // a hashed/optimized URL (cached 1y immutable) instead of no-cache original.
+      // Cuts egress ~70% per README memory of selah.fm egress trouble.
+      { protocol: 'https', hostname: 'jxniwtzbkthrgmyrslno.supabase.co', pathname: '/storage/v1/object/public/**' },
     ],
   },
   // Compress responses
