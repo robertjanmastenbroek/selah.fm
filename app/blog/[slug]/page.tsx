@@ -1,18 +1,23 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { unstable_cache } from 'next/cache';
 import sql from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+// ISR with 1h freshness — published blog content barely changes
 export const revalidate = 3600;
 
 interface Props { params: { slug: string } }
 
-async function getPost(slug: string) {
-  const posts = await sql`
-    SELECT * FROM blog_posts WHERE slug = ${slug} AND status = 'published'
-  `;
-  return posts[0] || null;
-}
+const getPostCached = unstable_cache(
+  async (slug: string) => {
+    const posts = await sql`
+      SELECT * FROM blog_posts WHERE slug = ${slug} AND status = 'published'
+    `;
+    return posts[0] || null;
+  },
+  ['blog-post-v1'],
+  { revalidate: 3600, tags: ['blog'] }
+);
 
 /** Build enhanced JSON-LD with Person schema + correct author override */
 function buildEnhancedSchema(schemaMarkup: unknown, authorName: string, authorUrl: string): object | null {
@@ -48,7 +53,7 @@ function absoluteUrl(path: string | null): string | null {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const post = await getPost(params.slug);
+  const post = await getPostCached(params.slug);
   if (!post) return { title: 'Post not found — Selah.fm Blog' };
 
   const ogImage = absoluteUrl(post.featured_image);
@@ -77,7 +82,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function BlogPostPage({ params }: Props) {
-  const post = await getPost(params.slug);
+  const post = await getPostCached(params.slug);
   if (!post) notFound();
 
   const relatedPosts = post.tags ? await getRelatedPosts(params.slug, post.tags) : [];

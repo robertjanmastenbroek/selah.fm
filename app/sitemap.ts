@@ -1,7 +1,22 @@
 import { MetadataRoute } from 'next';
+import { unstable_cache } from 'next/cache';
 import sql from '@/lib/db';
 
-export const dynamic = 'force-dynamic';
+// Sitemap rebuilds every 6h; bots hammer this endpoint
+export const revalidate = 21600;
+
+const getSitemapData = unstable_cache(
+  async () => {
+    const [blogs, artists, campaigns] = await Promise.all([
+      sql`SELECT slug, updated_at FROM blog_posts WHERE status = 'published' ORDER BY published_at DESC LIMIT 100`,
+      sql`SELECT slug, last_refreshed_at AS updated_at FROM artist_profiles WHERE slug IS NOT NULL ORDER BY last_refreshed_at DESC NULLS LAST LIMIT 5000`,
+      sql`SELECT slug, updated_at FROM campaigns WHERE status = 'active' ORDER BY updated_at DESC LIMIT 500`,
+    ]);
+    return { blogs, artists, campaigns };
+  },
+  ['sitemap-data-v1'],
+  { revalidate: 21600, tags: ['sitemap'] }
+);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://selah.fm';
@@ -31,22 +46,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/tools/playlist-analyzer`, lastModified: new Date(), changeFrequency: 'daily', priority: 0.9 },
   ];
 
-  // Blog posts
-  let blogPages: MetadataRoute.Sitemap = [];
-  try {
-    const posts = await sql`
-      SELECT slug, updated_at FROM blog_posts WHERE status = 'published'
-      ORDER BY published_at DESC LIMIT 100
-    `;
-    blogPages = posts.map((p: any) => ({
-      url: `${baseUrl}/blog/${p.slug}`,
-      lastModified: new Date(p.updated_at),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }));
-  } catch { /* skip */ }
+  // Data-driven sections — fetched via cached helper
+  const { blogs, artists, campaigns } = await getSitemapData();
 
-  // Q&A pages (AI-optimized short answers)
+  const blogPages: MetadataRoute.Sitemap = blogs.map((p: any) => ({
+    url: `${baseUrl}/blog/${p.slug}`,
+    lastModified: new Date(p.updated_at),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
+  // Artist profile pages (SEO gold)
+  const artistPages: MetadataRoute.Sitemap = artists.map((a: any) => ({
+    url: `${baseUrl}/artist/${a.slug}`,
+    lastModified: new Date(a.updated_at),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
+  // Active campaign pages
+  const campaignPages: MetadataRoute.Sitemap = campaigns.map((c: any) => ({
+    url: `${baseUrl}/c/${c.slug}`,
+    lastModified: new Date(c.updated_at),
+    changeFrequency: 'daily' as const,
+    priority: 0.9,
+  }));
+
+  // Q&A pages — separate query, also cheap
   let qaPages: MetadataRoute.Sitemap = [];
   try {
     const qa = await sql`SELECT slug, published_at FROM qa_pages WHERE status = 'published' ORDER BY published_at DESC LIMIT 200`;
@@ -58,22 +84,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
   } catch { /* skip */ }
 
-  // Active campaign pages
-  let campaignPages: MetadataRoute.Sitemap = [];
-  try {
-    const campaigns = await sql`
-      SELECT c.slug, c.track_title, c.updated_at
-      FROM campaigns c
-      WHERE c.status = 'active' AND c.track_title IS NOT NULL
-      ORDER BY c.updated_at DESC LIMIT 100
-    `;
-    campaignPages = campaigns.map((c: any) => ({
-      url: `${baseUrl}/c/${c.slug || c.id}`,
-      lastModified: new Date(c.updated_at),
-      changeFrequency: 'daily' as const,
-      priority: 0.9,
-    }));
-  } catch { /* skip */ }
-
-  return [...staticPages, ...toolPages, ...blogPages, ...qaPages, ...campaignPages];
+  return [...staticPages, ...toolPages, ...blogPages, ...artistPages, ...campaignPages, ...qaPages];
 }

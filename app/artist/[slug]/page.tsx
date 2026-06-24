@@ -1,12 +1,23 @@
 import type { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import sql from '@/lib/db';
 import ArtistProfileClient from './ArtistProfileClient';
 
-export const dynamic = 'force-dynamic';
+// Cache artist profiles for 1 hour — bot crawls + repeat visitors coalesce
+export const revalidate = 3600;
 
 interface Props { params: { slug: string } }
 
-async function getArtistData(slug: string) {
+// Wrap the heavy data fetch so identical lookups within the same render coalesce,
+// AND so cross-request lookups within the revalidate window hit the cache.
+// ponytail: artist's social/stats don't change second-to-second; 1h freshness matches the SEO cache.
+const getArtistDataCached = unstable_cache(
+  async (slug: string) => getArtistDataUncached(slug),
+  ['artist-data-v1'],
+  { revalidate: 3600, tags: ['artist'] }
+);
+
+async function getArtistDataUncached(slug: string) {
   try {
   // Find artist by slug (with name-based fallback)
   let [artist] = await sql`
@@ -177,7 +188,7 @@ async function getArtistData(slug: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const data = await getArtistData(params.slug);
+  const data = await getArtistDataCached(params.slug);
   if (!data) return { title: 'Artist not found — Selah.fm' };
 
   const { artist, stats, tracks } = data;
@@ -230,7 +241,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArtistPage({ params }: Props) {
-  const data = await getArtistData(params.slug);
+  const data = await getArtistDataCached(params.slug);
   if (!data) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0F0F23' }}>
